@@ -1,0 +1,185 @@
+import Testing
+@testable import Shellhand
+
+@Suite("Validation")
+nonisolated struct ValidationTests {
+    private let existing = [
+        Host(id: "a", name: "web", addr: "10.0.0.1"),
+        Host(id: "b", name: "DB", addr: "10.0.0.2"),
+    ]
+
+    @Test("a host needs a name and an address")
+    func needs() {
+        #expect(Validation.problem(with: Host(addr: "10.0.0.9"), among: []) != nil)
+        #expect(Validation.problem(with: Host(name: "new"), among: []) != nil)
+        #expect(Validation.problem(with: Host(name: "  ", addr: "10.0.0.9"), among: []) != nil)
+        #expect(Validation.problem(with: Host(name: "new", addr: "10.0.0.9"), among: []) == nil)
+    }
+
+    @Test("nought is not a port but a way of saying ssh's own")
+    func ports() {
+        func host(_ port: Int) -> Host { Host(name: "new", addr: "10.0.0.9", port: port) }
+        #expect(Validation.problem(with: host(0), among: []) == nil)
+        #expect(Validation.problem(with: host(22), among: []) == nil)
+        #expect(Validation.problem(with: host(65535), among: []) == nil)
+        #expect(Validation.problem(with: host(65536), among: []) != nil)
+        #expect(Validation.problem(with: host(-1), among: []) != nil)
+    }
+
+    @Test("two hosts cannot share a name, however it is cased")
+    func duplicates() {
+        #expect(Validation.problem(
+            with: Host(id: "c", name: "WEB", addr: "10.0.0.9"), among: existing) != nil)
+        #expect(Validation.problem(
+            with: Host(id: "c", name: " db ", addr: "10.0.0.9"), among: existing) != nil)
+        #expect(Validation.problem(
+            with: Host(id: "c", name: "cache", addr: "10.0.0.9"), among: existing) == nil)
+    }
+
+    @Test("a host saved under the name it already has is not a clash with itself")
+    func itself() {
+        #expect(Validation.problem(
+            with: Host(id: "a", name: "web", addr: "10.0.0.5"), among: existing) == nil)
+    }
+
+    @Test("a host cannot be its own jump host")
+    func ownJumpHost() {
+        #expect(Validation.problem(
+            with: Host(id: "c", name: "edge", addr: "10.0.0.9", proxyJump: "EDGE"),
+            among: existing) != nil)
+        #expect(Validation.problem(
+            with: Host(id: "c", name: "edge", addr: "10.0.0.9", proxyJump: "web"),
+            among: existing) == nil)
+    }
+
+    @Test("a group needs a name of its own, and cannot be inside itself")
+    func groups() {
+        let groups = [Group(id: "g", name: "Production")]
+        #expect(Validation.problem(with: Group(name: ""), among: groups) != nil)
+        #expect(Validation.problem(with: Group(id: "h", name: "production"), among: groups) != nil)
+        #expect(Validation.problem(with: Group(id: "h", name: "Staging"), among: groups) == nil)
+        #expect(Validation.problem(
+            with: Group(id: "h", name: "Staging", parentId: "h"), among: groups) != nil)
+    }
+}
+
+@Suite("Where a group can go")
+nonisolated struct GroupParentTests {
+    /// Production › EU › Frankfurt, and a Staging of its own.
+    private let groups = [
+        Group(id: "p", name: "Production"),
+        Group(id: "e", name: "EU", parentId: "p"),
+        Group(id: "f", name: "Frankfurt", parentId: "e"),
+        Group(id: "s", name: "Staging"),
+    ]
+
+    @Test("a group is never offered itself")
+    func notItself() {
+        let offered = Validation.possibleParents(for: groups[0], among: groups).map(\.id)
+        #expect(!offered.contains("p"))
+    }
+
+    @Test("nor anything already beneath it, however deep")
+    func notItsOwnChildren() {
+        let offered = Validation.possibleParents(for: groups[0], among: groups).map(\.id)
+        #expect(offered == ["s"])
+    }
+
+    @Test("a group deeper in can still move anywhere above it")
+    func deeperOne() {
+        let offered = Validation.possibleParents(for: groups[2], among: groups).map(\.id).sorted()
+        #expect(offered == ["e", "p", "s"])
+    }
+
+    @Test("a group that does not exist yet can go anywhere")
+    func newOne() {
+        let offered = Validation.possibleParents(for: Group(name: "New"), among: groups)
+        #expect(offered.count == groups.count)
+    }
+
+    @Test("a tree that somehow loops does not hang the walk")
+    func looping() {
+        let looped = [
+            Group(id: "a", name: "A", parentId: "b"),
+            Group(id: "b", name: "B", parentId: "a"),
+            Group(id: "c", name: "C"),
+        ]
+        let offered = Validation.possibleParents(for: looped[0], among: looped).map(\.id)
+        #expect(offered == ["c"])
+    }
+}
+
+@Suite("What deleting takes with it")
+nonisolated struct DeletionWarningTests {
+    private let host = Host(id: "h", name: "web", addr: "10.0.0.1")
+
+    @Test("a host with no rules says only that it cannot be undone")
+    func noRules() {
+        #expect(Validation.deletionWarning(for: host) == "This cannot be undone.")
+    }
+
+    // Production › EU, with two hosts in EU and one in Production.
+    private var groups: [Group] {
+        [Group(id: "p", name: "Production"), Group(id: "e", name: "EU", parentId: "p")]
+    }
+
+    private var hosts: [Host] {
+        [
+            Host(id: "a", name: "a", addr: "10.0.0.1", groupId: "p"),
+            Host(id: "b", name: "b", addr: "10.0.0.2", groupId: "e"),
+            Host(id: "c", name: "c", addr: "10.0.0.3", groupId: "e"),
+        ]
+    }
+
+    @Test("an empty group says nothing is filed under it")
+    func emptyGroup() {
+        let said = Validation.deletionWarning(
+            for: Group(id: "x", name: "Empty"), groups: [Group(id: "x", name: "Empty")],
+            hosts: [])
+        #expect(said == "Nothing is filed under it. This cannot be undone.")
+    }
+
+    @Test("a group counts every host beneath it, however deep, and says where they go")
+    func countsEverythingBeneath() {
+        let said = Validation.deletionWarning(
+            for: groups[0], groups: groups, hosts: hosts)
+        #expect(said.contains("Its 3 hosts move to the top of the list"))
+        #expect(said.contains("so does the group inside it"))
+        #expect(said.contains("Nothing is deleted but the group itself."))
+    }
+
+    @Test("a group inside another says which one its hosts move to")
+    func namesTheParent() {
+        let said = Validation.deletionWarning(for: groups[1], groups: groups, hosts: hosts)
+        #expect(said.contains("Its 2 hosts move to Production"))
+        #expect(!said.contains("groups inside it"))
+    }
+
+    @Test("one host reads as one")
+    func singleHost() {
+        let said = Validation.deletionWarning(
+            for: groups[1], groups: groups,
+            hosts: [Host(id: "b", name: "b", addr: "10.0.0.2", groupId: "e")])
+        #expect(said.contains("Its one host moves to Production"))
+    }
+}
+
+@Suite("Options a host can carry")
+nonisolated struct OptionValidationTests {
+    @Test("an option ssh would refuse is refused here")
+    func badOption() {
+        let host = Host(id: "h", name: "web", addr: "10.0.0.1", sshOptions: ["BatchMode"])
+        #expect(Validation.problem(with: host, among: []) != nil)
+        let group = Group(id: "g", name: "Production", sshOptions: ["=yes"])
+        #expect(Validation.problem(with: group, among: []) != nil)
+    }
+
+    @Test("real ones pass, on either")
+    func goodOptions() {
+        let host = Host(id: "h", name: "web", addr: "10.0.0.1",
+                        sshOptions: ["ServerAliveInterval=30", "SetEnv FOO=bar"])
+        #expect(Validation.problem(with: host, among: []) == nil)
+        let group = Group(id: "g", name: "Production", sshOptions: ["Compression=yes"])
+        #expect(Validation.problem(with: group, among: []) == nil)
+    }
+}

@@ -1,0 +1,10 @@
+.DS_Store
+# Xcode's derived data. build/ is what CLAUDE.md builds and tests into; a
+# second copy to look at goes to a path of its own, because two copies of the
+# same bundle stop the test suite before it starts.
+build*/
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/
+*.xcuserstate

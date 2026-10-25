@@ -1,0 +1,95 @@
+# The XcodeGen spec for Shellhand.app. Shellhand.xcodeproj is generated from it;
+# on a merge conflict there, take either side and run `xcodegen generate` again.
+name: Shellhand
+options:
+  bundleIdPrefix: com.shellhand
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  minimumXcodeGenVersion: "2.40.0"
+
+settings:
+  base:
+    MARKETING_VERSION: "0.0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    # The Developer ID the releases are signed with, so a spike sees what a
+    # shipped build will see.
+    DEVELOPMENT_TEAM: MN66F68NBY
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "Developer ID Application"
+    ENABLE_HARDENED_RUNTIME: YES
+  configs:
+    Release:
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: "1.12.0"
+  # The store: the host list, in SQLite.
+  GRDB:
+    url: https://github.com/groue/GRDB.swift
+    from: "7.0.0"
+  # Host lists travel as YAML, in and out, and the config is YAML too.
+  Yams:
+    url: https://github.com/jpsim/Yams
+    from: "5.1.0"
+
+targets:
+  Shellhand:
+    type: application
+    platform: macOS
+    sources:
+      # Shellhand/Resources/Shellhand.icon is a directory, but XcodeGen knows
+      # the extension and writes it as one `wrapper.icon` in the resources
+      # phase rather than walking in after the SVG. Nothing extra is needed.
+      - Shellhand
+    dependencies:
+      - package: SwiftTerm
+      - package: GRDB
+        product: GRDB
+      - package: Yams
+    info:
+      path: Shellhand/Info.plist
+      properties:
+        CFBundleDisplayName: Shellhand
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHumanReadableCopyright: ""
+        # The type a drag between the two file panes carries. A remote file
+        # has no URL to hand over, so what travels is which pane it is in and
+        # what it is called; an exported type is how the other pane knows to
+        # take it.
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.shellhand.file-reference
+            UTTypeDescription: Shellhand file reference
+            UTTypeConformsTo:
+              - public.data
+            UTTypeTagSpecification: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shellhand.Shellhand
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        ASSETCATALOG_COMPILER_APPICON_NAME: Shellhand
+    scheme:
+      testTargets:
+        - ShellhandTests
+
+  # What `go test ./...` used to cover. The core is ported into the app's own
+  # module rather than a package of its own, so the tests are hosted by the app.
+  ShellhandTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+    dependencies:
+      - target: Shellhand
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.shellhand.ShellhandTests
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        GENERATE_INFOPLIST_FILE: YES

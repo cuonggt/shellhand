@@ -1,0 +1,160 @@
+import Foundation
+
+// These cross to the Go side off the main thread, so they and their Codable
+// conformances are nonisolated: the app is MainActor by default.
+
+/// The host list as the core hands it over. These mirror the shapes in
+/// `ShellhandCore/core.go` and nothing else: the store's own types stay on the Go
+/// side, where the rules about them live.
+nonisolated struct Snapshot: Codable, Sendable, Equatable {
+    var groups: [Group] = []
+    var hosts: [Host] = []
+}
+
+nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
+    var id: String = ""
+    var name: String = ""
+    var addr: String = ""
+    var port: Int = 0
+    /// What is typed onto the host itself. Empty means "take it from above",
+    /// which is what `effective` then reports.
+    var user: String = ""
+    var identity: String = ""
+    var proxyJump: String = ""
+    var groupId: String = ""
+    var tags: [String] = []
+    /// `-o` settings for this host alone, ahead of anything a group or the
+    /// config says, because ssh keeps the first value it is given.
+    var sshOptions: [String] = []
+    /// Whether the agent is carried to this host. Nothing means "whatever the
+    /// group above says", which is why it is not a plain Bool: a group that
+    /// turns it on and a host that turns it off are different from a host
+    /// that was never asked.
+    var forwardAgent: Bool?
+    /// The palette this host's terminals come up in. Empty means "take it
+    /// from above", and nothing anywhere in the chain means the one chosen in
+    /// Settings.
+    var theme: String = ""
+    var effective = Effective()
+}
+
+/// What the host connects with once the groups above it have filled in what it
+/// leaves empty, and the name of whatever supplied each value.
+nonisolated struct Effective: Codable, Sendable, Hashable {
+    var user: String = ""
+    var userFrom: String = ""
+    var identity: String = ""
+    var identityFrom: String = ""
+    var proxyJump: String = ""
+    var proxyJumpFrom: String = ""
+    var port: Int = 22
+    var aliasElsewhere: Alias?
+    /// Every `-o` setting that reaches this host, nearest first.
+    var sshOptions: [String] = []
+    /// Whether the agent is carried, and what said so.
+    var forwardAgent: Bool?
+    var forwardAgentFrom: String = ""
+    /// The palette that reaches this host, and what supplied it.
+    var theme: String = ""
+    var themeFrom: String = ""
+}
+
+nonisolated struct Alias: Codable, Sendable, Hashable {
+    var name: String
+    var addr: String
+    var port: Int
+}
+
+nonisolated struct Group: Codable, Sendable, Identifiable, Hashable {
+    var id: String = ""
+    var name: String = ""
+    var parentId: String = ""
+    var user: String = ""
+    var identity: String = ""
+    var proxyJump: String = ""
+    /// Reaches every host beneath it, after each host's own.
+    var sshOptions: [String] = []
+    var forwardAgent: Bool?
+    /// The palette every host beneath it comes up in unless it says otherwise.
+    /// Production not looking like staging is the point.
+    var theme: String = ""
+}
+
+/// What an import did, or would do with `dryRun`.
+nonisolated struct MergeResult: Codable, Sendable {
+    var changes: [Change] = []
+    var added = 0
+    var updated = 0
+    var unchanged = 0
+    /// What the file said that this app no longer keeps — "credentials",
+    /// "snippets", "startup snippets". Apart from `changes` rather than among
+    /// them, because nothing is written for these: a row in the list of what
+    /// will change would leave Import enabled with nothing to do.
+    var passedOver: [String] = []
+
+    var summary: String {
+        "\(added) added, \(updated) updated, \(unchanged) already matched"
+    }
+}
+
+/// What a CSV import did, with the reading of the file that produced it.
+nonisolated struct CSVImport: Sendable {
+    var result = MergeResult()
+    /// Columns that became a field, and columns nothing was made of — both in
+    /// the file's own spelling, so the window can name them back.
+    var used: [String] = []
+    var ignored: [String] = []
+}
+
+nonisolated struct Change: Codable, Sendable, Hashable, Identifiable {
+    var kind: String
+    var name: String
+    var action: String
+
+    var id: String { "\(action) \(kind) \(name)" }
+}
+
+// MARK: Phase 2 — files
+
+/// A file or directory on either side of a transfer.
+nonisolated struct RemoteEntry: Codable, Sendable, Identifiable, Hashable {
+    var name = ""
+    var size: Int64 = 0
+    var mode = ""
+    var modTime = ""
+    var isDir = false
+
+    var id: String { name }
+}
+
+nonisolated struct Listing: Codable, Sendable {
+    var path = ""
+    var parent = ""
+    var label = ""
+    var entries: [RemoteEntry] = []
+}
+
+nonisolated struct Transfer: Codable, Sendable, Identifiable, Hashable {
+    var id = ""
+    var name = ""
+    /// Whether this is one file or a folder of them, which decides how it is
+    /// carried and is worth showing beside the name.
+    var kind = ""
+    var done: Int64 = 0
+    var total: Int64 = 0
+    /// `queued`, `running`, `done`, `failed` or `cancelled` —
+    /// `TransferQueue` names them and decides what moves next.
+    var state = TransferQueue.queued
+    var error = ""
+
+    var fraction: Double { total > 0 ? min(1, Double(done) / Double(total)) : 0 }
+    /// Nothing more will happen to it. Not simply "not running": a transfer
+    /// waiting its turn has not finished, and reading it as finished was what
+    /// made a queue impossible to add.
+    var finished: Bool {
+        state == TransferQueue.done || state == TransferQueue.failed
+            || state == TransferQueue.cancelled
+    }
+    var waiting: Bool { state == TransferQueue.queued }
+    var moving: Bool { state == TransferQueue.running }
+}
