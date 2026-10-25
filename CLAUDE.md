@@ -34,8 +34,11 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -destination "platform=macOS" -derivedDataPath build -skipPackagePluginValidation
 ```
 
-`Tests/` is the whole suite, and it covers `Core/` only. **Nothing checks the
-app end to end.** Three shell harnesses once did — the terminal on a real pty,
+`Tests/` is the whole suite. It covers `Core/`, and — newly — the rules that
+have been lifted out of the views: `Views/Panes.swift` (which tab is in front,
+what is beside it, what ⌘D and closing a tab do) and `Views/QuickConnect.swift`
+(what ⌘K offers for what was typed, and where an arrow moves the highlight),
+plus `Sessions.shortTitle`. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
 the window from store to sidebar, SFTP against a loopback server — and they
 were removed along with the loopback servers and the flags the app published
 for them. So a change above `Core/` is judged by building it and using it,
@@ -146,6 +149,26 @@ credentials, which is most of it.
   with it, which groups could hold another — live in `Core/Validation.swift`,
   not in the sheet that shows them. A rule in a view can only be tested by
   driving the view, and this app's dialogs do not answer to `click at`.
+- **The same rule now applies upward, not just to data.** `Views/Panes.swift`
+  and `Views/QuickConnect.swift` hold decisions that used to be `private`
+  inside `ContentView` and `QuickConnectSheet`: which tab is in front and what
+  is beside it, and how ⌘K ranks what you typed. They keep no state — the
+  views still own that and simply obey — so the whole of each behaviour is
+  reachable from a test with a couple of values and a list. Quick Connect
+  especially: driving the real palette is how a session to a live machine got
+  opened during a check, which is a high price for testing a sort.
+- **A rule type lifted into `Views/` is MainActor unless you say otherwise,
+  and so is the enum it works on.** The app target defaults to MainActor, so
+  `Panes`, `QuickConnect` **and `PaneTab` itself** all picked it up, which
+  made even `PaneTab`'s `Equatable` conformance actor-isolated and unusable
+  from a `nonisolated` test. Nothing in the app ever notices, because every
+  caller is already on the main actor; the first test that looks from outside
+  fails to compile. Mark them `nonisolated`, the enum included — it took
+  three compiles to walk that chain down.
+- **`Sessions.shortTitle` has a pure overload** taking the host's name and the
+  title, with the `TerminalSession` one calling it. A session builds a 900×560
+  terminal view and registers a notification observer, which is a lot of
+  machinery to stand up in order to check where a string gets cut.
 - Menus live in `Shellhand/App/Commands.swift` and reach the front window
   through `AppActions`, a focused scene value. Keyboard shortcuts belong there
   rather than on a button.

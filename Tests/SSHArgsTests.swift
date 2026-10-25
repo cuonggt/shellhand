@@ -102,7 +102,7 @@ nonisolated struct SSHArgsTests {
             Hop(name: "outer", addr: "10.0.0.9"),
         ]
         let args = SSHArgs.build(resolved)
-        let proxy = try? #require(args.first { $0.hasPrefix("ProxyCommand=") })
+        let proxy = args.first { $0.hasPrefix("ProxyCommand=") }
         // The first hop is reached through the second, and dials only the
         // address of the host that named it.
         #expect(proxy == "ProxyCommand=ssh -o 'ProxyCommand=ssh -W '\"'\"'[10.0.1.9]:22'\"'\"' "

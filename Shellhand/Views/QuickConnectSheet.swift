@@ -67,31 +67,11 @@ struct QuickConnectSheet: View {
         .onExitCommand { dismiss() }
     }
 
-    /// Everything whose name, address or tags hold what was typed, nearest
-    /// first: a name that starts with it before one that merely contains it.
+    /// What the list is showing. The ranking lives in `QuickConnect`, where
+    /// it can be checked without a window and without a host list that
+    /// connects to real machines.
     private var matches: [Host] {
-        let needle = text.lowercased()
-        guard !needle.isEmpty else {
-            return Array(store.snapshot.hosts
-                .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-                .prefix(50))
-        }
-        return store.snapshot.hosts
-            .compactMap { host -> (Host, Int)? in
-                let name = host.name.lowercased()
-                if name.hasPrefix(needle) { return (host, 0) }
-                if name.contains(needle) { return (host, 1) }
-                if host.addr.lowercased().contains(needle) { return (host, 2) }
-                if host.tags.contains(where: { $0.lowercased().contains(needle) }) { return (host, 3) }
-                return nil
-            }
-            .sorted {
-                $0.1 == $1.1
-                    ? $0.0.name.localizedStandardCompare($1.0.name) == .orderedAscending
-                    : $0.1 < $1.1
-            }
-            .prefix(50)
-            .map(\.0)
+        QuickConnect.matches(among: store.snapshot.hosts, for: text)
     }
 
     private var first: Host? {
@@ -99,14 +79,8 @@ struct QuickConnectSheet: View {
         return matches.first
     }
 
-    /// Moves the highlight, stopping at the ends rather than wrapping — the
-    /// shape Spotlight has, where running off the bottom and reappearing at
-    /// the top loses your place.
     private func move(_ delta: Int) {
-        let list = matches
-        guard !list.isEmpty else { return }
-        let at = list.firstIndex { $0.id == highlighted } ?? 0
-        highlighted = list[min(max(at + delta, 0), list.count - 1)].id
+        highlighted = QuickConnect.moved(from: highlighted, by: delta, over: matches)
     }
 
     private func connect(_ host: Host?) {

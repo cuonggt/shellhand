@@ -21,7 +21,7 @@ enum Selection: Hashable {
 /// never fired, and clicking the sidebar row already selected wrote nothing
 /// through the `List`'s binding at all. Both were the same bug, and neither
 /// is expressible once the mode is a tab.
-enum PaneTab: Hashable {
+nonisolated enum PaneTab: Hashable {
     case hosts
     case session(UUID)
 }
@@ -177,8 +177,7 @@ struct ContentView: View {
         // where setting the mode was not: this only has to react when the
         // value really did move, and closing always moves it.
         .onChange(of: sessions.selected) { _, now in
-            guard case .session = pane else { return }
-            pane = now.map(PaneTab.session) ?? .hosts
+            pane = Panes.following(selected: now, front: pane)
         }
         // Closed on the way into SFTP and put back on the way out.
         //
@@ -414,9 +413,7 @@ struct ContentView: View {
             hasHost: selectedHost != nil,
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
-            // Not on the hosts tab: it is not one of the two sides, so
-            // there would be nothing to put beside it.
-            canSplit: pane != .hosts && openTabs.count > 1)
+            canSplit: Panes.canSplit(front: pane, open: openTabs))
     }
 
     /// The ssh command for the selected host, on the pasteboard — the same
@@ -459,12 +456,7 @@ struct ContentView: View {
     /// Shows a tab. The strip, the sidebar and everything that opens a
     /// session go through this, so the pane and `Sessions` cannot drift.
     private func pick(tab: PaneTab) {
-        // Picking the one already shown beside this one would draw the same
-        // thing twice, and a terminal is one view that can only be in one
-        // place — so the second pane drew nothing. They trade places instead,
-        // which is what clicking the other pane's tab means.
-        if beside == tab { beside = pane }
-        pane = tab
+        (pane, beside) = Panes.picking(tab, front: pane, beside: beside)
         if case let .session(id) = tab { sessions.selected = id }
     }
 
@@ -472,11 +464,7 @@ struct ContentView: View {
     /// closes it. The hosts are not offered: the sidebar is the list, and the
     /// split is for watching one thing while working in another.
     private func toggleSplit() {
-        guard beside == nil else {
-            beside = nil
-            return
-        }
-        beside = openTabs.first { $0 != pane }
+        beside = Panes.splitting(front: pane, beside: beside, open: openTabs)
     }
 
     /// Every tab that can take a side of the split, terminals before SFTP,

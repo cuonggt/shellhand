@@ -351,9 +351,19 @@ final class Sessions {
     /// which is too long for a menu and mostly the same across sessions on
     /// one machine. The machine and the tail of the path say which is which.
     static func shortTitle(of session: TerminalSession) -> String {
-        let name = session.host?.name ?? "Local"
-        guard let colon = session.title.lastIndex(of: ":") else { return name }
-        let place = session.title[session.title.index(after: colon)...]
+        shortTitle(host: session.host?.name, title: session.title)
+    }
+
+    /// The rule itself, over the only two things it reads.
+    ///
+    /// Separate from the overload above so that checking it costs nothing: a
+    /// `TerminalSession` builds a 900×560 terminal view and registers a
+    /// notification observer, which is a lot of machinery to stand up in
+    /// order to test where a string gets cut.
+    nonisolated static func shortTitle(host: String?, title: String) -> String {
+        let name = host ?? "Local"
+        guard let colon = title.lastIndex(of: ":") else { return name }
+        let place = title[title.index(after: colon)...]
         return place.isEmpty ? name : "\(name) — \(place)"
     }
 

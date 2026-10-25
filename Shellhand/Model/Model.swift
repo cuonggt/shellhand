@@ -1,11 +1,10 @@
 import Foundation
 
-// These cross to the Go side off the main thread, so they and their Codable
+// These are read and written off the main actor, so they and their Codable
 // conformances are nonisolated: the app is MainActor by default.
 
-/// The host list as the core hands it over. These mirror the shapes in
-/// `ShellhandCore/core.go` and nothing else: the store's own types stay on the Go
-/// side, where the rules about them live.
+/// The host list as `Core` hands it over, with every group above a host
+/// already folded into `effective`.
 nonisolated struct Snapshot: Codable, Sendable, Equatable {
     var groups: [Group] = []
     var hosts: [Host] = []
