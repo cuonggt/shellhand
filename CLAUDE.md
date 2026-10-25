@@ -54,6 +54,11 @@ python3 tools/icon.py Shellhand/Resources/Shellhand.icon   # rewrite the bundle
 
 `docs/app-icon.md` says why the format and the mark are what they are.
 
+A release is `scripts/release.sh`, which builds, signs, notarizes, packages and
+rewrites the appcast and the cask — and **publishes nothing**, printing the two
+commands that would. `--skip-notarize` runs everything that needs no
+credentials, which is most of it.
+
 ## Layout
 
 - `Shellhand/` — the app. `App/` (entry, menus, settings), `Core/` (the
@@ -65,6 +70,10 @@ python3 tools/icon.py Shellhand/Resources/Shellhand.icon   # rewrite the bundle
   with `RenderIcon.swift`, which render it at the sizes that decide it. Not
   checks: `icon.py` is where the mark's geometry lives, so it is the only way
   to change the icon at all.
+- `scripts/release.sh` — the whole of a release, from `xcodebuild` to the cask.
+- `Casks/shellhand.rb` — the Homebrew cask, copied into the tap on release.
+- `appcast.xml` — the update feed, served from `main`. Generated, never
+  hand-edited.
 - `docs/` — the architecture, the Phase 0 measurements, the engine comparison,
   the app icon, and the name.
 
@@ -794,6 +803,67 @@ python3 tools/icon.py Shellhand/Resources/Shellhand.icon   # rewrite the bundle
   the last:
   `--path "$(ls -1d build/Logs/Test/*.xcresult | sort | tail -1)"` — the
   timestamps are in the names, so sorting by name is sorting by time.
+- **Sparkle's helpers have to be signed again after the build, from the
+  release script rather than a build phase.** Xcode signs
+  `Sparkle.framework` as it embeds it but leaves `Autoupdate` and
+  `Updater.app` inside exactly as Sparkle shipped them, and notarization
+  refuses those: they need this project's Developer ID, the hardened runtime
+  and a secure timestamp. It cannot be a build phase, because Xcode embeds a
+  **package's** frameworks outside the build phases, so no phase can be
+  ordered after that embedding — one tried, and raced it. The app is then
+  signed again over the changed framework, with
+  `--preserve-metadata=identifier,entitlements,requirements,flags` so that
+  re-signing does not quietly drop what the build decided.
+- **The app is not sandboxed, so Sparkle's XPC services go and
+  `SUEnableInstallerLauncherService` is not set.** Sparkle ships both for
+  sandboxed apps; shipping them unsandboxed means notarizing code nothing
+  runs. Sparkle's own sample Info.plist sets that key — it is wrong for this
+  app, and the release script deletes `XPCServices` to match.
+- **Ordinary builds have no secure timestamp, and notarization takes nothing
+  without one.** `OTHER_CODE_SIGN_FLAGS="--timestamp"` on the release build is
+  what adds it. The script then checks for `Timestamp=`, the hardened runtime
+  flag, a Developer ID authority and the absence of `get-task-allow` on every
+  piece of code it is about to ship, because each of those is a rejection that
+  otherwise arrives from Apple ten minutes later with no line number.
+- **`SUFeedURL` is permanent for the life of a build.** An app in the wild
+  asks the address it was born with, for ever, and there is no correcting it in
+  the field. So the feed is `appcast.xml` on this repository's `main` branch
+  and the DMGs come from GitHub releases: nothing a shipped build depends on
+  needs a domain, a host or a renewal. If a domain ever arrives, new builds can
+  be born with a new address while the old ones go on asking GitHub. The
+  release script refuses to build if the plist's feed is not that URL.
+- **Back up the EdDSA private key or every shipped app is stranded.** It lives
+  in the login keychain under the account `shellhand`, and
+  `generate_keys --account shellhand -x <file>` is the only copy there will
+  ever be. Without it, nothing can sign an update those apps will accept —
+  there is no re-keying a build that is already out, and no recovery. The
+  public half is in `project.yml`; the release script refuses to build an
+  appcast if the keychain's key is not the one the app checks against.
+- **Nothing about updates runs in a Debug build.** Sparkle would offer a
+  Debug build the newest release DMG and install it over itself. `start()`
+  and `check()` return early and `canCheck` is false, so Check for Updates…
+  greys out while developing rather than looking live and doing nothing.
+- **The appcast is written from a folder, so the folder has to hold every
+  version still being offered.** `generate_appcast` does not amend an
+  appcast; it rewrites it from the DMGs it is given, so a folder holding only
+  the new one produces a feed that has forgotten every earlier release. The
+  DMGs live in the GitHub releases, so the script fetches the past ones back
+  before generating. One `--download-url-prefix` covers the whole folder while
+  GitHub puts each version behind a tag of its own, which is why the enclosure
+  URLs are rewritten per version straight afterwards, from the version in each
+  filename.
+- **`Updates` deliberately does not bridge `canCheckForUpdates`.** Sparkle's
+  own sample publishes it through Combine, which costs an `ObservableObject`
+  in a codebase that is otherwise `@Observable` and a KVO callback that has to
+  hop to the main actor to be legal under Swift 6 — all to grey the menu item
+  out for the second a check is already running, which is harmless to ask
+  twice. The menu reads it when it is built, which is often enough.
+- **There is no app delegate, so the updater starts a turn of the run loop
+  late.** Sparkle wants its controller made before any window, which is
+  `ShellhandApp.init()` — but that runs *during* launching, too early to start
+  checking. `start()` hops through `DispatchQueue.main.async`, the same
+  deferral the inspector needs, rather than adding an `AppDelegate` to reach a
+  single notification.
 - **The published history is one commit, and what came before it is in a
   bundle outside this repository.** This app began inside a larger project of
   ours, over a core written in another language and reached from Swift as a C
@@ -842,5 +912,13 @@ It has an icon: a shell prompt, chevron and block cursor, as an Icon Composer
 bundle that macOS composites into the Tahoe squircle. `docs/app-icon.md` has
 the directions that lost and why this one did not.
 
-Release packaging (Sparkle, a notarized DMG, a Homebrew cask) is not set up
-yet. Hopmeter's `scripts/release.sh` in `~/Projects/nettoolbox` is the model.
+Release packaging is built: `scripts/release.sh` takes it from `xcodebuild`
+to a notarized, stapled DMG, a signed appcast and an updated cask, and the app
+checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
+`~/Projects/nettoolbox` was the model, and most of what is worth knowing about
+it is in the conventions above. **Nothing has been released**, and three
+things are outstanding before anything can be: a notarytool keychain profile
+called `Shellhand` (the Hopmeter one already works for this team, via
+`NOTARY_PROFILE=Hopmeter`), a backup of the EdDSA key, and release notes at
+`docs/release-notes/<version>.md` — without them the update window comes up
+blank.

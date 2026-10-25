@@ -37,6 +37,10 @@ packages:
   Yams:
     url: https://github.com/jpsim/Yams
     from: "5.1.0"
+  # Updates for a build downloaded from GitHub rather than the App Store.
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.6.0"
 
 targets:
   Shellhand:
@@ -52,6 +56,7 @@ targets:
       - package: GRDB
         product: GRDB
       - package: Yams
+      - package: Sparkle
     info:
       path: Shellhand/Info.plist
       properties:
@@ -60,6 +65,15 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSApplicationCategoryType: public.app-category.developer-tools
         NSHumanReadableCopyright: ""
+        # Sparkle: where a shipped build looks, and the public half of the key
+        # its DMGs are signed with. The feed is served out of this repository
+        # rather than from a domain — `App/Updates.swift` says why, and the
+        # address a build ships with is the one it asks for ever after.
+        SUFeedURL: https://raw.githubusercontent.com/cuonggt/shellhand/main/appcast.xml
+        SUPublicEDKey: 2y3m+mmqJuE9aMLYY4DHfDXSfQnHChyG23qiYbprlC4=
+        # Deliberately no SUEnableInstallerLauncherService: that is for a
+        # sandboxed app, and this one is not sandboxed. `scripts/release.sh`
+        # strips Sparkle's XPC services for the same reason.
         # The type a drag between the two file panes carries. A remote file
         # has no URL to hand over, so what travels is which pane it is in and
         # what it is called; an exported type is how the other pane knows to

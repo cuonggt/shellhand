@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  What a shipped Shellhand asks for when it looks for an update.
+
+  It is served from this repository's main branch, at
+  https://raw.githubusercontent.com/cuonggt/shellhand/main/appcast.xml, which
+  is the SUFeedURL compiled into every build. A build asks its own address for
+  ever — there is no correcting it in the field — so the feed deliberately
+  lives somewhere that needs no domain and no host to keep paying for.
+
+  **Do not edit this by hand.** `scripts/release.sh` rewrites it with Sparkle's
+  generate_appcast, which signs each enclosure with the EdDSA key in the login
+  keychain; a hand-written entry has no valid signature and every app refuses
+  it. The releases it lists are the DMGs in the updates folder at the time,
+  which is why that script fetches the past ones back from GitHub first.
+
+  Empty until the first release, which is correct: Sparkle reads a channel with
+  no items as "nothing newer than what you have".
+-->
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Shellhand</title>
+    <description>Updates for Shellhand, a native macOS SSH client.</description>
+    <language>en</language>
+  </channel>
+</rss>

@@ -9,11 +9,37 @@ import SwiftUI
 /// How the app behaves, and where it keeps what it knows.
 struct GeneralSettingsPane: View {
     @AppStorage("confirmCloseLiveSession") private var confirmClose = true
+    @State private var updates = Updates.shared
     let storePath: String
     let configPath: String
 
     var body: some View {
         Form {
+            // Here rather than in a pane of its own: a fourth pane holding
+            // one switch would say updates are a subject, and they are one
+            // line about how the app behaves. Check Now sits beside the
+            // switch as well as in the app menu, because this is where you
+            // come when you are wondering what version you are on — the
+            // build number is in the corner of this very window.
+            Section("Updates") {
+                Toggle(isOn: Binding(
+                    get: { updates.automatic },
+                    set: { updates.automatic = $0 }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Check for updates automatically")
+                        Text("Releases are published on GitHub; this looks "
+                            + "there and offers what it finds.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+
+                Button("Check Now\u{2026}") { updates.check() }
+                    .disabled(!updates.canCheck)
+            }
+
             Section("Closing") {
                 Toggle(isOn: $confirmClose) {
                     VStack(alignment: .leading, spacing: 2) {

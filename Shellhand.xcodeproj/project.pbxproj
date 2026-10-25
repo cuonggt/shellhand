@@ -23,6 +23,7 @@
 		2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467E73B5CE44F6B57382DC67 /* ResolverTests.swift */; };
 		3243D1D24C643C4DB18495CD /* TagField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C564CAC406B2F78C655FD3 /* TagField.swift */; };
 		3A2EB394976CF16932AA9BF0 /* SSHArgs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F30BECE69E1DA23C37953AE /* SSHArgs.swift */; };
+		3A3665741D034387ED16AEEF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5F1C9A8EC9E8345D811B6F3C /* Sparkle */; };
 		3EF64384DD3F520418889DFF /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FEC0D62AABE1AD7178D42A /* Shell.swift */; };
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
 		474950C3E6ECFE6BF7F32AF5 /* SFTPWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */; };
@@ -30,6 +31,7 @@
 		57321BC003DA515202D4FF68 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0EF95D39299BCB708595723A /* GRDB */; };
 		575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */; };
 		595F4A50CE3646F61608793D /* HostsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */; };
+		5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222BDDF31905C063CACE18AD /* Updates.swift */; };
 		5ECF27731478F2DBB0874D1D /* FindBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA96D946715413445668CB3B /* FindBar.swift */; };
 		67681879901F818576724761 /* Portable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C980CDA163D4D20A0C1C3D6F /* Portable.swift */; };
 		73F718188AE077E2AE4559EE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18AEC282492A0EB7F7C69600 /* ContentView.swift */; };
@@ -90,6 +92,7 @@
 		0E8192A6AF313B243CB39AE9 /* Resolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolve.swift; sourceTree = "<group>"; };
 		18AEC282492A0EB7F7C69600 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1C8A25118E059F686A9F089C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		222BDDF31905C063CACE18AD /* Updates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updates.swift; sourceTree = "<group>"; };
 		2719DDE5E363B72B59964667 /* TransferQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueueTests.swift; sourceTree = "<group>"; };
 		287AE931BEA1EE294A3CD956 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortableTests.swift; sourceTree = "<group>"; };
@@ -156,6 +159,7 @@
 				09C95B906A367ECF575444AE /* SwiftTerm in Frameworks */,
 				57321BC003DA515202D4FF68 /* GRDB in Frameworks */,
 				FE68496FCFD8F2500BF6C0B3 /* Yams in Frameworks */,
+				3A3665741D034387ED16AEEF /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +171,7 @@
 			children = (
 				CA3966F3845382E6166AE1A0 /* Commands.swift */,
 				06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */,
+				222BDDF31905C063CACE18AD /* Updates.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -323,6 +328,7 @@
 				84B8116AD7A03666013C2119 /* SwiftTerm */,
 				0EF95D39299BCB708595723A /* GRDB */,
 				C60842B8DBC5F1F3F9F08A4A /* Yams */,
+				5F1C9A8EC9E8345D811B6F3C /* Sparkle */,
 			);
 			productName = Shellhand;
 			productReference = 683EAA256A466A529CF89C0C /* Shellhand.app */;
@@ -376,6 +382,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				DE14C1BD0B41626B114EE2EB /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+				382B6FA7FAD7DF3D0B842148 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				2EC95764CAC9719733DECEA1 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 				E8CE7D1BCC72A5AB79A07C2B /* XCRemoteSwiftPackageReference "Yams" */,
 			);
@@ -470,6 +477,7 @@
 				803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */,
 				A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */,
 				575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */,
+				5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */,
 				EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */,
 				8971631CB6A95A1D1D22AB7E /* WelcomeView.swift in Sources */,
 			);
@@ -729,6 +737,14 @@
 				minimumVersion = 1.12.0;
 			};
 		};
+		382B6FA7FAD7DF3D0B842148 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
 		DE14C1BD0B41626B114EE2EB /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/groue/GRDB.swift";
@@ -752,6 +768,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = DE14C1BD0B41626B114EE2EB /* XCRemoteSwiftPackageReference "GRDB.swift" */;
 			productName = GRDB;
+		};
+		5F1C9A8EC9E8345D811B6F3C /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 382B6FA7FAD7DF3D0B842148 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 		84B8116AD7A03666013C2119 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;

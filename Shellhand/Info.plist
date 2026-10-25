@@ -24,6 +24,10 @@
 	<string>public.app-category.developer-tools</string>
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/cuonggt/shellhand/main/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>2y3m+mmqJuE9aMLYY4DHfDXSfQnHChyG23qiYbprlC4=</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>

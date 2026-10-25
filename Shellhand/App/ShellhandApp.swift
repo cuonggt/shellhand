@@ -18,6 +18,10 @@ struct ShellhandApp: App {
         // file names.
         self.configPath = (try? Core.configure(configPath: options.configPath))?.path
             ?? options.configPath
+        // Sparkle wants its controller made before any window exists, which
+        // is here; `start()` holds the first look until launching is done,
+        // because there is no app delegate to put it in.
+        Updates.shared.start()
     }
 
     var body: some Scene {

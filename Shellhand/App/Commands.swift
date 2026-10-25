@@ -108,7 +108,8 @@ struct ShellhandCommands: Commands {
     }
 
     var body: some Commands {
-        // The two things this app shows, in the app menu, above Settings.
+        // The app menu: looking for an update, then the two things this app
+        // shows, all above Settings.
         //
         // **Hosts does not go through `AppActions`.** That is a focused scene
         // value, so it is nil whenever the host window is not the front one —
@@ -120,6 +121,14 @@ struct ShellhandCommands: Commands {
         // store the host window holds — so ⌘B is dead while the SFTP window
         // itself is in front. Bring the host list forward and it works.
         CommandGroup(after: .appInfo) {
+            Divider()
+            // Straight under About, where every Mac app keeps it. Like Hosts
+            // and SFTP it needs nothing selected, so it is not gated on the
+            // sidebar — only on whether Sparkle can look at all, which a
+            // Debug build never can, so this greys out while developing
+            // rather than looking live and doing nothing.
+            Button("Check for Updates\u{2026}") { Updates.shared.check() }
+                .disabled(!Updates.shared.canCheck)
             Divider()
             Button("Hosts") {
                 HostsWindow.front()
