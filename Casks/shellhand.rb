@@ -20,7 +20,7 @@ cask "shellhand" do
   # The app updates itself through Sparkle, so brew leaves the version it
   # finds installed alone rather than reporting it as outdated.
   auto_updates true
-  depends_on macos: ">= :tahoe"
+  depends_on macos: :tahoe
 
   app "Shellhand.app"
 
