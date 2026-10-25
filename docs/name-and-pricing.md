@@ -21,8 +21,40 @@ update feed's host are still to do, and so is the price — see
 - It is easy to say, spell and search for, which nautical vocabulary mostly
   is not.
 
-**This was not a trademark search.** Before shipping, search USPTO (classes 9
-and 42) and EUIPO.
+## What the registers say
+
+Searched 2026-10-25 through [TMview](https://www.tmdn.org/tmview/), which
+covers EUIPO, the USPTO, WIPO and the national offices in one query.
+
+- **`shellhand` returns nothing.** No mark of that name, in any class, at any
+  participating office. The instrument was checked rather than trusted: the
+  same search for `shellfire` returns three marks across Italy, Vietnam and
+  the USPTO, and it matched `CHELLFIRE` too, so it is doing fuzzy matching and
+  a zero means zero.
+- **`shell hand` as two words returns 24**, every one of them a loose match
+  holding both words separately — `THE HAND SHELL`, `NUTSHELL HANDBOOK`,
+  `HANDCRAFTED SOLID-SHELL` and so on. Fifteen have ended and two expired.
+  None is a unitary Shellhand.
+- **One live mark is worth knowing about: `HANDYSHELL`**, USPTO 85954312,
+  registered, **class 9**, owned by Speculative Product Design LLC — the same
+  two elements the other way round. Their class 9 is phone cases, not
+  developer tools. Whether that distance is enough is a lawyer's question,
+  not one this file can answer.
+- Nothing turned up in **class 42** at all.
+
+**This is still not a clearance search, and none of it is legal advice.** It
+is a knockout search for an identical or near-identical name. It does not
+cover phonetic equivalents, unregistered common-law rights, or anyone's
+judgement about likelihood of confusion — and TMview says itself that it is
+not an official register and carries no legal effect.
+
+**The SHELL element was not assessed.** That is the one structural question
+left and it wants an attorney, because it cuts both ways: in computing a
+shell is a command interpreter and the word is close to descriptive, while
+SHELL is also among the most broadly protected marks there is. A coined
+unitary word for an SSH client is a long way from fuel, but "a long way" is
+exactly the kind of judgement worth paying for before the name is on
+something harder to change than a GitHub release.
 
 ## Names already ruled out
 
@@ -73,7 +105,9 @@ it asks for a price of zero. Two things do change.
 
 ## Before shipping
 
-- Trademark: USPTO classes 9 and 42, and EUIPO.
+- Trademark: the register search is done and clean (see above). What is left
+  is an attorney on the SHELL element and on classes 9 and 42 — **and this is
+  now overdue**, because 0.0.1 and 0.0.2 have already shipped under the name.
 - Secure the name's domains and namespaces. **Which ones, and where each
   stands, are deliberately not in this file**, because the repository is
   public and a list of what is still unclaimed is a list of what to take.
