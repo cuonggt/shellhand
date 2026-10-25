@@ -936,9 +936,24 @@ Release packaging is built: `scripts/release.sh` takes it from `xcodebuild`
 to a notarized, stapled DMG, a signed appcast and an updated cask, and the app
 checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
-it is in the conventions above. **Nothing has been released**, and three
-things are outstanding before anything can be: a notarytool keychain profile
-called `Shellhand` (the Hopmeter one already works for this team, via
-`NOTARY_PROFILE=Hopmeter`), a backup of the EdDSA key, and release notes at
-`docs/release-notes/<version>.md` — without them the update window comes up
-blank.
+it is in the conventions above.
+
+**0.0.1 is out**: the GitHub release `v0.0.1`, tagged at the commit its DMG was
+built from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
+The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
+this disk, and release notes live at `docs/release-notes/<version>.md` —
+write one per version or the update window comes up blank.
+
+**What that release did not prove is the update itself.** Every link resolves
+— the feed URL serves the appcast, the appcast's enclosure serves the DMG at
+the length it claims, the digest matches what GitHub hands out, and a DMG
+fetched back from GitHub is still Gatekeeper-accepted — but no copy of the app
+has yet found an update and installed one, because that takes a second
+release. 0.0.2 is the first real test of the mechanism, and the EdDSA key is
+what it rests on.
+
+**Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
+from a tap outside Homebrew's own must be trusted once before it will load,
+because casks can carry install scripts. This one carries none, but the gate
+applies anyway, so the README spells the step out rather than letting an
+install fail with an error that reads like the cask is broken.

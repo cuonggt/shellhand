@@ -7,10 +7,35 @@ Shellhand keeps your machines in a list you can file into groups and find by
 tag, opens each session as a tab running the system's own `ssh`, and browses
 and moves files over SFTP.
 
+## Install
+
+Requires macOS 26. The build is universal, signed and notarized, and updates
+itself from here.
+
+Download `Shellhand-0.0.1.dmg` from
+[the latest release](https://github.com/cuonggt/shellhand/releases/latest),
+or use Homebrew:
+
+```sh
+brew tap cuonggt/tap
+brew trust --cask cuonggt/tap/shellhand
+brew install --cask shellhand
+```
+
+The `brew trust` line is Homebrew's own doing, not this cask's: since Homebrew
+7 a cask from a tap outside Homebrew's own has to be trusted once before it
+will load, because a cask can carry install scripts. Read
+[the cask](https://github.com/cuonggt/homebrew-tap/blob/master/Casks/shellhand.rb)
+first if you would rather see what you are trusting — it is thirty-six lines
+and carries no scripts at all.
+
+Or build it yourself: `xcodegen generate` and then open the project, which is
+what the licence is for.
+
 ## Status
 
-Pre-release, version 0.0.1. There is no packaged build yet — no DMG, no update
-feed, no Homebrew cask — so for now you build it yourself.
+Pre-release, version 0.0.1 — the first release, and the update mechanism it
+ships with has not yet been proven against a second one.
 
 This is cut back to an MVP: the host list and the editor, tabs, files over
 SFTP, and import and export. Four things that were built have been taken out
