@@ -69,6 +69,10 @@ build=$(setting CURRENT_PROJECT_VERSION)
 team=$(setting DEVELOPMENT_TEAM)
 bundle_id=$(setting PRODUCT_BUNDLE_IDENTIFIER)
 commit=$(git rev-parse --short HEAD)
+# The release tags the commit the DMG was built from, not whatever HEAD has reached by the time it
+# is published. GitHub's API refuses an abbreviated SHA for target_commitish with a bare "invalid",
+# so the full one is what gets passed.
+full_commit=$(git rev-parse HEAD)
 [[ -n $version && -n $build && -n $team && -n $bundle_id ]] || fail "can't read the version, build, team or bundle ID from project.yml"
 if [[ -n $(git status --porcelain) && $allow_dirty == 0 ]]; then
     fail "the working tree has uncommitted changes; commit them, or pass --allow-dirty"
@@ -254,19 +258,31 @@ else
 fi
 
 step "Done"
+notes_flag=""
+[[ -f docs/release-notes/$version.md ]] && notes_flag=" --notes-file docs/release-notes/$version.md"
 echo "$dmg"
 echo "sha256 $sha"
 if (( notarize )); then
     cat <<DONE
 
-Nothing has been published. The release goes out in this order, because the appcast points into
-the release: make the release first, then commit the appcast that names it.
+Nothing has been published. The order below is the only one that works: the release has to exist
+before the appcast naming it is committed, and the commit the release tags has to be on the remote
+before the release can tag it.
 
-  gh release create v$version --repo $repo --title "Shellhand $version" \\
+  git push origin main
+
+  gh release create v$version --repo $repo --target $full_commit \\
+      --title "Shellhand $version"${notes_flag} \\
       "$dmg" "$out/Shellhand-$version-dSYMs.zip"
+
   git add appcast.xml $cask && git commit -m "Release $version" && git push
 
 Then copy $cask into the Casks/ directory of the homebrew-tap repository.
+
+Worth checking afterwards, because it is the one link nothing here can test: that the URL in
+appcast.xml really serves the DMG.
+
+  curl -sIL "$(grep -o 'url="[^"]*"' appcast.xml | sed 's/url="//; s/"//')" | grep -iE '^HTTP/|content-length'
 DONE
 else
     echo "not notarized: for trying the script only"
