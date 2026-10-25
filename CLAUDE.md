@@ -791,6 +791,11 @@ credentials, which is most of it.
   like a broken test run rather than a launch that never happened. Build the
   copy you want to look at to a derived data path of its own and quit it before
   testing.
+  **It is a copy that is *running* that does this, not one that merely
+  exists.** Worth knowing now that `brew install --cask shellhand` leaves a
+  second copy at `/Applications/Shellhand.app` for good: the suite was run with
+  it sitting there and passed all 254. Quit the app, and the installed copy can
+  stay.
 - `Executed 0 tests, with 0 failures` is the **XCTest** counter, and every test
   here is swift-testing, so that line says nothing either way — grepping for it
   reports an empty run as a pass. Ask the result bundle instead:
