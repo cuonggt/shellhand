@@ -829,20 +829,22 @@ credentials, which is most of it.
   service outlives the build.** `SWBBuildService` keeps `build.db` open after
   its `xcodebuild` has exited, so starting the second run too soon after the
   first fails with *"unable to attach DB … database is locked. Possibly there
-  are two concurrent builds running in the same filesystem location."* Either
-  leave a moment between runs or give one its own `-derivedDataPath`.
-  **The trap inside the trap is the log.** `xcodebuild` prints that error
-  *and* `** BUILD FAILED **`, then retries internally without exiting — so the
-  log says the build failed while the build is in fact still running and about
-  to succeed. The script runs under `set -e`, which makes the honest signal
-  the process, not the text: if `release.sh` is still alive, its `xcodebuild`
-  has not exited non-zero, whatever the log claims. Check
-  `ps -o pid,ppid,command` for the `release.sh → xcodebuild → SWBBuildService`
-  chain before concluding anything, and resist killing it.
-  A wrapper around the script has its own way of lying: in zsh `status` is
-  read-only — it is an alias for `$?` — so `status=$?` kills the wrapper
-  while the script it launched carries on orphaned, which reads as "the
-  release failed" when nothing of the sort happened. Name it anything else.
+  are two concurrent builds running in the same filesystem location."* and
+  `** BUILD FAILED **`. The failure is real and that run dies; a later run,
+  once the lock is free, builds fine. Either leave a moment between runs or
+  give one its own `-derivedDataPath`.
+- **A wrapper around the release script can hide which run you are looking
+  at.** In zsh `status` is read-only — it is an alias for `$?` — so
+  `status=$?` kills the wrapper while the script it launched carries on, and
+  whatever was watching the wrapper reports the release as failed when it is
+  running perfectly well. Name the variable anything else. What that cost
+  here was worse than the lost wrapper: a dead run's 337-byte log sat beside a
+  live `release.sh` from a *later* invocation, and the live process was read as
+  the dead one recovering — `BUILD FAILED` explained away as an internal
+  retry, which `xcodebuild` does not do. A log is written per invocation, so a
+  stale log next to a running process means **two runs, not one that is
+  retrying**. Check `ps -o pid,ppid,etime,command` and compare the elapsed
+  time against when you started it before concluding anything either way.
 - **`SUFeedURL` is permanent for the life of a build.** An app in the wild
   asks the address it was born with, for ever, and there is no correcting it in
   the field. So the feed is `appcast.xml` on this repository's `main` branch
