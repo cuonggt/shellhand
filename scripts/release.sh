@@ -228,6 +228,13 @@ if (( notarize )); then
     # the wrong release breaks updating for exactly the people who are updating. If download size
     # ever matters enough to want them back, they need uploading to the new version's release and
     # a build-to-version map built from the DMGs in the folder.
+    #
+    # The flag stops deltas being *made*; it does not evict one already written. generate_appcast
+    # updates an appcast in place and keeps entries it finds there, so a delta from a run before
+    # this flag existed survives regeneration and the rewrite below cannot place it — which is
+    # exactly how the guard fired twice on 0.0.2. If a stale enclosure ever turns up again, delete
+    # $updates/appcast.xml and let this rebuild it from the DMGs in the folder; the only thing lost
+    # is the original pubDate of each past release.
     "$sparkle_bin/generate_appcast" --account "$sparkle_account" --maximum-deltas 0 \
         --download-url-prefix "https://github.com/$repo/releases/download/$tag_sentinel/" \
         --embed-release-notes "$updates"
