@@ -10,7 +10,7 @@ cask "shellhand" do
   # Replaced by scripts/release.sh with the real digest. Left as a string that
   # is not a valid SHA-256 on purpose: if it ever reaches the tap unreplaced,
   # Homebrew refuses it loudly instead of installing something unverified.
-  sha256 "PLACEHOLDER-UNTIL-FIRST-RELEASE"
+  sha256 "9afdceb5442d03a0f22e19b964e899886e2e9ebfb552dcb195ae96de1f8fcf0d"
 
   url "https://github.com/cuonggt/shellhand/releases/download/v#{version}/Shellhand-#{version}.dmg"
   name "Shellhand"
