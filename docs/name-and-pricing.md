@@ -1,12 +1,12 @@
 # The name, and what to charge
 
-Decided 2026-10-18; revisited 2026-10-22 when the repository went public under
-GPL-3.0-or-later.
+Decided 2026-10-18; revisited 2026-10-22 under GPL-3.0-or-later, and again on
+2026-10-25 when the repository was actually made public.
 
-**The name is Shellhand**, with the bundle ID `com.shellhand.Shellhand`, the
-cask `cuonggt/tap/shellhand` and the update feed at `updates.shellhand.app`.
-The trademark search and the domains under [Before shipping](#before-shipping)
-are still to do, and so is the price.
+**The name is Shellhand**, with the bundle ID `com.shellhand.Shellhand` and
+the cask `cuonggt/tap/shellhand`. The trademark search, the domains and the
+update feed's host are still to do, and so is the price — see
+[Before shipping](#before-shipping).
 
 ## Why this name
 
@@ -14,8 +14,9 @@ are still to do, and so is the price.
   shellhand is the one who works your shells. It sits in the same family as
   `bosun` without being a dictionary word, which is why it survived checks
   that killed every single word tried.
-- It was free everywhere checked: `.com`, `.app` and `.dev`, both App Stores,
-  Homebrew, GitHub, npm, and no command of that name on this Mac.
+- It was clear on every register checked at the time — the domains, both App
+  Stores, Homebrew, GitHub, npm — and there is no command of that name on
+  this Mac.
 - A web search turned up no product called Shellhand or Shell Hand.
 - It is easy to say, spell and search for, which nautical vocabulary mostly
   is not.
@@ -73,8 +74,10 @@ it asks for a price of zero. Two things do change.
 ## Before shipping
 
 - Trademark: USPTO classes 9 and 42, and EUIPO.
-- Register `shellhand.app`, then `.com` and `.dev`. Not urgent for the feed —
-  a public repository can serve the appcast and the DMGs from GitHub Releases,
-  so the URL compiled into the first build need not wait on a domain. It is
-  permanent once a build ships, so choose it deliberately.
-- Take the GitHub account `shellhand` the same day.
+- Secure the name's domains and namespaces. **Which ones, and where each
+  stands, are deliberately not in this file**, because the repository is
+  public and a list of what is still unclaimed is a list of what to take.
+- The update feed can wait on none of it: a public repository serves the
+  appcast and the DMGs from GitHub Releases, so the URL compiled into the
+  first build need not wait on a domain. That URL is permanent once a build
+  ships, so choose it deliberately.
