@@ -889,6 +889,39 @@ credentials, which is most of it.
   checking. `start()` hops through `DispatchQueue.main.async`, the same
   deferral the inspector needs, rather than adding an `AppDelegate` to reach a
   single notification.
+- **No binary deltas, and the reason is in `scripts/release.sh`.** Sparkle
+  makes them as soon as the updates folder holds two versions, and a delta is
+  named for the **build** numbers it spans — `Shellhand2-1.delta` — so nothing
+  in the filename says which release should serve it and the per-version URL
+  rewrite cannot place it. `--maximum-deltas 0` stops new ones. It does **not**
+  evict one already in the appcast: `generate_appcast` updates an appcast in
+  place and keeps what it finds, so delete `build/updates/appcast.xml` and let
+  it rebuild from the DMGs. The guard that catches an unplaced URL fired twice
+  on 0.0.2 before this was understood, and it is the reason nothing broken
+  reached the feed — **keep it**.
+- **A restored window title can read as a live connection.** On launch the
+  window briefly carries the title of a session from a previous run — a real
+  shell prompt, `root@ip-…: ~`, with the host as the subtitle — before
+  SwiftUI's own `.navigationTitle` overwrites it with the truth. It is state
+  AppKit restores, not a session: nothing has connected, and in the same
+  moment there is no `ssh` child process and no established socket. This cost
+  two separate alarms in one sitting, both of them a production hostname that
+  was never contacted. **The title is not evidence.** `pgrep -P <pid>` is:
+  this app connects by spawning `ssh` on a pty, so no child means no
+  connection.
+- **Sparkle's preferences share the bundle-id domain with everything else**,
+  which is the `@AppStorage` trap again with teeth. This machine carries
+  `SUAutomaticallyUpdate = 1`, so an update installs here with nobody
+  clicking Install Update — while neither that key nor
+  `SUEnableAutomaticChecks` is in the shipped `Info.plist` or set anywhere in
+  the source, so a new user gets Sparkle's own default and is asked first.
+  Don't read this machine's update behaviour as the product's. The same
+  domain still holds window frames for `SpikeView` and `snippets`, both gone
+  for weeks, which is how old it is.
+- **`auto_updates true` in the cask is doing a job.** The app updates itself
+  past whatever version brew installed, so `brew list` goes on reporting its
+  own record — 0.0.1 after the app has reached 0.0.2 — and brew correctly
+  does not call it outdated. That is intended; don't "fix" the discrepancy.
 - **The published history is one commit, and what came before it is in a
   bundle outside this repository.** This app began inside a larger project of
   ours, over a core written in another language and reached from Swift as a C
@@ -943,19 +976,18 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 is out**: the GitHub release `v0.0.1`, tagged at the commit its DMG was
-built from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
+**0.0.1 and 0.0.2 are out**, each tagged at the commit its DMG was built from,
+with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
 write one per version or the update window comes up blank.
 
-**What that release did not prove is the update itself.** Every link resolves
-— the feed URL serves the appcast, the appcast's enclosure serves the DMG at
-the length it claims, the digest matches what GitHub hands out, and a DMG
-fetched back from GitHub is still Gatekeeper-accepted — but no copy of the app
-has yet found an update and installed one, because that takes a second
-release. 0.0.2 is the first real test of the mechanism, and the EdDSA key is
-what it rests on.
+**Updating is proven.** An installed 0.0.1 found 0.0.2 on the live feed,
+offered it with the release notes carried inside the appcast, downloaded it,
+checked the EdDSA signature and installed it — and what landed verifies,
+staples and passes Gatekeeper. 0.0.2 was cut for that purpose and earned it
+twice over: it also exposed the delta bug above, which is unreachable on a
+first release because there is no earlier version to make a delta against.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
