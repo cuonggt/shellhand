@@ -25,11 +25,10 @@ final class HostStore {
     private var ignoringChanges = false
     private var pendingReload: Task<Void, Never>?
 
-    /// Hosts and groups filed by their parent, worked out once per snapshot
-    /// rather than filtered per row: with a few hundred hosts, a sidebar that
-    /// filters the whole list in every row's body spends its life doing it.
-    private var hostsByGroup: [String: [Host]] = [:]
-    private var groupsByParent: [String: [Group]] = [:]
+    /// The list as a tree, rebuilt with each snapshot. The walks live in
+    /// `Tree` so they can be checked without a store; this holds the current
+    /// one and the sidebar reads it directly.
+    private(set) var tree = Tree()
 
     init(dbPath: String) {
         self.dbPath = dbPath
@@ -67,15 +66,10 @@ final class HostStore {
         }
     }
 
-    private func index() {
-        hostsByGroup = Dictionary(grouping: snapshot.hosts, by: \.groupId)
-            .mapValues { $0.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
-        groupsByParent = Dictionary(grouping: snapshot.groups, by: \.parentId)
-            .mapValues { $0.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending } }
-    }
+    private func index() { tree = Tree(snapshot) }
 
-    /// Reloads when the store changes underneath us, so the TUI and the app can
-    /// be open on the same list at once.
+    /// Reloads when the store changes underneath us, so a list edited
+    /// elsewhere — an import, another window — shows up here.
     func watchForExternalChanges() {
         guard watcher.source == nil else { return }
         let descriptor = Darwin.open(dbPath, O_EVTONLY)
@@ -115,27 +109,17 @@ final class HostStore {
 
     // MARK: the shape the sidebar wants
 
-    func group(_ id: String) -> Group? { snapshot.groups.first { $0.id == id } }
+    func group(_ id: String) -> Group? { tree.group(id) }
 
-    func children(of groupID: String) -> [Group] { groupsByParent[groupID] ?? [] }
+    func children(of groupID: String) -> [Group] { tree.children(of: groupID) }
 
-    func hosts(in groupID: String) -> [Host] { hostsByGroup[groupID] ?? [] }
+    func hosts(in groupID: String) -> [Host] { tree.hosts(in: groupID) }
 
-    /// Every host beneath a group, as selecting one in the TUI shows.
-    func hostsBeneath(_ groupID: String) -> [Host] {
-        var ids: Set<String> = [groupID]
-        var frontier = [groupID]
-        while let id = frontier.popLast() {
-            for child in children(of: id) where !ids.contains(child.id) {
-                ids.insert(child.id)
-                frontier.append(child.id)
-            }
-        }
-        return ids.flatMap { hostsByGroup[$0] ?? [] }
-            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
+    /// Every host beneath a group, however deep — what deleting it would take
+    /// with it, and what its row stands for.
+    func hostsBeneath(_ groupID: String) -> [Host] { tree.hostsBeneath(groupID) }
 
-    var ungrouped: [Host] { hostsByGroup[""] ?? [] }
+    var ungrouped: [Host] { tree.ungrouped }
 
     var allTags: [String] { Tags.all(in: snapshot.hosts) }
 
@@ -196,17 +180,7 @@ final class HostStore {
     }
 
     /// The name a group shows in a path, "Production / EU".
-    func path(of group: Group) -> String {
-        var parts = [group.name]
-        var parent = group.parentId
-        var seen: Set<String> = [group.id]
-        while !parent.isEmpty, let next = self.group(parent), !seen.contains(next.id) {
-            seen.insert(next.id)
-            parts.insert(next.name, at: 0)
-            parent = next.parentId
-        }
-        return parts.joined(separator: " / ")
-    }
+    func path(of group: Group) -> String { tree.path(of: group) }
 
     // MARK: writing
 

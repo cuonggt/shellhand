@@ -28,10 +28,12 @@
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
 		458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */; };
 		474950C3E6ECFE6BF7F32AF5 /* SFTPWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */; };
+		4BD192A73383CC157A49EFF2 /* TreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D441F061EB58A1F727AEA0 /* TreeTests.swift */; };
 		509091F17AAF61F636DC2043 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58931B72F5BD5A2BCA9AF6D4 /* ThemeTests.swift */; };
 		57321BC003DA515202D4FF68 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0EF95D39299BCB708595723A /* GRDB */; };
 		575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */; };
 		595F4A50CE3646F61608793D /* HostsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */; };
+		5C87E9F25A1D27D0D53F77D4 /* Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40C2A340AD1B26622F6D0AB2 /* Tree.swift */; };
 		5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222BDDF31905C063CACE18AD /* Updates.swift */; };
 		5ECF27731478F2DBB0874D1D /* FindBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA96D946715413445668CB3B /* FindBar.swift */; };
 		67681879901F818576724761 /* Portable.swift in Sources */ = {isa = PBXBuildFile; fileRef = C980CDA163D4D20A0C1C3D6F /* Portable.swift */; };
@@ -104,6 +106,7 @@
 		352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplacingTests.swift; sourceTree = "<group>"; };
 		36C1020FE3A76905A97685B4 /* Files.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
+		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
 		467E73B5CE44F6B57382DC67 /* ResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverTests.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -137,6 +140,7 @@
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
 		B3FBD42BA7400FB61B1AA875 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		B6D441F061EB58A1F727AEA0 /* TreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeTests.swift; sourceTree = "<group>"; };
 		B8E364C1F64E97AC080F1F08 /* ShellhandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellhandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BDB132447DA9624773556608 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
 		BE2DDE82A60175D6F5A16883 /* HostStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStore.swift; sourceTree = "<group>"; };
@@ -204,6 +208,7 @@
 				E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */,
 				58931B72F5BD5A2BCA9AF6D4 /* ThemeTests.swift */,
 				2719DDE5E363B72B59964667 /* TransferQueueTests.swift */,
+				B6D441F061EB58A1F727AEA0 /* TreeTests.swift */,
 				E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */,
 			);
 			path = Tests;
@@ -233,6 +238,7 @@
 				BE2DDE82A60175D6F5A16883 /* HostStore.swift */,
 				A115AC162E4D88C396D25873 /* Model.swift */,
 				06FEC0D62AABE1AD7178D42A /* Shell.swift */,
+				40C2A340AD1B26622F6D0AB2 /* Tree.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -443,6 +449,7 @@
 				9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */,
 				509091F17AAF61F636DC2043 /* ThemeTests.swift in Sources */,
 				89247966139C2A078C36B765 /* TransferQueueTests.swift in Sources */,
+				4BD192A73383CC157A49EFF2 /* TreeTests.swift in Sources */,
 				18A1899D88FA1D5521B2EE49 /* ValidationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -497,6 +504,7 @@
 				803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */,
 				A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */,
 				575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */,
+				5C87E9F25A1D27D0D53F77D4 /* Tree.swift in Sources */,
 				5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */,
 				EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */,
 				8971631CB6A95A1D1D22AB7E /* WelcomeView.swift in Sources */,

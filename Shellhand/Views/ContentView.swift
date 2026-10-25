@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// What the sidebar has selected. A group shows everything beneath it, as
-/// selecting one in the TUI does.
+/// What the sidebar has selected. A group stands for everything beneath it,
+/// however deep.
 enum Selection: Hashable {
     case host(String)
     case group(String)

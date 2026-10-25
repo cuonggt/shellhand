@@ -34,11 +34,12 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -destination "platform=macOS" -derivedDataPath build -skipPackagePluginValidation
 ```
 
-`Tests/` is the whole suite. It covers `Core/`, and — newly — the rules that
-have been lifted out of the views: `Views/Panes.swift` (which tab is in front,
-what is beside it, what ⌘D and closing a tab do) and `Views/QuickConnect.swift`
+`Tests/` is the whole suite. It covers `Core/`, and the rules lifted out of
+the layers above it: `Model/Tree.swift` (what is under what, what is above it,
+and the fold the sidebar opens on), `Views/Panes.swift` (which tab is in front,
+what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
-plus `Sessions.shortTitle`. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
+and `Sessions.shortTitle`. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
 the window from store to sidebar, SFTP against a loopback server — and they
 were removed along with the loopback servers and the flags the app published
 for them. So a change above `Core/` is judged by building it and using it,
@@ -169,6 +170,20 @@ credentials, which is most of it.
   title, with the `TerminalSession` one calling it. A session builds a 900×560
   terminal view and registers a notification observer, which is a lot of
   machinery to stand up in order to check where a string gets cut.
+- **Every walk over the group tree lives in `Model/Tree.swift`**, built once
+  per snapshot: the lookups and indexes `HostStore` used to hold, the descent
+  in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"
+  breadcrumb, and `ancestry`, for the groups that must be open before a row
+  can be reached. `HostStore` keeps the current one and delegates; the sidebar
+  reads `store.tree` rather than walking anything itself.
+  **The reason they are together is the cycle guard.** Each of those three
+  walks carried its own, against a group that became its own ancestor — a
+  thing only a bad edit or a corrupt store produces, which is exactly why
+  nobody would ever have noticed the guards rotting. They hang the app rather
+  than draw a wrong row, so the suite now turns a loop through all three.
+  Note which end each climb starts from: a **host** needs its own group open
+  and everything above it, while a **group** needs its parents and not
+  itself, because a group's own fold is its business.
 - Menus live in `Shellhand/App/Commands.swift` and reach the front window
   through `AppActions`, a focused scene value. Keyboard shortcuts belong there
   rather than on a button.

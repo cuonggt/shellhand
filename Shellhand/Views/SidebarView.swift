@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Hosts in their groups, as the TUI's list shows them: a group's own settings
+/// Hosts in their groups: a group's own settings
 /// reach everything beneath it, so the tree is the point rather than
 /// decoration.
 ///
@@ -63,7 +63,7 @@ struct SidebarView: View {
         .onChange(of: store.snapshot.groups) { _, groups in
             guard !foldedFirstLoad, !groups.isEmpty else { return }
             foldedFirstLoad = true
-            collapsed = Set(groups.map(\.id)).subtracting(ancestry(of: selection))
+            collapsed = store.tree.folded(keepingVisible: ancestry(of: selection))
         }
         // **Whatever is selected stays visible.** The selection restored at
         // launch arrives *after* the groups do — `ContentView` waits for the
@@ -275,30 +275,14 @@ struct SidebarView: View {
     /// be reached — so for a selected group this opens its parents and not
     /// the group itself.
     private func ancestry(of selection: Selection?) -> Set<String> {
-        var id: String
         switch selection {
-        case let .host(hostID):
-            guard let host = store.snapshot.hosts.first(where: { $0.id == hostID })
-            else { return [] }
-            id = host.groupId
-        case let .group(groupID):
-            id = store.group(groupID)?.parentId ?? ""
-        case nil:
-            return []
+        case let .host(id): store.tree.ancestry(ofHost: id)
+        case let .group(id): store.tree.ancestry(ofGroup: id)
+        case nil: []
         }
-        // `seen` for the same reason every walk here has one: a group that
-        // somehow became its own ancestor stops the loop rather than the app.
-        var out: Set<String> = []
-        var seen: Set<String> = []
-        while !id.isEmpty, !seen.contains(id) {
-            seen.insert(id)
-            out.insert(id)
-            id = store.group(id)?.parentId ?? ""
-        }
-        return out
     }
 
-    /// Groups before hosts at every level, as the TUI shows them. `seen` is
+    /// Groups before hosts at every level. `seen` is
     /// only there so a group that somehow became its own ancestor stops the
     /// walk rather than the app.
     private func walk(under parent: String, depth: Int, seen: Set<String>, into out: inout [Row]) {

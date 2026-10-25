@@ -141,7 +141,7 @@ struct TerminalPane: View {
     /// moved into.
     var isFront = true
     /// Reconnecting rebuilds the argv rather than reusing it: the host may
-    /// have been edited, here or in the TUI, since this tab was opened.
+    /// have been edited, here or elsewhere, since this tab was opened.
     let onReconnect: (Host) -> Void
 
     var body: some View {
