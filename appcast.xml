@@ -3,6 +3,25 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.2</title>
+            <pubDate>Sun, 25 Oct 2026 22:31:59 +0700</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[Nothing in the app has changed since 0.0.1.
+
+This release exists to exercise updating itself. 0.0.1 shipped with the
+machinery — Sparkle, a signed feed, a notarized DMG — but a first release has
+nothing to update *from*, so none of it could be proven. 0.0.2 is the first
+version an installed copy can actually find, download, verify and install, and
+these notes are the first ever carried inside the feed.
+
+If you are reading this in Shellhand's own update window, every part of it
+worked.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.2/Shellhand-0.0.2.dmg" length="13854611" type="application/octet-stream" sparkle:edSignature="PdknczHrewd1MPvc7OwcM0T5qmkzP4irdj/JNu9KyyFLarEut4c1FrPK1H7yOV/ppA5aSoDH2EJgEddiUosyCQ=="/>
+        </item>
+        <item>
             <title>0.0.1</title>
             <pubDate>Sun, 25 Oct 2026 21:57:22 +0700</pubDate>
             <sparkle:version>1</sparkle:version>
