@@ -825,6 +825,24 @@ credentials, which is most of it.
   flag, a Developer ID authority and the absence of `get-task-allow` on every
   piece of code it is about to ship, because each of those is a rejection that
   otherwise arrives from Apple ten minutes later with no line number.
+- **A dry run and a real run share `build/release/DerivedData`, and the build
+  service outlives the build.** `SWBBuildService` keeps `build.db` open after
+  its `xcodebuild` has exited, so starting the second run too soon after the
+  first fails with *"unable to attach DB … database is locked. Possibly there
+  are two concurrent builds running in the same filesystem location."* Either
+  leave a moment between runs or give one its own `-derivedDataPath`.
+  **The trap inside the trap is the log.** `xcodebuild` prints that error
+  *and* `** BUILD FAILED **`, then retries internally without exiting — so the
+  log says the build failed while the build is in fact still running and about
+  to succeed. The script runs under `set -e`, which makes the honest signal
+  the process, not the text: if `release.sh` is still alive, its `xcodebuild`
+  has not exited non-zero, whatever the log claims. Check
+  `ps -o pid,ppid,command` for the `release.sh → xcodebuild → SWBBuildService`
+  chain before concluding anything, and resist killing it.
+  A wrapper around the script has its own way of lying: in zsh `status` is
+  read-only — it is an alias for `$?` — so `status=$?` kills the wrapper
+  while the script it launched carries on orphaned, which reads as "the
+  release failed" when nothing of the sort happened. Name it anything else.
 - **`SUFeedURL` is permanent for the life of a build.** An app in the wild
   asks the address it was born with, for ever, and there is no correcting it in
   the field. So the feed is `appcast.xml` on this repository's `main` branch
