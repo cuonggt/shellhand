@@ -60,6 +60,7 @@
 		A5222C311175118B3748066D /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C1020FE3A76905A97685B4 /* Files.swift */; };
 		A888901F1498F4EE05CA99CF /* HostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */; };
 		AC82FD9C78614F4B03772E2F /* TerminalPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */; };
+		B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */; };
 		B428A5C09CB4E497BA6A38F1 /* Tags.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB7415E72159874F3B55359 /* Tags.swift */; };
 		B87D4AFF1469A46ACD14E3E8 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F618F3BB7CC761EA980324 /* Store.swift */; };
 		C0A2550D1969F2F6C19A4CE8 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3966F3845382E6166AE1A0 /* Commands.swift */; };
@@ -136,6 +137,7 @@
 		9F30BECE69E1DA23C37953AE /* SSHArgs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgs.swift; sourceTree = "<group>"; };
 		9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostDetailView.swift; sourceTree = "<group>"; };
 		A115AC162E4D88C396D25873 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStoreTests.swift; sourceTree = "<group>"; };
 		A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHOptionsField.swift; sourceTree = "<group>"; };
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
@@ -194,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
+				A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
 				78C4EA7A75A2EF2C9B73F5B9 /* QuickConnectTests.swift */,
@@ -435,6 +438,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
+				B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
 				C15994E660A2E90781F49F7A /* QuickConnectTests.swift in Sources */,

@@ -39,7 +39,9 @@ the layers above it: `Model/Tree.swift` (what is under what, what is above it,
 and the fold the sidebar opens on), `Views/Panes.swift` (which tab is in front,
 what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
-and `Sessions.shortTitle`. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
+`Sessions.shortTitle`, and `HostStore` itself — its writes, moves, tag
+rewrites and imports, driven against a scratch database through the same code
+path the app runs. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
 the window from store to sidebar, SFTP against a loopback server — and they
 were removed along with the loopback servers and the flags the app published
 for them. So a change above `Core/` is judged by building it and using it,
@@ -170,6 +172,17 @@ credentials, which is most of it.
   title, with the `TerminalSession` one calling it. A session builds a 900×560
   terminal view and registers a notification observer, which is a lot of
   machinery to stand up in order to check where a string gets cut.
+- **`HostStore` is testable because every call carries its own `db:`.**
+  `Core.shared` is a singleton actor, but nothing about it is pinned to one
+  database — `snapshot(db:)`, `save(db:…)` and the rest take the path per
+  call, so a `HostStore(dbPath: <temporary file>)` reaches nothing of the
+  user's and needs no fake. `Tests/HostStoreTests.swift` uses that, and the
+  rule it most wants covered is `move(group:toParent:)` refusing a group into
+  its own descendant: that is the write that would create the very loop the
+  guards in `Tree` exist to survive.
+  Check the real store's timestamp after touching any of this. It is one
+  `stat` and it is the only thing that proves a run stayed in the temporary
+  directory — the suite opened and migrated the real host list once already.
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built once
   per snapshot: the lookups and indexes `HostStore` used to hold, the descent
   in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"
