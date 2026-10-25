@@ -220,7 +220,15 @@ if (( notarize )); then
     fi
     # The release notes go inside the appcast, signed with it, rather than beside it as a file of
     # their own to host.
-    "$sparkle_bin/generate_appcast" --account "$sparkle_account" \
+    # --maximum-deltas 0: no binary deltas. Sparkle will happily generate them once the folder
+    # holds two versions, and they are a trap here rather than a saving. A delta is named for the
+    # BUILD numbers it spans — Shellhand2-1.delta — not the marketing version, so there is nothing
+    # in the filename to map it to the GitHub release that would serve it, and the rewrite below
+    # cannot place it. The saving is a fraction of a 14 MB download, while a delta URL pointing at
+    # the wrong release breaks updating for exactly the people who are updating. If download size
+    # ever matters enough to want them back, they need uploading to the new version's release and
+    # a build-to-version map built from the DMGs in the folder.
+    "$sparkle_bin/generate_appcast" --account "$sparkle_account" --maximum-deltas 0 \
         --download-url-prefix "https://github.com/$repo/releases/download/$tag_sentinel/" \
         --embed-release-notes "$updates"
 
@@ -231,6 +239,10 @@ if (( notarize )); then
         "s|/releases/download/$tag_sentinel/Shellhand-([^\"/]+)\.dmg|/releases/download/v\1/Shellhand-\1.dmg|g" \
         "$updates/appcast.xml"
     if grep -q "$tag_sentinel" "$updates/appcast.xml"; then
+        # This caught the delta case above, on the first release that had a predecessor. If it
+        # fires again, something other than Shellhand-<version>.dmg is being enclosed; look at
+        # what the URL names before widening the rewrite.
+        grep -o 'url="[^"]*'"$tag_sentinel"'[^"]*"' "$updates/appcast.xml" >&2 || true
         fail "an enclosure URL in $updates/appcast.xml still holds $tag_sentinel; it would point nowhere"
     fi
     grep -q "/releases/download/v$version/$(basename "$dmg")" "$updates/appcast.xml" \
