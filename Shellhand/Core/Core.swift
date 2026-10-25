@@ -330,11 +330,11 @@ actor Core {
                 default:
                     try await client.upload(localPath, to: remotePath, onProgress: progress)
                 }
-                await self.settle(jobID, state: TransferQueue.done, error: "")
+                self.settle(jobID, state: TransferQueue.done, error: "")
             } catch is CancellationError {
-                await self.settle(jobID, state: TransferQueue.cancelled, error: "")
+                self.settle(jobID, state: TransferQueue.cancelled, error: "")
             } catch {
-                await self.settle(jobID, state: TransferQueue.failed, error: error.localizedDescription)
+                self.settle(jobID, state: TransferQueue.failed, error: error.localizedDescription)
             }
         }
     }

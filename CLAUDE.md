@@ -118,6 +118,22 @@ credentials, which is most of it.
 - Swift 6 language mode, the app target MainActor by default. The engine is
   `nonisolated` throughout — mark extensions of its types `nonisolated` too, or
   their members pick the default back up.
+- **An `async` wrapper over a `nonisolated` engine function does not move the
+  work anywhere.** `HostStore.sshConfigHosts` was `async` and awaited
+  `Core.sshConfigHosts`, which is `nonisolated` — so the file read ran on the
+  main actor exactly as if it had been called directly, while four call sites
+  wrote `await` and looked like they were yielding. The compiler says so
+  (*"no 'async' operations occur within 'await' expression"*), and that
+  warning is worth reading rather than silencing: it is the difference
+  between work that is off the main thread and work that merely looks it.
+  Dropping the keyword changed no behaviour. Moving that read off the main
+  thread would be a change to `Core`'s isolation, not a keyword in `Model/`.
+  The same warning on `await self.settle(...)` inside `Task { [self] in }` is
+  a different thing and equally harmless to fix: a `Task` made inside an actor
+  inherits its isolation, so members need no await there. **But check which
+  closure you are in** — the nested `Task { await self.progress(...) }` sits
+  inside a `@Sendable` closure, which has left that isolation, and its await
+  is real. The compiler flagged one and not the other, correctly.
 - `deinit` is **nonisolated**, so a MainActor class cannot touch its own
   stored properties there — write `isolated deinit` rather than reaching for
   `nonisolated(unsafe)`. A block-based notification observer needs one: the

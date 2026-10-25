@@ -74,7 +74,7 @@ extension SFTPClient {
         // done, and what is on disk is wrong. Nothing at all is the same
         // failure, and the one that was happening.
         if done == 0 || (total > 0 && done != total) {
-            let stray = await strayReplies
+            let stray = strayReplies
             throw SFTPError(
                 "\(remote): \(done) of \(total) bytes arrived"
                     + (stray > 0 ? " — \(stray) replies came back unasked for" : ""))
@@ -173,7 +173,7 @@ extension SFTPClient {
                 try? await mkdir(to)
             } else {
                 let size = (try? manager.attributesOfItem(atPath: from)[.size] as? Int64) ?? 0
-                files.append((from, to, size ?? 0))
+                files.append((from, to, size))
             }
         }
 

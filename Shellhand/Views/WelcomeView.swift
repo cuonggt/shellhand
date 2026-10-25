@@ -50,7 +50,7 @@ struct WelcomeView: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { configCount = await store.sshConfigHosts() }
+        .task { configCount = store.sshConfigHosts() }
     }
 
     /// One way in. A whole row is the target rather than a word inside it,

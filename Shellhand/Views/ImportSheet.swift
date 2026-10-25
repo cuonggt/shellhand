@@ -111,7 +111,7 @@ struct ImportSheet: View {
             if configPath.isEmpty {
                 configPath = Core.shared.defaultSSHConfigPath()
             }
-            configCount = await store.sshConfigHosts(path: configPath)
+            configCount = store.sshConfigHosts(path: configPath)
             if source == .sshConfig, configCount != nil { await look() }
         }
     }
@@ -320,7 +320,7 @@ struct ImportSheet: View {
     private func take(_ url: URL) async {
         if source == .sshConfig {
             configPath = url.path
-            configCount = await store.sshConfigHosts(path: configPath)
+            configCount = store.sshConfigHosts(path: configPath)
             await look()
             return
         }
@@ -353,7 +353,7 @@ struct ImportSheet: View {
         if problem == nil, let before {
             note = "Imported \(before.added + before.updated) record"
                 + (before.added + before.updated == 1 ? "." : "s.")
-            if source == .sshConfig { configCount = await store.sshConfigHosts(path: configPath) }
+            if source == .sshConfig { configCount = store.sshConfigHosts(path: configPath) }
         }
     }
 

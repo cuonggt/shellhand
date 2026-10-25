@@ -291,8 +291,14 @@ final class HostStore {
 
     /// How many machines `~/.ssh/config` names, so an empty list can offer
     /// them by number rather than in the abstract.
-    func sshConfigHosts(path: String = "") async -> Int? {
-        await Core.shared.sshConfigHosts(path: path)
+    ///
+    /// Not `async`, although it reads a file. `Core.sshConfigHosts` is
+    /// `nonisolated`, so there was never a hop to await: the read ran on the
+    /// caller — this main actor — and the `async` bought the look of
+    /// something it was not doing. If it ever needs to be off the main
+    /// thread, that is a change to `Core`, not a keyword here.
+    func sshConfigHosts(path: String = "") -> Int? {
+        Core.shared.sshConfigHosts(path: path)
     }
 
     func exportYAML() async -> String? {
