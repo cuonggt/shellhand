@@ -3,6 +3,41 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.5</title>
+            <pubDate>Mon, 26 Oct 2026 16:30:20 +0700</pubDate>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>0.0.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**A host key you were being asked to approve could go unseen.** When the
+question did not fit the window — large text, or a narrow one — the terminal
+wrapped it, and the app looked for it a line at a time and found it in neither
+half. So nothing was asked: ssh sat on the other end waiting for an answer
+that was never coming, and the session showed as connected throughout. A
+wrapped question is read now, and what comes up is the fingerprint and the
+warning above it rather than the whole screen around them.
+
+**A session said it was connected before anything had answered.** The test for
+"has the far side said anything" counted a terminal that had heard nothing as
+output, because an untouched buffer is its own blank rows rather than nothing
+at all. Every session therefore reported connected about a fifth of a second
+after it opened, whether or not the host was there or willing. It says
+connecting until something actually arrives.
+
+**A download that cannot be written no longer takes the app with it.** A full
+disk, a volume pulled out mid-transfer, permissions changed underneath — the
+write that noticed raised something no Swift `catch` can see, so the app
+vanished where it meant to say the file could not be written.
+
+Nothing else is visible from the outside. The suite went from 383 checks to
+403, and the terminal is in it for the first time: the watchdog, what it makes
+of what is on screen, and the reading of the screen itself, all without a pty
+— the terminal is handed its output directly instead. Two of the three fixes
+above were found that way, by tests written for coverage rather than after a
+bug report.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.5/Shellhand-0.0.5.dmg" length="13845037" type="application/octet-stream" sparkle:edSignature="s4C5WO4W65vsjyNRulqht0LlkOJwa1ssY3oZOsR9P2qDC5YuIJeaCTBfMkWpKRWq0loWSt8Ew9XThUBj3EBpBA=="/>
+        </item>
+        <item>
             <title>0.0.4</title>
             <pubDate>Mon, 26 Oct 2026 13:07:23 +0700</pubDate>
             <sparkle:version>4</sparkle:version>
@@ -56,25 +91,6 @@ The Release build compiles without a warning again, which is mostly worth
 saying because that is where a real one would otherwise hide.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.3/Shellhand-0.0.3.dmg" length="13853982" type="application/octet-stream" sparkle:edSignature="gFXxA0PaH9y2qQUuDkjSFeIv/WmRw+2UBPcAizZ+loX/dkx4Py7MQUrE7iRaVB8Pr8XyGgMTo+8hd5IS9AGTBg=="/>
-        </item>
-        <item>
-            <title>0.0.2</title>
-            <pubDate>Sun, 25 Oct 2026 22:31:59 +0700</pubDate>
-            <sparkle:version>2</sparkle:version>
-            <sparkle:shortVersionString>0.0.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[Nothing in the app has changed since 0.0.1.
-
-This release exists to exercise updating itself. 0.0.1 shipped with the
-machinery — Sparkle, a signed feed, a notarized DMG — but a first release has
-nothing to update *from*, so none of it could be proven. 0.0.2 is the first
-version an installed copy can actually find, download, verify and install, and
-these notes are the first ever carried inside the feed.
-
-If you are reading this in Shellhand's own update window, every part of it
-worked.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.2/Shellhand-0.0.2.dmg" length="13854611" type="application/octet-stream" sparkle:edSignature="PdknczHrewd1MPvc7OwcM0T5qmkzP4irdj/JNu9KyyFLarEut4c1FrPK1H7yOV/ppA5aSoDH2EJgEddiUosyCQ=="/>
         </item>
     </channel>
 </rss>
