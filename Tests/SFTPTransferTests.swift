@@ -89,6 +89,79 @@ nonisolated struct SFTPTransferTests {
         #expect(try Data(contentsOf: URL(fileURLWithPath: local)).isEmpty)
     }
 
+    // MARK: the other direction
+
+    private func localFile(_ name: String, _ bytes: Data) throws -> String {
+        let path = scratch(name)
+        try bytes.write(to: URL(fileURLWithPath: path))
+        return path
+    }
+
+    @Test("a whole file goes up, byte for byte")
+    func sendsWhole() async throws {
+        let bytes = Data((0..<40_000).map { UInt8($0 % 241) })
+        let server = ScriptedSFTP()
+        let client = await server.client()
+        defer { server.stop() }
+
+        try await client.upload(try localFile("up.bin", bytes), to: "/remote/up.bin")
+        #expect(server.received == bytes)
+    }
+
+    /// The other half of the bug the download side had. Upload never grew the
+    /// `done == 0` guard, so nothing arriving has always been fine here — and
+    /// an empty file is exactly nothing arriving. The create-and-truncate on
+    /// the open is what makes the file at the far end.
+    @Test("an empty file goes up as an empty file, not as nothing at all")
+    func sendsEmpty() async throws {
+        let server = ScriptedSFTP()
+        let client = await server.client()
+        defer { server.stop() }
+
+        try await client.upload(try localFile("empty.bin", Data()), to: "/remote/empty.bin")
+        #expect(server.received.isEmpty)
+        #expect(server.openFlags != nil, "it still opened the file, which is what creates it")
+    }
+
+    /// Replacing is the whole point of the open: by the time bytes are going
+    /// up, the question has been asked and answered.
+    @Test("the upload asks to create and to truncate")
+    func truncates() async throws {
+        let server = ScriptedSFTP()
+        let client = await server.client()
+        defer { server.stop() }
+
+        try await client.upload(try localFile("flags.bin", Data([1, 2, 3])), to: "/remote/f.bin")
+        let flags = try #require(server.openFlags)
+        #expect(flags & SFTP.OpenFlags.write.rawValue != 0)
+        #expect(flags & SFTP.OpenFlags.create.rawValue != 0)
+        #expect(flags & SFTP.OpenFlags.truncate.rawValue != 0)
+    }
+
+    @Test("a far end that will not take the bytes is an error, not a success")
+    func refused() async throws {
+        let server = ScriptedSFTP(refuseWrites: true)
+        let client = await server.client()
+        defer { server.stop() }
+
+        let local = try localFile("refused.bin", Data(repeating: 9, count: 5_000))
+        await #expect(throws: SFTPError.self) {
+            try await client.upload(local, to: "/remote/refused.bin")
+        }
+    }
+
+    @Test("a local file that is not there is an error before anything is sent")
+    func missingLocal() async throws {
+        let server = ScriptedSFTP()
+        let client = await server.client()
+        defer { server.stop() }
+
+        await #expect(throws: SFTPError.self) {
+            try await client.upload(scratch("never-written.bin"), to: "/remote/x.bin")
+        }
+        #expect(server.openFlags == nil, "it did not even open the far end")
+    }
+
     /// A reply to a request nobody made is counted rather than dropped in
     /// silence, because it is the kind of thing that explains a short file.
     @Test("a reply nobody asked for is counted")

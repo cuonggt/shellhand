@@ -190,6 +190,12 @@ credentials, which is most of it.
   so lock files, `.keep` and a freshly rotated log were all uncarryable. The
   size is an optional now, and a size the server did give must match exactly,
   zero included. Found by the first test that could reach it.
+  **The two directions are not symmetric, and that is deliberate.** `upload`
+  has no closing check at all: every write is acknowledged by the far end, so
+  a partial upload would need a server that ACKs bytes it did not keep, and
+  nothing arriving is simply an empty file — which is why the bug could only
+  ever have been on the download side. Both halves are pinned now, so they
+  cannot quietly drift into agreeing.
 - **A rule type lifted into `Views/` is MainActor unless you say otherwise,
   and so is the enum it works on.** This catches **test helpers too**:
   `Tests/` is compiled into the app target, so a class there picks the default

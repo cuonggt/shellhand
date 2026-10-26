@@ -23,15 +23,42 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     /// A reply to send unasked, once, after the first request.
     private let intruder: Data?
 
+    /// Answer every write with a failure, to see what the client does when
+    /// the far end will not take the bytes.
+    private let refuseWrites: Bool
+
     private let clientToPeer = Pipe()
     private let peerToClient = Pipe()
     private var sentIntruder = false
 
-    init(contents: Data = Data(), claimedSize: Int64? = nil, intruder: Data? = nil) {
+    /// Touched from the peer's own thread and read from the test's, so both
+    /// go through the lock.
+    private let lock = NSLock()
+    private var storedWrites: [UInt64: Data] = [:]
+    private var storedFlags: UInt32?
+
+    init(
+        contents: Data = Data(), claimedSize: Int64? = nil,
+        intruder: Data? = nil, refuseWrites: Bool = false
+    ) {
         self.contents = contents
         self.claimedSize = claimedSize ?? Int64(contents.count)
         self.intruder = intruder
+        self.refuseWrites = refuseWrites
     }
+
+    /// Everything the client wrote — the file as it would have landed.
+    ///
+    /// `upload` writes sequentially from zero and never overlaps, so joining
+    /// the chunks in offset order is the whole of it.
+    var received: Data {
+        lock.withLock {
+            storedWrites.keys.sorted().reduce(into: Data()) { $0.append(storedWrites[$1]!) }
+        }
+    }
+
+    /// The flags the client asked to open with, once it has.
+    var openFlags: UInt32? { lock.withLock { storedFlags } }
 
     /// A client wired to this server, already reading.
     func client() async -> SFTPClient {
@@ -102,10 +129,24 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
             body.uint64(UInt64(claimedSize))
             out.append(SFTP.Writer.packet(.attrs, body.bytes))
         case .open:
+            _ = try? reader.string()           // the path
+            if let flags = try? reader.uint32() {
+                lock.withLock { storedFlags = flags }
+            }
             var body = SFTP.Writer()
             body.uint32(id)
             body.data(Data([0xAB]))
             out.append(SFTP.Writer.packet(.handle, body.bytes))
+        case .write:
+            _ = try? reader.data()             // the handle
+            let offset = (try? reader.uint64()) ?? 0
+            let bytes = (try? reader.data()) ?? Data()
+            if refuseWrites {
+                out.append(Self.status(id: id, .failure))
+            } else {
+                lock.withLock { storedWrites[offset] = bytes }
+                out.append(Self.status(id: id, .ok))
+            }
         case .read:
             _ = try? reader.data()             // the handle
             let offset = (try? reader.uint64()) ?? 0
