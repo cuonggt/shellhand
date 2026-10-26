@@ -3,6 +3,44 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.6</title>
+            <pubDate>Tue, 27 Oct 2026 06:12:31 +0700</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.0.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**New Local Shell opened at the root of the disk.** A shell started here
+inherits the app's own working directory, and an app launched the ordinary way
+— from the Dock, from Finder — has `/`. So a local shell opened at the root of
+the disk rather than in your home directory, in every release up to 0.0.5. It
+opens at home now, and the test for it asks the shell itself where it started
+rather than reading the screen.
+
+**A file pane could wait for ever.** Nothing in SFTP puts a limit on how long
+a reply may take, and the app had nothing of its own either: a request the far
+end never answered left a pane sitting on "Connecting…", or on a listing that
+was never going to arrive. Worse, it could not even be asked again — the guard
+that stops one pane opening twice was released at the end of the request, and
+a request that never ends never reaches it. A request now gives up after half
+a minute, says which kind of request went unanswered, and leaves the pane
+showing that rather than nothing.
+
+**Closing the SFTP window left its connections running.** Letting go of the
+window released the window and the browser inside it, but not the `ssh` each
+pane was talking through, so one connection per connected pane stayed open
+until the app quit. Closing the window now ends them. If a question about
+replacing files was still on screen when it closed, that is answered too —
+Cancel, so nothing is carried on the way out — rather than leaving the copy
+behind it waiting on an answer nobody could give any more.
+
+Nothing else here is visible from the outside. The suite went from 403 checks
+to 421, and what is new in it is the file browser's own orchestration — the
+guard above, and the replace question driven against a copy genuinely parked
+on it — along with the SFTP deadline and the two ends of a connection that
+stops answering.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.6/Shellhand-0.0.6.dmg" length="13845975" type="application/octet-stream" sparkle:edSignature="E1ojyDjJRJmdgUrmCEtcmqsmNfLWFpkEea0/Hq/zYp5Ql4G5niDwX0TpZ1X95/6yKB6RhoYYqqzQTCic9E4jAA=="/>
+        </item>
+        <item>
             <title>0.0.5</title>
             <pubDate>Mon, 26 Oct 2026 16:30:20 +0700</pubDate>
             <sparkle:version>5</sparkle:version>
@@ -67,30 +105,6 @@ terminal session's own bookkeeping are checked without a pty now, and a file
 pane's derived values without connecting to anything.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.4/Shellhand-0.0.4.dmg" length="13862857" type="application/octet-stream" sparkle:edSignature="2jh3T/MUhB9Is07mvFiC0nboNvl+wJi7ChMvAq+5Xr2BlNvkL4RljCy/XdlUf0zoYnqV8Xw0CeR8R9j9V553Dw=="/>
-        </item>
-        <item>
-            <title>0.0.3</title>
-            <pubDate>Mon, 26 Oct 2026 09:15:13 +0700</pubDate>
-            <sparkle:version>3</sparkle:version>
-            <sparkle:shortVersionString>0.0.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**⌘B brings the SFTP window back.** It used to do nothing whenever the host
-list was not the front window — including from the SFTP window itself and from
-Settings, which is exactly when you would reach for it. Bringing a browser you
-already have forward no longer needs the host list in front. Opening a *new*
-one still does, because that needs the host list the window holds.
-
-Nothing else is visible from the outside. The rest of this release is
-groundwork: the rules behind the tab strip, Quick Connect's ranking, the group
-tree and the host store have been lifted into places that can be checked
-without driving the window, and the suite went from 254 checks to 315 — the
-first of them to reach above the engine. Three cycle guards, against a group
-becoming its own ancestor, had never been exercised until now.
-
-The Release build compiles without a warning again, which is mostly worth
-saying because that is where a real one would otherwise hide.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.3/Shellhand-0.0.3.dmg" length="13853982" type="application/octet-stream" sparkle:edSignature="gFXxA0PaH9y2qQUuDkjSFeIv/WmRw+2UBPcAizZ+loX/dkx4Py7MQUrE7iRaVB8Pr8XyGgMTo+8hd5IS9AGTBg=="/>
         </item>
     </channel>
 </rss>

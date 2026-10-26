@@ -6,11 +6,11 @@
 # which is why they are formatted exactly as they are: one per line, two
 # spaces in, the value in double quotes.
 cask "shellhand" do
-  version "0.0.5"
+  version "0.0.6"
   # Replaced by scripts/release.sh with the real digest. Left as a string that
   # is not a valid SHA-256 on purpose: if it ever reaches the tap unreplaced,
   # Homebrew refuses it loudly instead of installing something unverified.
-  sha256 "998107156876764b9b891c19e0b345b5879908973b33cf410c4d3d70afe8d929"
+  sha256 "d1a4016d9e40e15a530f37f12808697e6e8f32410591899428d8c09cbab90395"
 
   url "https://github.com/cuonggt/shellhand/releases/download/v#{version}/Shellhand-#{version}.dmg"
   name "Shellhand"
