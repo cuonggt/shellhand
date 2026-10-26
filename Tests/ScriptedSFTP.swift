@@ -87,7 +87,15 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
 
     private func start() {
         let incoming = clientToPeer.fileHandleForReading.fileDescriptor
-        let outgoing = peerToClient.fileHandleForWriting
+        // A descriptor, like `incoming`, and for a reason that cost a whole
+        // run: `FileHandle.write(contentsOf:)` raises an **ObjC** exception
+        // once `stop()` has closed this end underneath the thread, `try?`
+        // cannot catch one, and the test host dies with every test already
+        // passed. The same mistake was in `SFTPClient.send`.
+        let outgoing = peerToClient.fileHandleForWriting.fileDescriptor
+        // Writing to a pipe nothing reads raises SIGPIPE, which ends the
+        // process outright; off for this descriptor only.
+        _ = fcntl(outgoing, F_SETNOSIGPIPE, 1)
         let thread = Thread { [weak self] in
             var pending = Data()
             var chunk = [UInt8](repeating: 0, count: 64 << 10)
@@ -103,13 +111,33 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
                     let packet = pending.subdata(in: 4..<(4 + length))
                     pending.removeSubrange(0..<(4 + length))
                     for reply in self.answer(packet) {
-                        try? outgoing.write(contentsOf: reply)
+                        Self.hand(reply, to: outgoing)
                     }
                 }
             }
         }
         thread.stackSize = 512 << 10
         thread.start()
+    }
+
+    /// Writes what it can and gives up quietly. By the time this fails the
+    /// test has called `stop()` and there is nobody left to tell — which is
+    /// what the old `try?` was reaching for and could not do.
+    private static func hand(_ reply: Data, to descriptor: Int32) {
+        reply.withUnsafeBytes { bytes in
+            var sent = 0
+            while sent < bytes.count {
+                let wrote = Darwin.write(
+                    descriptor, bytes.baseAddress! + sent, bytes.count - sent)
+                if wrote > 0 {
+                    sent += wrote
+                } else if wrote < 0 && errno == EINTR {
+                    continue
+                } else {
+                    return
+                }
+            }
+        }
     }
 
     private func answer(_ packet: Data) -> [Data] {

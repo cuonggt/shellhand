@@ -10,6 +10,10 @@ import Foundation
 actor SFTPClient {
     private let process: Process
     private let toServer: FileHandle
+    /// Taken once, while the handle is certainly open, because asking a closed
+    /// `FileHandle` for its descriptor raises one of the very exceptions this
+    /// exists to avoid.
+    private let outDescriptor: Int32
     private let fromServer: FileHandle
     private var nextRequest: UInt32 = 1
     private var waiting: [UInt32: CheckedContinuation<Reply, Error>] = [:]
@@ -29,7 +33,17 @@ actor SFTPClient {
     private init(process: Process, toServer: FileHandle, fromServer: FileHandle) {
         self.process = process
         self.toServer = toServer
+        self.outDescriptor = toServer.fileDescriptor
         self.fromServer = fromServer
+        // A write to a pipe nothing is reading raises SIGPIPE, which ends the
+        // process outright instead of returning — so turning that signal off
+        // for this one descriptor is what makes the error reportable at all.
+        // Measured: without it a broken pipe killed the test host with no
+        // exception and no message, which reads as a vanished process rather
+        // than a failed write. Per descriptor rather than
+        // `signal(SIGPIPE, SIG_IGN)`, which would be a decision about the
+        // whole app made from inside one file session.
+        _ = fcntl(outDescriptor, F_SETNOSIGPIPE, 1)
     }
 
     /// Opens a session to a host.
@@ -125,13 +139,42 @@ actor SFTPClient {
         if let ended { throw ended }
         return try await withCheckedThrowingContinuation { continuation in
             waiting[id] = continuation
-            let packet = SFTP.Writer.packet(type, body)
             do {
-                try toServer.write(contentsOf: packet)
+                try writeToServer(SFTP.Writer.packet(type, body))
             } catch {
                 waiting[id] = nil
-                continuation.resume(throwing: SFTPError(
-                    "the file session stopped listening: \(error.localizedDescription)"))
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+
+    /// Writes the whole packet to the descriptor rather than through the
+    /// `FileHandle`.
+    ///
+    /// `FileHandle.write(contentsOf:)` raises an **ObjC** exception when the
+    /// handle is closed or its far end has gone, and no Swift `catch` can see
+    /// one — so the `catch` above, which is the whole of what a dead far end
+    /// was supposed to come out as, could never run, and the process died
+    /// instead. `Darwin.write` only returns, which is how `startReading`
+    /// already reads: a closed descriptor comes back `EBADF` and a far end
+    /// that has gone `EPIPE`, both of them errors this can carry. A short
+    /// write is ordinary on a pipe, so the loop is the point rather than a
+    /// precaution, and nought counts as a failure so that it cannot spin.
+    private func writeToServer(_ packet: Data) throws {
+        try packet.withUnsafeBytes { bytes in
+            var sent = 0
+            while sent < bytes.count {
+                let wrote = Darwin.write(
+                    outDescriptor, bytes.baseAddress! + sent, bytes.count - sent)
+                if wrote > 0 {
+                    sent += wrote
+                } else if wrote < 0 && errno == EINTR {
+                    continue
+                } else {
+                    throw SFTPError(
+                        "the file session stopped listening: "
+                            + String(cString: strerror(errno)))
+                }
             }
         }
     }

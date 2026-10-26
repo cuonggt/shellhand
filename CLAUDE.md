@@ -199,13 +199,20 @@ credentials, which is most of it.
   was ever going to resume. Nothing was merely queued, either: with the pool
   idle an enqueued `deliver` would have run, so the reply either never came or
   arrived and was dropped.
-  It is **not explained.** It did not come back in 25 runs — 15 of that suite
-  alone, 10 of the whole suite — and shared mutable state, the
+  It is **not explained**, but it **does** reproduce — about two runs in ten,
+  once the limit was there to catch it, having hidden through 25 runs before
+  that. And it **roams**: three sightings, three different tests — *"a
+  directory that arrives in pieces is joined, in order"*, then *"an empty file
+  goes up as an empty file"* over in the transfer suite, then *"a directory
+  that arrives in one go"*. That last is the **minimal** conversation, one
+  opendir and one readdir and EOF, so every theory about batching, about the
+  EOF rule, about a long exchange is dead: whatever this is lives in what all
+  of them share — `client()`, `speaking(to:from:)`, `startReading`, and the
+  first packets over a fresh pair of pipes. Shared mutable state, the
   register-before-write order in `send` (which is correct: `waiting[id]` is
   set synchronously on the actor before the write) and a collision with the
-  handshake's id 0 (`nextRequest` starts at 1) were each ruled out. The one
-  thing that was different about that run is that a cold build was compiling
-  beside it, which is timing rather than a mechanism. Note what a sample
+  handshake's id 0 (`nextRequest` starts at 1) are each ruled out. Note what a
+  sample
   cannot tell you here: the handshake and the readdir loop look identical from
   outside, both just a blocked reader thread, so the log line naming a test
   proves only which test **started**.
@@ -237,12 +244,42 @@ credentials, which is most of it.
   and no `✘` anywhere: read only the test counts and it looks like a pass.
   The shipped consequence is the same shape, and worse: an `sftp` child that
   dies mid-transfer leaves a broken pipe, which is precisely what that `catch`
-  was written for and precisely what it cannot do. **Not fixed.** The read side
-  already uses `Darwin.read` on the descriptor; the write side doing the same
-  would raise nothing and make the `catch` real. Whether this is also the
-  sixteen-minute hang above is **not** established — same race, but a write
-  that raises crashes rather than hangs, so the hang's own landing is still
-  unaccounted for.
+  was written for and precisely what it cannot do. **Fixed, in both halves —
+  and the halves are the lesson.** `send` writes with `Darwin.write` on a
+  descriptor taken once in `init`, which only returns: `EBADF` for a closed
+  one, `EPIPE` for a far end that has gone, so that `catch` runs for the first
+  time. But `Darwin.write` **alone made it worse**. A write to a pipe nothing
+  is reading raises **SIGPIPE**, whose default disposition ends the process, so
+  a crash that at least printed a reason became one that printed **nothing** —
+  and that is the worst death to read here, because xcodebuild says only
+  *"Restarting after unexpected exit, crash, or test timeout"*, relaunches, and
+  totals both launches, so a run can come out **green with a crash inside it**.
+  `fcntl(fd, F_SETNOSIGPIPE, 1)` settles it, per descriptor rather than
+  `signal(SIGPIPE, SIG_IGN)`, which would be a decision about the whole app
+  taken inside one file session. Measured both ways: with the flag a
+  reader-less pipe gives `write == -1` and `errno == EPIPE`; without it the
+  process is gone and its buffered `stdout` with it, which is why the first
+  probe printed nothing at all and briefly read as a failed build — measure a
+  process that dies by signal on **stderr**.
+  **`ScriptedSFTP` had the identical bug**, and it only showed once `send` was
+  clean, because `send` was crashing first: its reader thread answered through
+  `try? outgoing.write(contentsOf:)` — the mirror side of the same race, since
+  `stop()` closes that end underneath the thread — so the suite went on dying
+  about one run in six with the engine already correct. Both write through a
+  descriptor now, and **nought exceptions in ten runs** says so. The moral is
+  cheap: when a mechanism like this is understood, `grep` for every
+  `write(contentsOf:` at once rather than fixing the one the stack named. One
+  is left on purpose — `SFTPTransfer`'s download, writing arriving bytes to a
+  local file, where a full disk would raise the same way; nothing has been
+  measured against it, so it is not being fixed blind.
+  `Tests/SFTPFarEndTests.swift` pins both ends, and they fail differently
+  enough that one does not cover the other: a closed handle returns `EBADF` and
+  raises no signal, so pinning only that case would have shipped a fix that
+  looked verified while the path that matters — a dying `sftp` child — still
+  took the app down.
+  Whether any of this was also the sixteen-minute hang above: **no.** The hang
+  still reproduces with the crash fixed and no exception anywhere, so they are
+  two bugs, not one.
 - **An empty file could not be carried, in every release up to 0.0.3.**
   `download` read "`stat` said zero" and "`stat` would not say" as the same
   number — `attributes?.size ?? 0` flattens **two** optionals, since the size
