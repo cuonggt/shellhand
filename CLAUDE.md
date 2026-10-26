@@ -1130,6 +1130,15 @@ credentials, which is most of it.
   GitHub puts each version behind a tag of its own, which is why the enclosure
   URLs are rewritten per version straight afterwards, from the version in each
   filename.
+  **It also prunes, and 0.0.4 was the first release with enough history to
+  show it.** `generate_appcast` retired `Shellhand-0.0.1.dmg` into
+  `build/updates/old_updates` by itself — nothing here passes
+  `--maximum-versions` — so the feed carries the most recent few rather than
+  every release ever made, and 0.0.4's appcast lists three items, not four.
+  That is harmless: Sparkle offers the newest item, an app never needs a feed
+  entry for the version it is already on, and the retired DMG is still served
+  from its own GitHub release. Worth knowing before it looks like a version
+  has gone missing.
 - **`Updates` deliberately does not bridge `canCheckForUpdates`.** Sparkle's
   own sample publishes it through Combine, which costs an `ObservableObject`
   in a codebase that is otherwise `@Observable` and a KVO callback that has to
