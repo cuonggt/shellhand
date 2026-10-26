@@ -172,6 +172,31 @@ credentials, which is most of it.
   lock around whatever it appends to is not optional. And a child stopped from
   here ends with a status that is **not a verdict** on what it was running, so
   cancelling has to be recorded separately from failing.
+- **A sweep for declarations nothing calls found four more, and `checkPort`
+  made five.** `Portable.hostPort`, `Portable.splitAddr`, and the `checkPort`
+  that only `splitAddr` could reach, were the whole of *"what a document has
+  to hold"* — 42 lines of IPv6-bracket address parsing whose own comment said
+  *"as a forward writes them"*, left behind by the port-forwarding cut.
+  `Sessions.closeAll()` and `Core.transferStatuses()` went with them: 51 lines
+  in all, no callers, not even a test. That is a third round of leftovers
+  after `Command`/`Shell` and `LibraryView`, so what is worth keeping is the
+  habit rather than the finding: every method declared under `Shellhand/`,
+  counted against every mention of its name anywhere in the app or the suite.
+  379 functions, 11 with no other mention — and **seven of those eleven are
+  framework conformances**, SwiftTerm's delegates, `QLPreviewPanelDataSource`,
+  `Layout`, `FileDocument`, so the sweep needs a list of what the system calls
+  or it reads as a massacre.
+  **`closeAll()` is the one worth a sentence, because deleting it is the
+  non-obvious call.** It looked exactly like `FilesModel.close()` — a
+  close-everything method nothing called — and `TerminalSession.deinit` only
+  removes the notification observer, so closing the host window looked like it
+  would orphan every `ssh` the same way. It does not, for two reasons that
+  both had to be read rather than assumed: the watchdog captures `[weak self]`
+  and returns once that is nil, so no task holds the session alive, and
+  SwiftTerm's own `LocalProcess.deinit` escalates SIGTERM to SIGKILL on the
+  child. A released session really does take its `ssh` with it. **Don't add a
+  call to it on the strength of the Files bug** — the two look alike and are
+  not the same.
 - ssh options are ordered by how specific they are, because ssh keeps the
   **first** value it is given for a setting: what a caller must not have
   overridden leads, then the host's own, then each

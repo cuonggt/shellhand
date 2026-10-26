@@ -257,48 +257,6 @@ nonisolated enum Portable {
         settings ? 4 : 1
     }
 
-    // MARK: what a document has to hold
-
-    /// An address and port as a forward writes them, with an IPv6 address in
-    /// brackets so the colons in it are not read as the separator.
-    static func hostPort(_ addr: String, _ port: Int) -> String {
-        if addr.isEmpty { return String(port) }
-        if addr.contains(":") { return "[\(addr)]:\(port)" }
-        return "\(addr):\(port)"
-    }
-
-    static func splitAddr(_ raw: String, _ what: String) throws -> (String, Int) {
-        let text = raw.trimmingCharacters(in: .whitespaces)
-        var addr = ""
-        var portText = ""
-        if text.hasPrefix("["), let close = text.lastIndex(of: "]") {
-            addr = String(text[text.index(after: text.startIndex)..<close])
-            let rest = text[text.index(after: close)...]
-            guard rest.hasPrefix(":") else {
-                throw PortableError("\(what) \"\(raw)\" is not an address and port")
-            }
-            portText = String(rest.dropFirst())
-        } else {
-            guard let colon = text.lastIndex(of: ":"), !text[text.index(after: colon)...].contains(":")
-            else {
-                throw PortableError("\(what) \"\(raw)\" is not an address and port")
-            }
-            addr = String(text[text.startIndex..<colon])
-            portText = String(text[text.index(after: colon)...])
-        }
-        guard let port = Int(portText) else {
-            throw PortableError("\(what) port \"\(portText)\" is not a number")
-        }
-        try checkPort(port, what)
-        return (addr, port)
-    }
-
-    static func checkPort(_ port: Int, _ what: String) throws {
-        guard (1...65535).contains(port) else {
-            throw PortableError("\(what) port must be between 1 and 65535")
-        }
-    }
-
     // MARK: reading helpers
 
     private static func each<T>(

@@ -379,12 +379,6 @@ final class Sessions {
         all.removeAll { $0.id == session.id }
         if selected == session.id { selected = all.last?.id }
     }
-
-    func closeAll() {
-        all.forEach { $0.close() }
-        all.removeAll()
-        selected = nil
-    }
 }
 
 

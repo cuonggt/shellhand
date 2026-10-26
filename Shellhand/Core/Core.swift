@@ -361,9 +361,6 @@ actor Core {
         return job.transfer
     }
 
-    /// Every transfer, in the order they were asked for.
-    func transferStatuses() -> [Transfer] { orderedTransfers }
-
     /// Calls one off. One still waiting has no work to cancel, so it is
     /// settled here — otherwise it would sit in the queue for ever, holding
     /// a place nothing will ever use.
