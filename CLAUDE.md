@@ -36,7 +36,9 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 
 `Tests/` is the whole suite. It covers `Core/`, and the rules lifted out of
 the layers above it: `Model/Tree.swift` (what is under what, what is above it,
-and the fold the sidebar opens on), `Views/Panes.swift` (which tab is in front,
+and the fold the sidebar opens on), `Model/Places.swift` (what a file pane
+calls itself, what it shows and how it names a child),
+`Views/Panes.swift` (which tab is in front,
 what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
 `Sessions.shortTitle`, and `HostStore` itself — its writes, moves, tag
@@ -183,6 +185,15 @@ credentials, which is most of it.
   Check the real store's timestamp after touching any of this. It is one
   `stat` and it is the only thing that proves a run stayed in the temporary
   directory — the suite opened and migrated the real host list once already.
+- **A file pane's derived values live in `Model/Places.swift`**, because a
+  `FilePlace` only reaches its states by connecting to something: asking "what
+  does a pane pointed nowhere call itself" would otherwise mean opening an
+  SFTP session to find out. `FilePlace` and `ReplaceQuestion` delegate.
+  `isLocal` is the one worth knowing about. It reads like a label and is not:
+  `FilesModel` hands it to `Replacing.clashes` as `caseInsensitive`, because
+  this disk is and a server's usually is not. And an **unpointed** pane is not
+  local — the same `chosen` flag that stops it calling itself "This Mac" —
+  so the three states are pinned rather than the two that are obvious.
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built once
   per snapshot: the lookups and indexes `HostStore` used to hold, the descent
   in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"

@@ -28,17 +28,14 @@ final class FilePlace {
 
     init(db: String) { self.db = db }
 
-    var isLocal: Bool { chosen && host == nil }
-    var title: String {
-        guard chosen else { return "Choose a host" }
-        return host?.name ?? "This Mac"
-    }
+    // The rules themselves are in `Places`, where they can be asked without
+    // opening a session to find out the answer.
+    var isLocal: Bool { Places.isLocal(chosen: chosen, onAHost: host != nil) }
+    var title: String { Places.title(chosen: chosen, host: host?.name) }
 
-    var entries: [RemoteEntry] {
-        showHidden ? listing.entries : listing.entries.filter { !$0.name.hasPrefix(".") }
-    }
+    var entries: [RemoteEntry] { Places.shown(listing.entries, hidden: showHidden) }
 
-    var hiddenCount: Int { listing.entries.count - entries.count }
+    var hiddenCount: Int { Places.hiddenCount(listing.entries, hidden: showHidden) }
 
     // MARK: where it is pointed
 
@@ -90,9 +87,7 @@ final class FilePlace {
     }
 
     /// A child of what this side is showing.
-    func path(_ name: String) -> String {
-        listing.path.hasSuffix("/") ? listing.path + name : listing.path + "/" + name
-    }
+    func path(_ name: String) -> String { Places.path(listing.path, name) }
 
     func localURL(named name: String) -> URL { URL(fileURLWithPath: path(name)) }
 
@@ -391,8 +386,6 @@ struct ReplaceQuestion: Identifiable {
 
     var said: String { Replacing.question(clashes, into: into) }
 
-    /// Singular where there is one, because "Skip them" over a single file
-    /// reads as though something else is being left behind too.
-    var skipping: String { clashes.count == 1 ? "Skip it" : "Skip them" }
-    var replacing: String { clashes.count == 1 ? "Replace" : "Replace them" }
+    var skipping: String { Places.skipping(clashes.count) }
+    var replacing: String { Places.replacing(clashes.count) }
 }
