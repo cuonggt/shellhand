@@ -140,11 +140,30 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 ```
 
 `Tests/` is the whole suite: inheritance, the argv, the merge, the delete
-rules, SFTP's wire format, the transfer queue, validation, themes, tags.
-**It does not cover the views.** There is no end-to-end check of the window,
-so a change above `Core/` is judged by building it and using it — which is
-why so much of `CLAUDE.md` is about what that costs and how to do it without
-being fooled.
+rules, SFTP's wire format and the conversation over it, the transfer queue,
+validation, themes, tags — and the rules lifted out of the layers above
+`Core/`, which is most of what used to be out of reach. What is under what and
+the fold the sidebar opens on; what a file pane calls itself and how it names a
+child; which tab is in front, what is beside it, and what ⌘D and closing a tab
+do; what ⌘K offers for what was typed; the sidebar flattened into one list and
+what search narrows it to; whether ssh is waiting to be told about a host key,
+and which part of the screen is the question; what a session's state becomes
+given what is on its screen. None of those needs a window, because none of
+them keeps state — the views still own that and simply obey.
+
+**What it still does not do is drive the views themselves.** One thing checks
+the app end to end: `scripts/window-check.sh`, which seeds a store of its own,
+launches a real window against it with `--db`, and walks the sidebar through
+System Events the way somebody on the keyboard does — folded as it comes up,
+then opened with the arrow keys, then a row picked and the **Host** menu read
+back to prove the selection reached the app rather than only the outline. It
+asks the app for nothing it does not already publish. Everything else above
+`Core/` is judged by building it and using it — which is why so much of
+`CLAUDE.md` is about what that costs and how to do it without being fooled.
+
+A release is `scripts/release.sh`, which takes it from `xcodebuild` through
+signing, notarization and a stapled DMG to a signed appcast and an updated
+cask — and **publishes nothing**, printing the two commands that would.
 
 ## Traps worth knowing
 
@@ -193,6 +212,34 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 
 ## Not here yet
 
-Release packaging: no Sparkle feed, no notarized DMG, no Homebrew cask. And
-nothing checks the app end to end, so anything above `Core/` is judged by
-building it and using it.
+**`ssh` itself is not under test, and nor is SFTP against a real server.** One
+test opens a real pty — a local shell, which it asks where it started — and
+that is the only process the suite spawns. The SFTP conversation is held
+against a server written in Swift in this process, over a pair of pipes, and
+that server is there for what a real one cannot be asked to do: answer a read
+with fewer bytes than its own `stat` promised, or reply to a request nobody
+made. What it cannot catch is a misunderstanding both ends share. For that the
+honest answer is the Go server in the pre-reset bundle, and restoring it would
+make a Go toolchain a prerequisite for `xcodebuild test` in a project that is
+otherwise Swift all the way down — not a trade worth making yet.
+
+**Files cannot reach a host that takes only a password.** An `sftp` child is
+given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is
+the one capability the cut back to an MVP costs; a session to such a host still
+works, because ssh asks on the pty where it can be typed.
+
+**A host-key question wrapped across three rows or more is still missed.** Two
+are rejoined, and three wants a terminal under about 34 columns. The right fix
+is at the source — have `screen` rejoin wrapped rows, so every reader sees
+logical lines — and it is not available: SwiftTerm keeps `Buffer.lines` and
+`Terminal.cols` internal, so the app cannot ask how wide the terminal is or
+which rows continued.
+
+**And one bug is bounded rather than understood.** A run of the suite once sat
+sixteen minutes on a single SFTP conversation, with both pipe reader threads
+idle and a continuation nothing was ever going to resume. It is episodic, it
+has turned up in three different tests — including the minimal conversation, so
+every theory about batching and framing is dead — and a clean batch proves
+nothing about it, however long. A request carries a deadline now, so the next
+sighting is a named failure saying which request went unanswered. That is not
+an explanation; it is a way of buying one cheaply.

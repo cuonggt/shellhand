@@ -109,17 +109,22 @@ xcodebuild test -project Shellhand.xcodeproj -scheme Shellhand \
 ```
 
 The suite in `Tests/` covers the engine — inheritance, the argv, the merge, the
-delete rules, SFTP's wire format, the transfer queue, validation. It does not
-cover the views: there is no end-to-end check of the window, so a change above
-`Core/` is judged by building it and using it.
+delete rules, SFTP's wire format and the conversation over it, the transfer
+queue, validation — and the rules lifted out of the layers above it: the group
+tree, what a file pane shows, which tab is in front, what ⌘K offers for what
+was typed, the sidebar's rows, whether ssh is waiting on a host key, and what a
+session's state becomes given what is on its screen. It does not drive the
+views themselves. `scripts/window-check.sh` is the one check that launches a
+real window and walks its sidebar from outside; anything else above `Core/` is
+judged by building it and using it.
 
 ## How it fits together
 
 `Shellhand/Core/` is the engine: the store, the inheritance resolver, the argv
-builder, the config, YAML and `ssh_config`, the script runner and SFTP.
-Everything above it — `Model/`, `Terminal/`, `Views/` — goes through `Core`, an
-actor holding the store connection and the sessions, runs and transfers that
-outlive the call that started them. The host list is SQLite, through GRDB, at
+builder, the config, YAML and `ssh_config`, and SFTP. Everything above it —
+`Model/`, `Terminal/`, `Views/` — goes through `Core`, an actor holding the
+store connection and the sessions, runs and transfers that outlive the call
+that started them. The host list is SQLite, through GRDB, at
 `~/Library/Application Support/Shellhand/`.
 
 `docs/` has the longer story: [architecture.md](docs/architecture.md) for the

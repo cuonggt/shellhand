@@ -14,9 +14,10 @@ name and what is still to decide about selling it.
 ## How it fits together
 
 `Shellhand/Core/` is the engine: the store, the inheritance resolver, the argv
-builder, the config, YAML and `ssh_config`, the script runner and SFTP. Everything above it — `Model/`, `Terminal/`, `Views/` — goes through
-`Core`, an actor holding the store connection and the sessions, runs and
-transfers that outlive the call that started them.
+builder, the config, YAML and `ssh_config`, and SFTP. Everything above it —
+`Model/`, `Terminal/`, `Views/` — goes through `Core`, an actor holding the
+store connection and the sessions, runs and transfers that outlive the call
+that started them.
 
 The list lives in SQLite at `~/Library/Application Support/Shellhand/`,
 through GRDB. A YAML export is how a list moves between machines: plain text
