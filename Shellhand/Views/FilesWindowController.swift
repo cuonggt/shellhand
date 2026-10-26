@@ -104,7 +104,17 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
     /// Let go on closing, so the next opening is a fresh browser rather than
     /// one still holding the connections of the last. Nothing is left talking
     /// to a host with no window to show it.
+    ///
+    /// **`files.close()` is what makes that last sentence true, and it was
+    /// missing.** `Core` holds each `SFTPClient` in `sessions`, so letting the
+    /// controller go released the window and the model and *not* the `ssh`
+    /// children: one per connected pane stayed alive, per opening, until the
+    /// app quit. `FilesModel.close()` existed and was documented and had no
+    /// callers anywhere — which is why the comment above described behaviour
+    /// the code did not have. It also answers a replace question still on
+    /// screen, which nothing else here could.
     func windowWillClose(_ notification: Notification) {
+        files.close()
         Self.shared = nil
     }
 }

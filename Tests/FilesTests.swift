@@ -161,6 +161,27 @@ struct FilesTests {
         #expect(model.asking == nil)
     }
 
+    /// The dismissal the dialog's binding cannot answer: the window is going,
+    /// so there is no view left to set `isPresented` to false. Without this the
+    /// copy is parked on a continuation nothing can ever reach — and unlike
+    /// every other way of leaving the question, this one is **invisible**,
+    /// because the window it would have been reported in has gone.
+    @Test("closing the window answers what was being asked")
+    func closingAnswersTheQuestion() async throws {
+        let from = folder(["a.txt": "new"]), into = folder(["a.txt": "old"])
+        let model = await twoPanes(from: from, into: into)
+        let entry = try #require(model.left.entries.first { $0.name == "a.txt" })
+
+        let copying = Task { await model.copy([entry], from: model.left, to: model.right) }
+        #expect(await waitUntil { model.asking != nil })
+
+        model.close()
+        // Returns at all, which is the whole point, and carried nothing.
+        await copying.value
+        #expect(read(into + "/a.txt") == "old")
+        #expect(model.asking == nil)
+    }
+
     @Test("skipping keeps what is already there and carries the rest")
     func skippingKeepsIt() async throws {
         let from = folder(["a.txt": "new", "b.txt": "fresh"])

@@ -329,6 +329,23 @@ credentials, which is most of it.
   while **"a far end that answers is not given up on" still passes** — which is
   exactly what that third one is for. A deadline that fired unconditionally
   would satisfy the other two and break every transfer this app makes.
+  **And it paid for itself on the first full run after it landed.** The stall
+  came back — *"a directory that arrives in one go"*, the same test as the
+  third sighting — and this time it said what it was: *"the far end did not
+  answer readdir within 30.0 seconds"*. That is the first thing anyone has
+  known about which request stalls, and it **rules out the first packet over a
+  fresh pair of pipes**, which was the standing theory. `speaking(to:from:)`
+  does no handshake, so that conversation is `opendir` then `readdir`, and
+  `readdir` is only sent once `opendir` has been answered and handed back a
+  handle — so a full round trip completed over those pipes before the one that
+  did not. The immediate re-run was clean at 420, so it is still episodic and
+  that number still proves nothing.
+  **The next thing to ask is `strayReplies`.** After a timeout it is 1 if the
+  reply turned up late and 0 if it never came at all, which separates "the
+  server never answered" from "the answer was lost between the reader thread
+  and `deliver`" — and nothing has ever been able to tell those two apart.
+  `SFTPListingTests` does not look at it; a timeout there is exactly where it
+  would be worth printing.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only
@@ -774,6 +791,30 @@ credentials, which is most of it.
   including beside a terminal, without the split existing at all. Don't flip
   it a fifth time on reasoning alone — only on a reason from someone who has
   used it.
+- **The SFTP window closes its sessions now, and for weeks it did not.**
+  `FilesModel.close()` ends both panes' sessions, and **nothing called it**:
+  `windowWillClose` set `Self.shared = nil` and no more. `Core` holds each
+  `SFTPClient` in `sessions`, so letting the controller go released the window
+  and the model and *not* the `ssh` children — one per connected pane stayed
+  alive, per opening, until the app quit. What makes this worth writing down is
+  that the comment on that method claimed the opposite in as many words,
+  *"Nothing is left talking to a host with no window to show it"*: a
+  documented method with no callers reads as working code, and a comment
+  beside it is evidence of what somebody intended, never of what the code
+  does. It was found by sweeping for every unbounded wait in the app once
+  `send` had its deadline — the same habit that found the third
+  `write(contentsOf:`, and the sweep is cheap because there are only two
+  continuations in the whole app.
+  `close()` also answers a replace question still on screen, which is the one
+  dismissal the dialog's own binding cannot cover: it answers Cancel when
+  `isPresented` goes false, and a closing window leaves no view to set it, so
+  the copy parked on that continuation waited for ever somewhere nobody could
+  see it. The question goes first and the sessions after, because closing them
+  underneath a parked copy would resume it into a session that has gone and
+  report a failed transfer in a window on its way out.
+  Only the question half can be checked without a server, and it is: with the
+  answer taken back out, *"closing the window answers what was being asked"*
+  dies on the suite's limit rather than passing.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
   a question (`chosen` is false) and says "Choose a host". Without that state
   an unpointed pane reads as "This Mac" with an empty listing, which looks

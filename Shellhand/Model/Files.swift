@@ -375,7 +375,18 @@ final class FilesModel {
         transfers.removeAll(where: \.finished)
     }
 
+    /// Letting go of the window: both sessions end, and anything still being
+    /// asked is answered.
+    ///
+    /// The question goes **first**, and the answer is Cancel. First, because
+    /// closing the sessions underneath a parked copy would resume it into a
+    /// session that has gone and report a failed transfer in a window that is
+    /// on its way out; Cancel, because nothing should be carried on the way
+    /// through a door. This is also the one dismissal the dialog's own binding
+    /// cannot cover — it answers Cancel when `isPresented` is set to false,
+    /// and here there is no view left to set it.
     func close() {
+        answer(nil)
         left.closeSession()
         right.closeSession()
     }
