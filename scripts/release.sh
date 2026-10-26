@@ -105,14 +105,25 @@ notarize_file() {
     # attempt — the build and the app's own notarization are thrown away to
     # retry the upload that failed. Only a timeout is retried; a rejection is
     # about the thing being shipped and is reported at once.
+    #
+    # **notarytool words this failure more than one way, and matching only one
+    # of them is as good as no retry at all.** 0.0.4 saw "The request timed
+    # out" and was retried; 0.0.5 saw `Error: HTTPClientError.connectTimeout`
+    # from the same flapping route, which does not contain "timed out" at all,
+    # so the loop gave up after one attempt and threw the build away. The
+    # pattern below is deliberately about the transport — a rejection from
+    # Apple is about the thing being shipped and says so in words that are
+    # nothing like these.
+    local transient='timed out|timeout|httpclienterror|could not connect|connection (lost|refused|reset)'
     local attempt
     for attempt in 1 2 3 4 5; do
         if xcrun notarytool submit "$file" --keychain-profile "$profile" --wait \
             --output-format json > "$result" 2> "$complaint"; then
             break
         fi
-        if grep -q "timed out" "$complaint" && (( attempt < 5 )); then
-            echo "  $(basename "$file"): attempt $attempt timed out reaching Apple; waiting 30s"
+        if grep -qiE "$transient" "$complaint" && (( attempt < 5 )); then
+            echo "  $(basename "$file"): attempt $attempt could not reach Apple" \
+                "($(tr -d '\n' < "$complaint" | tail -c 60)); waiting 30s"
             sleep 30
             continue
         fi
