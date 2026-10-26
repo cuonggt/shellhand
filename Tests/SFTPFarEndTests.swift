@@ -46,4 +46,28 @@ nonisolated struct SFTPFarEndTests {
             _ = try await client.list("/srv")
         }
     }
+
+    /// The packets going out to `ssh` and the bytes coming down into a local
+    /// file share one write loop, so this pins it once for both. A read-only
+    /// descriptor is the failure used rather than a closed one deliberately:
+    /// a closed descriptor's number can be handed to something else opening a
+    /// file in the same instant, and in a suite this parallel that would make
+    /// the write quietly succeed against a stranger's file.
+    @Test("a write that cannot land is an error in the caller's own words")
+    func writeThatCannotLand() throws {
+        let path = NSTemporaryDirectory() + "shellhand-write-\(UUID().uuidString)"
+        FileManager.default.createFile(atPath: path, contents: nil)
+        defer { try? FileManager.default.removeItem(atPath: path) }
+
+        let readOnly = try #require(FileHandle(forReadingAtPath: path))
+        defer { try? readOnly.close() }
+
+        do {
+            try SFTPClient.writeAll(
+                Data([1, 2, 3]), to: readOnly.fileDescriptor, failing: "nowhere to put it")
+            Issue.record("writing to a descriptor opened for reading should have failed")
+        } catch let error as SFTPError {
+            #expect(error.message.hasPrefix("nowhere to put it: "))
+        }
+    }
 }

@@ -293,10 +293,19 @@ credentials, which is most of it.
   about one run in six with the engine already correct. Both write through a
   descriptor now, and **nought exceptions in ten runs** says so. The moral is
   cheap: when a mechanism like this is understood, `grep` for every
-  `write(contentsOf:` at once rather than fixing the one the stack named. One
-  is left on purpose — `SFTPTransfer`'s download, writing arriving bytes to a
-  local file, where a full disk would raise the same way; nothing has been
-  measured against it, so it is not being fixed blind.
+  `write(contentsOf:` at once rather than fixing the one the stack named.
+  **There are none left.** The third, `SFTPTransfer`'s download writing
+  arriving bytes into the local file, went the same way — a full disk raises
+  exactly as a dead pipe does, so it would have crashed where it meant to
+  report a failed download. The loop itself now lives **once**, as
+  `SFTPClient.writeAll(_:to:failing:)`, with both the packets going out to
+  `ssh` and the bytes coming down into a file calling it: two copies of a
+  three-condition loop, one of whose conditions exists only to stop it
+  spinning, is how the harness's copy survived the first fix. Note the
+  download takes `out.fileDescriptor` **once**, while the handle is certainly
+  open, because asking a closed `FileHandle` for its descriptor raises the
+  very same exception as writing through one — capture it late and the bug is
+  back somewhere new.
   `Tests/SFTPFarEndTests.swift` pins both ends, and they fail differently
   enough that one does not cover the other: a closed handle returns `EBADF` and
   raises no signal, so pinning only that case would have shipped a fix that

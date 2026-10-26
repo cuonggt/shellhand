@@ -148,32 +148,40 @@ actor SFTPClient {
         }
     }
 
-    /// Writes the whole packet to the descriptor rather than through the
-    /// `FileHandle`.
-    ///
-    /// `FileHandle.write(contentsOf:)` raises an **ObjC** exception when the
-    /// handle is closed or its far end has gone, and no Swift `catch` can see
-    /// one — so the `catch` above, which is the whole of what a dead far end
-    /// was supposed to come out as, could never run, and the process died
-    /// instead. `Darwin.write` only returns, which is how `startReading`
-    /// already reads: a closed descriptor comes back `EBADF` and a far end
-    /// that has gone `EPIPE`, both of them errors this can carry. A short
-    /// write is ordinary on a pipe, so the loop is the point rather than a
-    /// precaution, and nought counts as a failure so that it cannot spin.
     private func writeToServer(_ packet: Data) throws {
-        try packet.withUnsafeBytes { bytes in
+        try Self.writeAll(
+            packet, to: outDescriptor, failing: "the file session stopped listening")
+    }
+
+    /// Writes the whole of `bytes` to a descriptor, or throws saying why.
+    ///
+    /// **Nothing here writes through a `FileHandle`, and this is the reason.**
+    /// `FileHandle.write(contentsOf:)` raises an **ObjC** exception when the
+    /// handle is closed, when its far end has gone, or when the write itself
+    /// fails — and no Swift `catch` can see one, so the error a caller means
+    /// to report never arrives and the process dies instead. It killed a whole
+    /// test run that way before it was understood. `Darwin.write` only
+    /// returns, which is how `startReading` already reads: `EBADF` for a
+    /// closed descriptor, `EPIPE` for a far end that has gone, `ENOSPC` for a
+    /// disk with no room, each of them an error this can carry.
+    /// A short write is ordinary rather than exceptional, so the loop is the
+    /// point and not a precaution, and nought counts as a failure so that it
+    /// cannot spin. Both directions share it: the packets going out to `ssh`,
+    /// and the bytes coming down into a local file.
+    nonisolated static func writeAll(
+        _ bytes: Data, to descriptor: Int32, failing what: String
+    ) throws {
+        try bytes.withUnsafeBytes { buffer in
             var sent = 0
-            while sent < bytes.count {
+            while sent < buffer.count {
                 let wrote = Darwin.write(
-                    outDescriptor, bytes.baseAddress! + sent, bytes.count - sent)
+                    descriptor, buffer.baseAddress! + sent, buffer.count - sent)
                 if wrote > 0 {
                     sent += wrote
                 } else if wrote < 0 && errno == EINTR {
                     continue
                 } else {
-                    throw SFTPError(
-                        "the file session stopped listening: "
-                            + String(cString: strerror(errno)))
+                    throw SFTPError("\(what): " + String(cString: strerror(errno)))
                 }
             }
         }

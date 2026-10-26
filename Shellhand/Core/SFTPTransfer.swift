@@ -31,6 +31,10 @@ extension SFTPClient {
         guard let out = FileHandle(forWritingAtPath: local) else {
             throw SFTPError("\(local) could not be written")
         }
+        // Taken once, while the handle is certainly open: asking a closed
+        // `FileHandle` for its descriptor raises the same ObjC exception that
+        // writing through one does.
+        let localDescriptor = out.fileDescriptor
         defer { try? out.close() }
 
         var offset: UInt64 = 0
@@ -59,7 +63,8 @@ extension SFTPClient {
                     finished = true
                     break
                 }
-                try out.write(contentsOf: data)
+                try Self.writeAll(
+                    data, to: localDescriptor, failing: "\(local) could not be written")
                 advanced += data.count
                 done += Int64(data.count)
                 // A short answer means the rest of that chunk is still to
