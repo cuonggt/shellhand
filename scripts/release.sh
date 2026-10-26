@@ -321,6 +321,13 @@ notes_flag=""
 echo "$dmg"
 echo "sha256 $sha"
 if (( notarize )); then
+    # What follows is printed rather than run, so it has to survive being pasted into a shell. The
+    # curl check reads the appcast when it is run instead of being interpolated here, and that is
+    # the whole of the fix: one quoted "$(...)" holding several URLs is a SINGLE argument with
+    # newlines inside it, which curl takes for one malformed URL — so the check this calls the one
+    # link nothing here can test was the one check that could not work. It went unnoticed because
+    # the printed line looks right: the URLs are all there, on separate lines. `xargs` hands curl
+    # one argument per line. Don't fold it back into a quoted substitution.
     cat <<DONE
 
 Nothing has been published. The order below is the only one that works: the release has to exist
@@ -340,7 +347,7 @@ Then copy $cask into the Casks/ directory of the homebrew-tap repository.
 Worth checking afterwards, because it is the one link nothing here can test: that the URL in
 appcast.xml really serves the DMG.
 
-  curl -sIL "$(grep -o 'url="[^"]*"' appcast.xml | sed 's/url="//; s/"//')" | grep -iE '^HTTP/|content-length'
+  grep -o 'url="[^"]*"' appcast.xml | sed 's/url="//; s/"//' | xargs curl -sIL | grep -iE '^HTTP/|content-length'
 DONE
 else
     echo "not notarized: for trying the script only"
