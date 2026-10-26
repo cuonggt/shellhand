@@ -91,8 +91,18 @@ mkdir -p "$out"
 # Submits a file to the notary service and waits; on a rejection, saves the service's log.
 notarize_file() {
     local file=$1 result="$out/notary-$(basename "$1").json"
-    xcrun notarytool submit "$file" --keychain-profile "$profile" --wait --output-format json > "$result" \
-        || fail "notarytool couldn't submit $file; is the keychain profile \"$profile\" stored? (see the top of this script)"
+    local complaint="$out/notary-stderr-$(basename "$1").txt"
+    # Show what notarytool actually said rather than guessing at it. The first
+    # version of this asserted the keychain profile was missing whatever went
+    # wrong, and the first time it fired the real answer was a timed-out
+    # request to Apple — which sent the reading straight to the wrong place.
+    if ! xcrun notarytool submit "$file" --keychain-profile "$profile" --wait \
+        --output-format json > "$result" 2> "$complaint"; then
+        echo "--- notarytool said ---" >&2
+        cat "$complaint" >&2
+        echo "-----------------------" >&2
+        fail "notarytool couldn't submit $(basename "$file"). \"The request timed out\" is Apple's service and worth retrying; \"No Keychain password item\" means the profile \"$profile\" is not stored (see the top of this script)."
+    fi
     local status id
     status=$(plutil -extract status raw "$result")
     id=$(plutil -extract id raw "$result")
