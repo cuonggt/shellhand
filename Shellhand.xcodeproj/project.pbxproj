@@ -26,7 +26,6 @@
 		3243D1D24C643C4DB18495CD /* TagField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C564CAC406B2F78C655FD3 /* TagField.swift */; };
 		3A2EB394976CF16932AA9BF0 /* SSHArgs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F30BECE69E1DA23C37953AE /* SSHArgs.swift */; };
 		3A3665741D034387ED16AEEF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5F1C9A8EC9E8345D811B6F3C /* Sparkle */; };
-		3EF64384DD3F520418889DFF /* Shell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06FEC0D62AABE1AD7178D42A /* Shell.swift */; };
 		4014E7F5E27F15C047D144A3 /* TerminalSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */; };
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
 		458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */; };
@@ -79,7 +78,6 @@
 		C1483227B1300FF71FBC66FF /* ReplacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */; };
 		C15994E660A2E90781F49F7A /* QuickConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C4EA7A75A2EF2C9B73F5B9 /* QuickConnectTests.swift */; };
 		C645D14004B98E57D2525464 /* SSHConfigFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */; };
-		C6463BCAC703C7D0C94D3D71 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = F69FA53D190DC5E66EDE4D3D /* Command.swift */; };
 		CDAFB463546EC02CCDB803D1 /* ImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */; };
 		CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287AE931BEA1EE294A3CD956 /* StoreTests.swift */; };
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
@@ -109,7 +107,6 @@
 
 /* Begin PBXFileReference section */
 		06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellhandApp.swift; sourceTree = "<group>"; };
-		06FEC0D62AABE1AD7178D42A /* Shell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shell.swift; sourceTree = "<group>"; };
 		07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVHostsTests.swift; sourceTree = "<group>"; };
 		0985F94F2EA3F4723F856A87 /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
 		0E8192A6AF313B243CB39AE9 /* Resolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolve.swift; sourceTree = "<group>"; };
@@ -193,7 +190,6 @@
 		ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPane.swift; sourceTree = "<group>"; };
 		EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindow.swift; sourceTree = "<group>"; };
-		F69FA53D190DC5E66EDE4D3D /* Command.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
 		FFBB07464DD8500D6AE1101A /* Replacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Replacing.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -284,7 +280,6 @@
 				BE2DDE82A60175D6F5A16883 /* HostStore.swift */,
 				A115AC162E4D88C396D25873 /* Model.swift */,
 				A06523BF579AB128F2163614 /* Places.swift */,
-				06FEC0D62AABE1AD7178D42A /* Shell.swift */,
 				40C2A340AD1B26622F6D0AB2 /* Tree.swift */,
 			);
 			path = Model;
@@ -316,7 +311,6 @@
 		A06B38121259F1E62DC8EFEF /* Core */ = {
 			isa = PBXGroup;
 			children = (
-				F69FA53D190DC5E66EDE4D3D /* Command.swift */,
 				593A5D44E7FD2E569688A062 /* Config.swift */,
 				DFC5B41C053B8973B6F4996E /* Core.swift */,
 				759DA8F72FB3A8A7AF07474B /* CSVHosts.swift */,
@@ -519,7 +513,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				04759EB87D4A08C1FE7B7F68 /* CSVHosts.swift in Sources */,
-				C6463BCAC703C7D0C94D3D71 /* Command.swift in Sources */,
 				C0A2550D1969F2F6C19A4CE8 /* Commands.swift in Sources */,
 				262C6F45A141D70D7A8A8419 /* Config.swift in Sources */,
 				73F718188AE077E2AE4559EE /* ContentView.swift in Sources */,
@@ -557,7 +550,6 @@
 				8E23CA0238D0E009763C676A /* SettingsPanes.swift in Sources */,
 				F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */,
 				A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */,
-				3EF64384DD3F520418889DFF /* Shell.swift in Sources */,
 				25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */,
 				F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */,
 				7A151960D143D2D93DCBDC59 /* SidebarView.swift in Sources */,

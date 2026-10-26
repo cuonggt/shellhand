@@ -153,6 +153,24 @@ credentials, which is most of it.
   group: that is a plain `-i`, inherited like `user` and the jump host, not
   the Keys manager. If any of it comes back, the pre-reset bundle has it;
   don't bring it back without a reason from someone other than us.
+- **The cut left two engines behind with nothing calling them, and they are
+  gone now too.** `Core/Command.swift` ran a program and collected what it
+  said, for the script `Runner`; `Model/Shell.swift` did a smaller version of
+  the same, for listing a key's fingerprint. Both outlived their callers by
+  weeks — 192 lines referenced by nothing, not their functions, not their
+  nested types, not a test. They are in this repository's own history, in the
+  root commit, so recovering them needs no bundle. That makes two leftovers
+  the cut produced, counting `LibraryView`: it took the features and their
+  windows out and left a couple of their engines standing.
+  **Three things in `Command` are worth more than the code was**, for whenever
+  something has to run a program again. Read the output **as it arrives**, not
+  after the program ends: a pipe holds about 64 KiB, and a command that fills
+  it blocks for ever waiting to be read while the reader waits for it to exit
+  — a deadlock that only shows up on the one command that is chatty enough.
+  A `readabilityHandler` runs on **a queue of the pipe's choosing**, so the
+  lock around whatever it appends to is not optional. And a child stopped from
+  here ends with a status that is **not a verdict** on what it was running, so
+  cancelling has to be recorded separately from failing.
 - ssh options are ordered by how specific they are, because ssh keeps the
   **first** value it is given for a setting: what a caller must not have
   overridden leads, then the host's own, then each
