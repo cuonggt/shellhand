@@ -379,8 +379,18 @@ credentials, which is most of it.
   **But it is not automatic capture, so do not expect it to be.** The counters
   are read after the fact and a failing test is gone by then; what they buy is
   that re-running the stalled test with a longer deadline and watching
-  `lateReplies` is now a question with an answer. The stall still roams, so
-  which test to re-run is whichever one last named a request.
+  `lateReplies` is now a question with an answer. Which test to re-run is
+  whichever one last named a request — and that has now been the same one
+  twice.
+  **Two of five full runs on 2026-10-27 stalled, both in *"a directory that
+  arrives in one go"*, both naming `readdir`.** Before the deadline it had
+  been seen in three different tests and looked as though it roamed; it may
+  simply be that nothing could say where it was. **Read no rate into that** —
+  this file already records a batch of ten with two stalls and then 49 runs
+  with none, and the lesson was that the clustering is real while the
+  arithmetic built on it was invented. What the two sightings do say is that
+  the minimal conversation is where to look, and that re-running that one test
+  is the cheapest way to try for a third.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only
@@ -1382,11 +1392,15 @@ credentials, which is most of it.
   like a broken test run rather than a launch that never happened. Build the
   copy you want to look at to a derived data path of its own and quit it before
   testing.
-  **It is a copy that is *running* that does this, not one that merely
-  exists.** Worth knowing now that `brew install --cask shellhand` leaves a
-  second copy at `/Applications/Shellhand.app` for good: the suite was run with
-  it sitting there and passed all 254. Quit the app, and the installed copy can
-  stay.
+  **The rule is narrower than "a copy is running", and 0.0.6 showed how
+  much.** `brew install --cask shellhand` leaves a copy at
+  `/Applications/Shellhand.app` for good, and the suite has passed with it
+  merely sitting there — but it has now also passed **twice with that copy
+  running**, 421 tests each time, having just updated itself underneath. So
+  what stops a run is not any live Shellhand: it is one launched from the same
+  build products the test host wants, which is the copy you have been looking
+  at in `-derivedDataPath`. Quit that one; the installed copy can stay, open
+  or shut.
 - `Executed 0 tests, with 0 failures` is the **XCTest** counter, and every test
   here is swift-testing, so that line says nothing either way — grepping for it
   reports an empty run as a pass. Ask the result bundle instead:
@@ -1589,7 +1603,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.5 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.6 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -1611,6 +1625,19 @@ key nor `SUEnableAutomaticChecks`. So that run proves the feed, the signature
 and the install, and says **nothing** about the dialog a new user meets — the
 "offered with the release notes, then installed on a click" half is still
 proven only by 0.0.2.
+**0.0.6 did it again, unasked and unwatched.** It was published, and minutes
+later the installed copy at `/Applications/Shellhand.app` had replaced itself
+— bundle mtime 06:34:24, its process started 06:34:26 — reporting 0.0.6 (6),
+hardened, carrying the release build's own `Timestamp=27 Oct 2026 at
+06:11:12`, `stapler validate` intact and Gatekeeper calling it a *Notarized
+Developer ID*. Sparkle will not install an update whose EdDSA signature does
+not check out, so that path is proven for 0.0.6 end to end: feed, signature,
+download, install, relaunch. `brew list --cask --versions` still says
+**0.0.1**, which is `auto_updates true` working as intended rather than a
+discrepancy to fix. And **nobody was asked**, again, because this machine
+carries `SUAutomaticallyUpdate = 1` — so the dialog a new user meets is
+*still* proven only by 0.0.2, and no amount of updating on this Mac will
+change that. Put the key aside first or it proves nothing.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
