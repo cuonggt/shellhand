@@ -15,6 +15,8 @@ actor SFTPClient {
     /// exists to avoid.
     private let outDescriptor: Int32
     private let fromServer: FileHandle
+    private let handshakeDeadline: Duration
+    private let replyDeadline: Duration
     private var nextRequest: UInt32 = 1
     private var waiting: [UInt32: CheckedContinuation<Reply, Error>] = [:]
     private var ended: SFTPError?
@@ -30,11 +32,48 @@ actor SFTPClient {
         var body: Data
     }
 
-    private init(process: Process, toServer: FileHandle, fromServer: FileHandle) {
+    /// How long one request may go unanswered before it is called a failure.
+    ///
+    /// Nothing in SFTP carries a timeout of its own, so without these a reply
+    /// that never comes is waited on for ever: the continuation in `send` is
+    /// resumed by the reply or by `finish`, and `finish` fires only when the
+    /// pipes break or the child dies. A far end that is wedged while its pipes
+    /// are perfectly healthy is neither — and that has been seen, a run of the
+    /// suite sitting sixteen minutes on one conversation with both reader
+    /// threads idle in `read` and nothing left that was ever going to resume
+    /// it. In the app the same thing is a file pane stuck on "Connecting…"
+    /// that cannot even be retried, because the guard on `FilePlace.opening`
+    /// is cleared in a `defer` a parked request never reaches.
+    ///
+    /// Neither of these explains that, and neither is a connect timeout. They
+    /// are what makes the next sighting cheap: a named failure saying which
+    /// request went unanswered, where there was an unbounded wait.
+    enum Deadline {
+        /// A request to a server that is already answering. One of those is a
+        /// single packet against a 32KiB chunk at most, so this is tens of
+        /// times a bad link's round trip rather than a budget to work within.
+        static let reply: Duration = .seconds(30)
+
+        /// The handshake's own, which is waiting for very much more: ssh
+        /// resolving the name, reaching the host, working along a jump chain,
+        /// authenticating, and starting the subsystem. Nothing here sets
+        /// `ConnectTimeout`, so ssh's own patience is the system's TCP timeout
+        /// and can run past a minute. This sits above that **deliberately**,
+        /// so a host that is merely slow or unreachable still fails with ssh's
+        /// own sentence, which says far more than this one can.
+        static let handshake: Duration = .seconds(120)
+    }
+
+    private init(
+        process: Process, toServer: FileHandle, fromServer: FileHandle,
+        handshakeDeadline: Duration, replyDeadline: Duration
+    ) {
         self.process = process
         self.toServer = toServer
         self.outDescriptor = toServer.fileDescriptor
         self.fromServer = fromServer
+        self.handshakeDeadline = handshakeDeadline
+        self.replyDeadline = replyDeadline
         // A write to a pipe nothing is reading raises SIGPIPE, which ends the
         // process outright instead of returning — so turning that signal off
         // for this one descriptor is what makes the error reportable at all.
@@ -70,16 +109,29 @@ actor SFTPClient {
 
         let client = SFTPClient(
             process: process, toServer: input.fileHandleForWriting,
-            fromServer: output.fileHandleForReading)
+            fromServer: output.fileHandleForReading,
+            handshakeDeadline: Deadline.handshake, replyDeadline: Deadline.reply)
         await client.startReading()
         do {
             try await client.handshake()
         } catch {
+            // The client is let go of **first**, and the order is
+            // load-bearing: reading ssh's stderr waits for an end of file,
+            // which comes only once ssh itself has gone. Where the handshake
+            // failed because the child had already died, that is true the
+            // moment it is asked — but it is not true of a far end answering
+            // with a version this cannot speak, nor of one that stopped
+            // answering at all, and in either of those this waited on a live
+            // child for ever. Terminating it first bounds the read and loses
+            // nothing, since what ssh said is already in the pipe. The proven
+            // path is untouched: `close()` does nothing once `ended` is set,
+            // and that is exactly the case where the child is gone and its own
+            // sentence is the one worth reporting.
+            await client.close()
             // ssh says why on its own stream, and that sentence is the useful
             // one: "Permission denied", "Host key verification failed".
             let said = (try? errors.fileHandleForReading.readToEnd())
                 .map { String(decoding: $0, as: UTF8.self) } ?? ""
-            await client.close()
             let detail = said.trimmingCharacters(in: .whitespacesAndNewlines)
             throw SFTPError(detail.isEmpty ? (error as? SFTPError)?.message ?? "the file session could not be opened" : detail)
         }
@@ -104,9 +156,18 @@ actor SFTPClient {
     /// The `Process` here is never started, so **do not call `close()` on a
     /// client made this way** — terminating a process that never ran raises.
     /// Close the handles instead.
-    static func speaking(to toServer: FileHandle, from fromServer: FileHandle) async -> SFTPClient {
+    ///
+    /// `answeringWithin` is here for the same reason the seam is: a test that
+    /// means to watch a deadline expire cannot sit through the shipped one. It
+    /// sets both, since on a pair of pipes the handshake is no slower to answer
+    /// than anything else.
+    static func speaking(
+        to toServer: FileHandle, from fromServer: FileHandle,
+        answeringWithin deadline: Duration = Deadline.reply
+    ) async -> SFTPClient {
         let client = SFTPClient(
-            process: Process(), toServer: toServer, fromServer: fromServer)
+            process: Process(), toServer: toServer, fromServer: fromServer,
+            handshakeDeadline: deadline, replyDeadline: deadline)
         await client.startReading()
         return client
     }
@@ -134,9 +195,20 @@ actor SFTPClient {
         }
     }
 
-    /// Sends one packet and waits for the reply that carries its id.
+    /// Sends one packet and waits for the reply that carries its id — though
+    /// not for ever; see `Deadline`.
     private func send(_ type: SFTP.PacketType, _ body: [UInt8], id: UInt32) async throws -> Reply {
         if let ended { throw ended }
+        let deadline = id == 0 ? handshakeDeadline : replyDeadline
+        // A cancelled sleep throws, so whenever the reply wins this race the
+        // task ends at the `try` and never reaches `giveUp`. The `defer` is
+        // what cancels it, which also means the strong `self` this task holds
+        // is held only for as long as the request is outstanding.
+        let watchdog = Task {
+            try await Task.sleep(for: deadline)
+            giveUp(on: id, type: type, after: deadline)
+        }
+        defer { watchdog.cancel() }
         return try await withCheckedThrowingContinuation { continuation in
             waiting[id] = continuation
             do {
@@ -146,6 +218,27 @@ actor SFTPClient {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    /// Answers one request that has waited past its deadline.
+    ///
+    /// Taking the waiter out of `waiting` before resuming it is what keeps
+    /// this and `deliver` from both answering the same request: each runs on
+    /// the actor, and whichever arrives second finds nothing and returns — so
+    /// a reply that comes in late is counted a stray rather than resuming a
+    /// continuation twice, which would trap.
+    ///
+    /// Only this one request fails. The session is left alone, because a reply
+    /// that never arrived has not lost the conversation its place — packets
+    /// are length-prefixed, so the next one still frames correctly — and the
+    /// caller can report and retry rather than having a session that is merely
+    /// slow destroyed under it. `ended` is deliberately not set either:
+    /// `close()` refuses to do anything once it is, which would leave the
+    /// `ssh` child running with nothing left to end it.
+    private func giveUp(on id: UInt32, type: SFTP.PacketType, after deadline: Duration) {
+        guard let continuation = waiting.removeValue(forKey: id) else { return }
+        continuation.resume(
+            throwing: SFTPError("the far end did not answer \(type) within \(deadline)"))
     }
 
     private func writeToServer(_ packet: Data) throws {

@@ -70,10 +70,14 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     var openFlags: UInt32? { lock.withLock { storedFlags } }
 
     /// A client wired to this server, already reading.
-    func client() async -> SFTPClient {
+    /// `answeringWithin` is passed straight through, for a test that wants a
+    /// conversation held to a deadline far shorter than the shipped one.
+    func client(answeringWithin deadline: Duration = SFTPClient.Deadline.reply) async -> SFTPClient
+    {
         start()
         return await SFTPClient.speaking(
-            to: clientToPeer.fileHandleForWriting, from: peerToClient.fileHandleForReading)
+            to: clientToPeer.fileHandleForWriting, from: peerToClient.fileHandleForReading,
+            answeringWithin: deadline)
     }
 
     /// Lets go of both ends. Never `close()` the client — its `Process` was

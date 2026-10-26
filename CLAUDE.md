@@ -302,6 +302,42 @@ credentials, which is most of it.
   run **finish**. `.timeLimit` takes only
   `.minutes`, so one minute is the floor, and `SFTPWireTests` has none because
   it only encodes and has nothing to wait for.
+- **An SFTP request has a deadline now, and the app needed one more than the
+  suite did.** The stall above was bounded only in `Tests/`: `send` parks on a
+  continuation that the reply or `finish` resumes, and `finish` fires only when
+  the pipes break or the child dies — neither of which is true of a far end
+  that has simply stopped answering. So the shipped shape of that hang was a
+  file pane stuck on "Connecting…" **that could not even be retried**, because
+  the guard on `FilePlace.opening` is cleared in a `defer` a parked request
+  never reaches. `SFTPClient.Deadline` is 30 seconds for an ordinary reply and
+  **120** for the handshake, and the gap is deliberate: the handshake waits for
+  ssh to resolve a name, reach the host, cross a jump chain, authenticate and
+  start a subsystem, and nothing here sets `ConnectTimeout` — so ssh's own
+  patience is the system's TCP timeout and can run past a minute, and a host
+  that is merely slow must still fail with ssh's sentence rather than this one.
+  Only the one request fails: a missing reply has not cost the conversation its
+  place, since packets are length-prefixed, and `ended` is deliberately left
+  unset because `close()` does nothing once it is set, which would leave the
+  `ssh` child running with nothing left to end it. The message **names the
+  request**, which is the whole point — 49 clean runs could not say which one
+  stalls, and the next sighting will say so in a line, at 30 seconds rather
+  than the suite's limit at 60.
+  Pinned three ways in `Tests/SFTPDeadlineTests.swift`, and checked the way
+  round that matters: with the watchdog taken back out, the unanswered test and
+  the stray test both come back *"Time limit was exceeded: 60.000 seconds"*,
+  while **"a far end that answers is not given up on" still passes** — which is
+  exactly what that third one is for. A deadline that fired unconditionally
+  would satisfy the other two and break every transfer this app makes.
+- **Reading ssh's stderr waits for the child to die, so let the client go
+  first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
+  *before* closing, and that read ends only at an end of file, which comes only
+  once ssh has gone. It worked for the failure it was written for — a child
+  that had already exited saying "Permission denied" — and was a **hang** for
+  the two that leave ssh alive: a far end answering with a version this cannot
+  speak, and now a handshake given up on. The close comes first. The proven
+  path is untouched for a reason worth keeping rather than tidying: `close()`
+  returns early once `ended` is set, and that is precisely the case where the
+  child is gone and its own sentence is the one worth reporting.
 - **`FileHandle.write(contentsOf:)` raises an ObjC exception, and `send`'s
   `catch` cannot catch it.** `SFTPClient.send` wraps its write in a `do`/`catch`
   meant to turn a dead far end into *"the file session stopped listening"*, and
