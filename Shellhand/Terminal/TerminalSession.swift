@@ -217,9 +217,9 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                 // last and then waits, so a match anywhere else is a question
                 // that has already been answered — and matching the whole
                 // buffer left the session stuck on a prompt that was gone.
-                if Self.isWaitingForHostKey(screen) {
+                if HostKey.isBeingAsked(screen) {
                     if case .askingHostKey = self.state {} else {
-                        self.state = .askingHostKey(Self.hostKeyQuestion(in: screen))
+                        self.state = .askingHostKey(HostKey.question(in: screen))
                     }
                 } else if !screen.isEmpty {
                     switch self.state {
@@ -237,26 +237,6 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     private func readDiagnostics() {
         guard let text = try? String(contentsOfFile: logPath, encoding: .utf8) else { return }
         diagnostics = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// Whether the last thing on screen is ssh waiting for an answer.
-    private static func isWaitingForHostKey(_ screen: String) -> Bool {
-        let tail = screen
-            .split(separator: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-            .suffix(2)
-        return tail.contains { $0.contains("continue connecting (yes/no") }
-    }
-
-    /// The fingerprint and the question, without the rest of the screen.
-    private static func hostKeyQuestion(in screen: String) -> String {
-        let lines = screen.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        guard let end = lines.lastIndex(where: { $0.contains("continue connecting (yes/no") }) else {
-            return screen
-        }
-        let start = lines[..<end].lastIndex { $0.contains("authenticity of host") } ?? max(0, end - 4)
-        return lines[start...end].filter { !$0.isEmpty }.joined(separator: "\n")
     }
 
     // MARK: LocalProcessTerminalViewDelegate

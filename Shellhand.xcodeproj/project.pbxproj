@@ -18,6 +18,7 @@
 		241850CCF95F6144B5DC95BC /* SFTPTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */; };
 		25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */; };
 		262C6F45A141D70D7A8A8419 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593A5D44E7FD2E569688A062 /* Config.swift */; };
+		27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */; };
 		29673CF60720DE3068D8F4A6 /* HostStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DDE82A60175D6F5A16883 /* HostStore.swift */; };
 		2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3798692706D23BAB1E792B2 /* PlacesTests.swift */; };
 		2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */; };
@@ -59,6 +60,7 @@
 		9F0104D3B8286FE2D9E4676F /* GroupEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */; };
 		9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */; };
 		A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 531C7DCC9E4C7E12F56A543C /* Theme.swift */; };
+		A3458987A2D5B009D6C90CCA /* HostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E60B26760CD52D26C77F6 /* HostKey.swift */; };
 		A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */; };
 		A5222C311175118B3748066D /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C1020FE3A76905A97685B4 /* Files.swift */; };
 		A888901F1498F4EE05CA99CF /* HostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */; };
@@ -130,6 +132,7 @@
 		683EAA256A466A529CF89C0C /* Shellhand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shellhand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWireTests.swift; sourceTree = "<group>"; };
 		6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueue.swift; sourceTree = "<group>"; };
+		6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyTests.swift; sourceTree = "<group>"; };
 		732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorSheet.swift; sourceTree = "<group>"; };
 		73F634D1B0D27FBB8ECFB95E /* Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Merge.swift; sourceTree = "<group>"; };
 		74F618F3BB7CC761EA980324 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
@@ -152,6 +155,7 @@
 		A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHOptionsField.swift; sourceTree = "<group>"; };
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
+		B20E60B26760CD52D26C77F6 /* HostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKey.swift; sourceTree = "<group>"; };
 		B3FBD42BA7400FB61B1AA875 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		B6D441F061EB58A1F727AEA0 /* TreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeTests.swift; sourceTree = "<group>"; };
 		B8E364C1F64E97AC080F1F08 /* ShellhandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellhandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -210,6 +214,7 @@
 			isa = PBXGroup;
 			children = (
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
+				6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */,
 				A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
 				E3798692706D23BAB1E792B2 /* PlacesTests.swift */,
@@ -239,6 +244,7 @@
 		65BDE5D7862A2C16764B5D50 /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
+				B20E60B26760CD52D26C77F6 /* HostKey.swift */,
 				BDB132447DA9624773556608 /* TerminalSession.swift */,
 			);
 			path = Terminal;
@@ -459,6 +465,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
+				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
 				B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
 				2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */,
@@ -502,6 +509,7 @@
 				9F0104D3B8286FE2D9E4676F /* GroupEditorSheet.swift in Sources */,
 				A888901F1498F4EE05CA99CF /* HostDetailView.swift in Sources */,
 				8BAFAC09DFC6411AF577B203 /* HostEditorSheet.swift in Sources */,
+				A3458987A2D5B009D6C90CCA /* HostKey.swift in Sources */,
 				29673CF60720DE3068D8F4A6 /* HostStore.swift in Sources */,
 				595F4A50CE3646F61608793D /* HostsWindow.swift in Sources */,
 				CDAFB463546EC02CCDB803D1 /* ImportSheet.swift in Sources */,

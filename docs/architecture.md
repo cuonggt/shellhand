@@ -47,7 +47,9 @@ ssh printed. Answering writes `yes` or `no` back to the pty, which is exactly
 what answering ssh would do, and the key lands in `known_hosts` the usual way.
 The question is only recognised at the end of the buffer, because ssh writes it
 last and then waits — matching it anywhere left a session stuck on a prompt
-that had already been answered.
+that had already been answered. That rule is `Terminal/HostKey.swift`, out on
+its own so it can be asked without a pty, an unknown host or a window; the
+tests include the stuck case, and the boundary of how far back it looks.
 
 **A password is typed into the terminal**, as it would be anywhere else. An
 askpass helper answering from the keychain was built and taken out with

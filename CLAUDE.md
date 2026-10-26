@@ -43,8 +43,10 @@ what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
 `Views/SidebarRows.swift` (the sidebar flattened into one list, and what the
 search field narrows it to),
-`Sessions.shortTitle`, the SFTP conversation against a server written in
-Swift in this process, and `HostStore` itself — its writes, moves, tag
+`Sessions.shortTitle`, `Terminal/HostKey.swift` (whether ssh is waiting to be
+told about a host key, and which part of the screen is the question), the SFTP
+conversation against a server written in Swift in this process, and
+`HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
 the window from store to sidebar, SFTP against a loopback server — and they
