@@ -199,9 +199,20 @@ credentials, which is most of it.
   was ever going to resume. Nothing was merely queued, either: with the pool
   idle an enqueued `deliver` would have run, so the reply either never came or
   arrived and was dropped.
-  It is **not explained**, but it **does** reproduce — about two runs in ten,
-  once the limit was there to catch it, having hidden through 25 runs before
-  that. And it **roams**: three sightings, three different tests — *"a
+  It is **not explained**, and it is **episodic rather than steady**, which
+  took far too long to see. Three sightings in all: one on its own, then two
+  inside a single batch of ten, and then **49 runs with none** across four
+  batches — two with a probe compiled in, two without. So "about two in ten"
+  was the wrong model: the stalls cluster in time and nothing in the build
+  predicts them.
+  **The trap that follows is worth more than the bug.** A clustered failure
+  read as a steady rate makes any clean batch look like proof of something.
+  Two probes were called heisenbugs on exactly that reasoning — 0 stalls in 31
+  instrumented runs, p ≈ 0.001 *if* the rate were really 0.2 — and then 8
+  **uninstrumented** runs came back clean too, which killed the story. The
+  arithmetic was fine; the model under it was invented. **Conclude nothing
+  about this hang from a clean batch, however long.**
+  And it **roams**: three sightings, three different tests — *"a
   directory that arrives in pieces is joined, in order"*, then *"an empty file
   goes up as an empty file"* over in the transfer suite, then *"a directory
   that arrives in one go"*. That last is the **minimal** conversation, one
@@ -216,6 +227,20 @@ credentials, which is most of it.
   cannot tell you here: the handshake and the readdir loop look identical from
   outside, both just a blocked reader thread, so the log line naming a test
   proves only which test **started**.
+  Ruled out since, each with real work behind it: the reassembly loop both
+  ends run is **correct** under one-byte reads and awkward splits, slices with
+  a non-zero `startIndex` included, so mis-framing is not it; **no other test
+  stalls** — 382 started and 381 finished in every log, stalled and clean
+  alike, the only gap being XCTest's own `run` — so the process is healthy and
+  exactly one conversation is orphaned while the suite carries on around it;
+  and `strays` is **always** exactly 1, by design, since `SFTPTransferTests`
+  builds a server with an `intruder` and asserts that very number, so it is no
+  sign of anything.
+  One tooling note, because it cost an afternoon: `sed`'s `\|` alternation is
+  a GNU extension and does **nothing** in the `sed` on this machine, silently.
+  It turned a test that had plainly passed into a phantom *"never finished"*,
+  which read as hard evidence that the whole process was stalling. Parse these
+  logs with something that fails loudly instead.
   So the limit is not a fix, it is what makes the next one cheap: a named
   failure instead of an unbounded wait. **It really does interrupt this, and
   that was worth checking rather than assuming**: a time limit works by
