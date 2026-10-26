@@ -5,8 +5,7 @@ import Testing
 @Suite("ssh config")
 nonisolated struct SSHConfigFileTests {
     private func write(_ text: String, named name: String = "config") throws -> String {
-        let folder = NSTemporaryDirectory() + "shellhand-ssh-\(UUID().uuidString)"
-        try FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
+        let folder = TestScratch.directory("ssh")
         let path = (folder as NSString).appendingPathComponent(name)
         try text.write(toFile: path, atomically: true, encoding: .utf8)
         return path

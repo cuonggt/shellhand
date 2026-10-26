@@ -16,8 +16,7 @@ private typealias AppHost = Shellhand.Host
 @Suite("Host store")
 struct HostStoreTests {
     private func scratch() -> HostStore {
-        HostStore(dbPath: NSTemporaryDirectory()
-            + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite")
+        HostStore(dbPath: TestScratch.database())
     }
 
     /// A store holding Production, EU beneath it, and a host in each.

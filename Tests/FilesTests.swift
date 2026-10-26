@@ -21,14 +21,12 @@ private typealias AppHost = Shellhand.Host
 @Suite("File panes", .timeLimit(.minutes(1)))
 struct FilesTests {
     private func scratchDB() -> String {
-        NSTemporaryDirectory() + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite"
+        TestScratch.database()
     }
 
     /// A directory of our own, holding the named files.
     private func folder(_ files: [String: String] = [:]) -> String {
-        let path = NSTemporaryDirectory() + "shellhand-files-\(UUID().uuidString)"
-        try? FileManager.default.createDirectory(
-            atPath: path, withIntermediateDirectories: true)
+        let path = TestScratch.directory("files")
         for (name, contents) in files {
             try? contents.write(toFile: path + "/" + name, atomically: true, encoding: .utf8)
         }

@@ -299,7 +299,7 @@ nonisolated struct PortableTests {
                 group: Production
                 tags: [edge]
             """
-        let path = NSTemporaryDirectory() + "shellhand-test-\(UUID().uuidString)/s.sqlite"
+        let path = TestScratch.database("s.sqlite")
         let store = try Store(path: path)
 
         let first = try Portable.merge(

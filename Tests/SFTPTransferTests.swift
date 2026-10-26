@@ -18,10 +18,7 @@ import Testing
 @Suite("SFTP transfers", .timeLimit(.minutes(1)))
 nonisolated struct SFTPTransferTests {
     private func scratch(_ name: String) -> String {
-        let directory = NSTemporaryDirectory() + "shellhand-sftp-\(UUID().uuidString)"
-        try? FileManager.default.createDirectory(
-            atPath: directory, withIntermediateDirectories: true)
-        return directory + "/" + name
+        TestScratch.directory("sftp") + "/" + name
     }
 
     @Test("a whole file arrives, byte for byte")

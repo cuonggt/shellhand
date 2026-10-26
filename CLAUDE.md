@@ -410,14 +410,31 @@ credentials, which is most of it.
   after a failure is allowed and must stay allowed, because the failure resets
   `host` to nil, which is how somebody fixes a mistyped port and tries again.
   That has a test of its own now.
-- **The suite leaves its scratch stores behind**, and it adds up faster than
-  it looks: a day of runs left **4,843 directories and 185MB** under
-  `$TMPDIR`. `HostStoreTests` has always worked this way and `FilesTests`
-  follows it — a store per test, at `shellhand-test-<uuid>/shellhand.sqlite`,
-  never removed. Harmless in that macOS clears `/var/folders` eventually and
-  the real list is untouched (check its timestamp, as ever), but worth knowing
-  before wondering where the disk went. Only `SFTPFarEndTests` and
-  `TerminalSessionTests` clean up after themselves.
+- **Every scratch path in the suite goes through `Tests/TestScratch.swift`**,
+  which keeps **one root per run** and removes it with `atexit`. Before that
+  each test made its own directory in the temporary one and left it there for
+  ever: a day of runs left **4,843 directories and 185MB**, which is harmless
+  right up until somebody goes looking for where the disk went. There were
+  **nine** such sites across **eight** files, every one with its own
+  hand-rolled `NSTemporaryDirectory() + "prefix-\(UUID())"`.
+  The shape was picked for the size of the diff. A `defer` per test meant
+  editing dozens of call sites; class suites with `isolated deinit` — which is
+  the idiomatic swift-testing teardown, and available, since `TerminalSession`
+  already uses one — meant turning eight structs into classes. Routing the
+  helpers instead changed **one line each and no call site at all**. `atexit`
+  is known to fire in this test host, not assumed: a temporary probe printed
+  from one earlier. A crash skips it, so the worst case is one directory per
+  run rather than one per test — and this suite does crash sometimes, so that
+  matters. **Nothing under `Tests/` calls `NSTemporaryDirectory` any more
+  except `TestScratch` itself**; a convention with one exception is one nobody
+  follows.
+  Two things to know before sweeping that directory by hand. The prefix
+  `shellhand-ssh-` is **both** kinds: `SSHConfigFileTests` left *directories*
+  and a running app writes `shellhand-ssh-<uuid>.log` *files* for live
+  sessions, so sweep by `-type d` or you delete the log a session is still
+  writing to. And `shellhand-under-test` is **not** litter — it is the store
+  `LaunchOptions` sends an XCTest run to, one directory reused, which is the
+  only reason a run does not open the real list.
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built once
   per snapshot: the lookups and indexes `HostStore` used to hold, the descent
   in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"

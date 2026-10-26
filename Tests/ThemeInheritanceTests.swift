@@ -171,8 +171,7 @@ nonisolated struct ThemePortableTests {
 
     @Test("a palette in a file reaches the store through the merge")
     func merges() throws {
-        let store = try Store(
-            path: NSTemporaryDirectory() + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite")
+        let store = try Store(path: TestScratch.database())
         let document = try Portable.parse("""
             groups:
               - name: Production

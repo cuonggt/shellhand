@@ -6,9 +6,7 @@ import Testing
 @Suite("Store")
 nonisolated struct StoreTests {
     private func scratch() throws -> Store {
-        let path = NSTemporaryDirectory()
-            + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite"
-        return try Store(path: path)
+        try Store(path: TestScratch.database())
     }
 
     @Test("an empty store reads as an empty list")
@@ -96,7 +94,7 @@ nonisolated struct StoreTests {
 
     @Test("the list survives being closed and opened again")
     func reopen() throws {
-        let path = NSTemporaryDirectory() + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite"
+        let path = TestScratch.database()
         let first = try Store(path: path)
         _ = try first.save(Host(name: "web", addr: "10.0.0.1", tags: ["edge"]))
 

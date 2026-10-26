@@ -55,7 +55,7 @@ nonisolated struct SFTPFarEndTests {
     /// the write quietly succeed against a stranger's file.
     @Test("a write that cannot land is an error in the caller's own words")
     func writeThatCannotLand() throws {
-        let path = NSTemporaryDirectory() + "shellhand-write-\(UUID().uuidString)"
+        let path = TestScratch.directory("write") + "/file"
         FileManager.default.createFile(atPath: path, contents: nil)
         defer { try? FileManager.default.removeItem(atPath: path) }
 

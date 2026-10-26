@@ -257,8 +257,7 @@ nonisolated struct CSVRoundTripTests {
         """
 
     private func scratch() throws -> Store {
-        try Store(
-            path: NSTemporaryDirectory() + "shellhand-test-\(UUID().uuidString)/shellhand.sqlite")
+        try Store(path: TestScratch.database())
     }
 
     @discardableResult
