@@ -53,13 +53,37 @@ copy genuinely parked on its continuation), the SFTP
 conversation against a server written in Swift in this process, and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
-path the app runs. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
-the window from store to sidebar, SFTP against a loopback server — and they
-were removed along with the loopback servers and the flags the app published
-for them. So a change above `Core/` is judged by building it and using it,
-which is what most of the warnings further down are about. The harnesses are
-in the pre-reset bundle if they are ever wanted back, not in this
-repository's history.
+path the app runs.
+
+**One thing checks the app end to end: `scripts/window-check.sh`.** It seeds a
+store of its own, launches a real window against it with `--db`, and drives the
+sidebar through System Events the way somebody on the keyboard does — the tree
+folded as it comes up, then opened with the arrow keys, then a row picked and
+the **Host** menu read back to prove the selection reached the app rather than
+only the outline. It asks the app for nothing it does not already publish:
+`--db` is the whole of it.
+
+That matters because of what it replaces. Three shell harnesses once covered
+this — the terminal on a real pty, the window from store to sidebar, SFTP
+against a loopback server — and went with the loopback servers and the flags
+the app published for them. They are in the pre-reset bundle, 532 lines across
+six files, and restoring one costs three things the code size does not show: a
+**Go toolchain** as a prerequisite (`spike/go.mod` wants Go 1.26 with
+`creack/pty`, `gliderlabs/ssh` and `pkg/sftp`); flags that are gone
+(`--seed`, `--selftest`, `--uicheck`, `--scratch`, `--hold`, `--ssh-key`,
+`--ssh-port` — though `--db` and `--config` are **still** accepted); and, for
+the window one, features that no longer exist, since it logs in with a
+password, exercises copy-id and drives snippets. Worst of all, `--uicheck` was
+not external driving at all: the app checked **itself** and wrote a JSON
+report, so restoring it means test-only code back inside the shipping binary.
+Driving from outside costs the app nothing, which is why this is the shape to
+extend rather than the bundle.
+
+The terminal on a pty and SFTP against a real server are still uncovered, and
+for those the bundle's Go server remains the honest answer — its own `go.mod`
+says why: writing an SSH server in Swift to test a Swift SSH client against is
+not a trade worth making. `ScriptedSFTP` is not a counter-example; it speaks
+SFTP over a pair of pipes and is no SSH server and gives no pty.
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the
@@ -1080,7 +1104,24 @@ credentials, which is most of it.
     the item calls, and with that gone `newHostInGroup` and its like are
     checked by using them.
   So everything behind `hasHost` **is** verifiable on screen, with no source
-  edit and no preference to put back. Ungated routes are still the cheapest
+  edit and no preference to put back.
+  **`scripts/window-check.sh` is that walk written down**, and three things
+  cost a run each. An AppleScript **handler is top level**, so it is outside
+  any `tell application "System Events"` — and `UI elements of el` is that
+  app's terminology, so a handler using it fails to compile with *"Expected
+  end of line but found identifier"*, pointing at the `repeat` rather than at
+  the missing context. Wrap each handler's own body in the tell.
+  **Folded is correct.** The first version asserted the whole tree flat and
+  failed: `Tree` decides the fold the sidebar opens on, so a group keeps its
+  row and loses what is under it. Assert the folded shape, then open it — that
+  tests more, and the opened order is the documented one, groups before hosts
+  at every level.
+  **Refuse to run beside another copy.** System Events addresses a process by
+  name, so two copies of Shellhand make every lookup ambiguous; the check
+  names the other one and stops rather than driving the wrong window, and
+  never quits the user's. It borrows the whole preference domain with
+  `defaults export` and gives it back on an EXIT trap, because `@AppStorage`
+  is keyed by the bundle id and a scratch store does not protect it. Ungated routes are still the cheapest
   when they fit: `New Group…` opens the group editor with nothing selected,
   and Shellhand ▸ SFTP opens without a selection.
 - A key path is **spelled however it was typed** — `~/.ssh/id_ed25519`,
