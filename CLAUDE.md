@@ -1220,6 +1220,19 @@ credentials, which is most of it.
   checking. `start()` hops through `DispatchQueue.main.async`, the same
   deferral the inspector needs, rather than adding an `AppDelegate` to reach a
   single notification.
+- **notarytool words a timed-out upload more than one way, and matching one of
+  them is as good as no retry at all.** The retry loop tested for the literal
+  string `timed out`. 0.0.4's run printed *"The request timed out"* and
+  recovered, which looked like proof the loop worked; 0.0.5's printed
+  `Error: HTTPClientError.connectTimeout` from the same flapping route, which
+  contains no such phrase, so it gave up after **one** attempt and threw a
+  whole signed build away. It matches a transport pattern now
+  (`timed out|timeout|httpclienterror|could not connect|connection
+  (lost|refused|reset)`, case-insensitively) and echoes what notarytool
+  actually said, so the next wording is visible rather than silent. A rejection
+  from Apple is about the thing being shipped and reads nothing like these, so
+  widening this does not risk retrying a real refusal. The second run then went
+  through on the first attempt, which is what a flapping route looks like.
 - **No binary deltas, and the reason is in `scripts/release.sh`.** Sparkle
   makes them as soon as the updates folder holds two versions, and a delta is
   named for the **build** numbers it spans — `Shellhand2-1.delta` — so nothing
@@ -1307,7 +1320,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.4 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.5 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
