@@ -817,6 +817,33 @@ credentials, which is most of it.
   `SessionProgressTests` for the rule, `TerminalSessionTests` for the buffer
   being non-empty *and* blank — because the rule is only right while that
   second fact holds, and SwiftTerm is free to change it.
+- **A host-key question that wrapped was not seen at all**, in every release
+  up to 0.0.4, and the consequence is the worst shape this bug could take: ssh
+  sits on the pty waiting for an answer the app never asks for, while the
+  session reads as `.connected` because the screen is not blank. The buffer is
+  read row by row and nothing rejoins what wrapped, so a 27-character phrase
+  matched line by line is in neither row. Measured on a real 40-column
+  terminal: `"...want to continue connec\nting (yes/no/[fingerprint])? "`.
+  Reachable without trying — `changeFontSize` goes to 28pt, and a window
+  narrower than about 900pt is then some 50 columns, where the phrase straddles
+  the boundary.
+  **The obvious fix is the wrong one.** Widening `tail(of:)` past two lines
+  lets the shell's own reply sit in the tail beside the question it answered,
+  which is the stuck-prompt bug the rule exists to prevent and which
+  `howFarBack` pins deliberately. So the two rows are **rejoined** instead, and
+  compared with whitespace dropped from both sides, because `trimRight: true`
+  means a wrap falling on a space loses that space from the buffer and no
+  search for the phrase as written gets it back.
+  **Still broken on purpose:** a question wrapped across three rows or more,
+  which wants a terminal under about 34 columns. The right fix is at the
+  source — have `screen` rejoin wrapped rows, leaving this rule untouched and
+  every reader seeing logical lines — and it is **not available**: SwiftTerm
+  keeps `Buffer.lines`, `withTerminal` and `Terminal.cols` internal, so the app
+  cannot ask how wide the terminal is or which rows continued. If a version
+  ever makes any of those public, fix it there and delete the rejoining.
+  `question(in:)` needed the same treatment: with no row carrying the phrase it
+  fell through to "hand back the whole screen", burying the fingerprint at the
+  one moment somebody has to read it.
 - **The watchdog's decision is `SessionProgress`; `watch()` is only the
   looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
   of the screen is one pure function, which is why there are tests for it at

@@ -210,4 +210,28 @@ struct TerminalSessionTests {
 
         #expect(await waitUntil { session.diagnostics.contains("Connecting to web") })
     }
+
+    /// The same question against a terminal narrow enough to wrap it, which
+    /// is what a person gets from ⌘+ in a small window. The pure tests pin
+    /// the rule; this pins that a real buffer really does split a line this
+    /// way, because the rule is only worth anything if it does.
+    @Test("a host key question wrapped by a narrow terminal is still seen")
+    func watchdogAsksWhenWrapped() async {
+        let session = session()
+        session.view.resize(cols: 40, rows: 24)
+        session.view.feed(
+            text: "The authenticity of host 'web.example.com (198.51.100.11)'"
+                + " can't be established.\r\n"
+                + "ED25519 key fingerprint is"
+                + " SHA256:uN8Fh2kLqW3xYvZ9pR5tS7mB1cD4eG6jH0iJ2kL3nOp.\r\n"
+                + "Are you sure you want to continue connecting"
+                + " (yes/no/[fingerprint])? ")
+        session.watch()
+
+        let asked = await waitUntil {
+            if case .askingHostKey = session.state { return true }
+            return false
+        }
+        #expect(asked, "screen was: \(session.screen.debugDescription)")
+    }
 }

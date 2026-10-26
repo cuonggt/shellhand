@@ -109,4 +109,64 @@ nonisolated struct HostKeyTests {
         // One question's worth, not both.
         #expect(out.components(separatedBy: "continue connecting").count == 2)
     }
+
+    // MARK: a question the terminal wrapped
+
+    /// `getBufferAsData` walks the buffer **row by row**, appending a newline
+    /// after each, so a question too long for the terminal's width arrives as
+    /// two lines with the phrase split between them — and a rule that looks
+    /// line by line then finds it in neither. A person with large text in a
+    /// narrow window is asked nothing while ssh waits on the pty.
+    @Test("a question split mid-phrase across two rows is still a question")
+    func wrappedMidPhrase() {
+        let wrapped =
+            "The authenticity of host 'web' can't be established.\n"
+            + "ED25519 key fingerprint is SHA256:abcdefghijklmnop.\n"
+            + "Are you sure you want to conti\n"
+            + "nue connecting (yes/no/[fingerprint])?"
+        #expect(HostKey.isBeingAsked(wrapped))
+    }
+
+    /// The buffer right-trims every row, so a wrap that falls on a space
+    /// loses that space altogether: rejoining the rows gives
+    /// "continueconnecting" and no amount of looking for the phrase as
+    /// written will find it.
+    @Test("a question wrapped at a space is still a question")
+    func wrappedAtASpace() {
+        let wrapped =
+            "The authenticity of host 'web' can't be established.\n"
+            + "ED25519 key fingerprint is SHA256:abcdefghijklmnop.\n"
+            + "Are you sure you want to continue\n"
+            + "connecting (yes/no/[fingerprint])?"
+        #expect(HostKey.isBeingAsked(wrapped))
+    }
+
+    /// Worth having separately: the fingerprint is what the person is being
+    /// asked to vouch for, and a wrapped question that comes back as the
+    /// whole screen has buried it.
+    @Test("a wrapped question still carries its fingerprint")
+    func wrappedCarriesFingerprint() {
+        let wrapped =
+            "some earlier output\n"
+            + "The authenticity of host 'web' can't be established.\n"
+            + "ED25519 key fingerprint is SHA256:abcdefghijklmnop.\n"
+            + "Are you sure you want to conti\n"
+            + "nue connecting (yes/no/[fingerprint])?"
+        let out = HostKey.question(in: wrapped)
+        #expect(out.contains("SHA256:abcdefghijklmnop"))
+        #expect(!out.contains("some earlier output"))
+    }
+
+    /// The guard that must survive all of the above: a wrapped question with
+    /// the shell running on after it has still been answered.
+    @Test("a wrapped question with output after it is not being asked")
+    func wrappedButAnswered() {
+        let answered =
+            "Are you sure you want to conti\n"
+            + "nue connecting (yes/no/[fingerprint])?\n"
+            + "Warning: Permanently added 'web'.\n"
+            + "deploy@web:~$ ls\n"
+            + "Documents  notes.txt"
+        #expect(!HostKey.isBeingAsked(answered))
+    }
 }
