@@ -340,12 +340,22 @@ credentials, which is most of it.
   handle — so a full round trip completed over those pipes before the one that
   did not. The immediate re-run was clean at 420, so it is still episodic and
   that number still proves nothing.
-  **The next thing to ask is `strayReplies`.** After a timeout it is 1 if the
-  reply turned up late and 0 if it never came at all, which separates "the
-  server never answered" from "the answer was lost between the reader thread
-  and `deliver`" — and nothing has ever been able to tell those two apart.
-  `SFTPListingTests` does not look at it; a timeout there is exactly where it
-  would be worth printing.
+  **The thing to ask is `lateReplies`**, which exists for this and nothing
+  else. A reply nobody is waiting for used to be a stray whatever it was;
+  `deliver` now asks whether its id is one `giveUp` recorded, so after a
+  timeout `lateReplies == 1` says the answer was merely slow and `0` says it
+  never came — which separates "the far end never answered" from "the answer
+  was lost between the reader thread and `deliver`", and nothing has ever been
+  able to tell those two apart. It also stops the ordinary case of a slow
+  server raising an alarm about framing, since `strayReplies` is now only ever
+  an answer to a request nobody made, which really does mean the conversation
+  has lost its place. `SFTPTransferTests` asserting exactly 1 stray is
+  unaffected: its `intruder` was never given up on.
+  **But it is not automatic capture, so do not expect it to be.** The counters
+  are read after the fact and a failing test is gone by then; what they buy is
+  that re-running the stalled test with a longer deadline and watching
+  `lateReplies` is now a question with an answer. The stall still roams, so
+  which test to re-run is whichever one last named a request.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only

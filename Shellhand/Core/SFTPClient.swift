@@ -20,9 +20,27 @@ actor SFTPClient {
     private var nextRequest: UInt32 = 1
     private var waiting: [UInt32: CheckedContinuation<Reply, Error>] = [:]
     private var ended: SFTPError?
-    /// Replies that arrived with an id nothing was waiting for. More than
-    /// none means the conversation has lost its place.
+    /// Replies that arrived with an id nothing was waiting for **and** nothing
+    /// had given up on. More than none means the conversation has lost its
+    /// place.
     private(set) var strayReplies = 0
+
+    /// Replies to requests that were given up on, arriving after their
+    /// deadline had passed.
+    ///
+    /// These are the **opposite** of a lost place: the far end was answering
+    /// all along and only missed the deadline, so counting them as strays —
+    /// which is what happened until the deadline existed to make them
+    /// possible — would raise an alarm about framing over what is really a
+    /// slow server. They are kept apart because they are the one thing that
+    /// can separate the two halves of the stall this project has been chasing:
+    /// after a timeout, a late reply says the answer was merely slow, and none
+    /// at all says it never came.
+    private(set) var lateReplies = 0
+
+    /// Requests given up on whose reply has not arrived. An id leaves the
+    /// moment its answer does, so this holds only what is still owed.
+    private var gaveUpOn: Set<UInt32> = []
 
     /// The directory the session started in, which is where the browser opens.
     private(set) var home = "."
@@ -237,6 +255,7 @@ actor SFTPClient {
     /// `ssh` child running with nothing left to end it.
     private func giveUp(on id: UInt32, type: SFTP.PacketType, after deadline: Duration) {
         guard let continuation = waiting.removeValue(forKey: id) else { return }
+        gaveUpOn.insert(id)
         continuation.resume(
             throwing: SFTPError("the far end did not answer \(type) within \(deadline)"))
     }
@@ -502,7 +521,9 @@ actor SFTPClient {
         var reader = SFTP.Reader(Data(body))
         guard let id = try? reader.uint32() else { return }
         guard let waiter = waiting.removeValue(forKey: id) else {
-            strayReplies += 1
+            // Nobody is waiting, and that is two different things: the answer
+            // to something given up on, or one to a request nobody made.
+            if gaveUpOn.remove(id) != nil { lateReplies += 1 } else { strayReplies += 1 }
             return
         }
         waiter.resume(returning: Reply(type: type, body: Data(body.dropFirst(4))))

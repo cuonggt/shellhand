@@ -59,9 +59,14 @@ nonisolated struct SFTPDeadlineTests {
 
     /// The race the deadline introduces, pinned where it would otherwise be
     /// found in the field: a reply that arrives after its request was given up
-    /// on must be counted a stray, because resuming a continuation that has
-    /// already been answered traps and takes the app with it.
-    @Test("a reply that arrives after the deadline is a stray, not a second answer")
+    /// on must not be resumed into a continuation already answered, because
+    /// that traps and takes the app with it.
+    ///
+    /// It is counted **late** rather than stray, and that difference is the
+    /// only diagnostic there is for the stall: after a timeout, a late reply
+    /// says the far end was answering all along and merely missed the
+    /// deadline, while none at all says the answer never came.
+    @Test("a reply that arrives after the deadline is counted late, not stray")
     func lateReply() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
@@ -86,11 +91,44 @@ nonisolated struct SFTPDeadlineTests {
             to: fromPeer.fileHandleForWriting.fileDescriptor,
             failing: "the late reply could not be sent")
 
+        var late = 0
+        for _ in 0..<100 where late == 0 {
+            late = await client.lateReplies
+            if late == 0 { try await Task.sleep(for: .milliseconds(20)) }
+        }
+        #expect(late == 1)
+        #expect(await client.strayReplies == 0)
+    }
+
+    /// The other side of that distinction, and what `strayReplies` is left
+    /// meaning once late ones are taken out of it: an answer to something
+    /// nobody ever asked. This one really does say the conversation has lost
+    /// its place, which is why it must not be diluted by the ordinary case of
+    /// a server that was a moment too slow.
+    @Test("a reply to a request nobody made is still a stray")
+    func trueStray() async throws {
+        let toPeer = Pipe()
+        let fromPeer = Pipe()
+        let client = await SFTPClient.speaking(
+            to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
+        defer { try? fromPeer.fileHandleForWriting.close() }
+
+        // Nothing has been sent at all, so there is no id this could be the
+        // answer to and nothing has been given up on either.
+        var body = SFTP.Writer()
+        body.uint32(4242)
+        body.uint32(SFTP.Status.ok.rawValue)
+        try SFTPClient.writeAll(
+            SFTP.Writer.packet(.status, body.bytes),
+            to: fromPeer.fileHandleForWriting.fileDescriptor,
+            failing: "the stray reply could not be sent")
+
         var strays = 0
         for _ in 0..<100 where strays == 0 {
             strays = await client.strayReplies
             if strays == 0 { try await Task.sleep(for: .milliseconds(20)) }
         }
         #expect(strays == 1)
+        #expect(await client.lateReplies == 0)
     }
 }
