@@ -7,12 +7,14 @@ Shellhand keeps your machines in a list you can file into groups and find by
 tag, opens each session as a tab running the system's own `ssh`, and browses
 and moves files over SFTP.
 
+![The host list: groups in the sidebar, and a selected host showing the user, key and jump host it inherited from the groups above it beside the exact ssh command it will run](docs/screenshot.png)
+
 ## Install
 
 Requires macOS 26. The build is universal, signed and notarized, and updates
 itself from here.
 
-Download `Shellhand-0.0.1.dmg` from
+Download the DMG from
 [the latest release](https://github.com/cuonggt/shellhand/releases/latest),
 or use Homebrew:
 
@@ -34,8 +36,9 @@ what the licence is for.
 
 ## Status
 
-Pre-release, version 0.0.1 — the first release, and the update mechanism it
-ships with has not yet been proven against a second one.
+Pre-release. No version is named here on purpose — the release page is the one
+that cannot go stale. It updates itself through Sparkle, which has been
+exercised from one release to the next rather than merely wired up.
 
 This is cut back to an MVP: the host list and the editor, tabs, files over
 SFTP, and import and export. Four things that were built have been taken out
