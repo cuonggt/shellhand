@@ -182,63 +182,22 @@ struct SidebarView: View {
 
     private var filtering: Bool { !search.isEmpty || !chosenTags.isEmpty }
 
-    /// Name, address and tags, matched loosely enough that half a name finds a
-    /// host and strictly enough that the list stays short.
     private var matches: [Host] {
-        store.snapshot.hosts
-            .filter { host in
-                guard chosenTags.allSatisfy({ Tags.has($0, host) }) else { return false }
-                guard !search.isEmpty else { return true }
-                let needle = search.lowercased()
-                return host.name.lowercased().contains(needle)
-                    || host.addr.lowercased().contains(needle)
-                    || host.tags.contains { $0.lowercased().contains(needle) }
-                    || host.effective.user.lowercased().contains(needle)
-            }
-            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        SidebarRows.matches(in: store.snapshot.hosts, search: search, tags: chosenTags)
     }
 
     // MARK: the rows
 
-    /// One row of the sidebar, whether it stands for a group, a host or the
-    /// label over a run of them.
-    private struct Row: Identifiable {
-        enum Kind {
-            case header(String)
-            case group(Group, expanded: Bool)
-            case host(Host, showPath: Bool)
-        }
-        let id: String
-        let kind: Kind
-        let depth: Int
-    }
+    /// `SidebarRow` under its old name, so the rest of this file reads as it
+    /// did. The type and the building of it are in `SidebarRows`, where they
+    /// can be checked without a window.
+    private typealias Row = SidebarRow
 
-    /// The whole sidebar as a flat list: the tree walked in order when nothing
-    /// is being searched for, the matches when something is.
+    /// The whole sidebar as a flat list: the tree walked in order when
+    /// nothing is being searched for, the matches when something is.
     private func rows(matching found: [Host]) -> [Row] {
-        if filtering {
-            guard !found.isEmpty else { return [] }
-            return [Row(id: "label:matching", kind: .header("Matching"), depth: 0)]
-                + found.map {
-                    Row(id: "host:\($0.id)", kind: .host($0, showPath: true), depth: 0)
-                }
-        }
-        // A title over the whole list. Only where there is a list: a header
-        // above nothing is worse than no header, and the empty case already
-        // has its own panel.
-        var out: [Row] = []
-        if !store.snapshot.hosts.isEmpty || !store.snapshot.groups.isEmpty {
-            out.append(Row(id: "label:hosts", kind: .header("Hosts"), depth: 0))
-        }
-        walk(under: "", depth: 0, seen: [], into: &out)
-        let loose = store.ungrouped
-        if !loose.isEmpty {
-            out.append(Row(id: "label:ungrouped", kind: .header("Ungrouped"), depth: 0))
-            out += loose.map {
-                Row(id: "host:\($0.id)", kind: .host($0, showPath: false), depth: 0)
-            }
-        }
-        return out
+        SidebarRows.build(
+            tree: store.tree, collapsed: collapsed, matching: filtering ? found : nil)
     }
 
     /// What a click on the list meant, worked out from where it landed.
@@ -279,22 +238,6 @@ struct SidebarView: View {
         case let .host(id): store.tree.ancestry(ofHost: id)
         case let .group(id): store.tree.ancestry(ofGroup: id)
         case nil: []
-        }
-    }
-
-    /// Groups before hosts at every level. `seen` is
-    /// only there so a group that somehow became its own ancestor stops the
-    /// walk rather than the app.
-    private func walk(under parent: String, depth: Int, seen: Set<String>, into out: inout [Row]) {
-        for group in store.children(of: parent) where !seen.contains(group.id) {
-            let open = !collapsed.contains(group.id)
-            out.append(Row(
-                id: "group:\(group.id)", kind: .group(group, expanded: open), depth: depth))
-            guard open else { continue }
-            walk(under: group.id, depth: depth + 1, seen: seen.union([group.id]), into: &out)
-            out += store.hosts(in: group.id).map {
-                Row(id: "host:\($0.id)", kind: .host($0, showPath: false), depth: depth + 1)
-            }
         }
     }
 

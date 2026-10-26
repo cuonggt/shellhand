@@ -41,6 +41,8 @@ calls itself, what it shows and how it names a child),
 `Views/Panes.swift` (which tab is in front,
 what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
+`Views/SidebarRows.swift` (the sidebar flattened into one list, and what the
+search field narrows it to),
 `Sessions.shortTitle`, and `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
@@ -441,6 +443,14 @@ credentials, which is most of it.
 - The sidebar's `List` holds **one `ForEach` over one flat array of rows**,
   tree and search results alike. Two shapes in one list left the rows of the
   shape it had just dropped drawn over the new ones.
+  The array is built in `Views/SidebarRows.swift`, not in the view: the row
+  type, the walk down the tree and the search filter are all there, so the
+  ordering — groups before hosts at every level, a folded group keeping its
+  own row and losing what is under it, the search results **replacing** the
+  tree rather than joining it — is checked without a window. `SidebarView`
+  keeps `private typealias Row = SidebarRow` so the other six hundred lines
+  read as they did. Matching nothing is a list of nothing, and that is a
+  test: the tree coming back would be the old bug wearing a new shape.
 - Anything automated waits for **its own copy** of the app. `pgrep Shellhand`
   matches every copy, including one the user has open.
 - **Driving Quick Connect against a real host list connects to a real
