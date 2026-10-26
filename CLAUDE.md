@@ -44,7 +44,10 @@ what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 `Views/SidebarRows.swift` (the sidebar flattened into one list, and what the
 search field narrows it to),
 `Sessions.shortTitle`, `Terminal/HostKey.swift` (whether ssh is waiting to be
-told about a host key, and which part of the screen is the question), the SFTP
+told about a host key, and which part of the screen is the question),
+`Terminal/SessionProgress.swift` (what a session's state becomes given what is
+on its screen) — driven both as a rule and against a terminal fed by hand, with
+the real watchdog running over it — the SFTP
 conversation against a server written in Swift in this process, and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
@@ -792,6 +795,36 @@ credentials, which is most of it.
 - `import Foundation` in a test file makes **`Host` ambiguous** with
   `Foundation.Host`, so `Tests/ValidationTests.swift` deliberately does not
   import it. If something there needs `UUID`, give it a literal id instead.
+  The other way out, where the import is genuinely needed — `TerminalSessionTests`
+  writes an ssh log to disk — is to spell the app's own type `Shellhand.Host`,
+  exactly as `SwiftUI.Group` is spelled out elsewhere. Leave the comment on the
+  import saying why, or the next person deletes it and the file stops building.
+- **A terminal that has heard nothing does not come back empty, and reading it
+  as output made `.connecting` meaningless.** `getBufferAsData` hands back the
+  buffer's own blank rows, so the watchdog's `!screen.isEmpty` was true from the
+  moment a session opened: every session went to `.connected` on the first look,
+  200ms in, whether or not anything had answered — so a host refusing to answer
+  read as connected, in every release up to 0.0.4. The question is whether the
+  far side has **said** anything, so the test is blank rather than empty
+  (`trimmingCharacters(in: .whitespacesAndNewlines)`). `HostKey` was always
+  immune, because it filters empty lines before taking its tail.
+  **Only a real buffer could have found this.** The rule's own tests all passed
+  against the broken version, because they were written from the same
+  assumption the code made — `""` for "nothing said yet". That is the argument
+  for the scripted SFTP server in a second shape: the value is not only in the
+  misbehaviour you script, it is in the assumption you did not know you had.
+  So both halves are pinned in different places on purpose —
+  `SessionProgressTests` for the rule, `TerminalSessionTests` for the buffer
+  being non-empty *and* blank — because the rule is only right while that
+  second fact holds, and SwiftTerm is free to change it.
+- **The watchdog's decision is `SessionProgress`; `watch()` is only the
+  looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
+  of the screen is one pure function, which is why there are tests for it at
+  all. `watch()` is deliberately not private, and `logPath` is readable, so a
+  test can run the real loop against a view it has fed through SwiftTerm's own
+  `feed(text:)` — no pty, no process, no unknown host. `ticks` is what tells
+  "the watchdog ran and the state did not move" from "the watchdog never ran",
+  and there is a test for each.
 - **Settings is a window this app makes itself**, not a SwiftUI `Settings`
   scene: the glass chrome macOS 26 draws comes from `.fullSizeContentView` in
   the window's style mask, and a scene does not expose it — setting it

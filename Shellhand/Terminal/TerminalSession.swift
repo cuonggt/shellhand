@@ -14,7 +14,7 @@ import SwiftTerm
 @Observable
 @MainActor
 final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
-    enum State: Equatable {
+    nonisolated enum State: Equatable {
         case connecting
         case connected
         /// ssh wants an answer about a host key. The text is what it asked.
@@ -39,7 +39,8 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     private(set) var ticks = 0
     private(set) var host: Host?
 
-    private let logPath: String
+    /// Readable so that a test can put an ssh log where the watchdog looks.
+    let logPath: String
     private var watchdog: Task<Void, Never>?
     private var themeObserver: (any NSObjectProtocol)?
 
@@ -202,7 +203,11 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
 
     /// Watches for the two things that need the app rather than the terminal:
     /// a host-key question, and ssh's own log filling up.
-    private func watch() {
+    ///
+    /// What it *decides* is `SessionProgress`; this is only the looking. Not
+    /// private, so that a test can run the loop against a view it has fed by
+    /// hand rather than a real `ssh` on a real pty.
+    func watch() {
         watchdog?.cancel()
         watchdog = Task { [weak self] in
             while !Task.isCancelled {
@@ -212,23 +217,8 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                 self.readDiagnostics()
                 if case .ended = self.state { return }
 
-                let screen = self.screen
-                // Only the end of the buffer counts. ssh writes the question
-                // last and then waits, so a match anywhere else is a question
-                // that has already been answered — and matching the whole
-                // buffer left the session stuck on a prompt that was gone.
-                if HostKey.isBeingAsked(screen) {
-                    if case .askingHostKey = self.state {} else {
-                        self.state = .askingHostKey(HostKey.question(in: screen))
-                    }
-                } else if !screen.isEmpty {
-                    switch self.state {
-                    case .connecting, .askingHostKey:
-                        // Anything else from the far side means we are through.
-                        self.state = .connected
-                    default:
-                        break
-                    }
+                if let next = SessionProgress.next(from: self.state, screen: self.screen) {
+                    self.state = next
                 }
             }
         }
