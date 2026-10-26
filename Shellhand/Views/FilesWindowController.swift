@@ -32,17 +32,33 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
     /// right side goes there; from nowhere in particular it asks which host
     /// rather than showing this Mac twice.
     static func show(store: HostStore, on host: Host?) {
-        if let shared {
-            shared.showWindow(nil)
+        if front() {
             // Asked again on a different host, the window that is already
             // there moves — `start` would not, since it only fills a side
             // that was never chosen.
-            if let host { Task { await shared.files.show(host) } }
+            if let host, let shared { Task { await shared.files.show(host) } }
             return
         }
         let controller = FilesWindowController(store: store, on: host)
         shared = controller
         controller.showWindow(nil)
+    }
+
+    /// Brings the browser forward if there is one, and says whether there
+    /// was. **Needs no store**, which is the whole point.
+    ///
+    /// `AppActions` is a focused scene value, nil whenever the host window is
+    /// not in front — and that included standing in the SFTP window itself,
+    /// so ⌘B did nothing at the one moment it was most likely to be pressed.
+    /// *Opening* a browser needs the store the host window holds, but
+    /// bringing an existing one forward does not; and if you are looking at
+    /// the window, one exists by definition. So the menu tries this first and
+    /// falls back to `AppActions` only to make a new one.
+    @discardableResult
+    static func front() -> Bool {
+        guard let shared else { return false }
+        shared.showWindow(nil)
+        return true
     }
 
     private init(store: HostStore, on host: Host?) {

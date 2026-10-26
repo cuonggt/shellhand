@@ -134,8 +134,13 @@ struct ShellhandCommands: Commands {
                 HostsWindow.front()
                 actions?.showHosts()
             }
-            Button("SFTP") { actions?.openFiles() }
-                .keyboardShortcut("b", modifiers: .command)
+            // Fronting a browser that already exists needs no store, so it
+            // works from the SFTP window itself where `AppActions` is nil.
+            // Only making a new one has to go through the host window.
+            Button("SFTP") {
+                if !FilesWindowController.front() { actions?.openFiles() }
+            }
+            .keyboardShortcut("b", modifiers: .command)
         }
 
         // Settings is a window of this app's own making, not a `Settings`

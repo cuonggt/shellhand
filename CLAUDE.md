@@ -270,9 +270,14 @@ credentials, which is most of it.
   instead, finding the window by an identifier that `TagsHostsWindow` sets
   from behind `ContentView`. It is the one window this app does not make
   itself, so there is no controller holding it.
-  SFTP still goes through `AppActions`, because opening the window needs the
-  store the host window holds — so **⌘B is dead while the SFTP window itself
-  is in front**. Bring the host list forward and it works.
+  **SFTP has the same problem and half the same answer.** *Opening* a browser
+  needs the store the host window holds, so that still goes through
+  `AppActions` — but *fronting* one that already exists does not, and
+  `FilesWindowController.front()` does it without a store. The menu item tries
+  that first, which is what makes ⌘B work from inside the SFTP window, where
+  `AppActions` is nil and the shortcut used to do nothing at all. What is left
+  inert is narrow: ⌘B with **no** browser open *and* the host window not in
+  front — from Settings, say. Bring the host list forward and it works.
 - Two `.disabled` on one menu item **compose**, so both have to be true for it
   to be usable. "Delete Group…" carried one on `hasGroup` and a second on
   `hasHost`, which meant deleting a group needed a host selected as well.
