@@ -76,6 +76,27 @@ actor SFTPClient {
 
     private func setHome(_ path: String) { home = path }
 
+    /// A client speaking to handles somebody else owns, already reading.
+    ///
+    /// The one seam for tests. Everything below this line is the SFTP
+    /// conversation, and the only reason it has never been checked is that
+    /// `connect` insists on spawning `ssh` to reach a real server — so the
+    /// conversation could only be exercised against one. Handed two pipes
+    /// instead, it can be held against a server that misbehaves **on
+    /// purpose**: one that answers a read with fewer bytes than it promised,
+    /// or replies to a request nobody made. Neither is something a real
+    /// server can be asked to do.
+    ///
+    /// The `Process` here is never started, so **do not call `close()` on a
+    /// client made this way** — terminating a process that never ran raises.
+    /// Close the handles instead.
+    static func speaking(to toServer: FileHandle, from fromServer: FileHandle) async -> SFTPClient {
+        let client = SFTPClient(
+            process: Process(), toServer: toServer, fromServer: fromServer)
+        await client.startReading()
+        return client
+    }
+
     func close() {
         guard ended == nil else { return }
         finish(SFTPError("the file session was closed"))

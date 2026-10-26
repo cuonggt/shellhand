@@ -43,7 +43,8 @@ what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
 `Views/SidebarRows.swift` (the sidebar flattened into one list, and what the
 search field narrows it to),
-`Sessions.shortTitle`, and `HostStore` itself — its writes, moves, tag
+`Sessions.shortTitle`, the SFTP conversation against a server written in
+Swift in this process, and `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs. **Nothing still checks the app end to end.** Three shell harnesses once did — the terminal on a real pty,
 the window from store to sidebar, SFTP against a loopback server — and they
@@ -164,8 +165,38 @@ credentials, which is most of it.
   reachable from a test with a couple of values and a list. Quick Connect
   especially: driving the real palette is how a session to a live machine got
   opened during a check, which is a high price for testing a sort.
+- **The SFTP conversation is checked against a server written in Swift, in
+  this process** — `Tests/ScriptedSFTP.swift`, on a pair of pipes, reached
+  through the one seam `SFTPClient.speaking(to:from:)`. The spikes once ran a
+  real loopback server and it is still in the pre-reset bundle, but it is
+  **Go**, with a module of its own, so restoring it would make a Go toolchain
+  a prerequisite for `xcodebuild test` in a project that is otherwise Swift
+  all the way down — and it came tangled with a spike UI inside the app, 798
+  lines of it in `ContentView` alone.
+  The better reason is that a real server is **well behaved**, and what had
+  never been exercised is the handling of one that is not: a server answering
+  a read with fewer bytes than its own `stat` promised, or sending a reply to
+  a request nobody made. Neither can be asked of a real server; both are a
+  line here. What it gives up is real — it answers from this project's idea
+  of SFTP, so a misunderstanding shared by both ends goes unnoticed, and
+  `SFTPWireTests` pinning the encoding separately is what makes that bearable.
+  Do **not** call `close()` on a client made through that seam: its `Process`
+  was never started, and terminating one that never ran raises.
+- **An empty file could not be carried, in every release up to 0.0.3.**
+  `download` read "`stat` said zero" and "`stat` would not say" as the same
+  number — `attributes?.size ?? 0` flattens **two** optionals, since the size
+  is absent whenever the protocol's flags omit it — and then `done == 0` had
+  to treat both as failure. A zero-byte file came back `0 of 0 bytes arrived`,
+  so lock files, `.keep` and a freshly rotated log were all uncarryable. The
+  size is an optional now, and a size the server did give must match exactly,
+  zero included. Found by the first test that could reach it.
 - **A rule type lifted into `Views/` is MainActor unless you say otherwise,
-  and so is the enum it works on.** The app target defaults to MainActor, so
+  and so is the enum it works on.** This catches **test helpers too**:
+  `Tests/` is compiled into the app target, so a class there picks the default
+  up exactly as one in `Views/` does, and `ScriptedSFTP` needed `nonisolated`
+  for the same reason `PaneTab` did. Three separate times in one day, with it
+  already written down — so if you are writing a type a test will touch,
+  start it `nonisolated`. The app target defaults to MainActor, so
   `Panes`, `QuickConnect` **and `PaneTab` itself** all picked it up, which
   made even `PaneTab`'s `Equatable` conformance actor-isolated and unusable
   from a `nonisolated` test. Nothing in the app ever notices, because every

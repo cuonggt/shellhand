@@ -19,7 +19,11 @@ extension SFTPClient {
         _ remote: String, to local: String, onProgress: @Sendable (Int64, Int64) -> Void = { _, _ in }
     ) async throws {
         let attributes = try? await stat(remote)
-        let total = Int64(attributes?.size ?? 0)
+        /// What the far end says the file is, or nil where it would not say.
+        /// **Not the same as zero**, which is why this is an optional: see the
+        /// check at the end.
+        let expected = attributes?.size.map { Int64($0) }
+        let total = expected ?? 0
         let handle = try await openFile(remote, flags: .read)
         defer { Task { try? await self.closeHandle(handle) } }
 
@@ -73,7 +77,16 @@ extension SFTPClient {
         // nothing downstream would notice: the handle closes, the job says
         // done, and what is on disk is wrong. Nothing at all is the same
         // failure, and the one that was happening.
-        if done == 0 || (total > 0 && done != total) {
+        //
+        // What counts as short depends on whether the far end gave a size at
+        // all. Where it did, the answer has to match it exactly — and that
+        // includes matching **zero**, because an empty file is a real file and
+        // nothing arriving is exactly right for one. Reading "stat said zero"
+        // and "stat would not say" as the same number made every empty file
+        // impossible to carry: `done == 0` fired on both. Where there is no
+        // size to check against, nothing at all is still worth catching.
+        let short = expected.map { done != $0 } ?? (done == 0)
+        if short {
             let stray = strayReplies
             throw SFTPError(
                 "\(remote): \(done) of \(total) bytes arrived"
