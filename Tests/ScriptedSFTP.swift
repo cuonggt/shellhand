@@ -26,6 +26,11 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     /// Answer every write with a failure, to see what the client does when
     /// the far end will not take the bytes.
     private let refuseWrites: Bool
+    /// Names to hand back from `readdir`, one batch per call, then EOF. A
+    /// directory arriving in pieces is the normal case, not an edge one.
+    private let directory: [[String]]
+    /// Answer anything that expects a plain "that worked" with this instead.
+    private let refusal: (code: SFTP.Status, said: String)?
 
     private let clientToPeer = Pipe()
     private let peerToClient = Pipe()
@@ -36,15 +41,19 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     private let lock = NSLock()
     private var storedWrites: [UInt64: Data] = [:]
     private var storedFlags: UInt32?
+    private var servedBatches = 0
 
     init(
         contents: Data = Data(), claimedSize: Int64? = nil,
-        intruder: Data? = nil, refuseWrites: Bool = false
+        intruder: Data? = nil, refuseWrites: Bool = false,
+        directory: [[String]] = [], refusal: (code: SFTP.Status, said: String)? = nil
     ) {
         self.contents = contents
         self.claimedSize = claimedSize ?? Int64(contents.count)
         self.intruder = intruder
         self.refuseWrites = refuseWrites
+        self.directory = directory
+        self.refusal = refusal
     }
 
     /// Everything the client wrote — the file as it would have landed.
@@ -152,10 +161,38 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
             let offset = (try? reader.uint64()) ?? 0
             let count = (try? reader.uint32()) ?? 0
             out.append(readReply(id: id, offset: offset, count: count))
+        case .opendir:
+            var body = SFTP.Writer()
+            body.uint32(id)
+            body.data(Data([0xCD]))
+            out.append(SFTP.Writer.packet(.handle, body.bytes))
+        case .readdir:
+            let batch = lock.withLock { () -> [String]? in
+                guard servedBatches < directory.count else { return nil }
+                defer { servedBatches += 1 }
+                return directory[servedBatches]
+            }
+            guard let batch else {
+                out.append(Self.status(id: id, .eof))
+                break
+            }
+            var body = SFTP.Writer()
+            body.uint32(id)
+            body.uint32(UInt32(batch.count))
+            for name in batch {
+                body.string(name)
+                body.string("-rw-r--r--  1 someone  staff  0 Jan  1 00:00 \(name)")
+                body.uint32(0)                 // no attributes present
+            }
+            out.append(SFTP.Writer.packet(.name, body.bytes))
         case .close:
             out.append(Self.status(id: id, .ok))
         default:
-            out.append(Self.status(id: id, .ok))
+            if let refusal {
+                out.append(Self.status(id: id, refusal.code, said: refusal.said))
+            } else {
+                out.append(Self.status(id: id, .ok))
+            }
         }
         return out
     }
@@ -172,11 +209,11 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
 
     // MARK: packets a test can hand in
 
-    static func status(id: UInt32, _ code: SFTP.Status) -> Data {
+    static func status(id: UInt32, _ code: SFTP.Status, said: String = "") -> Data {
         var body = SFTP.Writer()
         body.uint32(id)
         body.uint32(code.rawValue)
-        body.string("")
+        body.string(said)
         body.string("")
         return SFTP.Writer.packet(.status, body.bytes)
     }

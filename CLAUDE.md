@@ -182,6 +182,12 @@ credentials, which is most of it.
   `SFTPWireTests` pinning the encoding separately is what makes that bearable.
   Do **not** call `close()` on a client made through that seam: its `Process`
   was never started, and terminating one that never ran raises.
+  **A directory ends when the far end says EOF, never because a batch came
+  back empty.** `list` filters `.` and `..` *after* reading each batch, so a
+  directory holding nothing else yields no entries while still having more to
+  come — inferring the end from an empty result would stop early and look
+  right in every ordinary case. The scripted server can send exactly that
+  batch, and does.
 - **An empty file could not be carried, in every release up to 0.0.3.**
   `download` read "`stat` said zero" and "`stat` would not say" as the same
   number — `attributes?.size ?? 0` flattens **two** optionals, since the size
