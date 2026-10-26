@@ -47,7 +47,9 @@ search field narrows it to),
 told about a host key, and which part of the screen is the question),
 `Terminal/SessionProgress.swift` (what a session's state becomes given what is
 on its screen) — driven both as a rule and against a terminal fed by hand, with
-the real watchdog running over it — the SFTP
+the real watchdog running over it — `Model/Files.swift`'s own orchestration
+(the guard that keeps a pane from re-opening, and the replace question with a
+copy genuinely parked on its continuation), the SFTP
 conversation against a server written in Swift in this process, and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
@@ -368,6 +370,27 @@ credentials, which is most of it.
   this disk is and a server's usually is not. And an **unpointed** pane is not
   local — the same `chosen` flag that stops it calling itself "This Mac" —
   so the three states are pinned rather than the two that are obvious.
+- **`Model/Files.swift`'s orchestration is testable because a local pane needs
+  no session.** `Core.list` reads this disk when the session id is empty, so
+  both sides can be pointed at directories of ours and local-to-local copying
+  — a real thing this window does, not a contrivance — drives the whole path
+  through the same code the app runs: no server, no fakes, no fixture.
+  That reaches the two pieces worth holding still. The **open guard** is
+  pinned by pointing a pane where it already is and finding it still there:
+  without the guard every re-entry walks to the home directory again, and what
+  that cost was worse than a wasted walk — two opens went through together and
+  a download landed in the wrong folder *with the job reporting success*. The
+  **replace question** is driven by starting the copy in a `Task` and not
+  awaiting it, waiting for `asking` to appear, checking the destination still
+  holds its old bytes, then answering. Cancel is the one that matters: the test
+  asserts the copy **returns at all**, because a copy waiting on a question no
+  longer on screen does not overwrite anything, it waits for ever.
+  **Do not walk `parent()` up out of a temporary directory.** The first version
+  of that test went up into the system temporary directory and spent **nine
+  seconds** listing every other process's leavings — slow, and at the mercy of
+  what happens to be in there. Make a parent of your own with one child in it:
+  0.013s, and `path == parent` with one named entry is a stronger claim than
+  "some ancestor" was.
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built once
   per snapshot: the lookups and indexes `HostStore` used to hold, the descent
   in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"
