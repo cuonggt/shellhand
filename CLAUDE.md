@@ -391,6 +391,33 @@ credentials, which is most of it.
   what happens to be in there. Make a parent of your own with one child in it:
   0.013s, and `path == parent` with one named entry is a stronger claim than
   "some ancestor" was.
+- **`FilePlace.opens` exists so that one open can be told from two.** The
+  guard on `opening` is all that stops two calls in flight at once becoming
+  two connections, and it has no other outward sign — once both have finished
+  the state looks identical either way, which is exactly how the bug went
+  unnoticed. `ticks` on a terminal session is there for the same reason.
+  **Do not try to catch the window by polling.** The first attempt started one
+  open in a `Task`, waited for `connecting` to appear, then called `use` again
+  — and a refused connection on loopback is quicker than any poll, so the
+  first had *finished* before it could be seen and the second was a sequential
+  retry measuring nothing. The diagnostic said so in one line: `opens=1
+  chosen=true host=nil failure=…Connection refused`. What works needs no
+  timing at all: make **both tasks before either runs**, and actor
+  serialisation does the rest, since whichever goes first cannot be
+  interrupted before its `await` and so arrives there with `opening` set. It
+  holds whichever order they run in, so it leans on no scheduling guarantee.
+  The failed attempt was worth something anyway — it showed that a **retry**
+  after a failure is allowed and must stay allowed, because the failure resets
+  `host` to nil, which is how somebody fixes a mistyped port and tries again.
+  That has a test of its own now.
+- **The suite leaves its scratch stores behind**, and it adds up faster than
+  it looks: a day of runs left **4,843 directories and 185MB** under
+  `$TMPDIR`. `HostStoreTests` has always worked this way and `FilesTests`
+  follows it — a store per test, at `shellhand-test-<uuid>/shellhand.sqlite`,
+  never removed. Harmless in that macOS clears `/var/folders` eventually and
+  the real list is untouched (check its timestamp, as ever), but worth knowing
+  before wondering where the disk went. Only `SFTPFarEndTests` and
+  `TerminalSessionTests` clean up after themselves.
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built once
   per snapshot: the lookups and indexes `HostStore` used to hold, the descent
   in `hostsBeneath`, and the two climbs — `path`, for the "Production / EU"

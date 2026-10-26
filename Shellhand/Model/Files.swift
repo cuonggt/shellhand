@@ -24,6 +24,14 @@ final class FilePlace {
     /// which looks like an empty home directory.
     private(set) var chosen = false
     private var opening = false
+    /// How many times a session has actually been opened.
+    ///
+    /// The guard on `opening` is the only thing stopping two calls in flight
+    /// at once from becoming two connections, and it has **no other outward
+    /// sign**: one open and two look identical from outside once both have
+    /// finished, which is exactly how the bug it prevents went unnoticed.
+    /// `ticks` on a terminal session is here for the same reason.
+    private(set) var opens = 0
     private let db: String
 
     init(db: String) { self.db = db }
@@ -55,6 +63,7 @@ final class FilePlace {
         }
         guard !opening else { return }
         opening = true
+        opens += 1
         connecting = true
         defer {
             opening = false

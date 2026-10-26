@@ -2,6 +2,11 @@ import Foundation
 import Testing
 @testable import Shellhand
 
+/// `Foundation` is needed here for the directories, and it brings
+/// `Foundation.Host` with it, so the app's own is named — as `HostStoreTests`
+/// does for the same reason.
+private typealias AppHost = Shellhand.Host
+
 /// A file pane, and the two of them together, against directories on this
 /// disk.
 ///
@@ -205,5 +210,82 @@ struct FilesTests {
         #expect(model.asking == nil)
         #expect(read(into + "/new.txt") == "fresh")
         #expect(model.transfers.isEmpty)
+    }
+
+    // MARK: a pane asked to open twice at once
+
+    /// A store of our own holding a host nothing answers for. Port 1 refuses
+    /// at once, so ssh fails immediately and reaches no machine at all —
+    /// which is what makes driving the connecting path cheap enough to do.
+    private func refusingHost() async throws -> (db: String, host: AppHost) {
+        let db = scratchDB()
+        let store = HostStore(dbPath: db)
+        await store.refresh()
+        let host = try #require(
+            await store.save(AppHost(name: "nowhere", addr: "127.0.0.1", port: 1)))
+        return (db, host)
+    }
+
+    /// The backstop behind the early guard, and the two turn away different
+    /// things. The early one refuses a pane pointed where it already is; this
+    /// one refuses the **second of two opens in flight at once**, which the
+    /// early guard lets straight through — its `listing.path.isEmpty` clause
+    /// is true for as long as the first open is still connecting. Letting
+    /// both through is what put a download in the wrong folder with the job
+    /// reporting success.
+    ///
+    /// **Both tasks are made before either runs, and nothing here polls.**
+    /// Waiting for `connecting` to appear was the first attempt and it does
+    /// not work: a refused connection on loopback is quicker than any poll,
+    /// so the first call had finished before it could be seen and the second
+    /// was a sequential retry measuring nothing. This way needs no timing at
+    /// all — whichever task the actor runs first cannot be interrupted before
+    /// its `await`, so it gets there with `opening` set, and the other is
+    /// turned away whichever order they go in.
+    @Test("a pane asked to open twice at once opens once")
+    func opensOnceWhenAskedTwice() async throws {
+        let (db, host) = try await refusingHost()
+        let place = FilePlace(db: db)
+
+        let first = Task { await place.use(host) }
+        let second = Task { await place.use(host) }
+        await first.value
+        await second.value
+
+        #expect(place.opens == 1, "opens=\(place.opens)")
+    }
+
+    /// The other side of that guard, and worth its own test: it must not turn
+    /// away a **retry**. A host that refused leaves `host` nil, so pointing
+    /// the pane at it again is a fresh attempt rather than a re-entry — which
+    /// is how someone fixes a typo in a port and tries once more.
+    @Test("a pane that failed to open will try again")
+    func retriesAfterAFailure() async throws {
+        let (db, host) = try await refusingHost()
+        let place = FilePlace(db: db)
+
+        await place.use(host)
+        #expect(place.opens == 1)
+        #expect(place.failure != nil)
+
+        await place.use(host)
+        #expect(place.opens == 2, "a second attempt should have been made")
+    }
+
+    /// Why `chosen` is set **before** the connecting starts: a host that
+    /// refuses has to leave the pane saying what went wrong, rather than
+    /// falling back to "Choose a host", which reads as though nothing had
+    /// been tried.
+    @Test("a host that refuses leaves the pane showing why, not asking again")
+    func refusedShowsWhy() async throws {
+        let (db, host) = try await refusingHost()
+        let place = FilePlace(db: db)
+
+        await place.use(host)
+        #expect(place.chosen)
+        #expect(place.failure != nil)
+        #expect(place.host == nil)
+        #expect(!place.connecting)
+        #expect(place.opens == 1)
     }
 }
