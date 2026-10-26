@@ -96,13 +96,31 @@ notarize_file() {
     # version of this asserted the keychain profile was missing whatever went
     # wrong, and the first time it fired the real answer was a timed-out
     # request to Apple — which sent the reading straight to the wrong place.
-    if ! xcrun notarytool submit "$file" --keychain-profile "$profile" --wait \
-        --output-format json > "$result" 2> "$complaint"; then
+    #
+    # **A timed-out upload is retried, because it is not a failure of this
+    # release.** Reaching Apple's notary service is not uniformly reliable from
+    # everywhere: measured from here one request answered in 0.38s and the next
+    # timed out entirely, seconds apart, and a run once got the app through and
+    # lost the DMG. Without this, a flapping link costs a whole rebuild per
+    # attempt — the build and the app's own notarization are thrown away to
+    # retry the upload that failed. Only a timeout is retried; a rejection is
+    # about the thing being shipped and is reported at once.
+    local attempt
+    for attempt in 1 2 3 4 5; do
+        if xcrun notarytool submit "$file" --keychain-profile "$profile" --wait \
+            --output-format json > "$result" 2> "$complaint"; then
+            break
+        fi
+        if grep -q "timed out" "$complaint" && (( attempt < 5 )); then
+            echo "  $(basename "$file"): attempt $attempt timed out reaching Apple; waiting 30s"
+            sleep 30
+            continue
+        fi
         echo "--- notarytool said ---" >&2
         cat "$complaint" >&2
         echo "-----------------------" >&2
-        fail "notarytool couldn't submit $(basename "$file"). \"The request timed out\" is Apple's service and worth retrying; \"No Keychain password item\" means the profile \"$profile\" is not stored (see the top of this script)."
-    fi
+        fail "notarytool couldn't submit $(basename "$file") after $attempt attempt(s). \"The request timed out\" that many times means the route to Apple is the problem, not this release — try another network. \"No Keychain password item\" means the profile \"$profile\" is not stored (see the top of this script)."
+    done
     local status id
     status=$(plutil -extract status raw "$result")
     id=$(plutil -extract id raw "$result")
