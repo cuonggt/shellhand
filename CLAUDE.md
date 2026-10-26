@@ -466,6 +466,18 @@ credentials, which is most of it.
   Worth knowing if it is ever revisited: macOS keeps the app menu for About,
   Settings, Hide and Quit, and "bring a window forward" normally lives in the
   Window menu, which lists it already.
+  **And nothing is called Library any more either.** `LibraryView` outlived
+  the concept by weeks — it is the pane beside the sidebar showing the host
+  list, whole or filed under a group, so it is `HostsPane` now, with
+  `HostsLayout`, matching `TerminalPane` and `FilesPane`. The sweep that found
+  it also cleared the other cut-era words, and they are all deliberate:
+  `credential` and `snippet` in `Portable` keep old exports importable,
+  `forwards` in `Store` is the append-only v1 migration, and `forwardAgent` is
+  a live setting. **The one exception is `@AppStorage("libraryLayout")`**,
+  which keeps its old name for the same reason
+  `setFrameAutosaveName("FilesWindow")` does: it is where the existing
+  preference lives, and renaming it resets everybody's choice silently. This
+  machine's was set to `grid`, so that was not hypothetical.
 - Text size sits in **Terminal**, not View: "Bigger Text" in a View menu does
   not say bigger than what, and these size the terminal and nothing else.
 - **The toolbar is placed by the same rule as the menus** — by what each item

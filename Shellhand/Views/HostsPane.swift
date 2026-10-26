@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The main panel with nothing picked in the sidebar, and with a group picked.
+/// The pane beside the sidebar with nothing picked, and with a group picked.
 ///
 /// The sidebar is narrow: a row there has room for a name and a destination,
 /// middle-truncated. This is the same list with room to breathe — the groups
@@ -11,7 +11,7 @@ import SwiftUI
 /// somewhere of its own, so there are never two ideas about what is selected.
 /// A group picked here shows its own contents next, which is the same view
 /// one level down.
-struct LibraryView: View {
+struct HostsPane: View {
     let store: HostStore
     /// Whose contents to show, or nil for the whole list.
     let group: Group?
@@ -21,10 +21,15 @@ struct LibraryView: View {
     /// How you like to read the list, so `@AppStorage` rather than
     /// `@SceneStorage`: it is about you, not about this window.
     ///
+    /// **The key stays `libraryLayout`** though nothing is called Library any
+    /// more: it is what every existing preference is stored under, and
+    /// renaming it would quietly reset everybody's choice. Same reason
+    /// `setFrameAutosaveName("FilesWindow")` must not change.
+    ///
     /// For anything automated: `@AppStorage` is keyed by the bundle id and
     /// not by `--db`, so a run against a scratch store writes the real
     /// preference. Read it first and put it back.
-    @AppStorage("libraryLayout") private var layout = LibraryLayout.list
+    @AppStorage("libraryLayout") private var layout = HostsLayout.list
 
     var body: some View {
         ScrollView {
@@ -99,10 +104,10 @@ struct LibraryView: View {
             Picker("Layout", selection: $layout) {
                 Image(systemName: "list.bullet")
                     .accessibilityLabel("List")
-                    .tag(LibraryLayout.list)
+                    .tag(HostsLayout.list)
                 Image(systemName: "square.grid.2x2")
                     .accessibilityLabel("Grid")
-                    .tag(LibraryLayout.grid)
+                    .tag(HostsLayout.grid)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -275,7 +280,7 @@ struct LibraryView: View {
     }
 }
 
-/// Whether the library reads as a list of rows or a grid of cards.
-enum LibraryLayout: String {
+/// Whether the list reads as rows or as a grid of cards.
+enum HostsLayout: String {
     case list, grid
 }

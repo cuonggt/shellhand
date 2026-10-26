@@ -571,14 +571,14 @@ struct DetailView: View {
                            onShowSession: { onPickTab(.session($0)) },
                            onEdit: onEdit)
         } else {
-            library
+            hosts
         }
     }
 
     /// Nothing picked, or a group picked. Either way the answer is the list —
     /// the whole of it, or the part filed under that group.
-    private var library: some View {
-        LibraryView(
+    private var hosts: some View {
+        HostsPane(
             store: store, group: group,
             onPick: onPick, onEditGroup: onEditGroup)
     }
