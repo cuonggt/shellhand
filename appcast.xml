@@ -3,6 +3,30 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.3</title>
+            <pubDate>Mon, 26 Oct 2026 09:15:13 +0700</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>0.0.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**⌘B brings the SFTP window back.** It used to do nothing whenever the host
+list was not the front window — including from the SFTP window itself and from
+Settings, which is exactly when you would reach for it. Bringing a browser you
+already have forward no longer needs the host list in front. Opening a *new*
+one still does, because that needs the host list the window holds.
+
+Nothing else is visible from the outside. The rest of this release is
+groundwork: the rules behind the tab strip, Quick Connect's ranking, the group
+tree and the host store have been lifted into places that can be checked
+without driving the window, and the suite went from 254 checks to 315 — the
+first of them to reach above the engine. Three cycle guards, against a group
+becoming its own ancestor, had never been exercised until now.
+
+The Release build compiles without a warning again, which is mostly worth
+saying because that is where a real one would otherwise hide.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.3/Shellhand-0.0.3.dmg" length="13853982" type="application/octet-stream" sparkle:edSignature="gFXxA0PaH9y2qQUuDkjSFeIv/WmRw+2UBPcAizZ+loX/dkx4Py7MQUrE7iRaVB8Pr8XyGgMTo+8hd5IS9AGTBg=="/>
+        </item>
+        <item>
             <title>0.0.2</title>
             <pubDate>Sun, 25 Oct 2026 22:31:59 +0700</pubDate>
             <sparkle:version>2</sparkle:version>
