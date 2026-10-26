@@ -1238,7 +1238,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 and 0.0.2 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.4 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -1250,6 +1250,16 @@ checked the EdDSA signature and installed it — and what landed verifies,
 staples and passes Gatekeeper. 0.0.2 was cut for that purpose and earned it
 twice over: it also exposed the delta bug above, which is unreachable on a
 first release because there is no earlier version to make a delta against.
+An installed 0.0.3 then took 0.0.4 the same way, from the menu item: what
+landed is 0.0.4 (4), hardened, secure-timestamped, stapled, accepted by
+Gatekeeper and verifying `--deep --strict`, with Sparkle relaunching the app
+on a new pid and `brew info` dropping its upgrade arrow once the app matched
+the cask. **But nobody was asked**, because this machine carries
+`SUAutomaticallyUpdate = 1` while the shipped `Info.plist` sets neither that
+key nor `SUEnableAutomaticChecks`. So that run proves the feed, the signature
+and the install, and says **nothing** about the dialog a new user meets — the
+"offered with the release notes, then installed on a click" half is still
+proven only by 0.0.2.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
