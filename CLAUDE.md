@@ -190,6 +190,59 @@ credentials, which is most of it.
   come — inferring the end from an empty result would stop early and look
   right in every ordinary case. The scripted server can send exactly that
   batch, and does.
+- **Both suites that reach that server carry a one-minute time limit, and an
+  observed hang is why.** A run wedged for sixteen minutes on *"a directory
+  that arrives in pieces is joined, in order"* and had to be killed by hand,
+  having reported nothing at all. A stack sample taken while it was still
+  stuck showed both pipe reader threads idle in `read`, **no cooperative-pool
+  threads at all**, and so a continuation in `SFTPClient.waiting` that nothing
+  was ever going to resume. Nothing was merely queued, either: with the pool
+  idle an enqueued `deliver` would have run, so the reply either never came or
+  arrived and was dropped.
+  It is **not explained.** It did not come back in 25 runs — 15 of that suite
+  alone, 10 of the whole suite — and shared mutable state, the
+  register-before-write order in `send` (which is correct: `waiting[id]` is
+  set synchronously on the actor before the write) and a collision with the
+  handshake's id 0 (`nextRequest` starts at 1) were each ruled out. The one
+  thing that was different about that run is that a cold build was compiling
+  beside it, which is timing rather than a mechanism. Note what a sample
+  cannot tell you here: the handshake and the readdir loop look identical from
+  outside, both just a blocked reader thread, so the log line naming a test
+  proves only which test **started**.
+  So the limit is not a fix, it is what makes the next one cheap: a named
+  failure instead of an unbounded wait. **It really does interrupt this, and
+  that was worth checking rather than assuming**: a time limit works by
+  cancelling the test's task, `withCheckedThrowingContinuation` is **not**
+  cancellation-aware, and cancelling a task parked on one does not resume it —
+  so the trait could have compiled, read perfectly and still wedged on the one
+  case it was added for. It does not. Checked with a client on pipes nobody
+  serves, the exact shape of the real failure: swift-testing recorded *"Time
+  limit was exceeded: 60.000 seconds"*, failed that test by name, and let the
+  run **finish**. `.timeLimit` takes only
+  `.minutes`, so one minute is the floor, and `SFTPWireTests` has none because
+  it only encodes and has nothing to wait for.
+- **`FileHandle.write(contentsOf:)` raises an ObjC exception, and `send`'s
+  `catch` cannot catch it.** `SFTPClient.send` wraps its write in a `do`/`catch`
+  meant to turn a dead far end into *"the file session stopped listening"*, and
+  that block is **dead code**: writing to a closed or broken handle raises
+  `NSFileHandleOperationException`, which is not a Swift error, so it sails past
+  that `catch`, past the `try?` in `list`'s
+  `defer { Task { try? await self.closeHandle(handle) } }`, and terminates the
+  process. It killed a whole run this way. `list` leaves that close unawaited, a
+  test's `defer { server.stop() }` closes the client's own `toServer` underneath
+  it — `stop()` closes `clientToPeer.fileHandleForWriting`, which *is* that
+  handle — and the orphaned close then writes to a closed descriptor **after
+  every test has already passed**. So swift-testing reported 158 tests passed
+  and the run still came out failed, the crash in the tail with no test named
+  and no `✘` anywhere: read only the test counts and it looks like a pass.
+  The shipped consequence is the same shape, and worse: an `sftp` child that
+  dies mid-transfer leaves a broken pipe, which is precisely what that `catch`
+  was written for and precisely what it cannot do. **Not fixed.** The read side
+  already uses `Darwin.read` on the descriptor; the write side doing the same
+  would raise nothing and make the `catch` real. Whether this is also the
+  sixteen-minute hang above is **not** established — same race, but a write
+  that raises crashes rather than hangs, so the hang's own landing is still
+  unaccounted for.
 - **An empty file could not be carried, in every release up to 0.0.3.**
   `download` read "`stat` said zero" and "`stat` would not say" as the same
   number — `attributes?.size ?? 0` flattens **two** optionals, since the size

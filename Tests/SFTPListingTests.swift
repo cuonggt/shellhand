@@ -7,7 +7,14 @@ import Testing
 /// Both are multi-step and neither could be reached before: `list` keeps
 /// asking until the server says EOF, and an error has to survive two layers —
 /// the status code, and whatever sentence the server chose to send with it.
-@Suite("SFTP listings")
+///
+/// The time limit is on the suite because every test in it waits on a reply
+/// carried over a pipe, and a reply that never comes is not a failure — it is
+/// an unbounded wait. One run sat for sixteen minutes before it was killed by
+/// hand, having reported nothing at all; a limit turns that into a named
+/// failure. It is deliberately not on `SFTPWireTests`, which only encodes and
+/// decodes and has nothing to wait for.
+@Suite("SFTP listings", .timeLimit(.minutes(1)))
 nonisolated struct SFTPListingTests {
     @Test("a directory that arrives in one go")
     func oneBatch() async throws {

@@ -8,7 +8,14 @@ import Testing
 /// spawns `ssh` and the only way to answer it was a real server. The ones
 /// worth having are where the **server misbehaves**, which a real one will
 /// not do on request.
-@Suite("SFTP transfers")
+///
+/// The time limit is on the suite because every test in it waits on a reply
+/// carried over a pipe, and a reply that never comes is not a failure — it is
+/// an unbounded wait. One run sat for sixteen minutes before it was killed by
+/// hand, having reported nothing at all; a limit turns that into a named
+/// failure. It is deliberately not on `SFTPWireTests`, which only encodes and
+/// decodes and has nothing to wait for.
+@Suite("SFTP transfers", .timeLimit(.minutes(1)))
 nonisolated struct SFTPTransferTests {
     private func scratch(_ name: String) -> String {
         let directory = NSTemporaryDirectory() + "shellhand-sftp-\(UUID().uuidString)"
