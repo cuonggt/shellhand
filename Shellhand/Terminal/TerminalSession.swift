@@ -92,10 +92,18 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     }
 
     /// A local shell, for a window that wants one.
+    ///
+    /// **It starts at home, and saying so is the whole point.** A forked shell
+    /// inherits the app's working directory, and an app launched the ordinary
+    /// way — by LaunchServices, from the Dock or Finder — has `/`. So a local
+    /// shell opened at the root of the disk, which is nobody's idea of where a
+    /// terminal begins; Terminal.app opens at home and so does this.
     func startLocalShell() {
         state = .connected
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        view.startProcess(executable: shell, execName: "-" + (shell as NSString).lastPathComponent)
+        view.startProcess(
+            executable: shell, execName: "-" + (shell as NSString).lastPathComponent,
+            currentDirectory: FileManager.default.homeDirectoryForCurrentUser.path)
     }
 
     func send(_ text: String) { view.send(txt: text) }

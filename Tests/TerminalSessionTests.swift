@@ -234,4 +234,38 @@ struct TerminalSessionTests {
         }
         #expect(asked, "screen was: \(session.screen.debugDescription)")
     }
+
+    // MARK: a real shell on a real pty
+
+    /// **The one test here that spawns a process**, and it is worth it: it
+    /// asks the shell itself where it started, which is the only answer that
+    /// cannot be wrong. A forked shell inherits the app's working directory
+    /// and an app launched by LaunchServices has `/`, so a local shell used to
+    /// open at the root of the disk.
+    ///
+    /// The oracle is the filesystem rather than the screen: reading the
+    /// terminal back would depend on what SwiftTerm's own accessibility
+    /// exposes and on the shell's prompt, neither of which is this test's
+    /// business. A file either says `$HOME` or it does not.
+    @Test("a local shell starts in the home directory, not at the root")
+    func localShellStartsAtHome() async throws {
+        let out = TestScratch.directory("shell") + "/pwd"
+        let session = session()
+        session.startLocalShell()
+        defer { session.close() }
+
+        // The shell has to be up before it can be typed at, and a login shell
+        // reads the user's own rc files first, which is not instant.
+        #expect(await waitUntil { session.state == .connected })
+        session.send("pwd > \(out)\n")
+
+        let landed = await waitUntil { FileManager.default.fileExists(atPath: out) }
+        #expect(landed, "the shell never wrote to \(out)")
+        guard landed else { return }
+
+        let said = try String(contentsOfFile: out, encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        #expect(said == home, "the shell started in \(said), not \(home)")
+    }
 }

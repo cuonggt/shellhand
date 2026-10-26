@@ -79,8 +79,10 @@ report, so restoring it means test-only code back inside the shipping binary.
 Driving from outside costs the app nothing, which is why this is the shape to
 extend rather than the bundle.
 
-The terminal on a pty and SFTP against a real server are still uncovered, and
-for those the bundle's Go server remains the honest answer — its own `go.mod`
+A **local shell on a real pty** is covered too, by the one test in the suite
+that spawns a process: it opens one and asks the shell itself where it
+started. `ssh` in particular and SFTP against a real server are still
+uncovered, and for those the bundle's Go server remains the honest answer — its own `go.mod`
 says why: writing an SSH server in Swift to test a Swift SSH client against is
 not a trade worth making. `ScriptedSFTP` is not a counter-example; it speaks
 SFTP over a pair of pipes and is no SSH server and gives no pty.
@@ -370,6 +372,22 @@ credentials, which is most of it.
   caller is already on the main actor; the first test that looks from outside
   fails to compile. Mark them `nonisolated`, the enum included — it took
   three compiles to walk that chain down.
+- **A local shell starts at home, and it took a user to notice.** A forked
+  shell inherits the app's working directory, and an app launched the ordinary
+  way — LaunchServices, from the Dock or Finder — has `/`: confirmed on a
+  running copy, `lsof -d cwd` said `/`. So New Local Shell opened at the root
+  of the disk for every release up to 0.0.5. `startProcess` takes
+  `currentDirectory:` and always did; nothing was passing it.
+  **The test for it asks the shell**, which is the only answer that cannot be
+  wrong: it sends `pwd > <file>` and reads the file. The oracle is deliberately
+  the filesystem and not the screen — reading the terminal back would depend on
+  what SwiftTerm's accessibility exposes and on the user's own prompt, neither
+  of which is the test's business. It is also the first real pty in the suite,
+  which is a thing the three removed harnesses were supposed to be for, and it
+  needs no server: 0.47s, no Go, no network, no external host.
+  Checked the way round that matters: with the fix removed the test says *"the
+  shell started in /, not /Users/cuonggt"*. A test for a bug that passes
+  without the fix is worth nothing.
 - **`Sessions.shortTitle` has a pure overload** taking the host's name and the
   title, with the `TerminalSession` one calling it. A session builds a 900×560
   terminal view and registers a notification observer, which is a lot of
