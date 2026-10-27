@@ -1800,6 +1800,16 @@ credentials, which is most of it.
   leaves whatever was frontmost **reporting** as frontmost, so that check does
   not give the lock away either — only the window count and
   `CGSSessionScreenIsLocked` do.
+  **`window-check.sh` carried a guard against this that could not fire**, and
+  it is the `FilesModel.close()` lesson again: the comment said *"Ask
+  CoreGraphics, which answers through the lock"* while the code asked System
+  Events for the frontmost app and failed only on an **empty** answer — which
+  a lock never gives. So the run passed the guard and died further down on the
+  zero windows, reading as a launch that never happened, which is the exact
+  confusion the guard existed to prevent. It reads
+  `CGSSessionScreenIsLocked` out of `ioreg` now, and the walk is checked
+  against fixtures of all four shapes — key true, key absent, key false, no
+  session dictionary — because a guard nobody can make fire is worth nothing.
 - A screenshot taken with `screencapture -R` captures **the screen at that
   rectangle, not that window** — if the app loses focus between reading its
   bounds and capturing, you get whatever is on top, which may be the user's own

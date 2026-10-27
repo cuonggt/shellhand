@@ -42,11 +42,49 @@ fi
 
 # A locked screen reports zero windows for every process and fails
 # `front window` with "Invalid index", which reads exactly like an app that
-# never launched. Ask CoreGraphics, which answers through the lock.
-if /usr/bin/python3 -c 'import sys' 2>/dev/null; then :; fi
-locked=$(osascript -e 'tell application "System Events" to return (name of first application process whose frontmost is true)' 2>/dev/null)
-[ -z "$locked" ] && fail "cannot read the frontmost app — the screen may be locked"
-echo "window-check: frontmost before this runs: $locked"
+# never launched.
+#
+# This guard used to ask System Events for the frontmost app and fail only if
+# the answer came back empty — while its comment claimed it asked
+# CoreGraphics. It never fired: behind a lock the app that *was* frontmost
+# goes on being reported as frontmost (measured, with `loginwindow` at layer
+# 2004 over everything and another app still named). So the run went through
+# the guard and died further down, on the zero windows, reading as a launch
+# that failed. A comment is evidence of what somebody intended, never of what
+# the code does.
+#
+# The window server's own session dictionary is the thing that answers through
+# the lock: `CGSSessionScreenIsLocked` is present and true while locked and
+# absent otherwise.
+locked=$(/usr/bin/python3 - <<'LOCKED'
+import plistlib, subprocess
+
+raw = subprocess.run(
+    ["/usr/sbin/ioreg", "-n", "Root", "-d1", "-a"], capture_output=True).stdout
+
+
+def locked(node):
+    if isinstance(node, dict):
+        for session in node.get("IOConsoleUsers") or []:
+            if isinstance(session, dict) and session.get("CGSSessionScreenIsLocked"):
+                return True
+        return any(locked(value) for value in node.values())
+    if isinstance(node, list):
+        return any(locked(value) for value in node)
+    return False
+
+
+try:
+    print("yes" if locked(plistlib.loads(raw)) else "no")
+except Exception:
+    print("unknown")
+LOCKED
+)
+[ "$locked" = yes ] && fail "the screen is locked. Behind the lock System Events
+       reports no windows for any process, so this check cannot see the window
+       it drives — and the failure would read as the app never launching."
+frontmost=$(osascript -e 'tell application "System Events" to return (name of first application process whose frontmost is true)' 2>/dev/null)
+echo "window-check: locked: $locked; frontmost: ${frontmost:-unknown}"
 
 # --- the user's preferences, borrowed and given back ----------------------
 
