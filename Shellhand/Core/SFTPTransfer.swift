@@ -185,13 +185,40 @@ extension SFTPClient {
         }
     }
 
+    /// Makes a folder, treating one already there as made and every other
+    /// refusal as a failure.
+    ///
+    /// This replaces a `try?`, half of which was deliberate: carrying a folder
+    /// onto one that already exists has to merge rather than fail, so an
+    /// upload cannot simply insist on making every folder. It swallowed a real
+    /// refusal with it — and an **empty** folder is where nothing else would
+    /// notice, since a folder with files under it surfaces the refusal through
+    /// the files' own failures while an empty one vanishes with the job
+    /// reporting done. That is the download side's bug from 0.0.8 wearing the
+    /// other direction's clothes.
+    ///
+    /// The far end is **asked** rather than the status read, the way `remove`
+    /// asks what a path is before deciding what to send: SFTP 3 has no
+    /// "already exists" status — that arrived in version 4 — so OpenSSH
+    /// answers a name already taken with the same `SSH_FX_FAILURE` it gives a
+    /// read-only disk, and no code can tell them apart. The original error is
+    /// what gets thrown, not the `stat`'s, because it carries the far end's
+    /// own sentence about what it refused.
+    private func makeFolder(_ path: String) async throws {
+        do {
+            try await mkdir(path)
+        } catch {
+            guard let there = try? await stat(path), there.isDirectory else { throw error }
+        }
+    }
+
     func uploadDirectory(
         _ local: String, to remote: String,
         onProgress: @Sendable (Int64, Int64) -> Void = { _, _ in }
     ) async throws {
         let base = (local as NSString).lastPathComponent
         let root = remote.hasSuffix("/") ? remote + base : remote + "/" + base
-        try? await mkdir(root)
+        try await makeFolder(root)
 
         let manager = FileManager.default
         var files: [(String, String, Int64)] = []
@@ -202,7 +229,7 @@ extension SFTPClient {
             guard manager.fileExists(atPath: from, isDirectory: &isDirectory) else { continue }
             let to = root + "/" + relative
             if isDirectory.boolValue {
-                try? await mkdir(to)
+                try await makeFolder(to)
             } else {
                 let size = (try? manager.attributesOfItem(atPath: from)[.size] as? Int64) ?? 0
                 files.append((from, to, size))

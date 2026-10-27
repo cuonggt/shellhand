@@ -161,4 +161,78 @@ nonisolated struct SFTPFolderTests {
             returned.folders == Self.sample.folders,
             "folders lost on the way: \(Self.sample.folders.subtracting(returned.folders).sorted())")
     }
+
+    // MARK: a refusal nothing else would notice
+
+    /// A folder with files under it surfaces a refused `mkdir` through the
+    /// files' own failures. An empty one has nothing to fail with, so
+    /// swallowing the refusal left it vanishing while the job reported done —
+    /// the same silent shape as the empty folder that downloaded as nothing.
+    /// The server refuses for real here: `-R` is OpenSSH's own read-only
+    /// mode, not an answer this project wrote.
+    @Test("an empty folder that cannot be made fails rather than reporting success")
+    func refusedAtTheRoot() async throws {
+        let local = TestScratch.directory("folder-up-refused") + "/nothing"
+        try FileManager.default.createDirectory(atPath: local, withIntermediateDirectories: true)
+        let server = try RealSFTPServer(readOnly: true)
+        defer { server.stop() }
+
+        let client = try await server.client()
+        let error = await #expect(throws: SFTPError.self) {
+            try await client.uploadDirectory(local, to: server.root)
+        }
+        #expect(error?.message.isEmpty == false, "the refusal came back with nothing said")
+        #expect(!Self.isFolder(server.root + "/nothing"), "it was made after all")
+    }
+
+    /// The other half, and the one that needs the far end **asked** rather
+    /// than the status read: SFTP 3 has no "already exists", so OpenSSH
+    /// answers a name already taken with the same failure it gives a
+    /// read-only disk. Here the destination is a folder — already there, so
+    /// carrying on is right — while the folder that has to go inside it is a
+    /// **file**, which is a refusal worth reporting. With both swallowed the
+    /// upload said done and the folder was simply not there.
+    @Test("a folder whose name is taken by a file fails, where one already made does not")
+    func refusedInside() async throws {
+        let local = TestScratch.directory("folder-up-taken") + "/tree"
+        try FileManager.default.createDirectory(
+            atPath: local + "/empty", withIntermediateDirectories: true)
+        let server = try RealSFTPServer { root in
+            try FileManager.default.createDirectory(
+                atPath: root + "/tree", withIntermediateDirectories: false)
+            FileManager.default.createFile(
+                atPath: root + "/tree/empty", contents: Data("taken".utf8))
+        }
+        defer { server.stop() }
+
+        let client = try await server.client()
+        await #expect(throws: SFTPError.self) {
+            try await client.uploadDirectory(local, to: server.root)
+        }
+        #expect(
+            !Self.isFolder(server.root + "/tree/empty"),
+            "the file standing in the folder's place was replaced")
+    }
+
+    /// The control. Half of the `try?` those two replace was deliberate —
+    /// carrying a folder onto one already there merges rather than fails — so
+    /// a fix that merely stopped swallowing would satisfy both tests above
+    /// and break every upload this app makes.
+    @Test("a folder carried onto one already there still merges")
+    func uploadsOntoItself() async throws {
+        let local = TestScratch.directory("folder-up-twice") + "/tree"
+        try Self.plant(Self.sample, at: local)
+        let server = try RealSFTPServer()
+        defer { server.stop() }
+
+        let client = try await server.client()
+        try await client.uploadDirectory(local, to: server.root)
+        try await client.uploadDirectory(local, to: server.root)
+
+        let arrived = Self.snapshot(server.root + "/tree")
+        #expect(arrived.files == Self.sample.files)
+        #expect(
+            arrived.folders == Self.sample.folders,
+            "folders lost on the second pass: \(Self.sample.folders.subtracting(arrived.folders).sorted())")
+    }
 }

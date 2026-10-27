@@ -794,13 +794,31 @@ credentials, which is most of it.
   empty top-level folder is lost — nested folders make it anyway, as a side
   effect of `withIntermediateDirectories` — while without nested folders
   recorded, the whole-tree and round-trip tests fail and the empty one passes.
-  **Noticed and not chased:** upload `mkdir`s each folder with `try?`. Partly
-  on purpose — uploading into a folder that already exists merges rather than
-  fails — but it swallows a real refusal too. A folder with files in it
-  surfaces that through the files' own failures; an *empty* folder whose
-  `mkdir` was refused would vanish with the job reporting done. Only when
-  something is already wrong, but it is the same silent shape. The fix would
-  tell "already there" apart from every other failure.
+  **And the same silent shape was left on the upload side, chased since.**
+  `uploadDirectory` made each folder with `try?`, half of it on purpose —
+  carrying a folder onto one already there merges rather than fails, so an
+  upload cannot insist on making every folder — and it swallowed a real
+  refusal with it. A folder with files under it surfaces that through the
+  files' own failures; an **empty** folder whose `mkdir` was refused vanished
+  with the job reporting done, which is the download bug wearing the other
+  direction's clothes. `makeFolder` now tolerates a folder already there and
+  throws everything else.
+  **The status cannot tell those apart, and that was measured rather than
+  assumed.** SFTP 3 has no "already exists" — it arrived in version 4 — so
+  OpenSSH answers a name already taken with plain `SSH_FX_FAILURE`, exactly
+  what it gives a read-only disk: with the tolerance removed the control came
+  back `SFTPError(message: "Failure", status: .failure)`. So the far end is
+  **asked** instead, the way `remove` asks what a path is before choosing its
+  request, and the original error is what gets thrown, not the `stat`'s, since
+  it carries the far end's own sentence.
+  **Three tests, each failing its own arm taken out**, and the refusals are
+  real rather than scripted — `-R` is OpenSSH's own read-only mode. With the
+  destination's `mkdir` swallowed again, only the read-only case fails; with
+  each folder's swallowed, only the case where a **file** stands in the
+  folder's place fails; and with `makeFolder` tolerating nothing, only the
+  control fails — a folder carried twice onto itself. That control is the
+  point: a fix that merely stopped swallowing passes both refusal tests and
+  breaks every upload this app makes.
 - **A rule type lifted into `Views/` is MainActor unless you say otherwise,
   and so is the enum it works on.** This catches **test helpers too**:
   `Tests/` is compiled into the app target, so a class there picks the default
