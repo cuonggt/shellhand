@@ -220,12 +220,12 @@ given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is
 the one capability the cut back to an MVP costs; a session to such a host still
 works, because ssh asks on the pty where it can be typed.
 
-**A host-key question wrapped across three rows or more is still missed.** Two
-are rejoined, and three wants a terminal under about 34 columns. The right fix
-is at the source — have `screen` rejoin wrapped rows, so every reader sees
-logical lines — and it is not available: SwiftTerm keeps `Buffer.lines` and
-`Terminal.cols` internal, so the app cannot ask how wide the terminal is or
-which rows continued.
+**A host-key question is found by putting rows back together, not by reading
+logical lines.** It is found and shown whole down to about three columns, which
+is narrower than anyone types in, but the right fix is still at the source —
+have `screen` rejoin wrapped rows, so every reader sees logical lines — and it
+is not available: SwiftTerm keeps `Buffer.lines` and `Terminal.cols` internal,
+so the app cannot ask how wide the terminal is or which rows continued.
 
 **And one bug is bounded rather than understood.** A run of the suite once sat
 sixteen minutes on a single SFTP conversation, with both pipe reader threads

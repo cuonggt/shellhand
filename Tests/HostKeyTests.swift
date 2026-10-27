@@ -202,4 +202,63 @@ nonisolated struct HostKeyTests {
             + "Documents  notes.txt"
         #expect(!HostKey.isBeingAsked(answered))
     }
+
+    // MARK: a question wrapped across more than two rows
+
+    /// A screen as a terminal `columns` wide hands it back: each line cut into
+    /// rows of that width, each row right-trimmed as `getBufferAsData` trims
+    /// it — so a wrap that falls on a space loses the space, as it does for
+    /// real. Generated rather than typed, because typed fixtures are how this
+    /// rule was tested against a screen no terminal ever produces.
+    static func wrapped(_ text: String, at columns: Int) -> String {
+        text.split(separator: "\n", omittingEmptySubsequences: false).flatMap { line -> [String] in
+            let characters = Array(line)
+            guard !characters.isEmpty else { return [""] }
+            return stride(from: 0, to: characters.count, by: columns).map { at in
+                var row = String(characters[at..<min(at + columns, characters.count)])
+                while row.last?.isWhitespace == true { row.removeLast() }
+                return row
+            }
+        }.joined(separator: "\n")
+    }
+
+    /// OpenSSH's real question at widths that wrap its prompt across three,
+    /// four, five and six rows. Two rows was all the rule used to look at, so
+    /// each of these was a question ssh sat waiting on while the app asked
+    /// nobody anything — large text in a narrow window was enough.
+    @Test("a question wrapped across three rows or more is a question",
+          arguments: [33, 16, 13, 8])
+    func wrappedFurther(columns: Int) {
+        #expect(HostKey.isBeingAsked(Self.wrapped(Self.askedForReal, at: columns)))
+    }
+
+    /// The tail only had to reach further back. It must not let an answered
+    /// question count again, at any of those widths, which is what the
+    /// closing-`?` rule is for.
+    @Test("wrapped that far and then answered, it is not",
+          arguments: [33, 16, 13, 8])
+    func wrappedFurtherAnswered(columns: Int) {
+        for answered in [
+            Self.askedForReal + " yes",
+            Self.askedForReal + " yes\nshellhand-session-ready",
+            Self.askedForReal + " no",
+        ] {
+            #expect(!HostKey.isBeingAsked(Self.wrapped(answered, at: columns)), "at \(columns) columns")
+        }
+    }
+
+    /// At widths that narrow the warning and the fingerprint wrap too, so the
+    /// question shown has to be put back together from rows rather than found
+    /// in one — or the fingerprint is cut, at the one moment somebody has to
+    /// read it. Compared with whitespace out, since the rows break it anywhere.
+    @Test("wrapped that far, it still shows the whole fingerprint",
+          arguments: [33, 16, 13, 8])
+    func wrappedFurtherShowsFingerprint(columns: Int) {
+        let screen = Self.wrapped("some earlier output\n" + Self.askedForReal, at: columns)
+        let shown = HostKey.question(in: screen).filter { !$0.isWhitespace }
+        #expect(shown.contains("SHA256:C5SjKQsmTqrrkBXY2d/2NgFWAzj05pE4qijO5S09/00"))
+        #expect(shown.hasPrefix("Theauthenticityofhost"))
+        #expect(shown.hasSuffix("(yes/no/[fingerprint])?"))
+        #expect(!shown.contains("someearlieroutput"))
+    }
 }

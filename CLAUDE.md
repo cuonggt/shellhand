@@ -1407,13 +1407,33 @@ credentials, which is most of it.
   compared with whitespace dropped from both sides, because `trimRight: true`
   means a wrap falling on a space loses that space from the buffer and no
   search for the phrase as written gets it back.
-  **Still broken on purpose:** a question wrapped across three rows or more,
-  which wants a terminal under about 34 columns. The right fix is at the
-  source — have `screen` rejoin wrapped rows, leaving this rule untouched and
-  every reader seeing logical lines — and it is **not available**: SwiftTerm
-  keeps `Buffer.lines`, `withTerminal` and `Terminal.cols` internal, so the app
-  cannot ask how wide the terminal is or which rows continued. If a version
-  ever makes any of those public, fix it there and delete the rejoining.
+  **Three rows or more are found now too, and showing the question is the
+  half that mattered.** This was left broken on purpose while the tail's depth
+  was what kept an answered question from reading as live; once the
+  closing-`?` rule took that job, depth only had to reach back far enough to
+  find the phrase. OpenSSH's prompt is 68 characters with the phrase starting
+  25 in: three rows under 34 columns, four at 16, five at 13, six at 8 — not
+  even monotonic, since at 25 the phrase happens to start a row and two will
+  do. So no depth is the right one; the tail is **sixteen** rows, enough down to
+  about three columns, and bounded because `getBufferAsData` hands back the
+  scrollback and the watchdog asks five times a second.
+  **Finding it was not enough.** At those widths the warning and the
+  fingerprint wrap as well, and `question(in:)` looked for its start in a single
+  row and fell back to four rows — so a widened tail alone would have raised a
+  dialog asking you to trust a key **without showing the fingerprint**, at 16
+  columns and below. It now puts rows back together to find where the warning
+  opens, then the fingerprint's line, then four rows as a last resort, with a
+  search kept linear so a long scrollback cannot make it slow.
+  Pinned by fixtures **generated** rather than typed — OpenSSH 10.3's real
+  question cut into rows the way a terminal of that width hands them back,
+  right-trimmed — at 33, 16, 13 and 8 columns, live and answered. Checked the
+  way round that matters, one half at a time: with the tail back at two rows
+  the question is missed at all four widths; with the start found in one row
+  again, it is found but shown without its fingerprint or its opening at 16,
+  13 and 8. The ideal is still at the source — `screen` rejoining wrapped rows
+  so every reader sees logical lines — and still not available, since SwiftTerm
+  keeps `Buffer.lines`, `withTerminal` and `Terminal.cols` internal; if a version
+  ever makes them public, rejoin there and delete this.
   `question(in:)` needed the same treatment: with no row carrying the phrase it
   fell through to "hand back the whole screen", burying the fingerprint at the
   one moment somebody has to read it.
@@ -1439,9 +1459,8 @@ credentials, which is most of it.
   question last and waits, so it is live only while **nothing follows its
   closing `?`** — no echoed answer, no output. The two rows are still joined,
   because a wrapped question needs them; the depth just no longer does the
-  guarding. That also means a **wider tail is safe now** and would find a
-  question wrapped across three rows, still missed under about 34 columns —
-  not done, and noted in `tail(of:)`.
+  guarding. That also made a **wider tail safe**, which is what let a question
+  wrapped across three rows or more be found — see the bullet above.
   Pinned three ways and checked the way round that matters: with the old rule
   put back, `answeredQuietly` fails on all three answered forms (OpenSSH
   10.3's real wording, `fingerprint is:` with a colon, echoed `yes`, `yes` and
