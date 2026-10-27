@@ -1335,6 +1335,15 @@ credentials, which is most of it.
 - **`@AppStorage` is keyed by the bundle id, not by `--db`.** A run against a
   scratch store still reads and writes the user's real preferences, so anything
   automated that touches one has to read it first and put it back.
+  **And putting it back is not symmetrical.** `defaults export` saves the
+  domain, and a single key is still easy to restore wrongly:
+  `SUAutomaticallyUpdate` was boolean `true`, a restore with `-int 1` leaves
+  an integer, and `-bool true` will **not** change it back while the app is
+  running — the app holds the domain and re-asserts what it cached, so every
+  rewrite comes straight back as an integer. Harmless, since `bool(forKey:)`
+  reads an integer 1 and a boolean true the same way and Sparkle is no
+  exception; but write a key back with the **type** it had, and do it while
+  the app is shut.
 - The test bundle is **hosted by the app**, so running the suite launches it.
   With no `--db` that opened and migrated the real host list. `LaunchOptions`
   sends a run under XCTest to a store in the temporary directory; keep it that
@@ -1735,6 +1744,15 @@ credentials, which is most of it.
   with `onscreen=true` whatever the lock is doing, and an on-screen-only
   listing shows `loginwindow` sitting at layer ~2004 over everything. Check
   that before suspecting the app, and do not try to screenshot past it.
+  **It hides one more probe than that, found proving the update dialog:** a
+  menu item's `enabled` reads **false** whether or not it is, because AppKit
+  validates a menu when it is about to be displayed and nothing can display
+  behind a lock. `Check for Updates…` read `enabled=false` on a **Release**
+  build, which looks exactly like the Debug guard firing on the wrong build.
+  Conclude nothing about a menu from behind a lock. Note also that the lock
+  leaves whatever was frontmost **reporting** as frontmost, so that check does
+  not give the lock away either — only the window count and
+  `CGSSessionScreenIsLocked` do.
 - A screenshot taken with `screencapture -R` captures **the screen at that
   rectangle, not that window** — if the app loses focus between reading its
   bounds and capturing, you get whatever is on top, which may be the user's own
@@ -2078,7 +2096,8 @@ download, install, relaunch. `brew list --cask --versions` still says
 discrepancy to fix. And **nobody was asked**, again, because this machine
 carries `SUAutomaticallyUpdate = 1` — so the dialog a new user meets is
 *still* proven only by 0.0.2, and no amount of updating on this Mac will
-change that. Put the key aside first or it proves nothing.
+change that. Put the key aside first or it proves nothing — which was done
+for 0.0.8, below.
 **0.0.7 had not reached this machine's copy an hour after it went out — and
 then it arrived at an hour and a quarter, which killed the explanation.** The
 release was published at 10:49:45 on 2026-10-27 and the feed naming it pushed
@@ -2128,6 +2147,24 @@ copy had it some seven minutes after that. So 0.0.8 is proven end to end as
 well: feed, signature, download, install, relaunch. It is the sharpest
 arrival yet, and it is what tightened the bound above from an hour to ten
 minutes — written the same morning, on one sighting, and already too loose.
+**The dialog a new user meets is proven now, on 0.0.8 — and it needed no
+release.** Every version's DMG is still on disk, so the experiment is to
+`ditto` **0.0.7** from `build/release/0.0.7/` over `/Applications`, put
+`SUAutomaticallyUpdate` aside, and let the live feed — already offering 0.0.8
+— do the rest. Sparkle's default is to **ask**, so an install that happens at
+all has been through the dialog. It was, with the **release notes shown**:
+offered, installed on a click, relaunched at 15:56:34 on 2026-10-27 as
+0.0.8 (8) carrying `Timestamp=27 Oct 2026 at 11:59:10` — the same secure
+timestamp as the app inside the published DMG, so it is that build —
+hardened, verifying `--deep --strict`, stapled and accepted by Gatekeeper.
+One release now holds the whole path instead of it being split across two:
+feed, signature, the notes in the dialog, a click, install, relaunch.
+**Nothing was published to do it and the app ended where it started**, which
+is what makes it repeatable. The costs are the two to know about: quitting the
+app drops any live session it is holding — check `pgrep -P <pid>` first, and
+`lsof -a -p`, because `lsof` ORs its selectors without `-a` and will otherwise
+list the whole machine's sockets — and borrowing the preference domain has a
+trap of its own, noted above.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
