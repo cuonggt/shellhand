@@ -2186,17 +2186,24 @@ it a *Notarized Developer ID*, carrying 0.0.7's own build timestamp. So 0.0.7
 is proven end to end here as well — feed, signature, download, install,
 relaunch — and **nobody was asked**, for the third time.
 **What was wrong is the model, not the observation**, and this file has
-already warned twice about building one from a single sighting. One thing the
-run does show directly: Sparkle checks shortly **after a launch**, since the
-relaunch at 12:04:44 was followed by a check at 12:04:55. So the likely story
-is a relaunch somewhere between 09:02 and 12:04 — but nothing here records
-one, so that is where it stops. **Don't predict when a release will reach an
-installed copy.** What is safe is the pair of bounds, both now seen on this
-Mac: a copy may take one within ten minutes, and a copy that has just
-checked may not hear for a day. The consequence is the certainty — an install
-relaunches the app under whatever sessions are open — which is why **Check
-for Updates… is still not triggered from here**. That is the user's call, and
-this arrival shows it can happen without anyone making it.
+already warned twice about building one from a single sighting. **Then it was
+done again, in this very paragraph, within the hour** — which is why the
+mistake is left in rather than tidied away. The first version of these lines
+read *"Sparkle checks shortly after a launch, since the relaunch at 12:04:44
+was followed by a check at 12:04:55"*, and reasoned on to a relaunch somewhere
+between 09:02 and 12:04. That is one correlated pair turned into a rule, and
+it is **false**: the same copy was quit and relaunched twice that afternoon
+and `SULastCheckTime` stayed at 15:56:34 through both. The 12:04:55 check
+followed an **update install**, which is not an ordinary launch. Nothing
+replaces it — no account of when Sparkle looks is established here, and with
+`SUScheduledCheckInterval` unset its documented default of a day is the only
+answer anybody has. **Don't predict when a release will reach an installed
+copy.** What is safe is the pair of bounds, both now seen on this Mac: a copy
+may take one within ten minutes, and a copy that has just checked may not
+hear for a day. The consequence is the certainty — an install relaunches the
+app under whatever sessions are open — which is why **Check for Updates… is
+still not triggered from here**. That is the user's call, and this arrival
+shows it can happen without anyone making it.
 What 0.0.7 shipped is the host-key fix — a question answered on a quiet
 server no longer comes straight back, and a second Accept no longer types
 `yes` into the shell — with the descriptor leak into terminals behind it.
