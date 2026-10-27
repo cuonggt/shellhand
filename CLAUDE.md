@@ -581,6 +581,24 @@ credentials, which is most of it.
   could never see inheritance would pass with the fix taken out. Checked that
   way round: with `closeOnExec` marking nothing, both ends of the marked pipe
   are reported inherited and the control still passes.
+  **Upstream knows, and is not going to fix it soon.** SwiftTerm #716, open
+  since 2026-09-26, describes this exact hang — *"a shell inherited another
+  test's pipe writer, and that test waited for EOF until the run was killed"*
+  — and fixes it in the child with `POSIX_SPAWN_CLOEXEC_DEFAULT`, which is also
+  why children `Process` starts do not leak. The maintainer declined it:
+  posix_spawn *"breaks all sorts of other things"*, from Swift Subprocess,
+  where it had to be reverted. #719, merged and inside the 1.99.0 this builds
+  against, marks SwiftTerm's *own* private descriptor and treats the rest as
+  the host's job — which is what this project now does. `main`'s `Pty.swift`
+  is byte-identical to 1.99.0's, so no version bump helps. Checked
+  2026-10-27; look again before treating the window as permanent.
+  **What would close the window here, completely:** `startProcess` forks
+  synchronously, before it returns, so one lock held around a terminal's
+  `startProcess` and around every `Pipe()`-and-mark would leave no moment for
+  a fork to land in — in the app and in the suite alike, where it would take
+  the real server's one-in-two-hundred to nothing. It is not done: it couples
+  `Terminal/` to `Core/` to close a race two system calls wide, and no lock of
+  ours reaches a descriptor some framework opens.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only
