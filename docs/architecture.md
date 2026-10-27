@@ -142,7 +142,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 `Tests/` is the whole suite: inheritance, the argv, the merge, the delete
 rules, SFTP's wire format and the conversation over it — including against
 OpenSSH's own `sftp-server` — the `ssh` layer itself against macOS's own
-`sshd`, the transfer queue,
+`sshd`, and a terminal session over it, real host-key prompt included, the
+transfer queue,
 validation, themes, tags — and the rules lifted out of the layers above
 `Core/`, which is most of what used to be out of reach. What is under what and
 the fold the sidebar opens on; what a file pane calls itself and how it names a
@@ -213,17 +214,6 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 `SwiftUI.Color` in a file that hits them.
 
 ## Not here yet
-
-**The terminal over real `ssh` is not under test.** Everything beneath it is:
-the SFTP conversation twice over — against a server written in Swift in this
-process, for what a real one cannot be asked to do, and against OpenSSH's own
-`sftp-server`, for the misunderstanding both of this project's ends would share
-— and the transport itself, `SFTPClient.connect` driven against macOS's own
-`sshd` on loopback with throwaway keys, jump hosts included, and kept off your
-own `~/.ssh`. None of it needed the Go server the pre-reset bundle carries. What
-is still fed by hand is a terminal session's half: its watchdog and the
-host-key question, which are checked against text written into a terminal
-rather than against a real `ssh` prompt. The same server would do it.
 
 **Files cannot reach a host that takes only a password.** An `sftp` child is
 given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is

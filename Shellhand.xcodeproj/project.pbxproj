@@ -51,6 +51,7 @@
 		73F718188AE077E2AE4559EE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18AEC282492A0EB7F7C69600 /* ContentView.swift */; };
 		78C0ACBED9BC5C20E971BB4B /* Panes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53922636D26F782CC80079B8 /* Panes.swift */; };
 		7A151960D143D2D93DCBDC59 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE455F58F183312F905772BE /* SidebarView.swift */; };
+		7B454809056124EEB3401DA8 /* TerminalOverSSHTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */; };
 		7C288F30D5BD84EE03371F5D /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC5B41C053B8973B6F4996E /* Core.swift */; };
 		7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */; };
 		803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB132447DA9624773556608 /* TerminalSession.swift */; };
@@ -117,6 +118,7 @@
 		07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVHostsTests.swift; sourceTree = "<group>"; };
 		0985F94F2EA3F4723F856A87 /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
 		0E8192A6AF313B243CB39AE9 /* Resolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolve.swift; sourceTree = "<group>"; };
+		159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalOverSSHTests.swift; sourceTree = "<group>"; };
 		17BE9EAB65DE445A9E268752 /* SFTPFarEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPFarEndTests.swift; sourceTree = "<group>"; };
 		18AEC282492A0EB7F7C69600 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1A1E1982747B39B2219C4D67 /* SFTPRealServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRealServerTests.swift; sourceTree = "<group>"; };
@@ -263,6 +265,7 @@
 				347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */,
 				287AE931BEA1EE294A3CD956 /* StoreTests.swift */,
 				0985F94F2EA3F4723F856A87 /* TagsTests.swift */,
+				159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */,
 				698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */,
 				32297DCCF2D81F82F136D103 /* TestScratch.swift */,
 				E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */,
@@ -525,6 +528,7 @@
 				A967E12D8A3D8405DFFFEA00 /* SidebarRowsTests.swift in Sources */,
 				CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */,
 				FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */,
+				7B454809056124EEB3401DA8 /* TerminalOverSSHTests.swift in Sources */,
 				4014E7F5E27F15C047D144A3 /* TerminalSessionTests.swift in Sources */,
 				E0DB9C7A33018400B36A2FFE /* TestScratch.swift in Sources */,
 				9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */,

@@ -145,7 +145,11 @@ nonisolated final class LocalSSHD: @unchecked Sendable {
     private let log: String
     private let process = Process()
 
-    init() throws {
+    /// `session` is a command to run in place of the account's own shell, for
+    /// a terminal: what it prints is all the far side ever says, so nothing of
+    /// the user's runs interactively and the screen holds nothing a test did
+    /// not choose.
+    init(session: String? = nil) throws {
         root = try Self.settled(TestScratch.directory("sshd"))
         log = root + "/sshd.log"
         let hostKey = try Self.key(in: root, named: "host")
@@ -157,8 +161,11 @@ nonisolated final class LocalSSHD: @unchecked Sendable {
         // no jail around it: a stray path in a test should fail, not write.
         // `UsePAM` and `StrictModes` are off because a non-root `sshd` can use
         // neither, and the scratch directory is not as private as `~/.ssh`.
+        // And quiet: no last-login line and no message of the day, so a
+        // terminal sees exactly what `session` prints. Many real servers log in
+        // that quietly, and a chatty one would hide a question still in view.
         let config = root + "/sshd_config"
-        try """
+        var settings = """
             ListenAddress 127.0.0.1
             Port \(port)
             HostKey \(hostKey)
@@ -171,8 +178,12 @@ nonisolated final class LocalSSHD: @unchecked Sendable {
             StrictModes no
             AllowUsers \(user)
             Subsystem sftp /usr/libexec/sftp-server -R
+            PrintLastLog no
+            PrintMotd no
 
-            """.write(toFile: config, atomically: true, encoding: .utf8)
+            """
+        if let session { settings += "ForceCommand \(session)\n" }
+        try settings.write(toFile: config, atomically: true, encoding: .utf8)
         let hostPublic = try String(contentsOfFile: hostKey + ".pub", encoding: .utf8)
             .split(separator: " ").prefix(2).joined(separator: " ")
         knownHosts = root + "/known_hosts"
@@ -211,12 +222,16 @@ nonisolated final class LocalSSHD: @unchecked Sendable {
     /// `ProxyCommand=none` would beat the very `ProxyCommand` that `SSHArgs`
     /// spells a jump with, and `ClearAllForwardings` could take the hop's `-W`
     /// with it. `-F /dev/null` already keeps out every forward a config holds.
-    func isolation(knownHosts: String? = nil) -> [String] {
+    ///
+    /// `askingAboutHostKeys` is for a terminal, where somebody can answer: ssh
+    /// then asks about an unknown key rather than refusing it, and a yes writes
+    /// the key down — into `knownHosts`, which is scratch, and nowhere else.
+    func isolation(knownHosts: String? = nil, askingAboutHostKeys: Bool = false) -> [String] {
         [
             "-F", "/dev/null",
             "-o", "UserKnownHostsFile=" + (knownHosts ?? self.knownHosts),
             "-o", "GlobalKnownHostsFile=/dev/null",
-            "-o", "StrictHostKeyChecking=yes",
+            "-o", "StrictHostKeyChecking=" + (askingAboutHostKeys ? "ask" : "yes"),
             "-o", "UpdateHostKeys=no",
             "-o", "IdentityAgent=none",
             "-o", "IdentitiesOnly=yes",

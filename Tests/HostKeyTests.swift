@@ -24,6 +24,10 @@ nonisolated struct HostKeyTests {
     /// waits, so anything after it means it has already been answered —
     /// matching the whole buffer left the session stuck on a prompt that was
     /// gone, with the shell's output scrolling past underneath.
+    ///
+    /// The "Warning: Permanently added" line below is not what the app sees:
+    /// it runs `ssh -E`, which sends that to the log. The screen after an
+    /// answer is quieter than this, which is what `answeredQuietly` is for.
     @Test("the same question with the session running on after it is not")
     func alreadyAnswered() {
         let answered = Self.asking + """
@@ -41,12 +45,41 @@ nonisolated struct HostKeyTests {
         #expect(HostKey.isBeingAsked(Self.asking + "\n\n   \n"))
     }
 
-    @Test("one line of output after it is still within reach, two is not")
+    /// Anything at all after the question means ssh has moved on: it writes
+    /// the question last and waits, so nothing else reaches the screen until
+    /// the question has been answered. This used to pin the opposite — one
+    /// line after the question was "still within reach", an artefact of the
+    /// two-row tail rather than a rule — and a real prompt showed what that
+    /// cost; see `answeredQuietly`.
+    @Test("one line of output after the question means it was answered, as two do")
     func howFarBack() {
-        // The tail is the last two lines that carry anything, so a single
-        // line of output still leaves the question inside it.
-        #expect(HostKey.isBeingAsked(Self.asking + "\nsomething"))
+        #expect(!HostKey.isBeingAsked(Self.asking + "\nsomething"))
         #expect(!HostKey.isBeingAsked(Self.asking + "\nsomething\nand more"))
+    }
+
+    /// What OpenSSH 10.3 really writes, taken from a real `ssh` on a real pty
+    /// — `fingerprint is:`, with a colon the fixture above predates — ending on
+    /// the closing `?` with nothing after it, as it does while it waits.
+    private static let askedForReal = """
+        The authenticity of host '[127.0.0.1]:58359 ([127.0.0.1]:58359)' can't be established.
+        ED25519 key fingerprint is: SHA256:C5SjKQsmTqrrkBXY2d/2NgFWAzj05pE4qijO5S09/00
+        This key is not known by any other names.
+        Are you sure you want to continue connecting (yes/no/[fingerprint])?
+        """
+
+    /// The bug a real prompt found. A pty echoes the answer onto the question's
+    /// **own row**, not below it, and `ssh -E` sends "Permanently added" to its
+    /// log rather than the screen — so on a server that logs in quietly, the
+    /// answered row and one line of the server's are the whole tail. The
+    /// question was asked again, and a second Accept typed `yes` into the live
+    /// shell.
+    @Test("an answer echoed onto the question's own row means it was answered")
+    func answeredQuietly() {
+        #expect(HostKey.isBeingAsked(Self.askedForReal))
+        #expect(HostKey.question(in: Self.askedForReal).contains("SHA256:C5SjKQsm"))
+        #expect(!HostKey.isBeingAsked(Self.askedForReal + " yes"))
+        #expect(!HostKey.isBeingAsked(Self.askedForReal + " yes\nshellhand-session-ready"))
+        #expect(!HostKey.isBeingAsked(Self.askedForReal + " no"))
     }
 
     @Test("an empty screen is not a question")

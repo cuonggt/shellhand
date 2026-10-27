@@ -10,22 +10,34 @@ import Foundation
 nonisolated enum HostKey {
     /// Whether the **last thing on screen** is ssh waiting for an answer.
     ///
-    /// Only the end of the buffer counts. ssh writes the question last and
-    /// then waits, so a match anywhere else is a question that has already
-    /// been answered — and matching the whole buffer left the session stuck
-    /// on a prompt that was gone, with the shell's own output scrolling past
-    /// underneath it.
+    /// ssh writes the question last and then waits, so the question is live
+    /// only while **nothing follows its closing `?`** — no answer echoed onto
+    /// its own row, no output below it. A match anywhere else is a question
+    /// already answered. Matching the whole buffer once left a session stuck on
+    /// a prompt that was gone, and matching the last two rows did it again on
+    /// a quieter screen: after a `yes` the pty echoes the answer onto the
+    /// question's own row, and `ssh -E` sends its "Permanently added" to the
+    /// log rather than the screen, so a server that logs in quietly leaves the
+    /// answered row and one line of its own as the whole tail. The question
+    /// was asked again, the dialog came back, and a second Accept typed `yes`
+    /// into the live shell. Only a real prompt showed it, from a real `ssh`;
+    /// `TerminalOverSSHTests` is the guard.
     static func isBeingAsked(_ screen: String) -> Bool {
-        let tail = tail(of: screen)
-        if tail.contains(where: { $0.contains(marker) }) { return true }
         // A question too long for the terminal's width arrives as **two rows
         // with the phrase split between them**, because the buffer is read
-        // row by row and nothing rejoins what wrapped. So the rows are put
-        // back together before giving up. Whitespace comes out of both sides
-        // of the comparison, because every row is right-trimmed: a wrap that
-        // falls on a space loses that space altogether, and no search for the
-        // phrase as written would find it again.
-        return tightened(tail.joined()).contains(tightMarker)
+        // row by row and nothing rejoins what wrapped — so the rows are put
+        // back together. Whitespace comes out of both sides of the comparison,
+        // because every row is right-trimmed: a wrap that falls on a space
+        // loses that space altogether, and no search for the phrase as written
+        // would find it again.
+        let joined = tightened(tail(of: screen).joined())
+        guard let found = joined.range(of: tightMarker, options: .backwards) else { return false }
+        // The rest of the prompt, up to and including its closing `?`, and
+        // then nothing at all. Up to the first `?` rather than an exact
+        // spelling, because the rest of the prompt differs between versions.
+        let rest = joined[found.upperBound...]
+        guard let closing = rest.firstIndex(of: "?") else { return false }
+        return rest.index(after: closing) == rest.endIndex
     }
 
     /// The fingerprint and the question, without the rest of the screen.
@@ -72,15 +84,16 @@ nonisolated enum HostKey {
     /// The last couple of lines that carry anything, which is where the
     /// question sits when it is live.
     ///
-    /// **Two, and not more**, even though a narrow enough terminal wraps the
-    /// question across three rows or four. Widening this is the obvious fix
-    /// and it is the wrong one: it would let the shell's own reply sit inside
-    /// the tail beside the question it answered, which is the stuck-prompt bug
-    /// this rule exists to prevent — `howFarBack` pins that boundary. So a
-    /// question wrapped across three rows or more, which needs a terminal
-    /// under about 34 columns, is still missed. Fixing that properly wants the
-    /// width, and SwiftTerm keeps both `cols` and the buffer's own
-    /// `isWrapped` flag internal, so the app cannot ask.
+    /// **Two**, which is enough to rejoin a question wrapped once. This depth
+    /// used to be what kept an answered question from reading as live, and it
+    /// never quite did: a quiet server's single line after a `yes` left the
+    /// answered row inside it. That job belongs to `isBeingAsked`'s rule now —
+    /// nothing may follow the closing `?` — so a wider tail no longer risks the
+    /// stuck prompt, and would let a question wrapped across three rows be
+    /// found, which needs a terminal under about 34 columns and is still
+    /// missed. It has not been widened. The proper fix still wants the width,
+    /// and SwiftTerm keeps both `cols` and the buffer's own `isWrapped` flag
+    /// internal, so the app cannot ask.
     private static func tail(of screen: String) -> [String] {
         screen
             .split(separator: "\n")

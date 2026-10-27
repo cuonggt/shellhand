@@ -115,7 +115,8 @@ transfer
 queue, validation — and the rules lifted out of the layers above it: the group
 tree, what a file pane shows, which tab is in front, what ⌘K offers for what
 was typed, the sidebar's rows, whether ssh is waiting on a host key, and what a
-session's state becomes given what is on its screen. It does not drive the
+session's state becomes given what is on its screen — the last two against a
+real `ssh` prompt as well. It does not drive the
 views themselves. `scripts/window-check.sh` is the one check that launches a
 real window and walks its sidebar from outside; anything else above `Core/` is
 judged by building it and using it.

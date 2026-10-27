@@ -136,9 +136,17 @@ that day; a config with a `ProxyCommand` in it would have reached every
 non-jump connection this suite makes, since `isolation` cannot set that keyword
 without breaking jumps. `LaunchOptions` sends the config to scratch now, the
 way it sends the store — see the note on the test bundle being hosted.
-**What is still not covered is the terminal over real `ssh`** — a session's
-watchdog and host-key question against a real prompt are still fed by hand.
-The same server would do it.
+**And the terminal over real `ssh` is covered too**, in
+`Tests/TerminalOverSSHTests.swift`, against the same server running a forced
+command — it says it is ready, once, and waits — so nothing of yours runs
+interactively, and logging in quietly, with no last-login line and no message
+of the day, so the screen holds exactly what the test chose. A real login
+reaches connected; a refused one **never reads as connected, even for a
+tick** — 0.0.5's blank-screen promise held against the thing it was for, ssh
+sending its own complaints to `-E` so the screen stays blank; OpenSSH's own
+host-key question is seen with its fingerprint; and answering it both ways is
+checked, the key landing in scratch on a yes and nowhere on a no. **Its first
+run found a real bug**, recorded beside the wrapped-question one.
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the
@@ -1402,6 +1410,44 @@ credentials, which is most of it.
   `question(in:)` needed the same treatment: with no row carrying the phrase it
   fell through to "hand back the whole screen", burying the fingerprint at the
   one moment somebody has to read it.
+- **Accepting a new host key could bring the question straight back**, in
+  every release that had the two-row tail, and its own unit test pinned the
+  bug as intended. On a server that logs in quietly the sequence was: Accept,
+  the app types `yes` and resets the state to connecting; the watchdog finds
+  `…(yes/no/[fingerprint])? yes` still in the last two rows and asks again; the
+  dialog reappears; and a second Accept types `yes` + Return into the now-live
+  shell, which runs the Unix `yes` command and floods the terminal with `y`. A
+  Reject typed `no` into it instead. A chatty server mostly hid it, its second
+  line pushing the question out of the tail, so it flickered rather than stuck.
+  **Two facts the fixtures had wrong, and only a real prompt had right.** A pty
+  echoes the answer onto the **question's own row**, not below it; and the app
+  runs `ssh -E`, so *"Warning: Permanently added"* goes to the log and never
+  reaches the screen the fixtures put it on. With both, the answered row plus
+  one line of the server's are the whole tail. `howFarBack` asserted exactly
+  that a question with one line after it is *"still within reach"* — an
+  artefact of the tail's depth written down as a rule, which is the
+  blank-screen bug's lesson again: tests written from the code's own
+  assumption pass against the code's own mistake.
+  **The rule now is the one the doc comment always claimed:** ssh writes the
+  question last and waits, so it is live only while **nothing follows its
+  closing `?`** — no echoed answer, no output. The two rows are still joined,
+  because a wrapped question needs them; the depth just no longer does the
+  guarding. That also means a **wider tail is safe now** and would find a
+  question wrapped across three rows, still missed under about 34 columns —
+  not done, and noted in `tail(of:)`.
+  Pinned three ways and checked the way round that matters: with the old rule
+  put back, `answeredQuietly` fails on all three answered forms (OpenSSH
+  10.3's real wording, `fingerprint is:` with a colon, echoed `yes`, `yes` and
+  a line, and `no`), the corrected `howFarBack` fails, and the real `ssh` test
+  in `TerminalOverSSHTests` fails — five expectations across three tests,
+  each able to catch it without the others.
+  **One residue, much narrower, left alone:** `answerHostKey` types the answer
+  and resets the state at once, so a watchdog tick landing in the instant
+  before the pty's echo arrives still sees a live question and re-poses it for
+  one tick — then the echo disqualifies it and the next tick reads connected.
+  A dialog visible for one 200ms tick, and only when a tick falls in that
+  instant; the fix would be for an answer to suppress re-asking the question
+  it answered, which is a change to `TerminalSession`, not to this rule.
 - **The watchdog's decision is `SessionProgress`; `watch()` is only the
   looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
   of the screen is one pure function, which is why there are tests for it at
