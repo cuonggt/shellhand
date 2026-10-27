@@ -1815,7 +1815,30 @@ credentials, which is most of it.
   names the other one and stops rather than driving the wrong window, and
   never quits the user's. It borrows the whole preference domain with
   `defaults export` and gives it back on an EXIT trap, because `@AppStorage`
-  is keyed by the bundle id and a scratch store does not protect it. Ungated routes are still the cheapest
+  is keyed by the bundle id and a scratch store does not protect it.
+  **It covers the pane and the inspector too**, since the host list stopped
+  being swapped out for a host's details: that the pane holds an `AXOutline`
+  of its own with rows in it, and that *"What will run"* — drawn by
+  `HostDetailView` and nothing else — is on screen, which proves in one
+  string that the inspector is open and describing a host rather than on
+  "Nothing selected". Checked the way round that matters: with the pane put
+  back to swapping itself for the details, it fails with *"the pane has no
+  list of its own"*.
+  **And it has to choose the layout, which is the `@AppStorage` trap wearing
+  a new hat.** Only list mode is a `List` with a selection — a `LazyVGrid`
+  has none, so grid mode is buttons and no outline at all. This machine's
+  preference is `grid`, so the first run of that assertion failed against a
+  build that was perfectly correct. The check writes `libraryLayout` itself
+  now; the domain is already borrowed and given back, so it costs nothing.
+  **Give a text probe room.** The first one stopped at depth 8 and the dump
+  ended at "Jump host", so an inspector drawing everything read as one that
+  had not filled in. Depth 16 reaches the bottom of it. A probe that cannot
+  see the thing it asserts on is worse than no probe — it fails against
+  working code, which is the most expensive kind of wrong.
+  **A handler may return one element reference, but not a list of them.**
+  `findOutline` returns a single `AXOutline` and always has; collecting
+  several into a list and returning that fails, which is why `findNthOutline`
+  counts through a `property` instead. Ungated routes are still the cheapest
   when they fit: `New Group…` opens the group editor with nothing selected,
   and Shellhand ▸ SFTP opens without a selection.
 - A key path is **spelled however it was typed** — `~/.ssh/id_ed25519`,

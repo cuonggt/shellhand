@@ -134,6 +134,14 @@ INSERT INTO hosts (id, name, addr, groupId) VALUES ('h-loose', 'unfiled-1', '198
 SQL
 echo "window-check: seeded 2 groups and 3 hosts into a store of its own"
 
+# The pane draws rows or cards, and only the rows are a `List` with a
+# selection of its own — a `LazyVGrid` has none, so grid mode has buttons and
+# no `AXOutline` at all. This machine's preference happens to be `grid`, which
+# is exactly how the pane-list assertion below first failed against a build
+# that was perfectly correct. The whole domain is already borrowed and given
+# back, so choosing here costs the user nothing.
+defaults write com.shellhand.Shellhand libraryLayout -string list
+
 # --- the window, driven the way a person on the keyboard drives it ---------
 
 "$binary" --db "$db" >/dev/null 2>&1 &
@@ -345,5 +353,110 @@ case "$picked" in
     false) fail "a row is highlighted but the app does not think anything is selected" ;;
     *) fail "could not read the Host menu: $picked" ;;
 esac
+
+# --- the pane and the inspector -------------------------------------------
+
+# The pane keeps the host list and the **inspector** says what a host is —
+# before that, selecting a host replaced the pane with its details. Two things
+# make this checkable from outside, and the first is the discriminator: the
+# pane now holds an `AXOutline` of its own, where it used to be a scroll area
+# full of `AXButton`s. So a window with fewer than two outlines in it is the
+# old layout, and this section cannot pass against it.
+#
+# `findNthOutline` counts through a **property** rather than threading a
+# counter, because a handler here may return a single element reference —
+# `findOutline` above does — but a **list** of them does not survive the
+# return. That cost an afternoon to learn the other way round.
+read -r -d '' PANE <<'APPLESCRIPT'
+property seen : 0
+
+on findNthOutline(el, depth, want)
+	if depth > 12 then return missing value
+	tell application "System Events"
+		try
+			if role of el is "AXOutline" then
+				set seen to seen + 1
+				if seen is want then return el
+			end if
+		end try
+		try
+			repeat with child in UI elements of el
+				set found to my findNthOutline(child, depth + 1, want)
+				if found is not missing value then return found
+			end repeat
+		end try
+	end tell
+	return missing value
+end findNthOutline
+
+on textsIn(el, depth)
+	set out to {}
+	-- Deep enough to reach "What will run", which sits below the facts grid.
+	-- At 8 the dump stopped at "Jump host" and the assertion below failed
+	-- against an inspector that was in fact drawing everything.
+	if depth > 16 then return out
+	tell application "System Events"
+		try
+			if role of el is "AXStaticText" then
+				set v to value of el
+				if v is not missing value then
+					if (v as text) is not "" then set end of out to (v as text)
+				end if
+			end if
+		end try
+		try
+			repeat with child in UI elements of el
+				set out to out & my textsIn(child, depth + 1)
+			end repeat
+		end try
+	end tell
+	return out
+end textsIn
+
+on joinText(lst, sep)
+	set out to ""
+	repeat with i from 1 to (count of lst)
+		if i > 1 then set out to out & sep
+		set out to out & (item i of lst)
+	end repeat
+	return out
+end joinText
+
+tell application "System Events"
+	tell process "Shellhand"
+		set seen to 0
+		set pane to my findNthOutline(front window, 0, 2)
+		if pane is missing value then return "NO-PANE-LIST"
+		set rowCount to count of UI elements of pane
+		set focused of pane to true
+		delay 0.4
+		repeat 2 times
+			key code 125
+			delay 0.4
+		end repeat
+		delay 0.8
+		set said to my joinText(my textsIn(front window, 0), " | ")
+		return (rowCount as text) & linefeed & said
+	end tell
+end tell
+APPLESCRIPT
+
+paned=$(osascript -e "$PANE" 2>&1)
+case "$paned" in
+    NO-PANE-LIST*)
+        fail "the pane has no list of its own — it is drawing host details, not the hosts" ;;
+esac
+pane_rows=$(printf '%s' "$paned" | head -1)
+pane_said=$(printf '%s' "$paned" | tail -n +2)
+[ "$pane_rows" -gt 0 ] 2>/dev/null || fail "the pane has a list with no rows in it: $pane_rows"
+echo "window-check: the pane holds a list of its own, $pane_rows rows"
+
+# "What will run" is drawn by `HostDetailView` and by nothing else, so seeing
+# it proves both halves at once: the inspector is open — it comes up open now,
+# since the details have nowhere else to be — and it is describing a host
+# rather than sitting on "Nothing selected".
+printf '%s' "$pane_said" | grep -q "What will run" \
+    || fail "the inspector is not describing a host: $pane_said"
+echo "window-check: the inspector is open and describing the host selected"
 
 echo "window-check: PASSED — a window loaded a store of its own and drew it"
