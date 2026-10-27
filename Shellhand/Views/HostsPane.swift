@@ -89,9 +89,22 @@ struct HostsPane: View {
                     ForEach(hosts) { host in
                         row(for: host)
                             .tag(Selection.host(host.id))
-                            // Two clicks is the Finder reflex for "open this",
-                            // and connecting is what opening a host means.
-                            .onTapGesture(count: 2) { onConnect(host) }
+                            // Two clicks is the Finder reflex for "open
+                            // this", and connecting is what opening a host
+                            // means. **`simultaneousGesture`, not
+                            // `onTapGesture`**: a tap gesture on a row can
+                            // take the single click the selection needs, and
+                            // selecting is what this pane is for — losing it
+                            // to a convenience would be a poor trade. The
+                            // simultaneous form is the one documented not to
+                            // interfere. It is a choice of construction
+                            // rather than a tested one: a synthetic
+                            // `click at` does nothing in this app, proven
+                            // with a control that behaves the same with no
+                            // gesture attached at all, so no script can tell
+                            // a working click from a broken one here.
+                            .simultaneousGesture(
+                                TapGesture(count: 2).onEnded { onConnect(host) })
                     }
                 }
             }
@@ -305,7 +318,10 @@ struct HostsPane: View {
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
             .background(skin(for: .host(host.id)), in: RoundedRectangle(cornerRadius: 8))
             .overlay(ring(for: .host(host.id)))
-            .onTapGesture(count: 2) { onConnect(host) }
+            // Simultaneous for the same reason as the row's: the card is a
+            // `Button` whose single tap selects, and a plain tap gesture can
+            // take it.
+            .simultaneousGesture(TapGesture(count: 2).onEnded { onConnect(host) })
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(host.name), \(destination(of: host))")
