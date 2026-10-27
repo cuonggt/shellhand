@@ -1968,6 +1968,17 @@ credentials, which is most of it.
   cache in front of it. A cache-busting query string would dodge it and
   prove nothing, since Sparkle asks the plain URL. Harmless in itself: an
   app checking inside that window hears on its next check.
+  **Two corrections from 0.0.9, both of which had been read the wrong way.**
+  The **tap's cask is behind the same cache** — served from
+  `raw.githubusercontent.com` too — and on 0.0.8 it looked instant, which
+  read as casks being exempt. They are not. The rule is **per path, and only
+  for a path something fetched recently**: on 0.0.8 nothing had asked for the
+  cask before the push, so there was nothing cached to serve; on 0.0.9 the
+  previous release's own verification had warmed it, and it served 0.0.8 for
+  minutes after 0.0.9 was pushed. So a verification that passes straight
+  after a push may only mean that nobody had looked before — which is the
+  weaker claim. Both turned over about 200 seconds after the push on 0.0.9,
+  measured.
 - **Back up the EdDSA private key or every shipped app is stranded.** It lives
   in the login keychain under the account `shellhand`, and
   `generate_keys --account shellhand -x <file>` is the only copy there will
@@ -2022,6 +2033,14 @@ credentials, which is most of it.
   from Apple is about the thing being shipped and reads nothing like these, so
   widening this does not risk retrying a real refusal. The second run then went
   through on the first attempt, which is what a flapping route looks like.
+  **0.0.9 is where that widening paid for itself**, and it needed both halves
+  of it: **six** failed attempts in one run, three per submission, in **two**
+  wordings — `_kCFStreamErrorDomainKey=4` for the app and
+  `HTTPClientError.connectTimeout` for the DMG, the second being the exact one
+  that cost 0.0.5 a signed build. Matching either alone would have thrown this
+  release away twice. The echo is worth as much as the retry: both wordings are
+  in the log, so the pattern can be widened again from evidence rather than
+  from a guess at what Apple might say next.
 - **No binary deltas, and the reason is in `scripts/release.sh`.** Sparkle
   makes them as soon as the updates folder holds two versions, and a delta is
   named for the **build** numbers it spans — `Shellhand2-1.delta` — so nothing
@@ -2109,7 +2128,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.8 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.9 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -2212,6 +2231,20 @@ app drops any live session it is holding — check `pgrep -P <pid>` first, and
 `lsof -a -p`, because `lsof` ORs its selectors without `-a` and will otherwise
 list the whole machine's sockets — and borrowing the preference domain has a
 trap of its own, noted above.
+
+**0.0.9 carries the two transfer fixes that 0.0.8's folder work turned up**,
+published at `bc3f309` and live on every surface — release, feed, cask and
+tap. It leads with symlinks: left behind entirely coming down, and going up
+turned into a copy of the target's bytes, an empty folder, or nothing at all.
+Behind it is the folder whose `mkdir` was refused and said nothing about it.
+The suite went 459 → 466. Verified the same way as 0.0.8, before publishing
+and again after: `stapler validate` and Gatekeeper on the DMG and on the app
+inside it, the DMG fetched back from GitHub hashing to the cask's digest,
+every appcast URL answering 200 with the length the feed claims, all three
+items' notes byte-identical to their `docs/release-notes` files, and the
+signature reproduced by re-signing. **The `mkdir` fix waited a release on
+purpose** — one conditional fix is a thin release, and holding it until the
+symlink work gave it company made a note about one thing rather than two.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
