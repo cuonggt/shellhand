@@ -109,8 +109,14 @@ actor SFTPClient {
     /// protocol, so a password prompt is one nobody can answer, and a single
     /// `-o BatchMode=no` from the config was once enough to leave a session
     /// waiting at one forever.
-    static func connect(_ resolved: Resolved) async throws -> SFTPClient {
-        let args = SSHArgs.subsystem(resolved, "sftp", fixed: SSHArgs.unattended)
+    ///
+    /// `fixed` is added to what nothing may override, and like the rest of it
+    /// leads every hop, carried into each jump's own `ssh`. The one caller with
+    /// a use for it is a test keeping `ssh` off its user's own files — `-F
+    /// /dev/null`, and the known-hosts and agent settings — which has to reach
+    /// the jump hosts as surely as the host. The app passes nothing.
+    static func connect(_ resolved: Resolved, fixed: [String] = []) async throws -> SFTPClient {
+        let args = SSHArgs.subsystem(resolved, "sftp", fixed: SSHArgs.unattended + fixed)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
         process.arguments = args

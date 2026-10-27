@@ -141,7 +141,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 
 `Tests/` is the whole suite: inheritance, the argv, the merge, the delete
 rules, SFTP's wire format and the conversation over it — including against
-OpenSSH's own `sftp-server` — the transfer queue,
+OpenSSH's own `sftp-server` — the `ssh` layer itself against macOS's own
+`sshd`, the transfer queue,
 validation, themes, tags — and the rules lifted out of the layers above
 `Core/`, which is most of what used to be out of reach. What is under what and
 the fold the sidebar opens on; what a file pane calls itself and how it names a
@@ -213,18 +214,16 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 
 ## Not here yet
 
-**`ssh` itself is not under test.** The SFTP conversation is, twice over: against
-a server written in Swift in this process, which is there for what a real one
-cannot be asked to do — answer a read with fewer bytes than its own `stat`
-promised, reply to a request nobody made — and against OpenSSH's own
-`sftp-server`, which ships with macOS and catches the misunderstanding both of
-this project's ends would share. What neither reaches is the transport:
-connecting, logging in, jump hosts, `BatchMode`. That once meant restoring the
-Go server in the pre-reset bundle, and a Go toolchain as a prerequisite for
-`xcodebuild test`. It no longer does: macOS's own `sshd` has been shown to run
-unprivileged on loopback with throwaway keys and to answer `ssh -s sftp`
-exactly as `SFTPClient.connect` speaks it. It is not wired in yet; `CLAUDE.md`
-says what wiring it in would have to keep away from your own `~/.ssh`.
+**The terminal over real `ssh` is not under test.** Everything beneath it is:
+the SFTP conversation twice over — against a server written in Swift in this
+process, for what a real one cannot be asked to do, and against OpenSSH's own
+`sftp-server`, for the misunderstanding both of this project's ends would share
+— and the transport itself, `SFTPClient.connect` driven against macOS's own
+`sshd` on loopback with throwaway keys, jump hosts included, and kept off your
+own `~/.ssh`. None of it needed the Go server the pre-reset bundle carries. What
+is still fed by hand is a terminal session's half: its watchdog and the
+host-key question, which are checked against text written into a terminal
+rather than against a real `ssh` prompt. The same server would do it.
 
 **Files cannot reach a host that takes only a password.** An `sftp` child is
 given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is

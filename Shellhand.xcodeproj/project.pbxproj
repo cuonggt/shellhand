@@ -94,6 +94,7 @@
 		E9AE1D908530CE6B4B5A923B /* SFTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE0A277FFB387246A7C1825 /* SFTPClient.swift */; };
 		ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */; };
 		EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11557A4783217279E63F09A /* Validation.swift */; };
+		F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */; };
 		F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C58D904DA593CE634918A8 /* SettingsView.swift */; };
 		F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B0CD60231E15370665FF94 /* SidebarRows.swift */; };
 		FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0985F94F2EA3F4723F856A87 /* TagsTests.swift */; };
@@ -125,6 +126,7 @@
 		31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortableTests.swift; sourceTree = "<group>"; };
 		32297DCCF2D81F82F136D103 /* TestScratch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestScratch.swift; sourceTree = "<group>"; };
 		32E39F04CC1F0098ECB930EE /* SessionProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgress.swift; sourceTree = "<group>"; };
+		347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHTransportTests.swift; sourceTree = "<group>"; };
 		352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplacingTests.swift; sourceTree = "<group>"; };
 		36C1020FE3A76905A97685B4 /* Files.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 				82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */,
 				C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */,
 				ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */,
+				347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */,
 				287AE931BEA1EE294A3CD956 /* StoreTests.swift */,
 				0985F94F2EA3F4723F856A87 /* TagsTests.swift */,
 				698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */,
@@ -511,6 +514,7 @@
 				01139DFDBD94594EEE6A09FA /* SFTPWireTests.swift in Sources */,
 				2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */,
 				C645D14004B98E57D2525464 /* SSHConfigFileTests.swift in Sources */,
+				F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */,
 				5651C0234D94D19625AB4769 /* ScriptedSFTP.swift in Sources */,
 				04E2E5A9DDE8AC15F390A3AD /* SessionProgressTests.swift in Sources */,
 				458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */,

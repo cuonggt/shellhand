@@ -52,7 +52,8 @@ the real watchdog running over it — `Model/Files.swift`'s own orchestration
 (the guard that keeps a pane from re-opening, and the replace question with a
 copy genuinely parked on its continuation), the SFTP
 conversation — against a server written in Swift in this process, **and against
-OpenSSH's own `sftp-server`**, which ships with macOS — and
+OpenSSH's own `sftp-server`**, which ships with macOS — the `ssh` layer itself
+against macOS's own `sshd`, kept off your own `~/.ssh`, and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs.
@@ -87,32 +88,56 @@ and without the Go server this paragraph used to call the honest answer:
 `/usr/libexec/sftp-server` is the binary `sshd` execs at the far end of every
 `ssh -s sftp`, it speaks the protocol on stdin and stdout, and
 `SFTPClient.speaking(to:from:)` was already the seam for exactly that — no
-toolchain, no network, no keys, no `sshd`. **`ssh` itself is still
-uncovered** — connecting, logging in, jump hosts, `BatchMode` — **but it no
-longer needs the bundle's Go server.** macOS's own `/usr/sbin/sshd` runs
-unprivileged: shown 2026-10-27 as you, not root, on `127.0.0.1` and a free
-port, with a throwaway host key and client key in a scratch directory. A
-command came back as you, the real `sftp` client listed through the
-subsystem, and **`ssh -s sftp` with `BatchMode=yes` answered VERSION 3 —
-the exact shape `SFTPClient.connect` spawns.** It needs nothing switched on:
-Remote Login can stay off, since this is a server of its own, and the
-firewall cannot prompt for Apple's signed `sshd` (it is off here anyway, and
-built-in signed software is allowed by default when it is not). One line in
-its log looks alarming and is not: *"BSM audit: setaudit_addr failed:
-Operation not permitted"* is a non-root process refused an audit session, and
-the login goes through regardless.
-**It is not wired in, and three things decide whether it should be.**
-`ssh` must be kept off your own `~/.ssh` — `-F /dev/null`, an explicit `-i`,
-`IdentityAgent=none`, and above all `UserKnownHostsFile` pointed at scratch,
-or the first connection **writes a test host key into the real
-`known_hosts`**; the probe did all four and left it untouched (still dated
-08:42 that morning). The app's own argv honours `~/.ssh/config` on purpose,
-because that is what an ssh client is for, so a suite driving
-`SFTPClient.connect` has to get that isolation into `SSHArgs` without
-changing what users get. And for as long as a test runs, it is a login
-server as you on loopback, for anyone holding a key that lives in
-`TestScratch` — the same trust boundary as your own processes, but a real
-one.
+toolchain, no network, no keys, no `sshd`. **And `ssh` itself is covered
+now**, in `Tests/SSHTransportTests.swift`, without the bundle's Go server:
+macOS's own `/usr/sbin/sshd` runs as you, not root, on `127.0.0.1` and a free
+port, with keys made for each test in `TestScratch`. Each test gets a server of
+its own, read-only, for as long as it runs. It drives the real
+`SFTPClient.connect` — the argv `SSHArgs` builds, `ssh -s sftp`, `begin` — and
+covers what that path does for real: a session that lists and downloads
+600 KB byte for byte; a key the server will not take, which comes back as
+ssh's own *"Permission denied"* through the stderr branch that once had to let
+the client go first; an unknown host key refused with *"Host key verification
+failed"* and nothing written; and a jump host gone **through**, proven by two
+logins in `sshd`'s own log where a bypass would show one. It needs nothing
+switched on — Remote Login stays off, since this is a server of its own, and
+the firewall cannot prompt for Apple's signed `sshd`. One line in its log looks
+alarming and is not: *"BSM audit: setaudit_addr failed"* is a non-root process
+refused an audit session, and the login goes through regardless.
+**Every connection is kept off its user's own `~/.ssh`, and that is most of
+the care the suite takes.** `connect(_:fixed:)` takes extra settings nothing
+may override; the app passes none, and the suite passes
+`LocalSSHD.isolation`: `-F /dev/null`, so `~/.ssh/config` and every `Host *`
+in it — a `ProxyCommand`, a `ControlMaster`, a `Match exec` that runs a program
+— is never read; `UserKnownHostsFile` in scratch with `GlobalKnownHostsFile`
+off; `StrictHostKeyChecking=yes` and `UpdateHostKeys=no`, so a broken isolation
+fails at the door instead of writing a key anywhere; `IdentityAgent=none` and
+`IdentitiesOnly`; and control sockets off. Because `fixed` leads every hop,
+the jump's own `ssh` gets all of it too — and the jump test passing **proves
+it did**, since the hop could only have verified the server against the
+scratch known_hosts: the real one has never heard of that port or that key.
+**Two settings are left out on purpose.** `fixed` leads, so `ProxyCommand=none`
+would beat the very `ProxyCommand` that `SSHArgs` spells a jump with, and
+`ClearAllForwardings` could take the hop's `-W` with it; `-F /dev/null`
+already keeps out every forward a config holds.
+**Checked from outside the suite, not only from inside it:** `~/.ssh/known_hosts`
+had the same size and modification time before and after a full run with
+`SSHArgsTests` changing the global options alongside, and `~/.ssh` gained and
+lost nothing — the last test checks the same, every run. And checked the way
+round that matters **without touching `~/.ssh`**: stripping the isolation to
+show it matters would have made `ssh` read your files, which is the one thing
+this suite promises not to do, so the check made `SSHArgs` skip the hop
+instead — and the jump test failed with *"sshd let somebody in 1 times"*.
+**One gap this turned up, not closed:** the test host sends the *store* to a
+scratch path under XCTest but still reads the **real** Shellhand config,
+`~/Library/Application Support/Shellhand/config.yaml`, and its ssh options
+become every connection's global options. There is no such file on this
+machine, so it is harmless today; a config with a `ProxyCommand` in it would
+reach every non-jump connection this suite makes. `isolation` wins on every
+keyword it sets, which covers the ones that write files, but not that one.
+**What is still not covered is the terminal over real `ssh`** — a session's
+watchdog and host-key question against a real prompt are still fed by hand.
+The same server would do it.
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the

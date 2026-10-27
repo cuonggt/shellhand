@@ -109,7 +109,9 @@ xcodebuild test -project Shellhand.xcodeproj -scheme Shellhand \
 ```
 
 The suite in `Tests/` covers the engine — inheritance, the argv, the merge, the
-delete rules, SFTP's wire format and the conversation over it, the transfer
+delete rules, SFTP's wire format and the conversation over it — against
+OpenSSH's own `sftp-server` too — the `ssh` layer against a local `sshd`, the
+transfer
 queue, validation — and the rules lifted out of the layers above it: the group
 tree, what a file pane shows, which tab is in front, what ⌘K offers for what
 was typed, the sidebar's rows, whether ssh is waiting on a host key, and what a
