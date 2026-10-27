@@ -3,6 +3,37 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.8</title>
+            <pubDate>Tue, 27 Oct 2026 12:00:38 +0700</pubDate>
+            <sparkle:version>8</sparkle:version>
+            <sparkle:shortVersionString>0.0.8</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**A folder from a host arrived without its empty folders.** Dragging a folder
+from a host onto this Mac carried every file in it, but none of the folders
+that held nothing — and dragging an empty folder brought nothing across at
+all, while the transfer said it had finished. Every folder arrives now, empty
+or not, and a folder sent up and brought back is the folder it was.
+
+**A host-key question in a narrow window could go unasked.** With large text,
+or a window narrow enough, ssh's question about a new machine's key wraps
+across several lines of the terminal. Past two of them it was not seen, so
+ssh sat waiting for an answer the app never asked you for. It is asked now
+however many lines it takes, and the dialog shows the whole question,
+fingerprint included.
+
+**Answering a host-key question could bring it back for an instant.** In the
+moment between your answer and the terminal showing it, the question could
+reappear — and a click in that moment typed into the shell. An answered
+question stays answered.
+
+Nothing else here is visible from the outside. The suite went from 448 checks
+to 459, and folders are now among what it carries for real against OpenSSH's
+own server: the first fix above was found the first time anything tested a
+folder at all.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.8/Shellhand-0.0.8.dmg" length="13850990" type="application/octet-stream" sparkle:edSignature="RDQLehSr2A4ri5ONFk3XR1sXNoXLHnHBdCMS5MuJtgrUXgvoAOyFI0eFM41axhA0yfo9rydz9mmp1n4msRs1BQ=="/>
+        </item>
+        <item>
             <title>0.0.7</title>
             <pubDate>Tue, 27 Oct 2026 10:48:02 +0700</pubDate>
             <sparkle:version>7</sparkle:version>
@@ -70,41 +101,6 @@ on it — along with the SFTP deadline and the two ends of a connection that
 stops answering.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.6/Shellhand-0.0.6.dmg" length="13845975" type="application/octet-stream" sparkle:edSignature="E1ojyDjJRJmdgUrmCEtcmqsmNfLWFpkEea0/Hq/zYp5Ql4G5niDwX0TpZ1X95/6yKB6RhoYYqqzQTCic9E4jAA=="/>
-        </item>
-        <item>
-            <title>0.0.5</title>
-            <pubDate>Mon, 26 Oct 2026 16:30:20 +0700</pubDate>
-            <sparkle:version>5</sparkle:version>
-            <sparkle:shortVersionString>0.0.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**A host key you were being asked to approve could go unseen.** When the
-question did not fit the window — large text, or a narrow one — the terminal
-wrapped it, and the app looked for it a line at a time and found it in neither
-half. So nothing was asked: ssh sat on the other end waiting for an answer
-that was never coming, and the session showed as connected throughout. A
-wrapped question is read now, and what comes up is the fingerprint and the
-warning above it rather than the whole screen around them.
-
-**A session said it was connected before anything had answered.** The test for
-"has the far side said anything" counted a terminal that had heard nothing as
-output, because an untouched buffer is its own blank rows rather than nothing
-at all. Every session therefore reported connected about a fifth of a second
-after it opened, whether or not the host was there or willing. It says
-connecting until something actually arrives.
-
-**A download that cannot be written no longer takes the app with it.** A full
-disk, a volume pulled out mid-transfer, permissions changed underneath — the
-write that noticed raised something no Swift `catch` can see, so the app
-vanished where it meant to say the file could not be written.
-
-Nothing else is visible from the outside. The suite went from 383 checks to
-403, and the terminal is in it for the first time: the watchdog, what it makes
-of what is on screen, and the reading of the screen itself, all without a pty
-— the terminal is handed its output directly instead. Two of the three fixes
-above were found that way, by tests written for coverage rather than after a
-bug report.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.5/Shellhand-0.0.5.dmg" length="13845037" type="application/octet-stream" sparkle:edSignature="s4C5WO4W65vsjyNRulqht0LlkOJwa1ssY3oZOsR9P2qDC5YuIJeaCTBfMkWpKRWq0loWSt8Ew9XThUBj3EBpBA=="/>
         </item>
     </channel>
 </rss>
