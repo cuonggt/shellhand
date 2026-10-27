@@ -15,7 +15,13 @@ struct HostsPane: View {
     let store: HostStore
     /// Whose contents to show, or nil for the whole list.
     let group: Group?
+    /// What is selected, so a row can look it. The pane used to be replaced
+    /// by the selected host's details, so nothing here ever had to show a
+    /// selection; now the list stays and the highlight is the only thing
+    /// saying which host the inspector is describing.
+    let selection: Selection?
     let onPick: (Selection) -> Void
+    let onConnect: (Host) -> Void
     let onEditGroup: (Group) -> Void
 
     /// How you like to read the list, so `@AppStorage` rather than
@@ -32,61 +38,125 @@ struct HostsPane: View {
     @AppStorage("libraryLayout") private var layout = HostsLayout.list
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Pinned rather than scrolling away with the rows: it carries the
+            // layout picker and says which place this is, and both are wanted
+            // while you are part-way down a long list.
+            header
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 14)
+
+            if groups.isEmpty && hosts.isEmpty {
+                empty
+            } else if layout == .list {
+                rows
+            } else {
+                grid
+            }
+        }
+    }
+
+    /// The selection as a binding, for `List`.
+    ///
+    /// A nil write — ⌘-clicking the selected row — is dropped rather than
+    /// passed on: the inspector beside this has to be describing *something*,
+    /// and "nothing selected" is a state you can only reach by deselecting,
+    /// which nobody does on purpose. Writing an unchanged value through a
+    /// `List` binding fires nothing at all, which is a trap recorded twice
+    /// elsewhere in this app; nothing here leans on it, because the highlight
+    /// is drawn from `selection` rather than from a change to it.
+    private var picked: Binding<Selection?> {
+        Binding(get: { selection }, set: { if let now = $0 { onPick(now) } })
+    }
+
+    /// List mode is a real `List(selection:)` rather than a column of
+    /// buttons, which is what "selectable" has to mean: the highlight follows
+    /// the selection, ↑ and ↓ walk the rows, and ⏎ connects. The buttons it
+    /// replaces could be clicked and nothing else — no keyboard anywhere, and
+    /// a row drew the same whether or not it was the one selected.
+    private var rows: some View {
+        List(selection: picked) {
+            if !groups.isEmpty {
+                Section(group == nil ? "Groups" : "Inside") {
+                    ForEach(groups) { folder in
+                        row(for: folder).tag(Selection.group(folder.id))
+                    }
+                }
+            }
+            if !hosts.isEmpty {
+                Section("Hosts") {
+                    ForEach(hosts) { host in
+                        row(for: host)
+                            .tag(Selection.host(host.id))
+                            // Two clicks is the Finder reflex for "open this",
+                            // and connecting is what opening a host means.
+                            .onTapGesture(count: 2) { onConnect(host) }
+                    }
+                }
+            }
+        }
+        .listStyle(.inset)
+        // ⏎ as well as the Host menu's ⌘↩: in a list you have arrowed down,
+        // Return is the key the hand reaches for, and the menu item is across
+        // the screen. Ignored unless a host is selected, so Return on a group
+        // row falls through rather than connecting to something else.
+        .onKeyPress(.return) {
+            guard case let .host(id) = selection,
+                  let host = hosts.first(where: { $0.id == id })
+            else { return .ignored }
+            onConnect(host)
+            return .handled
+        }
+    }
+
+    /// Grid mode keeps its buttons — a `LazyVGrid` has no selection of its
+    /// own — so the highlight is drawn by hand and the keyboard belongs to
+    /// the list.
+    private var grid: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                header
-
                 if !groups.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(group == nil ? "Groups" : "Inside").font(.headline)
-                        if layout == .list {
+                        LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
                             ForEach(groups) { folder in
-                                row(for: folder)
-                            }
-                        } else {
-                            LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
-                                ForEach(groups) { folder in
-                                    card(for: folder)
-                                }
+                                card(for: folder)
                             }
                         }
                     }
                 }
-
                 if !hosts.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Hosts").font(.headline)
-                        if layout == .list {
+                        LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
                             ForEach(hosts) { host in
-                                row(for: host)
-                            }
-                        } else {
-                            LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
-                                ForEach(hosts) { host in
-                                    card(for: host)
-                                }
+                                card(for: host)
                             }
                         }
                     }
                 }
-
-                if groups.isEmpty && hosts.isEmpty {
-                    ContentUnavailableView {
-                        Label("Nothing filed here yet", systemImage: "tray")
-                    } description: {
-                        Text(group == nil
-                            ? "Press ⌘N to add a host."
-                            : "Drag a host onto \(group?.name ?? "") to file it here.")
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-
                 Spacer(minLength: 0)
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
+
+    private var empty: some View {
+        ContentUnavailableView {
+            Label("Nothing filed here yet", systemImage: "tray")
+        } description: {
+            Text(group == nil
+                ? "Press ⌘N to add a host."
+                : "Drag a host onto \(group?.name ?? "") to file it here.")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Whether this is the one selected, for the cards to draw.
+    private func selected(_ what: Selection) -> Bool { selection == what }
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -137,62 +207,51 @@ struct HostsPane: View {
 
     // MARK: rows
 
+    /// Plain content, not a button: the `List` above draws the row and its
+    /// selection, so a button inside one would take the click the selection
+    /// needs and paint a background over the highlight.
     private func row(for folder: Group) -> some View {
-        Button {
-            onPick(.group(folder.id))
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "folder").foregroundStyle(.tint)
-                Text(folder.name)
-                Spacer(minLength: 12)
-                Text(counted(folder)).font(.caption).foregroundStyle(.secondary)
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+        HStack(spacing: 10) {
+            Image(systemName: "folder").foregroundStyle(.tint)
+            Text(folder.name)
+            Spacer(minLength: 12)
+            Text(counted(folder)).font(.caption).foregroundStyle(.secondary)
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel("\(folder.name), \(counted(folder))")
     }
 
     private func row(for host: Host) -> some View {
-        Button {
-            onPick(.host(host.id))
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "server.rack").foregroundStyle(.tint)
-                // A set width, not a minimum: with a minimum the destination
-                // starts wherever the name happens to end, so the second
-                // column is ragged down the page and cannot be scanned.
-                Text(host.name)
-                    .frame(width: 240, alignment: .leading)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Text(destination(of: host))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Spacer(minLength: 12)
-                // Only when it is not already the answer: inside a group,
-                // every row would say the same thing.
-                if group == nil, let folder = store.group(host.groupId) {
-                    Text(folder.name).font(.caption).foregroundStyle(.secondary)
-                }
-                ForEach(host.tags, id: \.self) { tag in
-                    Text(tag)
-                        .font(.caption)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.quaternary, in: Capsule())
-                }
+        HStack(spacing: 10) {
+            Image(systemName: "server.rack").foregroundStyle(.tint)
+            // A set width, not a minimum: with a minimum the destination
+            // starts wherever the name happens to end, so the second
+            // column is ragged down the page and cannot be scanned.
+            Text(host.name)
+                .frame(width: 240, alignment: .leading)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Text(destination(of: host))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 12)
+            // Only when it is not already the answer: inside a group,
+            // every row would say the same thing.
+            if group == nil, let folder = store.group(host.groupId) {
+                Text(folder.name).font(.caption).foregroundStyle(.secondary)
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+            ForEach(host.tags, id: \.self) { tag in
+                Text(tag)
+                    .font(.caption)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(.quaternary, in: Capsule())
+            }
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
 
@@ -209,7 +268,8 @@ struct HostsPane: View {
             // A set height so a card with tags does not stand taller than one
             // without and leave the row ragged.
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+            .background(skin(for: .group(folder.id)), in: RoundedRectangle(cornerRadius: 8))
+            .overlay(ring(for: .group(folder.id)))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(folder.name), \(counted(folder))")
@@ -243,10 +303,28 @@ struct HostsPane: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+            .background(skin(for: .host(host.id)), in: RoundedRectangle(cornerRadius: 8))
+            .overlay(ring(for: .host(host.id)))
+            .onTapGesture(count: 2) { onConnect(host) }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(host.name), \(destination(of: host))")
+    }
+
+    /// A card's fill, and the ring that makes the selection unmistakable at a
+    /// glance across a grid — a tint wash alone reads as a hover on a dense
+    /// page of cards.
+    private func skin(for what: Selection) -> AnyShapeStyle {
+        selected(what)
+            ? AnyShapeStyle(.tint.opacity(0.18))
+            : AnyShapeStyle(.quaternary.opacity(0.4))
+    }
+
+    @ViewBuilder
+    private func ring(for what: Selection) -> some View {
+        if selected(what) {
+            RoundedRectangle(cornerRadius: 8).strokeBorder(.tint, lineWidth: 2)
+        }
     }
 
     // MARK: what is shown

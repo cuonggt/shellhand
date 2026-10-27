@@ -44,7 +44,15 @@ struct ContentView: View {
     /// the flag flipped: pressing CSV on the welcome opened the sheet on the
     /// ssh config every time.
     @State private var importing: ImportSheet.Source?
-    @State private var showingInspector = false
+    /// Open by default, and remembered: the host's details live **here**
+    /// now rather than in the pane, so a window that came up with it shut
+    /// would answer a click on a host with nothing anywhere. `@AppStorage`
+    /// rather than `@State` because it is a preference about you, not about
+    /// this window — and a new key, since no existing one means this.
+    @AppStorage("hostInspector") private var showingInspector = true
+    /// Which group the pane is **looking at**, which is not what is selected
+    /// — see `Browsing`. Empty means the whole list.
+    @State private var browsing = ""
     /// Which tab of the strip the pane is on. Starts on the hosts, which is
     /// what the window is for and the only thing there is on a fresh install.
     @State private var pane = PaneTab.hosts
@@ -74,6 +82,13 @@ struct ContentView: View {
         return store.group(id)
     }
 
+    /// The place the pane shows: `browsing`, with a group that has been
+    /// deleted since forgotten. Deliberately **not** `selectedGroup`, which
+    /// is nil for a host — that is the whole of what `Browsing` is for.
+    private var browsedGroup: Group? {
+        store.group(Browsing.settled(browsing, within: store.snapshot.groups))
+    }
+
     var body: some View {
         NavigationSplitView {
             SidebarView(
@@ -88,7 +103,7 @@ struct ContentView: View {
         } detail: {
             DetailView(
                 store: store, sessions: sessions,
-                host: selectedHost, group: selectedGroup,
+                group: browsedGroup, selection: selection,
                 pane: pane, beside: beside,
                 onConnect: connect, onPickTab: pick(tab:),
                 onEdit: { editing = $0 },
@@ -122,6 +137,12 @@ struct ContentView: View {
             }
         }
         .onChange(of: selection) { _, now in
+            browsing = Browsing.scope(
+                after: now, from: browsing,
+                hostsGroup: {
+                    guard case let .host(id) = now else { return nil }
+                    return store.snapshot.hosts.first { $0.id == id }?.groupId
+                }())
             if case let .host(id) = now { storedHostID = id }
             // Anything picked in the sidebar is about the hosts, so the
             // hosts tab is what shows it — a host's own detail, a group's
@@ -349,13 +370,16 @@ struct ContentView: View {
     @ViewBuilder
     private var inspector: some View {
         if let host = inspectedHost {
-            // Compact: the inspector is beside a terminal or a files pane,
-            // saying what the session in front is using. The full shape is
-            // the main panel's, and showing it in both at once was simply
-            // the same view twice.
+            // The whole of it. There used to be two shapes — a compact one
+            // here and the full one in the pane — and `compact` existed so
+            // the two would not be the same view twice. The pane shows the
+            // list now, so this is the only place a host is described and
+            // there is nothing left to repeat.
             HostDetailView(
-                store: store, host: host, compact: true,
-                onConnect: connect, onEdit: { editing = $0 })
+                store: store, host: host, sessions: sessions,
+                onConnect: connect,
+                onShowSession: { pick(tab: .session($0)) },
+                onEdit: { editing = $0 })
         } else {
             ContentUnavailableView(
                 "Nothing selected", systemImage: "sidebar.right",
@@ -492,11 +516,12 @@ struct ContentView: View {
 struct DetailView: View {
     let store: HostStore
     let sessions: Sessions
-    let host: Host?
-    /// The group picked, when one is. A group has no detail view of its own —
-    /// what you want from it is what is filed under it, which is the library
-    /// one level down.
+    /// The place the pane is looking at, or nil for the whole list. This is
+    /// `Browsing`'s answer rather than the selection: picking a host must not
+    /// move the list out from under the click that picked it.
     let group: Group?
+    /// What is selected, for the pane to draw as selected.
+    let selection: Selection?
     /// Which tab of the strip is up, and so what fills the pane.
     let pane: PaneTab
     /// What is beside it, when the split is open.
@@ -562,24 +587,16 @@ struct DetailView: View {
         }
     }
 
-    /// The host side of the app: the host selected, or the list.
-    @ViewBuilder
+    /// The host side of the app, which is **always the list**.
+    ///
+    /// It used to swap itself for the selected host's details, so selecting a
+    /// host in the pane made the pane disappear — you could never click down
+    /// a list, and the thing you had just picked was the only thing you could
+    /// no longer see in context. The details are the inspector's job now, and
+    /// the list stays put with the selection drawn on it.
     private var hostsSide: some View {
-        if let host {
-            HostDetailView(store: store, host: host, sessions: sessions,
-                           onConnect: onConnect,
-                           onShowSession: { onPickTab(.session($0)) },
-                           onEdit: onEdit)
-        } else {
-            hosts
-        }
-    }
-
-    /// Nothing picked, or a group picked. Either way the answer is the list —
-    /// the whole of it, or the part filed under that group.
-    private var hosts: some View {
         HostsPane(
-            store: store, group: group,
-            onPick: onPick, onEditGroup: onEditGroup)
+            store: store, group: group, selection: selection,
+            onPick: onPick, onConnect: onConnect, onEditGroup: onEditGroup)
     }
 }

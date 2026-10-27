@@ -3,23 +3,24 @@ import SwiftUI
 /// What this host connects with, where each part of it came from, and what is
 /// already going on with it.
 ///
-/// Two shapes out of one view. The **main panel** gets the lot: the command
-/// ssh will actually be given, and the sessions already open on this host. The
-/// **inspector** asks for `compact`, which keeps the header and the facts and
-/// drops the rest — at 300pt a quoted ssh line wraps into a paragraph, and the
-/// inspector is there to say what the session in front is using, not to repeat
-/// the pane beside it.
+/// **One shape, and it lives in the inspector.** There were two: the main
+/// panel got the lot while the inspector asked for `compact`, which dropped
+/// the ssh line and the open sessions — because at 300pt a quoted command
+/// wraps into a paragraph, and because showing the same thing in both at once
+/// was simply the same view twice. The pane shows the list now, so this is
+/// the only place a host is described and there is nothing to repeat.
+///
+/// The command stays, wrapping and all. It is what you paste into a ticket
+/// when a connection misbehaves, and the alternative to a wrapped line here
+/// is not having it anywhere — the inspector widens to 420pt, and `Copy`
+/// sits in its header where the length cannot push it below the fold.
 struct HostDetailView: View {
     let store: HostStore
     let host: Host
-    /// What is open, for the sessions already on this host. The compact shape
-    /// does not show them, so it does not need this.
+    /// What is open, for the sessions already on this host.
     var sessions: Sessions?
-    /// The narrow shape, for the inspector.
-    var compact = false
     let onConnect: (Host) -> Void
-    /// Bringing one of the sessions in "Open now" to the front. Defaulted
-    /// because the compact shape does not list them, like `sessions` above.
+    /// Bringing one of the sessions in "Open now" to the front.
     var onShowSession: (UUID) -> Void = { _ in }
     let onEdit: (Host) -> Void
 
@@ -60,10 +61,8 @@ struct HostDetailView: View {
                 }
                 .font(.callout)
 
-                if !compact {
-                    command
-                    if !openHere.isEmpty { openNow }
-                }
+                command
+                if !openHere.isEmpty { openNow }
 
                 Spacer(minLength: 0)
             }
