@@ -219,10 +219,12 @@ cannot be asked to do — answer a read with fewer bytes than its own `stat`
 promised, reply to a request nobody made — and against OpenSSH's own
 `sftp-server`, which ships with macOS and catches the misunderstanding both of
 this project's ends would share. What neither reaches is the transport:
-connecting, logging in, jump hosts, `BatchMode`. For that the honest answer is
-still the Go server in the pre-reset bundle, and restoring it would make a Go
-toolchain a prerequisite for `xcodebuild test` in a project that is otherwise
-Swift all the way down — not a trade worth making yet.
+connecting, logging in, jump hosts, `BatchMode`. That once meant restoring the
+Go server in the pre-reset bundle, and a Go toolchain as a prerequisite for
+`xcodebuild test`. It no longer does: macOS's own `sshd` has been shown to run
+unprivileged on loopback with throwaway keys and to answer `ssh -s sftp`
+exactly as `SFTPClient.connect` speaks it. It is not wired in yet; `CLAUDE.md`
+says what wiring it in would have to keep away from your own `~/.ssh`.
 
 **Files cannot reach a host that takes only a password.** An `sftp` child is
 given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is

@@ -88,10 +88,31 @@ and without the Go server this paragraph used to call the honest answer:
 `ssh -s sftp`, it speaks the protocol on stdin and stdout, and
 `SFTPClient.speaking(to:from:)` was already the seam for exactly that — no
 toolchain, no network, no keys, no `sshd`. **`ssh` itself is still
-uncovered** — connecting, logging in, jump hosts, `BatchMode` — and that is
-where the bundle's Go server remains the honest answer, for the reason its own
-`go.mod` gives: writing an SSH server in Swift to test a Swift SSH client
-against is not a trade worth making.
+uncovered** — connecting, logging in, jump hosts, `BatchMode` — **but it no
+longer needs the bundle's Go server.** macOS's own `/usr/sbin/sshd` runs
+unprivileged: shown 2026-10-27 as you, not root, on `127.0.0.1` and a free
+port, with a throwaway host key and client key in a scratch directory. A
+command came back as you, the real `sftp` client listed through the
+subsystem, and **`ssh -s sftp` with `BatchMode=yes` answered VERSION 3 —
+the exact shape `SFTPClient.connect` spawns.** It needs nothing switched on:
+Remote Login can stay off, since this is a server of its own, and the
+firewall cannot prompt for Apple's signed `sshd` (it is off here anyway, and
+built-in signed software is allowed by default when it is not). One line in
+its log looks alarming and is not: *"BSM audit: setaudit_addr failed:
+Operation not permitted"* is a non-root process refused an audit session, and
+the login goes through regardless.
+**It is not wired in, and three things decide whether it should be.**
+`ssh` must be kept off your own `~/.ssh` — `-F /dev/null`, an explicit `-i`,
+`IdentityAgent=none`, and above all `UserKnownHostsFile` pointed at scratch,
+or the first connection **writes a test host key into the real
+`known_hosts`**; the probe did all four and left it untouched (still dated
+08:42 that morning). The app's own argv honours `~/.ssh/config` on purpose,
+because that is what an ssh client is for, so a suite driving
+`SFTPClient.connect` has to get that isolation into `SSHArgs` without
+changing what users get. And for as long as a test runs, it is a login
+server as you on loopback, for anyone holding a key that lives in
+`TestScratch` — the same trust boundary as your own processes, but a real
+one.
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the
