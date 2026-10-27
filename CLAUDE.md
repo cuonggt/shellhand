@@ -774,6 +774,33 @@ credentials, which is most of it.
   nothing arriving is simply an empty file — which is why the bug could only
   ever have been on the download side. Both halves are pinned now, so they
   cannot quietly drift into agreeing.
+- **An empty folder could not be carried down either, in every release up to
+  0.0.7** — the empty file's sibling, found the first time anything tested
+  folders at all. `downloadDirectory` and `uploadDirectory` run whenever a
+  folder is dragged between the panes, and **nothing called either** until
+  `Tests/SFTPFolderTests.swift` held them against OpenSSH's own server.
+  Every *file* came through byte for byte both ways — nested two deep, a
+  dotfile, a file of no bytes, 600 KB across several pipelined windows — so
+  the transfers were sound. Folders were not: `walk` collected files only, and
+  a folder was made only as the parent of a file about to land in it, so any
+  folder with no file beneath it at any depth was never made. Every empty
+  folder in a tree was left out, and **an empty folder downloaded as nothing
+  while the transfer reported success** — `downloadDirectory` returned
+  without throwing, so `Core` settled the job as done. Uploads made each
+  folder they met, so the directions disagreed and a round trip lost them.
+  Now `walk` records folders too, and the destination and every folder are
+  made before any file is written. **The fix has two halves and each fails
+  its own test taken out:** without the destination made first, only the
+  empty top-level folder is lost — nested folders make it anyway, as a side
+  effect of `withIntermediateDirectories` — while without nested folders
+  recorded, the whole-tree and round-trip tests fail and the empty one passes.
+  **Noticed and not chased:** upload `mkdir`s each folder with `try?`. Partly
+  on purpose — uploading into a folder that already exists merges rather than
+  fails — but it swallows a real refusal too. A folder with files in it
+  surfaces that through the files' own failures; an *empty* folder whose
+  `mkdir` was refused would vanish with the job reporting done. Only when
+  something is already wrong, but it is the same silent shape. The fix would
+  tell "already there" apart from every other failure.
 - **A rule type lifted into `Views/` is MainActor unless you say otherwise,
   and so is the enum it works on.** This catches **test helpers too**:
   `Tests/` is compiled into the app target, so a class there picks the default

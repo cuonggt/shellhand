@@ -135,19 +135,29 @@ extension SFTPClient {
     /// The count is of bytes rather than files, so a folder of one large file
     /// and a folder of a thousand small ones both report something that moves
     /// at a sensible rate.
+    ///
+    /// **Every folder is made before any file is written** — the destination
+    /// itself first. A folder used to be made only as the parent of a file
+    /// about to land in it, so one with no file beneath it at any depth was
+    /// never made at all: every empty folder in a tree was left out, and an
+    /// empty folder downloaded as nothing while the transfer reported success.
+    /// Uploads always made each folder they met, so the two directions
+    /// disagreed, and a folder sent up and brought back lost them on the way.
     func downloadDirectory(
         _ remote: String, to local: String,
         onProgress: @Sendable (Int64, Int64) -> Void = { _, _ in }
     ) async throws {
+        var folders = [local]
         var files: [(String, String, Int64)] = []
-        try await walk(remote, local: local, into: &files)
+        try await walk(remote, local: local, folders: &folders, files: &files)
+        for folder in folders {
+            try FileManager.default.createDirectory(
+                atPath: folder, withIntermediateDirectories: true)
+        }
         let total = files.reduce(0) { $0 + $1.2 }
         var done: Int64 = 0
         for (from, to, size) in files {
             try Task.checkCancellation()
-            try FileManager.default.createDirectory(
-                atPath: (to as NSString).deletingLastPathComponent,
-                withIntermediateDirectories: true)
             let before = done
             try await download(from, to: to) { moved, _ in
                 onProgress(before + moved, total)
@@ -157,14 +167,18 @@ extension SFTPClient {
         }
     }
 
+    /// Every folder and file under `remote`, mapped to where it lands under
+    /// `local`, each folder before what is in it.
     private func walk(
-        _ remote: String, local: String, into files: inout [(String, String, Int64)]
+        _ remote: String, local: String,
+        folders: inout [String], files: inout [(String, String, Int64)]
     ) async throws {
         for entry in try await list(remote) {
             let from = remote.hasSuffix("/") ? remote + entry.name : remote + "/" + entry.name
             let to = (local as NSString).appendingPathComponent(entry.name)
             if entry.attributes.isDirectory {
-                try await walk(from, local: to, into: &files)
+                folders.append(to)
+                try await walk(from, local: to, folders: &folders, files: &files)
             } else if !entry.attributes.isSymlink {
                 files.append((from, to, Int64(entry.attributes.size ?? 0)))
             }
