@@ -1337,13 +1337,18 @@ credentials, which is most of it.
   automated that touches one has to read it first and put it back.
   **And putting it back is not symmetrical.** `defaults export` saves the
   domain, and a single key is still easy to restore wrongly:
-  `SUAutomaticallyUpdate` was boolean `true`, a restore with `-int 1` leaves
-  an integer, and `-bool true` will **not** change it back while the app is
-  running — the app holds the domain and re-asserts what it cached, so every
-  rewrite comes straight back as an integer. Harmless, since `bool(forKey:)`
-  reads an integer 1 and a boolean true the same way and Sparkle is no
-  exception; but write a key back with the **type** it had, and do it while
-  the app is shut.
+  `SUAutomaticallyUpdate` was boolean `true` and a restore with `-int 1`
+  leaves an integer. **`-bool true` will not change it back**, because
+  `defaults write` keeps an existing key's type and coerces the value into
+  it — the rewrite comes back as an integer however many times it is tried.
+  `defaults delete` the key first and then write it, which does give a
+  boolean. Measured, with a scratch key proving `-bool` worked in that domain
+  all along; and **quitting the app has nothing to do with it**, which was the
+  first guess here and cost a pointless restart of somebody's app.
+  Harmless in itself, since `bool(forKey:)` reads an integer 1 and a boolean
+  true the same way and Sparkle is no exception — but restore a key with the
+  **type** it had, and check it with `defaults read-type`, since
+  `defaults read` prints `1` for both and cannot tell you.
 - The test bundle is **hosted by the app**, so running the suite launches it.
   With no `--db` that opened and migrated the real host list. `LaunchOptions`
   sends a run under XCTest to a store in the temporary directory; keep it that
