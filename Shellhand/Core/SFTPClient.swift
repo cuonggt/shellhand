@@ -483,9 +483,33 @@ actor SFTPClient {
     /// A thread rather than a readability handler: the reads are blocking and
     /// the packets have to be reassembled in order, which is exactly what a
     /// loop of its own is for.
+    ///
+    /// **The thread reads a descriptor of its own.** A number is all a thread
+    /// can hold, and it used to borrow `fromServer`'s — so the `FileHandle`
+    /// that owns that number could be deallocated while the thread was still
+    /// parked in `read`, leaving it on a closed descriptor whose number the
+    /// kernel is free to give to the next thing that opens a file. That is the
+    /// hazard class that made `FileHandle.write(contentsOf:)` so expensive: a
+    /// descriptor outliving its owner. A `dup` cannot be closed from under the
+    /// thread, its number cannot be reissued while the thread holds it, and
+    /// the thread gives it back on the way out.
+    /// **Whether that was ever the cause of the stall is not established** —
+    /// `CLAUDE.md` has what the experiment could and could not settle. This
+    /// closes a hazard and is not a fix for that.
+    /// Only the **reading** end is copied. A write end must not be: a reader
+    /// reaches an end of file only once every write end is closed, so a spare
+    /// copy held by a thread would leave the far side waiting for ever.
     private func startReading() {
-        let descriptor = fromServer.fileDescriptor
+        let descriptor = Darwin.dup(fromServer.fileDescriptor)
+        guard descriptor >= 0 else {
+            finish(
+                SFTPError(
+                    "the file session could not be read: "
+                        + String(cString: strerror(errno))))
+            return
+        }
         let thread = Thread { [weak self] in
+            defer { Darwin.close(descriptor) }
             var pending = Data()
             var chunk = [UInt8](repeating: 0, count: 64 << 10)
             while true {

@@ -116,7 +116,16 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     // MARK: answering
 
     private func start() {
-        let incoming = clientToPeer.fileHandleForReading.fileDescriptor
+        // A copy of the reading end, for the reason `SFTPClient.startReading`
+        // sets out: a thread can hold only a descriptor number, and the handle
+        // that owns it can go away underneath. The writing end below is
+        // deliberately **not** copied — an extra write end would stop the
+        // client ever reaching an end of file.
+        let incoming = Darwin.dup(clientToPeer.fileHandleForReading.fileDescriptor)
+        guard incoming >= 0 else {
+            noteReaderStopped("dup failed: " + String(cString: strerror(errno)))
+            return
+        }
         // A descriptor, like `incoming`, and for a reason that cost a whole
         // run: `FileHandle.write(contentsOf:)` raises an **ObjC** exception
         // once `stop()` has closed this end underneath the thread, `try?`
@@ -127,6 +136,7 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
         // process outright; off for this descriptor only.
         _ = fcntl(outgoing, F_SETNOSIGPIPE, 1)
         let thread = Thread { [weak self] in
+            defer { Darwin.close(incoming) }
             var pending = Data()
             var chunk = [UInt8](repeating: 0, count: 64 << 10)
             while true {

@@ -274,8 +274,11 @@ credentials, which is most of it.
   was ever going to resume. Nothing was merely queued, either: with the pool
   idle an enqueued `deliver` would have run, so the reply either never came or
   arrived and was dropped.
-  It is **not explained**, and it is **episodic rather than steady**, which
-  took far too long to see. Three sightings in all: one on its own, then two
+  It went **unexplained for weeks**, and it is **episodic rather than
+  steady**, which took far too long to see. **It is explained now, and the
+  cause was this harness rather than the engine** — the resolution is a few
+  bullets down; what follows here is the history, which is still worth
+  reading for how long it took and why. Three sightings in all: one on its own, then two
   inside a single batch of ten, and then **49 runs with none** across four
   batches — two with a probe compiled in, two without. So "about two in ten"
   was the wrong model: the stalls cluster in time and nothing in the build
@@ -453,14 +456,52 @@ credentials, which is most of it.
   gave 6 in one run and 1 in the next, a sixfold swing, which is the same
   clustering that has already turned small clean batches into a story twice in
   this file. Many alternating runs, or none.
-  **What is worth doing regardless of the stall** is narrower and does not
-  depend on the theory being right: both reader threads — `SFTPClient`'s and
-  `ScriptedSFTP`'s — hold a bare descriptor number whose lifetime belongs to
-  somebody else, which is the same hazard class as the `write(contentsOf:)`
-  bug a `FileHandle` could not report. `dup()` in the thread, closed by the
-  thread when it leaves, gives each one a descriptor nothing else can close or
-  reissue underneath it. That is a fix for a hazard, not for the stall; don't
-  let it be written up as the latter.
+  **What was worth doing regardless** turned out to be the whole of it, on
+  one side. Both reader threads — `SFTPClient`'s and `ScriptedSFTP`'s — held a
+  bare descriptor number whose lifetime belonged to somebody else, the same
+  hazard class as the `write(contentsOf:)` bug a `FileHandle` could not
+  report. Giving each thread a `dup` of its own, closed by the thread when it
+  leaves, was done as hygiene and turned out to settle the stall as well —
+  though only the harness's half did. See below.
+- **The stall is explained: it was this harness, not the engine.**
+  `ScriptedSFTP`'s reader thread borrowed the pipe's read descriptor by
+  **number**, which is all a thread can hold. Churn thousands of conversations
+  and the `FileHandle` owning that number is deallocated while the thread is
+  still parked in `read`; the number is handed to the next pipe, and an
+  orphaned thread reads somebody else's conversation. That is the one thing no
+  single-sided fault could account for — bytes going missing in **both**
+  directions — because either reader can be the orphan.
+  Measured as a 2x2, every arm in one sitting on one machine, which is what
+  makes this believable where the earlier arithmetic was not:
+
+      harness   engine    stalls per 20,000   a run took
+      borrows   borrows   6, 1                ~7s
+      borrows   dup       2, 2                ~7s
+      dup       borrows   0, 0                ~2.1s
+      dup       dup       0, 0, 0             ~1.9s
+
+  **11 stalls in 80,000 conversations whenever the harness borrows, 0 in
+  100,000 whenever it holds a `dup`** — and the engine's own descriptor makes
+  no difference to either row. The wall clock agrees independently and for
+  nothing: a run drops from about seven seconds to about two, because the
+  five-second waits are gone.
+  **So the shipped engine was innocent all along**, which is worth saying
+  plainly after weeks of suspecting it. Every sighting was the suite's own
+  server losing bytes; no user was ever going to meet this, and nothing about
+  it needed a release.
+  `SFTPClient.startReading` holds a `dup` anyway. That is **hygiene and not
+  the fix** — the table says so — kept because a thread holding a number whose
+  lifetime belongs to somebody else is a trap the next change around it should
+  not have to rediscover.
+  `Tests/SFTPChurnTests.swift` is the guard, and a real check now rather than a
+  hunt: 20,000 conversations in about two seconds, which fails at 11 in 80,000
+  with the harness's `dup` taken back out.
+  **The lesson that survives** is not about descriptors. What made every
+  earlier clean batch worthless was the absence of a baseline measured in the
+  same sitting — 49 clean runs said nothing because nobody knew that week's
+  rate. Two arms an hour apart on one machine said everything. When something
+  is episodic, spend the effort on a reproducer before spending any on a
+  theory.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only
