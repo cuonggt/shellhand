@@ -149,10 +149,18 @@ extension SFTPClient {
     ) async throws {
         var folders = [local]
         var files: [(String, String, Int64)] = []
-        try await walk(remote, local: local, folders: &folders, files: &files)
+        var links: [(String, String)] = []
+        try await walk(remote, local: local, folders: &folders, files: &files, links: &links)
         for folder in folders {
+            try Task.checkCancellation()
             try FileManager.default.createDirectory(
                 atPath: folder, withIntermediateDirectories: true)
+        }
+        // After the folders, since a link sits inside one; before the files,
+        // because nothing about a link depends on them.
+        for (at, target) in links {
+            try Task.checkCancellation()
+            try FileManager.default.createSymbolicLink(atPath: at, withDestinationPath: target)
         }
         let total = files.reduce(0) { $0 + $1.2 }
         var done: Int64 = 0
@@ -167,19 +175,29 @@ extension SFTPClient {
         }
     }
 
-    /// Every folder and file under `remote`, mapped to where it lands under
-    /// `local`, each folder before what is in it.
+    /// Every folder, file and symlink under `remote`, mapped to where each
+    /// lands under `local`, each folder before what is in it.
+    ///
+    /// A symlink is asked about **first**, because `readdir` answers with
+    /// `lstat` and so describes the link rather than what it points at — and
+    /// because a link is carried as a link. Nothing is followed, which is also
+    /// what keeps this walk from needing a loop guard: a link pointing at its
+    /// own ancestor is a name to copy, not a branch to descend.
     private func walk(
         _ remote: String, local: String,
-        folders: inout [String], files: inout [(String, String, Int64)]
+        folders: inout [String], files: inout [(String, String, Int64)],
+        links: inout [(String, String)]
     ) async throws {
         for entry in try await list(remote) {
             let from = remote.hasSuffix("/") ? remote + entry.name : remote + "/" + entry.name
             let to = (local as NSString).appendingPathComponent(entry.name)
-            if entry.attributes.isDirectory {
+            if entry.attributes.isSymlink {
+                links.append((to, try await readlink(from)))
+            } else if entry.attributes.isDirectory {
                 folders.append(to)
-                try await walk(from, local: to, folders: &folders, files: &files)
-            } else if !entry.attributes.isSymlink {
+                try await walk(
+                    from, local: to, folders: &folders, files: &files, links: &links)
+            } else {
                 files.append((from, to, Int64(entry.attributes.size ?? 0)))
             }
         }
@@ -224,15 +242,27 @@ extension SFTPClient {
         var files: [(String, String, Int64)] = []
         let enumerator = manager.enumerator(atPath: local)
         while let relative = enumerator?.nextObject() as? String {
+            try Task.checkCancellation()
             let from = (local as NSString).appendingPathComponent(relative)
-            var isDirectory: ObjCBool = false
-            guard manager.fileExists(atPath: from, isDirectory: &isDirectory) else { continue }
             let to = root + "/" + relative
-            if isDirectory.boolValue {
+            // `attributesOfItem` is `lstat`, and that is the whole point here:
+            // `fileExists(atPath:isDirectory:)` **follows** a symlink, so a
+            // link to a file went up as a copy of its bytes and a link to a
+            // directory as an empty folder on the far end — while
+            // `FileManager`'s enumerator does not descend through one, so
+            // nothing inside it ever followed. A dangling link was dropped
+            // without a word, since `fileExists` said it was not there.
+            guard let attributes = try? manager.attributesOfItem(atPath: from) else { continue }
+            switch attributes[.type] as? FileAttributeType {
+            case .typeSymbolicLink:
+                try await symlink(manager.destinationOfSymbolicLink(atPath: from), at: to)
+            case .typeDirectory:
                 try await makeFolder(to)
-            } else {
-                let size = (try? manager.attributesOfItem(atPath: from)[.size] as? Int64) ?? 0
-                files.append((from, to, size))
+            case .typeRegular:
+                files.append((from, to, (attributes[.size] as? Int64) ?? 0))
+            default:
+                // A socket, a fifo, a device: nothing a transfer can carry.
+                continue
             }
         }
 

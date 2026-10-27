@@ -11,6 +11,7 @@ nonisolated enum SFTP {
         case initialise = 1, version = 2, open = 3, close = 4, read = 5, write = 6
         case lstat = 7, fstat = 8, setstat = 9, opendir = 11, readdir = 12
         case remove = 13, mkdir = 14, rmdir = 15, realpath = 16, stat = 17, rename = 18
+        case readlink = 19, symlink = 20
         case status = 101, handle = 102, data = 103, name = 104, attrs = 105
     }
 

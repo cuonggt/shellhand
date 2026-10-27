@@ -19,6 +19,10 @@ nonisolated struct SFTPFolderTests {
     struct Tree: Equatable {
         var folders: Set<String> = []
         var files: [String: Data] = [:]
+        /// Path to the target string **as stored** — relative or absolute,
+        /// resolved or dangling. What a link points at is not followed here,
+        /// because the transfer does not follow it either.
+        var links: [String: String] = [:]
     }
 
     /// Nested two deep, with folders that hold nothing — one at the top, one
@@ -34,6 +38,19 @@ nonisolated struct SFTPFolderTests {
             "sub/deeper/c.txt": Data("gamma".utf8),
         ])
 
+    /// Every shape of link worth carrying: one to a file, one to a folder,
+    /// one that points nowhere, and one written absolute — the target is
+    /// copied as a string, so none of them is resolved on the way.
+    static let linked = Tree(
+        folders: ["real"],
+        files: ["real/f.txt": Data("bytes".utf8)],
+        links: [
+            "to-file": "real/f.txt",
+            "to-dir": "real",
+            "dangling": "nowhere",
+            "absolute": "/etc/hosts",
+        ])
+
     static func plant(_ tree: Tree, at root: String) throws {
         let manager = FileManager.default
         try manager.createDirectory(atPath: root, withIntermediateDirectories: true)
@@ -44,20 +61,36 @@ nonisolated struct SFTPFolderTests {
         for (path, bytes) in tree.files {
             manager.createFile(atPath: root + "/" + path, contents: bytes)
         }
+        // Last, so a link may sit inside a folder this just made.
+        for (path, target) in tree.links {
+            try manager.createSymbolicLink(
+                atPath: root + "/" + path, withDestinationPath: target)
+        }
     }
 
+    /// Asks `lstat`, not `stat`. The first version used
+    /// `fileExists(atPath:isDirectory:)`, which **follows** a symlink: a link
+    /// to a folder was recorded as a folder and a link to a file as that
+    /// file's bytes, so a snapshot could not have told a carried link from a
+    /// carried copy — and the thing these tests most need to see is exactly
+    /// that difference.
     static func snapshot(_ root: String) -> Tree {
         var tree = Tree()
         let manager = FileManager.default
         guard let walker = manager.enumerator(atPath: root) else { return tree }
         while let relative = walker.nextObject() as? String {
-            var isFolder: ObjCBool = false
             let path = root + "/" + relative
-            guard manager.fileExists(atPath: path, isDirectory: &isFolder) else { continue }
-            if isFolder.boolValue {
+            guard let attributes = try? manager.attributesOfItem(atPath: path) else { continue }
+            switch attributes[.type] as? FileAttributeType {
+            case .typeSymbolicLink:
+                tree.links[relative] =
+                    (try? manager.destinationOfSymbolicLink(atPath: path)) ?? ""
+            case .typeDirectory:
                 tree.folders.insert(relative)
-            } else {
+            case .typeRegular:
                 tree.files[relative] = manager.contents(atPath: path)
+            default:
+                continue
             }
         }
         return tree
@@ -139,10 +172,72 @@ nonisolated struct SFTPFolderTests {
         #expect(Self.snapshot(server.root + "/nothing") == Tree())
     }
 
+    // MARK: symlinks, carried as symlinks
+
+    /// A symlink is carried **as a link**, both ways: the target string copied
+    /// verbatim and nothing followed. Until these, download skipped links
+    /// outright while upload turned one into a copy of its target's bytes, a
+    /// link to a folder into an **empty folder** on the far end, and a
+    /// dangling one into nothing at all — three silent divergences, none
+    /// reported, and a round trip that could not give back the tree it took.
+    @Test("links come down as links, pointing where they pointed")
+    func downloadsLinks() async throws {
+        let server = try RealSFTPServer(readOnly: true) { root in
+            try Self.plant(Self.linked, at: root + "/tree")
+        }
+        defer { server.stop() }
+        let local = TestScratch.directory("link-down") + "/tree"
+
+        let client = try await server.client()
+        try await client.downloadDirectory(server.root + "/tree", to: local)
+
+        let arrived = Self.snapshot(local)
+        #expect(
+            arrived.links == Self.linked.links,
+            "links that did not arrive as links: \(Self.linked.links.keys.filter { arrived.links[$0] == nil }.sorted())")
+        #expect(arrived.files == Self.linked.files)
+        #expect(arrived.folders == Self.linked.folders)
+    }
+
+    @Test("links go up as links, pointing where they pointed")
+    func uploadsLinks() async throws {
+        let local = TestScratch.directory("link-up") + "/tree"
+        try Self.plant(Self.linked, at: local)
+        let server = try RealSFTPServer()
+        defer { server.stop() }
+
+        let client = try await server.client()
+        try await client.uploadDirectory(local, to: server.root)
+
+        let arrived = Self.snapshot(server.root + "/tree")
+        #expect(
+            arrived.links == Self.linked.links,
+            "links that did not arrive as links: \(Self.linked.links.keys.filter { arrived.links[$0] == nil }.sorted())")
+        #expect(arrived.files == Self.linked.files)
+        #expect(arrived.folders == Self.linked.folders)
+    }
+
     // MARK: there and back
 
     /// The test that matters most, since it is what someone does: a folder
     /// sent up and brought back down must be the folder they started with.
+    /// The strongest claim in the file, and the one that catches a pair of
+    /// directions that each look right alone: the whole tree, compared whole.
+    @Test("a tree of links carried up and brought back is the tree it was")
+    func linkRoundTrip() async throws {
+        let original = TestScratch.directory("link-there") + "/tree"
+        try Self.plant(Self.linked, at: original)
+        let server = try RealSFTPServer()
+        defer { server.stop() }
+        let back = TestScratch.directory("link-back") + "/tree"
+
+        let client = try await server.client()
+        try await client.uploadDirectory(original, to: server.root)
+        try await client.downloadDirectory(server.root + "/tree", to: back)
+
+        #expect(Self.snapshot(back) == Self.linked)
+    }
+
     @Test("a folder carried up and brought back down is the folder it was")
     func roundTrip() async throws {
         let original = TestScratch.directory("folder-there") + "/tree"
@@ -160,6 +255,33 @@ nonisolated struct SFTPFolderTests {
         #expect(
             returned.folders == Self.sample.folders,
             "folders lost on the way: \(Self.sample.folders.subtracting(returned.folders).sorted())")
+    }
+
+    // MARK: symlinks, on the wire
+
+    /// The one thing only a real server can settle: which way round
+    /// `SSH_FXP_SYMLINK` takes its two paths. Draft 02 writes linkpath then
+    /// targetpath and OpenSSH has always read them the other way, so getting
+    /// it backwards makes a link named after its own target. The link is read
+    /// back off the server's **own disk** rather than through the protocol
+    /// that wrote it, because a reversed pair would look consistent to
+    /// `readlink` and wrong to everything else.
+    @Test("a symlink made over the wire points where it was told")
+    func symlinkOnTheWire() async throws {
+        let server = try RealSFTPServer { root in
+            FileManager.default.createFile(
+                atPath: root + "/target.txt", contents: Data("bytes".utf8))
+        }
+        defer { server.stop() }
+
+        let client = try await server.client()
+        try await client.symlink("target.txt", at: server.root + "/link")
+
+        let onDisk = try FileManager.default.destinationOfSymbolicLink(
+            atPath: server.root + "/link")
+        #expect(onDisk == "target.txt", "the link on disk points at \(onDisk)")
+        let throughTheProtocol = try await client.readlink(server.root + "/link")
+        #expect(throughTheProtocol == "target.txt")
     }
 
     // MARK: a refusal nothing else would notice

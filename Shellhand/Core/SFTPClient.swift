@@ -368,6 +368,40 @@ actor SFTPClient {
         return try reader.string()
     }
 
+    /// Where a symlink points, as the far end stores it — the target string
+    /// verbatim, relative or absolute, resolved or dangling. `realpath` would
+    /// answer a different question: what the link leads to.
+    func readlink(_ path: String) async throws -> String {
+        let reply = try await request(.readlink) { $0.string(path) }
+        guard reply.type == .name else {
+            try expectOK(reply)
+            throw SFTPError("the far end did not say where that link points")
+        }
+        var reader = SFTP.Reader(reply.body)
+        _ = try reader.uint32()  // how many names; readlink answers with one
+        return try reader.string()
+    }
+
+    /// Makes a symlink at `path` pointing at `target`.
+    ///
+    /// **The argument order is OpenSSH's, not the draft's.** Draft 02 writes
+    /// linkpath then targetpath; OpenSSH's own server reads them the other way
+    /// round, and since it is the only server anyone meets, its order is the
+    /// real one. Nothing but a real server could settle that, and
+    /// `SFTPFolderTests` does — reading the link back off the server's own
+    /// disk rather than through the protocol that wrote it, since a reversed
+    /// pair would look consistent to `readlink` and be wrong to everything
+    /// else. Checked the way round that matters: with the draft's order the
+    /// server answers plain `SSH_FX_FAILURE`, being asked to make a link
+    /// named after a file already sitting there.
+    func symlink(_ target: String, at path: String) async throws {
+        let reply = try await request(.symlink) { body in
+            body.string(target)
+            body.string(path)
+        }
+        try expectOK(reply)
+    }
+
     func stat(_ path: String) async throws -> SFTP.Attributes {
         let reply = try await request(.stat) { $0.string(path) }
         guard reply.type == .attrs else {

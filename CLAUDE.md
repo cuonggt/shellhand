@@ -819,6 +819,48 @@ credentials, which is most of it.
   control fails — a folder carried twice onto itself. That control is the
   point: a fix that merely stopped swallowing passes both refusal tests and
   breaks every upload this app makes.
+- **A symlink is carried as a symlink now; the two directions used to disagree
+  three different ways.** Found by reading the transfer path straight after
+  the folder fixes, and measured with a probe rather than reasoned:
+  `downloadDirectory` **skipped** links outright, while `uploadDirectory`
+  turned a link to a file into a **copy of its target's bytes**, a link to a
+  folder into an **empty folder** on the far end, and a **dangling** link into
+  nothing at all. None of it was reported and none of it was tested, so a
+  round trip could not give back the tree it took.
+  **The cause was one call.** `fileExists(atPath:isDirectory:)` **follows** a
+  symlink, so a link to a file looked like a file and a link to a folder like
+  a folder — while `FileManager`'s enumerator does **not** descend through
+  one, which is why that folder stayed empty; and a dangling link looked like
+  nothing there at all. `attributesOfItem(atPath:)` is `lstat` and answers the
+  question actually being asked, reporting `.typeSymbolicLink` for all three.
+  Worth remembering as a pair: one follows, the other does not.
+  **The policy is to carry the link and not what it points at**, both ways —
+  the target string copied verbatim, relative or absolute, resolved or
+  dangling, nothing followed. That is also what spares both sides a loop
+  guard, which following would have forced: a link pointing at its own
+  ancestor is a name to copy, not a branch to descend. It is what `rsync`
+  does without `-L`, and it is what makes a round trip exact. It does mean a
+  link whose target is not carried too arrives dangling, which is faithful
+  rather than wrong.
+  **It needed two opcodes this did not speak** — `readlink` (19) and
+  `symlink` (20) — and one carries a trap only a real server could settle:
+  **OpenSSH reads `SSH_FXP_SYMLINK`'s two paths in the opposite order to
+  draft 02**, target first. The test reads the link back off the server's own
+  disk rather than through the protocol that wrote it, because a reversed pair
+  looks consistent to `readlink` and is wrong to everything else. Checked the
+  way round that matters: with the draft's order the server answers plain
+  `SSH_FX_FAILURE`.
+  **The test's own oracle had the same bug**, which is this file's recurring
+  lesson in a new place: `snapshot` used that same following `fileExists`, so
+  a carried link and a carried copy were identical to it and no assertion
+  could have told them apart. It asks `lstat` now. Each half fails its own arm
+  taken out — download skipping links fails the download and round-trip tests
+  while upload still passes; upload following them fails the upload test on
+  **all three** counts at once, links, files and folders, which is the whole
+  of the old bug in one line.
+  **And both directions check for cancellation while making folders and
+  links**, not only while moving bytes: a deep tree used to be unstoppable
+  until the first file started.
 - **A rule type lifted into `Views/` is MainActor unless you say otherwise,
   and so is the enum it works on.** This catches **test helpers too**:
   `Tests/` is compiled into the app target, so a class there picks the default
