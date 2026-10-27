@@ -268,4 +268,44 @@ struct TerminalSessionTests {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         #expect(said == home, "the shell started in \(said), not \(home)")
     }
+
+    /// `Forking`'s lock is only worth anything if every terminal goes through
+    /// it, and a start that skipped it would look exactly like one that did —
+    /// the shell comes up either way. So these hold the lock from another
+    /// thread and check the start **waited** for it. Both doors are tried,
+    /// because they are two separate calls to `startProcess`.
+    @Test("a local shell does not start while a pipe is being made")
+    func localShellWaitsForTheLock() {
+        let session = session()
+        defer { session.close() }
+        let waited = Self.secondsTaken(whileTheLockIsHeld: { session.startLocalShell() })
+        #expect(waited >= 0.3, "the shell started \(waited)s in, with the lock still held")
+    }
+
+    /// To `127.0.0.1` port 1, which refuses at once and reaches nothing.
+    @Test("an ssh session does not start while a pipe is being made")
+    func sshWaitsForTheLock() {
+        let session = session()
+        defer { session.close() }
+        let waited = Self.secondsTaken(whileTheLockIsHeld: {
+            session.start(argv: ["-o", "BatchMode=yes", "-p", "1", "127.0.0.1"])
+        })
+        #expect(waited >= 0.3, "ssh started \(waited)s in, with the lock still held")
+    }
+
+    /// Holds the lock on another thread for 0.4s, and times `start` from the
+    /// moment the lock is certainly held.
+    private static func secondsTaken(whileTheLockIsHeld start: () -> Void) -> Double {
+        let held = DispatchSemaphore(value: 0)
+        Thread.detachNewThread {
+            Forking.exclusively {
+                held.signal()
+                usleep(400_000)
+            }
+        }
+        held.wait()
+        let began = Date()
+        start()
+        return Date().timeIntervalSince(began)
+    }
 }

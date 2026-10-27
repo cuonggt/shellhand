@@ -66,6 +66,7 @@
 		9BF3CE2BB610B88116E445FB /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = A115AC162E4D88C396D25873 /* Model.swift */; };
 		9F0104D3B8286FE2D9E4676F /* GroupEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */; };
 		9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */; };
+		A044E587C5DBA2004A69D3FF /* Descriptors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B62E7B658B3DDBB3926F /* Descriptors.swift */; };
 		A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 531C7DCC9E4C7E12F56A543C /* Theme.swift */; };
 		A3458987A2D5B009D6C90CCA /* HostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E60B26760CD52D26C77F6 /* HostKey.swift */; };
 		A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */; };
@@ -131,6 +132,7 @@
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
 		458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPListingTests.swift; sourceTree = "<group>"; };
 		467E73B5CE44F6B57382DC67 /* ResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverTests.swift; sourceTree = "<group>"; };
+		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		53922636D26F782CC80079B8 /* Panes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panes.swift; sourceTree = "<group>"; };
 		56CBAF06EEAEC36794910612 /* FilesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindowController.swift; sourceTree = "<group>"; };
@@ -326,6 +328,7 @@
 				593A5D44E7FD2E569688A062 /* Config.swift */,
 				DFC5B41C053B8973B6F4996E /* Core.swift */,
 				759DA8F72FB3A8A7AF07474B /* CSVHosts.swift */,
+				4D05B62E7B658B3DDBB3926F /* Descriptors.swift */,
 				73F634D1B0D27FBB8ECFB95E /* Merge.swift */,
 				C980CDA163D4D20A0C1C3D6F /* Portable.swift */,
 				FFBB07464DD8500D6AE1101A /* Replacing.swift */,
@@ -533,6 +536,7 @@
 				262C6F45A141D70D7A8A8419 /* Config.swift in Sources */,
 				73F718188AE077E2AE4559EE /* ContentView.swift in Sources */,
 				7C288F30D5BD84EE03371F5D /* Core.swift in Sources */,
+				A044E587C5DBA2004A69D3FF /* Descriptors.swift in Sources */,
 				23D9FD59E64FF01321E6E42C /* DialogSize.swift in Sources */,
 				A5222C311175118B3748066D /* Files.swift in Sources */,
 				DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */,

@@ -86,8 +86,12 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         try? FileManager.default.removeItem(atPath: logPath)
         // nil rather than an empty array: SwiftTerm reads nil as "inherit",
         // and a session with no TERM or PATH is not a session.
-        view.startProcess(executable: "/usr/bin/ssh", args: ["-E", logPath] + argv,
-                          environment: nil)
+        // Under `Forking`'s lock, so the fork cannot land while some pipe is
+        // still unmarked and take it into this terminal for its whole life.
+        Forking.exclusively {
+            view.startProcess(executable: "/usr/bin/ssh", args: ["-E", logPath] + argv,
+                              environment: nil)
+        }
         watch()
     }
 
@@ -101,9 +105,11 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     func startLocalShell() {
         state = .connected
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        view.startProcess(
-            executable: shell, execName: "-" + (shell as NSString).lastPathComponent,
-            currentDirectory: FileManager.default.homeDirectoryForCurrentUser.path)
+        Forking.exclusively {
+            view.startProcess(
+                executable: shell, execName: "-" + (shell as NSString).lastPathComponent,
+                currentDirectory: FileManager.default.homeDirectoryForCurrentUser.path)
+        }
     }
 
     func send(_ text: String) { view.send(txt: text) }

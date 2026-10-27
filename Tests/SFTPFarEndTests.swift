@@ -18,9 +18,8 @@ nonisolated struct SFTPFarEndTests {
     /// `stop()` does to the close `list` leaves unawaited.
     @Test("a closed handle is an error, not a dead process")
     func closedHandle() async throws {
-        let toPeer = Pipe()
-        let fromPeer = Pipe()
-        SFTPClient.closeOnExec(toPeer, fromPeer)
+        let toPeer = Pipe.marked()
+        let fromPeer = Pipe.marked()
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         // Lets the client's reader thread end rather than blocking for ever.
@@ -36,9 +35,8 @@ nonisolated struct SFTPFarEndTests {
     /// pipe, so the next write is a broken one.
     @Test("a far end that has gone is an error, not a dead process")
     func brokenPipe() async throws {
-        let toPeer = Pipe()
-        let fromPeer = Pipe()
-        SFTPClient.closeOnExec(toPeer, fromPeer)
+        let toPeer = Pipe.marked()
+        let fromPeer = Pipe.marked()
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         defer { try? fromPeer.fileHandleForWriting.close() }

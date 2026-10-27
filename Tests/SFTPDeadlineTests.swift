@@ -23,9 +23,8 @@ nonisolated struct SFTPDeadlineTests {
     /// request goes out, is written perfectly, and is simply never answered.
     @Test("a request nothing answers fails, naming what went unanswered")
     func unanswered() async throws {
-        let toPeer = Pipe()
-        let fromPeer = Pipe()
-        SFTPClient.closeOnExec(toPeer, fromPeer)
+        let toPeer = Pipe.marked()
+        let fromPeer = Pipe.marked()
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading,
             answeringWithin: .milliseconds(300))
@@ -69,9 +68,8 @@ nonisolated struct SFTPDeadlineTests {
     /// deadline, while none at all says the answer never came.
     @Test("a reply that arrives after the deadline is counted late, not stray")
     func lateReply() async throws {
-        let toPeer = Pipe()
-        let fromPeer = Pipe()
-        SFTPClient.closeOnExec(toPeer, fromPeer)
+        let toPeer = Pipe.marked()
+        let fromPeer = Pipe.marked()
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading,
             answeringWithin: .milliseconds(200))
@@ -109,9 +107,8 @@ nonisolated struct SFTPDeadlineTests {
     /// a server that was a moment too slow.
     @Test("a reply to a request nobody made is still a stray")
     func trueStray() async throws {
-        let toPeer = Pipe()
-        let fromPeer = Pipe()
-        SFTPClient.closeOnExec(toPeer, fromPeer)
+        let toPeer = Pipe.marked()
+        let fromPeer = Pipe.marked()
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         defer { try? fromPeer.fileHandleForWriting.close() }

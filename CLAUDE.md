@@ -542,12 +542,13 @@ credentials, which is most of it.
   the inheriting arm saw nine times the forks, because its stuck stops each
   waited the full second, so scaled for exposure about 13 would be expected
   where there was 1.
-  **The 1 is not noise and cannot be fixed here**: macOS has no `pipe2`, so a
-  fork landing between `Pipe()` and the `fcntl` still inherits. That is why
-  `RealSFTPServer.stop` is bounded and ends the server itself after five
-  seconds — close-on-exec narrows the race, only a bounded stop guarantees a
-  teardown cannot hang. `Process` itself does not leak this way: 400 servers
-  started together held none of each other's pipes.
+  **The 1 was not noise**: macOS has no `pipe2`, so a fork landing between
+  `Pipe()` and the `fcntl` still inherited. Marking narrows that race and only
+  `Forking`'s lock, further down, closes it. `RealSFTPServer.stop` stays
+  bounded anyway — it ends the server itself after five seconds — because a
+  teardown should never be able to hang a run, whatever opened the descriptor.
+  `Process` itself does not leak this way: 400 servers started together held
+  none of each other's pipes.
   **The same leak was in the app, and is fixed now.** Every terminal's `ssh`
   inherited whatever the app had open when it forked: an SFTP session's pipes,
   and — for the app's whole life — `HostStore`'s watch descriptor on the host
@@ -559,14 +560,16 @@ credentials, which is most of it.
 - **Every descriptor this project opens is close-on-exec, and which calls
   already are was measured rather than assumed:**
 
-      Pipe()                          inherited — mark with SFTPClient.closeOnExec
+      Pipe()                          inherited — make it with Pipe.marked()
       open(_, O_EVTONLY)              inherited — add O_CLOEXEC
       dup()                           inherited — use fcntl(_, F_DUPFD_CLOEXEC, 0)
       FileHandle(forReadingAtPath:)   already close-on-exec
       FileHandle(forWritingAtPath:)   already close-on-exec
 
-  `SFTPClient.closeOnExec` is the one place a pipe gets marked, and every pipe
-  in the app and the suite goes through it — the harnesses' as well, because a
+  **`Pipe.marked()` is the only way this project makes a pipe** — the one bare
+  `Pipe()` left is inside it, and the other is `InheritanceTests`' control,
+  on purpose — and every pipe in the app and the suite goes through it, the
+  harnesses' as well, because a
   test pipe inherited by the local-shell test's forked shell misbehaves in a
   way that is easy to misread: `SFTPFarEndTests`' broken-pipe case would still
   have *passed*, since a pipe with a reader somewhere gives no `EPIPE` and the
@@ -592,13 +595,28 @@ credentials, which is most of it.
   the host's job — which is what this project now does. `main`'s `Pty.swift`
   is byte-identical to 1.99.0's, so no version bump helps. Checked
   2026-10-27; look again before treating the window as permanent.
-  **What would close the window here, completely:** `startProcess` forks
-  synchronously, before it returns, so one lock held around a terminal's
-  `startProcess` and around every `Pipe()`-and-mark would leave no moment for
-  a fork to land in — in the app and in the suite alike, where it would take
-  the real server's one-in-two-hundred to nothing. It is not done: it couples
-  `Terminal/` to `Core/` to close a race two system calls wide, and no lock of
-  ours reaches a descriptor some framework opens.
+  **So the window is closed here, by a lock: `Forking`, in
+  `Core/Descriptors.swift`.** `startProcess` forks synchronously, before it
+  returns, so holding one lock around both of `TerminalSession`'s starts and
+  around every pipe's making-and-marking leaves no moment for a fork to land
+  in between. That is why `Pipe.marked()` makes the pipe as well as marking it:
+  a helper that only marked could be called with the lock not held.
+  **Closed by construction, and the measurements agree rather than prove
+  it.** At matched exposure — 1,500 servers and 480 forks in each arm — a
+  fork outside the lock still caught 3 servers' input, and under it, none.
+  Those counts are too small to carry the claim by themselves; the
+  construction carries it.
+  What *is* proven is the wiring, which is the part that could silently rot.
+  A start that skipped the lock would look exactly like one that took it —
+  the shell comes up either way — so `TerminalSessionTests` holds the lock
+  from another thread and checks that each start **waited**, the local shell
+  and `ssh` (to `127.0.0.1` port 1) both, since they are two separate calls.
+  Checked the way round that matters: with both starts taken out of the lock,
+  both tests fail at once.
+  The cost was weighed and taken: `Terminal/` now depends on a lock in
+  `Core/` to close a race two system calls wide. And no lock of ours reaches
+  a descriptor a framework opens on its own — that stays on its author, as
+  #719 put ours on us.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only

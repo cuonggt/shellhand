@@ -114,8 +114,8 @@ actor SFTPClient {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
         process.arguments = args
-        let input = Pipe(), output = Pipe(), errors = Pipe()
-        closeOnExec(input, output, errors)
+        // Marked, and made where no terminal can fork in between — see `Forking`.
+        let input = Pipe.marked(), output = Pipe.marked(), errors = Pipe.marked()
         process.standardInput = input
         process.standardOutput = output
         process.standardError = errors
@@ -305,30 +305,6 @@ actor SFTPClient {
                 } else {
                     throw SFTPError("\(what): " + String(cString: strerror(errno)))
                 }
-            }
-        }
-    }
-
-    /// Marks both ends of each pipe close-on-exec, so that no child this
-    /// process starts afterwards inherits them.
-    ///
-    /// **This is about every terminal, not about `ssh` here.** `Process` starts
-    /// its child cleanly — four hundred children started together held none of
-    /// each other's pipes — but SwiftTerm starts a terminal's child with
-    /// `forkpty` and goes straight to `execve` without closing anything, and a
-    /// `Pipe()` is not marked. So whatever pipe is open when a terminal opens
-    /// goes into that terminal's `ssh` for as long as it runs. That is a leak
-    /// at best, and at worst a read that waits on an end of file which never
-    /// comes because a terminal is holding the other end.
-    /// Marking the ends `Process` hands to its child is safe: it puts them on
-    /// 0, 1 and 2 with `dup2`, whose copies are not marked, so the child still
-    /// gets its standard streams. And macOS has no `pipe2`, so this cannot close
-    /// the window between a `Pipe()` and the call — only shrink it to the two
-    /// lines it is called between.
-    nonisolated static func closeOnExec(_ pipes: Pipe...) {
-        for pipe in pipes {
-            for end in [pipe.fileHandleForReading, pipe.fileHandleForWriting] {
-                _ = fcntl(end.fileDescriptor, F_SETFD, FD_CLOEXEC)
             }
         }
     }

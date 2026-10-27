@@ -14,16 +14,16 @@ import Testing
 /// choice the local-shell test made when it asked the shell where it started.
 @Suite("What a terminal's child inherits", .timeLimit(.minutes(1)))
 nonisolated struct InheritanceTests {
-    @Test("a pipe the app marks is not handed to a terminal's child")
+    @Test("a pipe the app makes is not handed to a terminal's child")
     func markedPipe() {
-        let pipe = Pipe()
-        SFTPClient.closeOnExec(pipe)
+        let pipe = Pipe.marked()
         #expect(!Self.inheritedByATerminal(pipe.fileHandleForReading.fileDescriptor))
         #expect(!Self.inheritedByATerminal(pipe.fileHandleForWriting.fileDescriptor))
     }
 
     /// The control, and not optional: a probe that could never see an
     /// inherited descriptor would pass the test above with the fix taken out.
+    /// The one bare `Pipe()` in the project, on purpose.
     @Test("a pipe nobody marks is handed to a terminal's child")
     func unmarkedPipe() {
         let pipe = Pipe()

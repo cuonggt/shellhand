@@ -32,8 +32,8 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     /// Answer anything that expects a plain "that worked" with this instead.
     private let refusal: (code: SFTP.Status, said: String)?
 
-    private let clientToPeer = Pipe()
-    private let peerToClient = Pipe()
+    private let clientToPeer = Pipe.marked()
+    private let peerToClient = Pipe.marked()
     private var sentIntruder = false
 
     /// Touched from the peer's own thread and read from the test's, so both
@@ -58,7 +58,6 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
         self.refuseWrites = refuseWrites
         self.directory = directory
         self.refusal = refusal
-        SFTPClient.closeOnExec(clientToPeer, peerToClient)
     }
 
     /// Why the serving thread stopped reading, if it has.

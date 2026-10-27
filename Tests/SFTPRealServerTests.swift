@@ -173,8 +173,11 @@ nonisolated final class RealSFTPServer: @unchecked Sendable {
     /// `realpath` that way, and the temporary directory is behind one here.
     let root: String
     private let process = Process()
-    private let toServer = Pipe()
-    private let fromServer = Pipe()
+    /// Marked at birth, for the reason this suite once hung for a minute: a
+    /// shell forked mid run — the local-shell test — took an unmarked server
+    /// input with it, and the server never saw that input end. See `Forking`.
+    private let toServer = Pipe.marked()
+    private let fromServer = Pipe.marked()
 
     /// `populate` runs before the server starts, so a read-only one can still
     /// be given something to read.
@@ -194,19 +197,6 @@ nonisolated final class RealSFTPServer: @unchecked Sendable {
         // It logs to syslog unless told otherwise, but a pipe nobody reads is
         // a server that blocks the moment it does write one, so: nowhere.
         process.standardError = FileHandle.nullDevice
-        // **Close-on-exec on all four ends, because this suite once hung for a
-        // minute without it.** SwiftTerm starts a terminal's child with
-        // `forkpty` and goes straight to `execve` without closing anything, so
-        // a shell forked anywhere in this process — the local-shell test, mid
-        // run — inherits every descriptor not marked, this server's input
-        // included, and the server then never sees its input end. Measured,
-        // with SwiftTerm forking alongside: 115 servers of 200 still running a
-        // second after their input closed when inheriting, 1 when marked.
-        // Not 0, because macOS has no `pipe2`: a fork landing between `Pipe()`
-        // and this call still inherits. That residue is why `stop` is bounded
-        // rather than trusting the input to end. The app's own pipes are
-        // marked by the same call, for the same reason.
-        SFTPClient.closeOnExec(toServer, fromServer)
         try process.run()
     }
 
@@ -223,11 +213,14 @@ nonisolated final class RealSFTPServer: @unchecked Sendable {
     /// `Process` was never started, and terminating one that never ran raises.
     ///
     /// **Bounded, never `waitUntilExit()`.** That cannot be interrupted, so a
-    /// server whose input was inherited by a forked child waits as long as the
+    /// server whose input some forked child is holding waits as long as the
     /// child lives, and the run learns nothing but *"Time limit was exceeded"*
-    /// on whichever test was tearing down. A server ended here rather than by
-    /// itself is not a failure of what the test checked: every assertion was
-    /// made over the conversation before this runs.
+    /// on whichever test was tearing down. `Forking` means this suite's own
+    /// pipes can no longer be taken that way, so the bound is insurance now
+    /// rather than the fix — kept because a teardown should never be able to
+    /// hang a run, whatever opened the descriptor. A server ended here rather
+    /// than by itself is not a failure of what the test checked: every
+    /// assertion was made over the conversation before this runs.
     func stop() {
         try? toServer.fileHandleForWriting.close()
         let until = Date().addingTimeInterval(5)
