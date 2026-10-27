@@ -1871,6 +1871,20 @@ credentials, which is most of it.
   needs a domain, a host or a renewal. If a domain ever arrives, new builds can
   be born with a new address while the old ones go on asking GitHub. The
   release script refuses to build if the plist's feed is not that URL.
+- **The feed is served through a CDN that caches it for five minutes, so
+  pushing the appcast does not change what Sparkle sees.**
+  `raw.githubusercontent.com` answers with `cache-control: max-age=300`, so
+  for up to five minutes afterwards the live feed goes on naming the
+  **previous** version. Measured on 0.0.8: the appcast was pushed, `main`
+  held it, and the feed still offered 0.0.7 at `source-age: 267`; it turned
+  over about three minutes later, so the window is real but short. Checked
+  straight after publishing that reads exactly like a push that did not
+  land, and the next move looks like pushing again. Ask what `main` holds
+  instead — the blob sha through the API, against
+  `git rev-parse HEAD:appcast.xml` — which is the same question with no
+  cache in front of it. A cache-busting query string would dodge it and
+  prove nothing, since Sparkle asks the plain URL. Harmless in itself: an
+  app checking inside that window hears on its next check.
 - **Back up the EdDSA private key or every shipped app is stranded.** It lives
   in the login keychain under the account `shellhand`, and
   `generate_keys --account shellhand -x <file>` is the only copy there will
@@ -2012,7 +2026,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.7 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.8 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -2047,20 +2061,45 @@ discrepancy to fix. And **nobody was asked**, again, because this machine
 carries `SUAutomaticallyUpdate = 1` — so the dialog a new user meets is
 *still* proven only by 0.0.2, and no amount of updating on this Mac will
 change that. Put the key aside first or it proves nothing.
-**0.0.7 had not reached this machine's copy an hour after it went out, and
-that is Sparkle working, not failing.** The release was published at 10:49:45
-on 2026-10-27 and the feed naming it pushed at 10:50:06. The copy in
-`/Applications` had been relaunched at 09:02, Sparkle looked then
-(`SULastCheckTime` 09:02:46 local), found 0.0.6 current, and — with no
-`SUScheduledCheckInterval` set — waits its default of a day before looking
-again. So **how fast 0.0.6 arrived this morning is not something to expect**:
-a copy that has already checked learns of a release on its next check, up to
-a day later, or at once through **Check for Updates…**. It was deliberately
-not triggered from here: with `SUAutomaticallyUpdate = 1` it would install
-and relaunch the app under whatever sessions were open, which is the user's
-call. What 0.0.7 shipped is the host-key fix — a question answered on a quiet
+**0.0.7 had not reached this machine's copy an hour after it went out — and
+then it arrived at an hour and a quarter, which killed the explanation.** The
+release was published at 10:49:45 on 2026-10-27 and the feed naming it pushed
+at 10:50:06. The copy in `/Applications` had been relaunched at 09:02, Sparkle
+looked then (`SULastCheckTime` 09:02:46 local), found 0.0.6 current, and —
+with no `SUScheduledCheckInterval` set — was taken to be waiting its default
+of a day. It was not. At **12:04:42** the bundle replaced itself with 0.0.7
+and relaunched on a new pid at 12:04:44: hardened, stapled, Gatekeeper calling
+it a *Notarized Developer ID*, carrying 0.0.7's own build timestamp. So 0.0.7
+is proven end to end here as well — feed, signature, download, install,
+relaunch — and **nobody was asked**, for the third time.
+**What was wrong is the model, not the observation**, and this file has
+already warned twice about building one from a single sighting. One thing the
+run does show directly: Sparkle checks shortly **after a launch**, since the
+relaunch at 12:04:44 was followed by a check at 12:04:55. So the likely story
+is a relaunch somewhere between 09:02 and 12:04 — but nothing here records
+one, so that is where it stops. **Don't predict when a release will reach an
+installed copy.** What is safe is the pair of bounds, both now seen on this
+Mac: a copy may take one within the hour, and a copy that has just checked
+may not hear for a day. The consequence is the certainty — an install
+relaunches the app under whatever sessions are open — which is why **Check
+for Updates… is still not triggered from here**. That is the user's call, and
+this arrival shows it can happen without anyone making it.
+What 0.0.7 shipped is the host-key fix — a question answered on a quiet
 server no longer comes straight back, and a second Accept no longer types
 `yes` into the shell — with the descriptor leak into terminals behind it.
+**0.0.8 went out seven seconds after that install finished**, published at
+12:04:49 at `8c83bb3` — close enough to be worth saying plainly: the copy
+took 0.0.7, not 0.0.8, from the feed as it then stood. It leads with the folder
+fix — a folder from a host arrived without its empty folders, and an empty
+folder arrived as nothing while the transfer reported success — and carries
+the two host-key ones behind it, a question wrapped across a narrow window
+going unasked and an answered one coming back for an instant. The suite went
+448 → 459. Verified before publishing and again after: `stapler validate` and
+Gatekeeper on the DMG and on the app inside it, the DMG fetched back from
+GitHub hashing to the digest in the cask, every appcast URL answering 200 with
+the length the feed claims, all three items' notes byte-identical to their
+`docs/release-notes` files, and the signature **reproduced** by re-signing the
+DMG — Ed25519 is deterministic, so that is a check and not a second guess.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
