@@ -246,6 +246,17 @@ credentials, which is most of it.
   framework conformances**, SwiftTerm's delegates, `QLPreviewPanelDataSource`,
   `Layout`, `FileDocument`, so the sweep needs a list of what the system calls
   or it reads as a massacre.
+  **Swept again after 0.0.9: 392 functions, 15 unmentioned, and all 15 are
+  framework.** `LocalProcessTerminalViewDelegate` takes three
+  (`sizeChanged`, `hostCurrentDirectoryUpdate`, `processFailedToStart`),
+  `NSViewRepresentable` six across three types, `NSWindowDelegate` two
+  `windowWillClose`, and `QLPreviewPanelDataSource`, `Layout` and
+  `FileDocument` the rest. So the cut-era leftovers really were all cleared
+  and nothing has re-accumulated, today's thirteen new functions included —
+  which is the first time this sweep has come back with nothing to delete.
+  Check the **conformance**, not the name: that is what turns fifteen
+  alarming-looking declarations into zero findings, and it is the whole
+  difference between this sweep and a massacre.
   **`closeAll()` is the one worth a sentence, because deleting it is the
   non-obvious call.** It looked exactly like `FilesModel.close()` — a
   close-everything method nothing called — and `TerminalSession.deinit` only
