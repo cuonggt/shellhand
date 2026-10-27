@@ -2106,7 +2106,10 @@ credentials, which is most of it.
   minutes after 0.0.9 was pushed. So a verification that passes straight
   after a push may only mean that nobody had looked before — which is the
   weaker claim. Both turned over about 200 seconds after the push on 0.0.9,
-  measured.
+  measured. **On 0.0.10 both came back at `source-age 0` at once**, which is
+  the same rule from the other side: nothing had asked for either path for
+  hours, so there was no stale copy to serve. An instant verification is not
+  evidence that caching is absent — only that nobody had looked lately.
 - **Back up the EdDSA private key or every shipped app is stranded.** It lives
   in the login keychain under the account `shellhand`, and
   `generate_keys --account shellhand -x <file>` is the only copy there will
@@ -2136,6 +2139,14 @@ credentials, which is most of it.
   entry for the version it is already on, and the retired DMG is still served
   from its own GitHub release. Worth knowing before it looks like a version
   has gone missing.
+  **And it orders and prunes by the integer build, not by the version
+  string** — which 0.0.10 was the first release able to show, since `0.0.10`
+  sorts **below** `0.0.9` as text. Had anything compared the short version as
+  a string the feed would have offered the wrong release, and an app on 0.0.9
+  would never have seen anything newer. It does not: the feed came out builds
+  10, 9, 8, newest first, with 0.0.7 retired and 0.0.8 kept. Checked rather
+  than reasoned, because the appcast step is skipped in a dry run and this was
+  the one release where a string comparison could have surfaced.
 - **`Updates` deliberately does not bridge `canCheckForUpdates`.** Sparkle's
   own sample publishes it through Combine, which costs an `ObservableObject`
   in a codebase that is otherwise `@Observable` and a KVO callback that has to
@@ -2256,8 +2267,8 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.9 are out**, each tagged at the commit its DMG was built from,
-with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
+**0.0.1 through 0.0.10 are out**, each tagged at the commit its DMG was built
+from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
 write one per version or the update window comes up blank.
@@ -2380,6 +2391,22 @@ items' notes byte-identical to their `docs/release-notes` files, and the
 signature reproduced by re-signing. **The `mkdir` fix waited a release on
 purpose** — one conditional fix is a thin release, and holding it until the
 symlink work gave it company made a note about one thing rather than two.
+
+**0.0.10 is the host window's shape rather than a fix**, published at
+`87ba111` and live on release, feed, cask and tap. Picking a host no longer
+takes the list away: the list stays with the host highlighted, its details
+moved to the inspector, and where the pane is **looking** came apart from what
+is **selected** — see the `Browsing` note above, and do not put them back
+together. The suite went 466 → 479. Verified the way 0.0.8 and 0.0.9 were,
+before publishing and again after, with the one addition this release needed:
+the feed's ordering, since `0.0.10` sorts below `0.0.9` as a string.
+**What it cost to get right is worth more than the feature.** A double-click
+to connect went in, was made a `simultaneousGesture` to stop it taking the
+click, and came out altogether a day later because it made **every** single
+click wait out the system's double-click interval. No probe here could have
+seen that — a synthetic click does nothing in this app, proven with a control
+— and a user felt it on the first click. Ask for a hand on the mouse when the
+question is only answerable by one.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
