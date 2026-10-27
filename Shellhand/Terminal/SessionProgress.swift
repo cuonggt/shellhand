@@ -19,8 +19,11 @@ nonisolated enum SessionProgress {
     /// **Nil is the common answer and it matters.** The watchdog looks five
     /// times a second, and writing the same state back each time would churn
     /// an `@Observable` into redrawing the terminal for nothing.
+    ///
+    /// `answered` is the question most recently answered, if the session has
+    /// not got through since — see where it is used below.
     static func next(
-        from state: TerminalSession.State, screen: String
+        from state: TerminalSession.State, screen: String, answered: String? = nil
     ) -> TerminalSession.State? {
         // An ended session is finished. Whatever is still on the screen, it is
         // the last thing that process ever said.
@@ -30,7 +33,15 @@ nonisolated enum SessionProgress {
             // Already asking: re-posing it would rebuild the question under
             // the person reading it, every 200ms.
             if case .askingHostKey = state { return nil }
-            return .askingHostKey(HostKey.question(in: screen))
+            let question = HostKey.question(in: screen)
+            // The question just answered, still on screen exactly as it was
+            // because the pty has not echoed the answer yet. A look in that
+            // instant used to ask it again: the dialog came back for a tick,
+            // and an Accept inside that tick typed `yes` into the shell. Only
+            // **that** question is held back — a different one is new and is
+            // asked, as a jump chain asks one per hop.
+            if question == answered { return nil }
+            return .askingHostKey(question)
         }
 
         // Nothing said yet is no evidence of a connection, and **a terminal

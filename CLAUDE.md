@@ -1467,13 +1467,27 @@ credentials, which is most of it.
   a line, and `no`), the corrected `howFarBack` fails, and the real `ssh` test
   in `TerminalOverSSHTests` fails — five expectations across three tests,
   each able to catch it without the others.
-  **One residue, much narrower, left alone:** `answerHostKey` types the answer
-  and resets the state at once, so a watchdog tick landing in the instant
-  before the pty's echo arrives still sees a live question and re-poses it for
-  one tick — then the echo disqualifies it and the next tick reads connected.
-  A dialog visible for one 200ms tick, and only when a tick falls in that
-  instant; the fix would be for an answer to suppress re-asking the question
-  it answered, which is a change to `TerminalSession`, not to this rule.
+  **The residue is closed too.** `answerHostKey` types the answer and resets
+  the state at once, so a watchdog tick landing in the instant before the
+  pty's echo arrived still saw a live question and re-posed it: the dialog
+  back for one 200 ms tick, and an Accept inside that tick typed `yes` into the
+  shell. An answer now records the question it answered, and
+  `SessionProgress.next` holds back **that question** — not questions, since a
+  jump chain asks one per hop and the second must still be asked — until the
+  session is through, when the record is let go so a later question worded
+  the same is a new one. The decision stays in `SessionProgress`, pure; the
+  session only remembers.
+  **The race is tested held open rather than hoped for.** It lasts about a
+  millisecond in a real session, so no real-`ssh` test could aim at it. A fed
+  view has no process behind it, so an answer is typed into nothing and
+  nothing ever echoes: every look after the answer is the look before the
+  echo, and the test lets five of them pass. Checked one piece at a time: with
+  the hold-back taken out of `SessionProgress`, the pure test and the held-open
+  one both fail; with `answerHostKey` no longer recording the question, the
+  pure test still passes and the held-open one fails with *"the answered
+  question came back"*. A different question straight after an answer is
+  asked either way — that test is the control that keeps the fix from muting
+  every question.
 - **The watchdog's decision is `SessionProgress`; `watch()` is only the
   looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
   of the screen is one pure function, which is why there are tests for it at

@@ -205,7 +205,14 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// What is on screen, as a person would read it.
     var screen: String { String(decoding: view.getBufferAsData() as Data, as: UTF8.self) }
 
+    /// The question most recently answered, kept until the session is
+    /// through: an answer is typed before its echo arrives, so for an instant
+    /// the screen still shows it being asked, and the watchdog is told not to
+    /// ask it again.
+    private var answered: String?
+
     func answerHostKey(accept: Bool) {
+        if case .askingHostKey(let question) = state { answered = question }
         send(accept ? "yes\n" : "no\n")
         state = .connecting
     }
@@ -231,8 +238,13 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                 self.readDiagnostics()
                 if case .ended = self.state { return }
 
-                if let next = SessionProgress.next(from: self.state, screen: self.screen) {
+                if let next = SessionProgress.next(
+                    from: self.state, screen: self.screen, answered: self.answered)
+                {
                     self.state = next
+                    // Through, so any question after this is a new one, even
+                    // one worded exactly like the last.
+                    if next == .connected { self.answered = nil }
                 }
             }
         }

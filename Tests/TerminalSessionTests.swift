@@ -200,6 +200,33 @@ struct TerminalSessionTests {
         #expect(question.contains("SHA256:abcdefgh"))
     }
 
+    /// The race held open. No process sits behind a fed view, so an answer is
+    /// typed into nothing and nothing ever echoes it: every watchdog look after
+    /// the answer is the look *before* the echo, which a real session passes
+    /// through in a millisecond and this one never leaves. Five looks — a whole
+    /// second — and the answered question must not have been asked again.
+    @Test("an answered question is not asked again while its echo is on the way")
+    func answeredStaysAnswered() async {
+        let session = session()
+        defer { session.close() }
+        session.view.feed(text: Self.prompt)
+        session.watch()
+        let asked = await waitUntil {
+            if case .askingHostKey = session.state { return true }
+            return false
+        }
+        guard asked else {
+            Issue.record("the question was never asked to begin with")
+            return
+        }
+
+        session.answerHostKey(accept: true)
+        let looked = session.ticks
+        _ = await waitUntil { session.ticks >= looked + 5 }
+        #expect(session.ticks >= looked + 5, "the watchdog stopped looking")
+        #expect(session.state == .connecting, "the answered question came back: \(session.state)")
+    }
+
     @Test("the watchdog picks up what ssh wrote to its own log")
     func watchdogReadsTheLog() async throws {
         let session = session()

@@ -46,6 +46,30 @@ nonisolated struct SessionProgressTests {
         #expect(SessionProgress.next(from: .askingHostKey("asked"), screen: answered) == .connected)
     }
 
+    /// The instant after an answer: the state is back to connecting, but the
+    /// pty has not echoed the answer, so the screen still shows the question
+    /// exactly as it was asked. Asked again there, the dialog came back for a
+    /// tick — and an Accept in that tick typed `yes` into the shell.
+    @Test("the question just answered is not asked again before its echo arrives")
+    func answeredIsNotAskedAgain() {
+        let asked = HostKey.question(in: Self.asking)
+        #expect(SessionProgress.next(from: .connecting, screen: Self.asking, answered: asked) == nil)
+    }
+
+    /// What is held back is that question, not questions: a jump chain asks
+    /// one per hop, and the second has to be asked even straight after the
+    /// first was answered.
+    @Test("a different question after an answer is still asked")
+    func aDifferentQuestionIsAsked() {
+        let first = HostKey.question(in: Self.asking)
+        let second = Self.asking
+            .replacingOccurrences(of: "web (198.51.100.11)", with: "db (198.51.100.12)")
+            .replacingOccurrences(of: "abcdefghijklmnop", with: "qrstuvwxyz012345")
+        #expect(
+            SessionProgress.next(from: .connecting, screen: second, answered: first)
+                == .askingHostKey(HostKey.question(in: second)))
+    }
+
     // MARK: getting through
 
     @Test("anything from the far side means the connection is through")
