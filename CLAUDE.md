@@ -2097,8 +2097,8 @@ relaunch at 12:04:44 was followed by a check at 12:04:55. So the likely story
 is a relaunch somewhere between 09:02 and 12:04 — but nothing here records
 one, so that is where it stops. **Don't predict when a release will reach an
 installed copy.** What is safe is the pair of bounds, both now seen on this
-Mac: a copy may take one within the hour, and a copy that has just checked
-may not hear for a day. The consequence is the certainty — an install
+Mac: a copy may take one within ten minutes, and a copy that has just
+checked may not hear for a day. The consequence is the certainty — an install
 relaunches the app under whatever sessions are open — which is why **Check
 for Updates… is still not triggered from here**. That is the user's call, and
 this arrival shows it can happen without anyone making it.
@@ -2118,6 +2118,16 @@ GitHub hashing to the digest in the cask, every appcast URL answering 200 with
 the length the feed claims, all three items' notes byte-identical to their
 `docs/release-notes` files, and the signature **reproduced** by re-signing the
 DMG — Ed25519 is deterministic, so that is a check and not a second guess.
+**And it arrived here nine minutes later**, unasked, which is the fourth time
+running. The copy in `/Applications` replaced itself at 12:14:03 and
+relaunched at 12:14:05, `SULastCheckTime` 12:14:04, carrying `Timestamp=27 Oct
+2026 at 11:59:10` — the same secure timestamp read out of the DMG's own app
+before publishing, so it is that build rather than a version string taken on
+trust. The feed had turned over about three minutes after the push, and the
+copy had it some seven minutes after that. So 0.0.8 is proven end to end as
+well: feed, signature, download, install, relaunch. It is the sharpest
+arrival yet, and it is what tightened the bound above from an hour to ten
+minutes — written the same morning, on one sighting, and already too loose.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
