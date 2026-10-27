@@ -428,6 +428,39 @@ credentials, which is most of it.
   pipes, churned far harder than the app ever churns a session. If the fault is
   the harness's own, it would explain every sighting so far and leave the
   shipped engine innocent — but that is a possibility, not a finding.
+- **The descriptor-reuse theory was tested and the test was flawed. Read this
+  before designing the next one.** The theory: a reader thread holds a raw
+  `Int32` while the `FileHandle` owning it can be deallocated and that number
+  handed out again, so an orphan goes on reading a pipe that now belongs to
+  somebody else. The design was to record, per conversation, whether either
+  read descriptor had belonged to a conversation whose reader thread had not
+  yet ended, and to report that against whether the conversation stalled —
+  with the conversations that did not stall as the control, since in a
+  churning run *every* conversation reuses numbers and a bare reuse count
+  proves nothing.
+  **Two traps sank it, and both are properties of the question rather than of
+  this attempt.** Knowing that a thread has ended means waiting for it to end,
+  and waiting is itself the intervention — the arm that can measure the clash
+  is the arm that has removed the chance of one, so the clash column came back
+  0 everywhere, including where it mattered. And deriving liveness from the
+  old object instead means **holding** that object, which keeps its pipes open
+  and so prevents the very reuse being measured. Observation and intervention
+  are entangled here; a design that separates them needs the thread to publish
+  its own exit through something that does not keep the pipes alive.
+  What the counts said, for whoever picks it up: **0 stalls in 40,000
+  conversations with a wait for the server thread, and 7 in 40,000 without** —
+  across two runs each. Suggestive, and **not** a conclusion: the no-wait arm
+  gave 6 in one run and 1 in the next, a sixfold swing, which is the same
+  clustering that has already turned small clean batches into a story twice in
+  this file. Many alternating runs, or none.
+  **What is worth doing regardless of the stall** is narrower and does not
+  depend on the theory being right: both reader threads — `SFTPClient`'s and
+  `ScriptedSFTP`'s — hold a bare descriptor number whose lifetime belongs to
+  somebody else, which is the same hazard class as the `write(contentsOf:)`
+  bug a `FileHandle` could not report. `dup()` in the thread, closed by the
+  thread when it leaves, gives each one a descriptor nothing else can close or
+  reissue underneath it. That is a fix for a hazard, not for the stall; don't
+  let it be written up as the latter.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only
