@@ -1789,6 +1789,31 @@ credentials, which is most of it.
     What works is `set focused of <the AXOutline> to true` and then arrow
     keys, which is the same path a person on the keyboard takes. After that
     `hasHost` is true and `Edit Host…` opens on the right host.
+  - **`click at` is inert here too, and that was proven with a control rather
+    than assumed.** Clicking the exact centre of a real `AXRow` — geometry
+    read off the element, 28pt high — left the inspector empty, which looked
+    exactly like the double-click gesture on those rows stealing the click
+    that selects. The same click against a build with **no gesture attached**
+    did nothing either. So a click probe here cannot tell a working click from
+    a broken one, and any conclusion drawn from one is worth nothing. **What
+    that costs is real:** whether a click selects is not checkable from a
+    script in this app, so anything riding on it has to be safe by
+    construction — which is why the pane's double-click is a
+    `simultaneousGesture` rather than an `onTapGesture`, the form documented
+    not to take the view's own handling.
+  - **An `AXOutline`'s children include an `AXColumn`**, whose centre is the
+    middle of the whole list — four hundred points below the rows on a short
+    one. A first pass clicked it and read the empty result as a broken click.
+    Filter to `role is "AXRow"`, and sanity-check the height: a row is tens of
+    points tall, the column is hundreds.
+  - **Keyboard paths, though, are fully drivable — including connecting.**
+    Arrow to a host in the pane's list, press Return, and a session opens:
+    seen as the **Terminal** menu's gate going false to true, the same trick
+    `Edit Host…` is read with. Drive it against a host at **`127.0.0.1` port
+    1**, which refuses instantly with status 255 and reaches nothing — the
+    rule this file already sets for Quick Connect, and the reason a check can
+    exercise connecting at all. Checked the way round that matters: with the
+    `onKeyPress(.return)` handler taken out, the gate stays false.
   - **A row's context menu cannot be opened from a script.** The row
     publishes `AXShowDefaultUI` and `AXShowAlternateUI` and nothing else —
     no `AXShowMenu` — and a control-click at the middle of its own reported
