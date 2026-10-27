@@ -140,7 +140,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 ```
 
 `Tests/` is the whole suite: inheritance, the argv, the merge, the delete
-rules, SFTP's wire format and the conversation over it, the transfer queue,
+rules, SFTP's wire format and the conversation over it — including against
+OpenSSH's own `sftp-server` — the transfer queue,
 validation, themes, tags — and the rules lifted out of the layers above
 `Core/`, which is most of what used to be out of reach. What is under what and
 the fold the sidebar opens on; what a file pane calls itself and how it names a
@@ -212,16 +213,16 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 
 ## Not here yet
 
-**`ssh` itself is not under test, and nor is SFTP against a real server.** One
-test opens a real pty — a local shell, which it asks where it started — and
-that is the only process the suite spawns. The SFTP conversation is held
-against a server written in Swift in this process, over a pair of pipes, and
-that server is there for what a real one cannot be asked to do: answer a read
-with fewer bytes than its own `stat` promised, or reply to a request nobody
-made. What it cannot catch is a misunderstanding both ends share. For that the
-honest answer is the Go server in the pre-reset bundle, and restoring it would
-make a Go toolchain a prerequisite for `xcodebuild test` in a project that is
-otherwise Swift all the way down — not a trade worth making yet.
+**`ssh` itself is not under test.** The SFTP conversation is, twice over: against
+a server written in Swift in this process, which is there for what a real one
+cannot be asked to do — answer a read with fewer bytes than its own `stat`
+promised, reply to a request nobody made — and against OpenSSH's own
+`sftp-server`, which ships with macOS and catches the misunderstanding both of
+this project's ends would share. What neither reaches is the transport:
+connecting, logging in, jump hosts, `BatchMode`. For that the honest answer is
+still the Go server in the pre-reset bundle, and restoring it would make a Go
+toolchain a prerequisite for `xcodebuild test` in a project that is otherwise
+Swift all the way down — not a trade worth making yet.
 
 **Files cannot reach a host that takes only a password.** An `sftp` child is
 given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is

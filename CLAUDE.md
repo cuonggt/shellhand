@@ -51,7 +51,8 @@ on its screen) — driven both as a rule and against a terminal fed by hand, wit
 the real watchdog running over it — `Model/Files.swift`'s own orchestration
 (the guard that keeps a pane from re-opening, and the replace question with a
 copy genuinely parked on its continuation), the SFTP
-conversation against a server written in Swift in this process, and
+conversation — against a server written in Swift in this process, **and against
+OpenSSH's own `sftp-server`**, which ships with macOS — and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs.
@@ -80,13 +81,17 @@ report, so restoring it means test-only code back inside the shipping binary.
 Driving from outside costs the app nothing, which is why this is the shape to
 extend rather than the bundle.
 
-A **local shell on a real pty** is covered too, by the one test in the suite
-that spawns a process: it opens one and asks the shell itself where it
-started. `ssh` in particular and SFTP against a real server are still
-uncovered, and for those the bundle's Go server remains the honest answer — its own `go.mod`
-says why: writing an SSH server in Swift to test a Swift SSH client against is
-not a trade worth making. `ScriptedSFTP` is not a counter-example; it speaks
-SFTP over a pair of pipes and is no SSH server and gives no pty.
+A **local shell on a real pty** is covered too: it opens one and asks the
+shell itself where it started. **SFTP against a real server is covered now**,
+and without the Go server this paragraph used to call the honest answer:
+`/usr/libexec/sftp-server` is the binary `sshd` execs at the far end of every
+`ssh -s sftp`, it speaks the protocol on stdin and stdout, and
+`SFTPClient.speaking(to:from:)` was already the seam for exactly that — no
+toolchain, no network, no keys, no `sshd`. **`ssh` itself is still
+uncovered** — connecting, logging in, jump hosts, `BatchMode` — and that is
+where the bundle's Go server remains the honest answer, for the reason its own
+`go.mod` gives: writing an SSH server in Swift to test a Swift SSH client
+against is not a trade worth making.
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the
@@ -502,6 +507,54 @@ credentials, which is most of it.
   rate. Two arms an hour apart on one machine said everything. When something
   is episodic, spend the effort on a reproducer before spending any on a
   theory.
+- **The SFTP conversation is held against OpenSSH's own server too**, in
+  `Tests/SFTPRealServerTests.swift`, and the reason it exists is the paragraph
+  above: `ScriptedSFTP` answers from this project's idea of the protocol, and
+  it was itself wrong for weeks. A reference implementation cannot share a
+  misunderstanding. It is **proven to catch one**: with `opendir` planted as
+  99 instead of 11, every scripted listing test still passed — the harness
+  decodes with the same enum the client encodes with — while the real server
+  refused it. It refused **silently**, too, sending no status at all, and the
+  request deadline is what turned that into *"did not answer opendir"* rather
+  than a hang.
+  Two things that cost nothing to get wrong and a lot to get wrong later:
+  **`-d` names where the server starts and is not a jail** — it runs as you,
+  with all of your access, so every path is absolute and under `TestScratch`,
+  and every test that only reads passes `-R` as well. And OpenSSH sends **at
+  most 100 names per `readdir`** (250 files arrive as 100, 100, 52), so the
+  several-batches test is the end-of-directory rule against batching the client
+  did not choose.
+  The suite meets the server through `SFTPClient.begin()`, the half of
+  `connect` that runs once there is a far end — the handshake and finding home
+  — so it gets the same opening the app makes rather than a test's idea of one.
+  `setHome` went with that change, having no other caller.
+- **SwiftTerm leaks every descriptor not marked close-on-exec into every
+  terminal's child**, and it made the new suite hang for a minute. Its
+  `PseudoTerminalHelpers.fork(andExec:)` calls `forkpty` and goes straight to
+  `execve` without closing anything, and `Pipe()` descriptors are not
+  close-on-exec, so a shell forked anywhere in the process — the local-shell
+  test, mid run — holds a copy of whatever pipes happen to be open. A real
+  server whose input it inherited never sees that input end, and
+  `waitUntilExit()` cannot be interrupted, so the run learned only *"Time limit
+  was exceeded"* on whichever test was tearing down. Measured with SwiftTerm
+  forking alongside: **115 servers of 200 still running a second after their
+  input closed when inheriting, 1 with the pipes marked close-on-exec** — and
+  the inheriting arm saw nine times the forks, because its stuck stops each
+  waited the full second, so scaled for exposure about 13 would be expected
+  where there was 1.
+  **The 1 is not noise and cannot be fixed here**: macOS has no `pipe2`, so a
+  fork landing between `Pipe()` and the `fcntl` still inherits. That is why
+  `RealSFTPServer.stop` is bounded and ends the server itself after five
+  seconds — close-on-exec narrows the race, only a bounded stop guarantees a
+  teardown cannot hang. `Process` itself does not leak this way: 400 servers
+  started together held none of each other's pipes.
+  **The same leak is in the app, and is not fixed by this.** Every terminal's
+  `ssh` inherits whatever the app has open when it forks, an SFTP session's
+  pipes included. `SFTPClient.close()` terminates its child rather than relying
+  on input ending, so closing a session cannot hang on it. The exposed path is
+  narrower: `connect`'s handshake-failure branch reads `ssh`'s stderr to its
+  end, and a terminal forked in the window before `Process` drops its copy of
+  that pipe would hold the read open for as long as the terminal lives.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only

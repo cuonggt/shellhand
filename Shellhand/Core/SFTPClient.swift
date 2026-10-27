@@ -131,7 +131,7 @@ actor SFTPClient {
             handshakeDeadline: Deadline.handshake, replyDeadline: Deadline.reply)
         await client.startReading()
         do {
-            try await client.handshake()
+            try await client.begin()
         } catch {
             // The client is let go of **first**, and the order is
             // load-bearing: reading ssh's stderr waits for an end of file,
@@ -153,12 +153,21 @@ actor SFTPClient {
             let detail = said.trimmingCharacters(in: .whitespacesAndNewlines)
             throw SFTPError(detail.isEmpty ? (error as? SFTPError)?.message ?? "the file session could not be opened" : detail)
         }
-        let home = (try? await client.realpath(".")) ?? "."
-        await client.setHome(home)
         return client
     }
 
-    private func setHome(_ path: String) { home = path }
+    /// What a session does once there is a far end to speak to: agree a
+    /// version, then ask where it starts. `connect` runs it over `ssh`; a test
+    /// runs it over a server it started itself — which is why it is not
+    /// private, so that the real `sftp-server` meets the same opening the app
+    /// makes rather than a test's idea of one.
+    ///
+    /// Only the handshake can fail it. A far end that will not say where home
+    /// is still has a session worth having, so that falls back to `.`.
+    func begin() async throws {
+        try await handshake()
+        home = (try? await realpath(".")) ?? "."
+    }
 
     /// A client speaking to handles somebody else owns, already reading.
     ///
