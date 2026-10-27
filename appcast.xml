@@ -3,6 +3,36 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.9</title>
+            <pubDate>Tue, 27 Oct 2026 17:09:07 +0700</pubDate>
+            <sparkle:version>9</sparkle:version>
+            <sparkle:shortVersionString>0.0.9</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**Symbolic links were left behind coming down, and carried wrongly going up.**
+A folder dragged from a host onto this Mac arrived without any of its symlinks
+at all. Sent the other way, a link to a file arrived as a full copy of that
+file, a link to a folder arrived as a folder with nothing inside it, and a
+link pointing at something that is not there arrived not at all — each of them
+without a word, while the transfer reported success. A link is now carried as
+a link, pointing exactly where it pointed, whether that is a file, a folder,
+somewhere absolute, or nowhere. A folder sent up and brought back down is the
+folder it was, links included.
+
+**A folder that could not be made on a host said nothing about it.** Uploading
+a folder into a place that will not take it — somewhere you have no permission
+to write, or where a file already has that name — the folder simply did not
+appear, and the transfer still said it had finished. It fails now, and passes
+on what the far end said about it. Carrying a folder onto one that is already
+there still merges, exactly as before.
+
+Nothing else here is visible from the outside. The suite went from 459 checks
+to 466, and both of these are held against OpenSSH's own server rather than a
+stand-in — including the one detail nothing else could settle: which way round
+that server wants the two paths of a request to make a link.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.9/Shellhand-0.0.9.dmg" length="13861235" type="application/octet-stream" sparkle:edSignature="rKtaN4QSHE11bU8OcsM36wtT+vDpcBG8gmnXhuk8V80zaA1RPNpmgucOfUixBX8U79UvZ6HzjAnkJVU49qIJDQ=="/>
+        </item>
+        <item>
             <title>0.0.8</title>
             <pubDate>Tue, 27 Oct 2026 12:00:38 +0700</pubDate>
             <sparkle:version>8</sparkle:version>
@@ -63,44 +93,6 @@ question — against a server started for the length of each test. The first
 fix above was found that way, on the first run of a test written to look.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.7/Shellhand-0.0.7.dmg" length="13847457" type="application/octet-stream" sparkle:edSignature="ZkAC6g2fI+OmjRRVczRX8PaObH0ClN8x8ZzRTeAXWUrErHpZZOjWf41PMRWdc/7YRWHA6sbymJYaLcZmP9k1CA=="/>
-        </item>
-        <item>
-            <title>0.0.6</title>
-            <pubDate>Tue, 27 Oct 2026 06:12:31 +0700</pubDate>
-            <sparkle:version>6</sparkle:version>
-            <sparkle:shortVersionString>0.0.6</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**New Local Shell opened at the root of the disk.** A shell started here
-inherits the app's own working directory, and an app launched the ordinary way
-— from the Dock, from Finder — has `/`. So a local shell opened at the root of
-the disk rather than in your home directory, in every release up to 0.0.5. It
-opens at home now, and the test for it asks the shell itself where it started
-rather than reading the screen.
-
-**A file pane could wait for ever.** Nothing in SFTP puts a limit on how long
-a reply may take, and the app had nothing of its own either: a request the far
-end never answered left a pane sitting on "Connecting…", or on a listing that
-was never going to arrive. Worse, it could not even be asked again — the guard
-that stops one pane opening twice was released at the end of the request, and
-a request that never ends never reaches it. A request now gives up after half
-a minute, says which kind of request went unanswered, and leaves the pane
-showing that rather than nothing.
-
-**Closing the SFTP window left its connections running.** Letting go of the
-window released the window and the browser inside it, but not the `ssh` each
-pane was talking through, so one connection per connected pane stayed open
-until the app quit. Closing the window now ends them. If a question about
-replacing files was still on screen when it closed, that is answered too —
-Cancel, so nothing is carried on the way out — rather than leaving the copy
-behind it waiting on an answer nobody could give any more.
-
-Nothing else here is visible from the outside. The suite went from 403 checks
-to 421, and what is new in it is the file browser's own orchestration — the
-guard above, and the replace question driven against a copy genuinely parked
-on it — along with the SFTP deadline and the two ends of a connection that
-stops answering.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.6/Shellhand-0.0.6.dmg" length="13845975" type="application/octet-stream" sparkle:edSignature="E1ojyDjJRJmdgUrmCEtcmqsmNfLWFpkEea0/Hq/zYp5Ql4G5niDwX0TpZ1X95/6yKB6RhoYYqqzQTCic9E4jAA=="/>
         </item>
     </channel>
 </rss>
