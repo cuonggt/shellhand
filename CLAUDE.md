@@ -548,13 +548,39 @@ credentials, which is most of it.
   seconds — close-on-exec narrows the race, only a bounded stop guarantees a
   teardown cannot hang. `Process` itself does not leak this way: 400 servers
   started together held none of each other's pipes.
-  **The same leak is in the app, and is not fixed by this.** Every terminal's
-  `ssh` inherits whatever the app has open when it forks, an SFTP session's
-  pipes included. `SFTPClient.close()` terminates its child rather than relying
-  on input ending, so closing a session cannot hang on it. The exposed path is
-  narrower: `connect`'s handshake-failure branch reads `ssh`'s stderr to its
-  end, and a terminal forked in the window before `Process` drops its copy of
-  that pipe would hold the read open for as long as the terminal lives.
+  **The same leak was in the app, and is fixed now.** Every terminal's `ssh`
+  inherited whatever the app had open when it forked: an SFTP session's pipes,
+  and — for the app's whole life — `HostStore`'s watch descriptor on the host
+  list. Closing a session could not hang on it, since `SFTPClient.close()`
+  terminates its child rather than waiting for input to end; the exposed path
+  was `connect`'s handshake-failure branch, which reads `ssh`'s stderr to its
+  end, and a terminal forked in the wrong window would have held that read
+  open for as long as the terminal lived.
+- **Every descriptor this project opens is close-on-exec, and which calls
+  already are was measured rather than assumed:**
+
+      Pipe()                          inherited — mark with SFTPClient.closeOnExec
+      open(_, O_EVTONLY)              inherited — add O_CLOEXEC
+      dup()                           inherited — use fcntl(_, F_DUPFD_CLOEXEC, 0)
+      FileHandle(forReadingAtPath:)   already close-on-exec
+      FileHandle(forWritingAtPath:)   already close-on-exec
+
+  `SFTPClient.closeOnExec` is the one place a pipe gets marked, and every pipe
+  in the app and the suite goes through it — the harnesses' as well, because a
+  test pipe inherited by the local-shell test's forked shell misbehaves in a
+  way that is easy to misread: `SFTPFarEndTests`' broken-pipe case would still
+  have *passed*, since a pipe with a reader somewhere gives no `EPIPE` and the
+  request deadline then throws an `SFTPError` of its own thirty seconds later.
+  **The `dup` from the stall fix was the first thing to need correcting**: a
+  plain `dup` is never marked, so the copy made to stop one descriptor
+  outliving its owner was handing every terminal a fresh copy of what had just
+  been marked. Write `F_DUPFD_CLOEXEC`, which is what SwiftTerm itself uses.
+  `Tests/InheritanceTests.swift` forks exactly the way a terminal does and asks
+  the child, through `/dev/fd`, whether a descriptor reached it. It has a
+  **control** — an unmarked pipe must be seen to arrive — because a probe that
+  could never see inheritance would pass with the fix taken out. Checked that
+  way round: with `closeOnExec` marking nothing, both ends of the marked pipe
+  are reported inherited and the control still passes.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only

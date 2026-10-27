@@ -203,12 +203,10 @@ nonisolated final class RealSFTPServer: @unchecked Sendable {
         // with SwiftTerm forking alongside: 115 servers of 200 still running a
         // second after their input closed when inheriting, 1 when marked.
         // Not 0, because macOS has no `pipe2`: a fork landing between `Pipe()`
-        // and these calls still inherits. That residue is why `stop` is
-        // bounded rather than trusting the input to end.
-        for end in [toServer.fileHandleForReading, toServer.fileHandleForWriting,
-                    fromServer.fileHandleForReading, fromServer.fileHandleForWriting] {
-            _ = fcntl(end.fileDescriptor, F_SETFD, FD_CLOEXEC)
-        }
+        // and this call still inherits. That residue is why `stop` is bounded
+        // rather than trusting the input to end. The app's own pipes are
+        // marked by the same call, for the same reason.
+        SFTPClient.closeOnExec(toServer, fromServer)
         try process.run()
     }
 

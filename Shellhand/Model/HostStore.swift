@@ -72,7 +72,10 @@ final class HostStore {
     /// elsewhere — an import, another window — shows up here.
     func watchForExternalChanges() {
         guard watcher.source == nil else { return }
-        let descriptor = Darwin.open(dbPath, O_EVTONLY)
+        // O_CLOEXEC because this is held for the app's whole life, so without
+        // it every terminal's `ssh` carries a descriptor on the host list for as
+        // long as it runs — SwiftTerm forks without closing anything.
+        let descriptor = Darwin.open(dbPath, O_EVTONLY | O_CLOEXEC)
         guard descriptor >= 0 else { return }
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: descriptor, eventMask: [.write, .rename, .delete], queue: .main)

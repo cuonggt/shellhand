@@ -58,6 +58,7 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
         self.refuseWrites = refuseWrites
         self.directory = directory
         self.refusal = refusal
+        SFTPClient.closeOnExec(clientToPeer, peerToClient)
     }
 
     /// Why the serving thread stopped reading, if it has.
@@ -121,7 +122,7 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
         // that owns it can go away underneath. The writing end below is
         // deliberately **not** copied — an extra write end would stop the
         // client ever reaching an end of file.
-        let incoming = Darwin.dup(clientToPeer.fileHandleForReading.fileDescriptor)
+        let incoming = fcntl(clientToPeer.fileHandleForReading.fileDescriptor, F_DUPFD_CLOEXEC, 0)
         guard incoming >= 0 else {
             noteReaderStopped("dup failed: " + String(cString: strerror(errno)))
             return

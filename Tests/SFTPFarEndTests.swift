@@ -20,6 +20,7 @@ nonisolated struct SFTPFarEndTests {
     func closedHandle() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
+        SFTPClient.closeOnExec(toPeer, fromPeer)
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         // Lets the client's reader thread end rather than blocking for ever.
@@ -37,6 +38,7 @@ nonisolated struct SFTPFarEndTests {
     func brokenPipe() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
+        SFTPClient.closeOnExec(toPeer, fromPeer)
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         defer { try? fromPeer.fileHandleForWriting.close() }

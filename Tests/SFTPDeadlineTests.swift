@@ -25,6 +25,7 @@ nonisolated struct SFTPDeadlineTests {
     func unanswered() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
+        SFTPClient.closeOnExec(toPeer, fromPeer)
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading,
             answeringWithin: .milliseconds(300))
@@ -70,6 +71,7 @@ nonisolated struct SFTPDeadlineTests {
     func lateReply() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
+        SFTPClient.closeOnExec(toPeer, fromPeer)
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading,
             answeringWithin: .milliseconds(200))
@@ -109,6 +111,7 @@ nonisolated struct SFTPDeadlineTests {
     func trueStray() async throws {
         let toPeer = Pipe()
         let fromPeer = Pipe()
+        SFTPClient.closeOnExec(toPeer, fromPeer)
         let client = await SFTPClient.speaking(
             to: toPeer.fileHandleForWriting, from: fromPeer.fileHandleForReading)
         defer { try? fromPeer.fileHandleForWriting.close() }

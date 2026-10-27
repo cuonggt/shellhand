@@ -89,6 +89,7 @@
 		DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6621FD97BB914B528EA0DED0 /* PanesTests.swift */; };
 		E03A692D5C392C444E9C96CF /* Shellhand.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5727B0DF68397BA5EF2CD109 /* Shellhand.icon */; };
 		E0DB9C7A33018400B36A2FFE /* TestScratch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32297DCCF2D81F82F136D103 /* TestScratch.swift */; };
+		E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */; };
 		E9AE1D908530CE6B4B5A923B /* SFTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE0A277FFB387246A7C1825 /* SFTPClient.swift */; };
 		ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */; };
 		EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11557A4783217279E63F09A /* Validation.swift */; };
@@ -183,6 +184,7 @@
 		CFB7415E72159874F3B55359 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWire.swift; sourceTree = "<group>"; };
 		D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgressTests.swift; sourceTree = "<group>"; };
+		DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InheritanceTests.swift; sourceTree = "<group>"; };
 		DA96D946715413445668CB3B /* FindBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindBar.swift; sourceTree = "<group>"; };
 		DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptedSFTP.swift; sourceTree = "<group>"; };
 		DFC5B41C053B8973B6F4996E /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 				96533AFA2A884A8C792A6F5D /* FilesTests.swift */,
 				6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */,
 				A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */,
+				DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
 				E3798692706D23BAB1E792B2 /* PlacesTests.swift */,
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
@@ -489,6 +492,7 @@
 				53C0DA7A90A3E4490308737B /* FilesTests.swift in Sources */,
 				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
 				B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */,
+				E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
 				2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */,
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
