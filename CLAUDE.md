@@ -128,13 +128,14 @@ round that matters **without touching `~/.ssh`**: stripping the isolation to
 show it matters would have made `ssh` read your files, which is the one thing
 this suite promises not to do, so the check made `SSHArgs` skip the hop
 instead — and the jump test failed with *"sshd let somebody in 1 times"*.
-**One gap this turned up, not closed:** the test host sends the *store* to a
-scratch path under XCTest but still reads the **real** Shellhand config,
-`~/Library/Application Support/Shellhand/config.yaml`, and its ssh options
-become every connection's global options. There is no such file on this
-machine, so it is harmless today; a config with a `ProxyCommand` in it would
-reach every non-jump connection this suite makes. `isolation` wins on every
-keyword it sets, which covers the ones that write files, but not that one.
+**One gap this turned up, closed since:** the test host sent the *store* to a
+scratch path under XCTest but still read the **real** Shellhand config,
+`~/Library/Application Support/Shellhand/config.yaml`, whose ssh options become
+every connection's global options. There was no such file, so it was harmless
+that day; a config with a `ProxyCommand` in it would have reached every
+non-jump connection this suite makes, since `isolation` cannot set that keyword
+without breaking jumps. `LaunchOptions` sends the config to scratch now, the
+way it sends the store — see the note on the test bundle being hosted.
 **What is still not covered is the terminal over real `ssh`** — a session's
 watchdog and host-key question against a real prompt are still fed by hand.
 The same server would do it.
@@ -1279,6 +1280,19 @@ credentials, which is most of it.
   sends a run under XCTest to a store in the temporary directory; keep it that
   way, and check the real store's timestamp if you ever touch that code. It
   is the only reason `LaunchOptions` reads the environment at all.
+  **The config goes to scratch the same way**, and for a reason as large: its
+  ssh options become every connection's, so a run reading the real one would
+  take whatever is written there — a `ProxyCommand` included — into every
+  connection the suite makes to its own `sshd`. Nothing writes the scratch
+  config, and a missing one reads as empty, so a run's ssh options are none.
+  `--db` and `--config` still win when named; `window-check.sh` relies on the
+  first. Touching this code was checked as the note above asks: the real store
+  kept its size and modification time across a full run, and the real config,
+  absent before, was still absent after. `LaunchOptionsTests` pins the
+  decision rather than the files, so neither real file is touched to check it —
+  and its config test compares the path *actually read*, because the empty
+  path that means "the default" would have let the obvious comparison pass
+  with the redirect taken out. It did, the first time.
 - A palette is inherited like every other group setting: the host's own, then
   each group going up, then the one in Settings. Empty means "ask above";
   **"System" is not empty** — it means SwiftTerm's own colours, which is a

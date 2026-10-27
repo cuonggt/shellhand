@@ -47,7 +47,11 @@ struct LaunchOptions {
         // Nothing was lost, but a test run is not allowed anywhere near it.
         var db = LaunchOptions.underTest
             ? LaunchOptions.scratchStore : Store.defaultPath
-        var config = ""
+        // The same for the config, and for a reason of the same size: its ssh
+        // options become every connection's, so a run reading the real one
+        // would take whatever the user wrote there — a `ProxyCommand` included
+        // — into every connection the suite makes to its own `sshd`.
+        var config = LaunchOptions.underTest ? LaunchOptions.scratchConfig : ""
         var i = 0
         while i < arguments.count {
             switch arguments[i] {
@@ -76,5 +80,12 @@ struct LaunchOptions {
     /// A store of this run's own, thrown away with the temporary directory.
     static var scratchStore: String {
         NSTemporaryDirectory() + "shellhand-under-test/shellhand.sqlite"
+    }
+
+    /// A config of this run's own, beside the store. Nothing writes one, and
+    /// a missing config reads as an empty one, so a run's ssh options are its
+    /// own: none.
+    static var scratchConfig: String {
+        NSTemporaryDirectory() + "shellhand-under-test/config.yaml"
     }
 }

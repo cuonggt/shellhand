@@ -52,6 +52,7 @@
 		78C0ACBED9BC5C20E971BB4B /* Panes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53922636D26F782CC80079B8 /* Panes.swift */; };
 		7A151960D143D2D93DCBDC59 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE455F58F183312F905772BE /* SidebarView.swift */; };
 		7C288F30D5BD84EE03371F5D /* Core.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC5B41C053B8973B6F4996E /* Core.swift */; };
+		7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */; };
 		803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB132447DA9624773556608 /* TerminalSession.swift */; };
 		8086DD275B95B625F1291FCF /* SessionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E39F04CC1F0098ECB930EE /* SessionProgress.swift */; };
 		8616DC3036D6892CAB562898 /* SSHConfigFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */; };
@@ -134,6 +135,7 @@
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
 		458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPListingTests.swift; sourceTree = "<group>"; };
 		467E73B5CE44F6B57382DC67 /* ResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverTests.swift; sourceTree = "<group>"; };
+		4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptionsTests.swift; sourceTree = "<group>"; };
 		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		53922636D26F782CC80079B8 /* Panes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panes.swift; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 				6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */,
 				A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */,
 				DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */,
+				4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
 				E3798692706D23BAB1E792B2 /* PlacesTests.swift */,
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
@@ -499,6 +502,7 @@
 				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
 				B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */,
 				E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */,
+				7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
 				2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */,
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
