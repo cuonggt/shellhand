@@ -389,6 +389,13 @@ credentials, which is most of it.
   spelling `sed -i ''` fails at the prompt by reading `''` as the script.
   `release.sh` is safe because it names `/usr/bin/sed` outright; anything new
   that edits files should do the same, or not use `sed` at all.
+  **`paste` is aliased too, to `pbpaste`, and that one leaks.** A check
+  piped through `paste -sd' ' -` to join two lines printed a fragment of the
+  **clipboard** instead — a wrong answer, and someone's clipboard landing in
+  a log, found during 0.0.7's dry run. Same cure: `/usr/bin/paste` by path.
+  The general rule both aliases teach is to run `type <name>` before
+  trusting any short command in a shell that reads the profile; this one has
+  quietly replaced two.
   So the limit is not a fix, it is what makes the next one cheap: a named
   failure instead of an unbounded wait. **It really does interrupt this, and
   that was worth checking rather than assuming**: a time limit works by
@@ -1945,7 +1952,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.6 are out**, each tagged at the commit its DMG was built from,
+**0.0.1 through 0.0.7 are out**, each tagged at the commit its DMG was built from,
 with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -1980,6 +1987,20 @@ discrepancy to fix. And **nobody was asked**, again, because this machine
 carries `SUAutomaticallyUpdate = 1` — so the dialog a new user meets is
 *still* proven only by 0.0.2, and no amount of updating on this Mac will
 change that. Put the key aside first or it proves nothing.
+**0.0.7 had not reached this machine's copy an hour after it went out, and
+that is Sparkle working, not failing.** The release was published at 10:49:45
+on 2026-10-27 and the feed naming it pushed at 10:50:06. The copy in
+`/Applications` had been relaunched at 09:02, Sparkle looked then
+(`SULastCheckTime` 09:02:46 local), found 0.0.6 current, and — with no
+`SUScheduledCheckInterval` set — waits its default of a day before looking
+again. So **how fast 0.0.6 arrived this morning is not something to expect**:
+a copy that has already checked learns of a release on its next check, up to
+a day later, or at once through **Check for Updates…**. It was deliberately
+not triggered from here: with `SUAutomaticallyUpdate = 1` it would install
+and relaunch the app under whatever sessions were open, which is the user's
+call. What 0.0.7 shipped is the host-key fix — a question answered on a quiet
+server no longer comes straight back, and a second Accept no longer types
+`yes` into the shell — with the descriptor leak into terminals behind it.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
