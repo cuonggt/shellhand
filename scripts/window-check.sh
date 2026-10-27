@@ -141,6 +141,12 @@ echo "window-check: seeded 2 groups and 3 hosts into a store of its own"
 # that was perfectly correct. The whole domain is already borrowed and given
 # back, so choosing here costs the user nothing.
 defaults write com.shellhand.Shellhand libraryLayout -string list
+# And the inspector, for the same reason and the same trap twice in one day:
+# `hostInspector` is a preference like any other, so a user who shut the
+# inspector hands this check a window with no inspector in it and the
+# assertion below fails against a build that is perfectly correct. Pin every
+# preference the assertions depend on, not just the one that bit first.
+defaults write com.shellhand.Shellhand hostInspector -bool true
 
 # --- the window, driven the way a person on the keyboard drives it ---------
 

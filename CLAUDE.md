@@ -1103,9 +1103,18 @@ credentials, which is most of it.
   as you clicked down the list — what a width that jumps between sheets does
   under the pointer. It was also the third copy of it — and the three are
   now the **inspector**, under the host's own name; the Host menu's ⌘↩; and
-  **⏎ or a double-click in the list**, which is where the hand already is
-  once you have arrowed to a row. The toolbar is still not one of them, and
-  the reason has not changed.
+  **⏎ in the list**, which is where the hand already is once you have arrowed
+  to a row. The toolbar is still not one of them, and the reason has not
+  changed.
+  **A double-click was the obvious fourth and it had to come out**, which is
+  the part worth keeping. It is the Finder reflex, it was two lines, and it
+  cost **every single click** the system's double-click interval — a tap
+  gesture for two clicks cannot tell one click from the first of a pair until
+  that interval has passed, so the row did not light up until it had. A user
+  felt it immediately and said so. Selecting is what the pane is for; nothing
+  that makes the main gesture feel slow is worth a shortcut. **Checking that
+  the gesture did not take the click was the wrong question** — it did not,
+  and it still had to go.
 - **Each column carries its own `.toolbar`**, and that is the whole trick.
   `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
   view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`
@@ -1797,10 +1806,13 @@ credentials, which is most of it.
     did nothing either. So a click probe here cannot tell a working click from
     a broken one, and any conclusion drawn from one is worth nothing. **What
     that costs is real:** whether a click selects is not checkable from a
-    script in this app, so anything riding on it has to be safe by
-    construction — which is why the pane's double-click is a
-    `simultaneousGesture` rather than an `onTapGesture`, the form documented
-    not to take the view's own handling.
+    script in this app, so anything riding on it cannot be settled here at
+    all. The pane's double-click went through `onTapGesture` and then
+    `simultaneousGesture` on that reasoning, and in the end came out
+    altogether — not because it stole the click, but because it **delayed**
+    every one of them, which is a thing no script here could have seen and a
+    user saw at once. When a question is only answerable by a hand on the
+    mouse, ask for the hand rather than building around the gap.
   - **An `AXOutline`'s children include an `AXColumn`**, whose centre is the
     middle of the whole list — four hundred points below the rows on a short
     one. A first pass clicked it and read the empty result as a broken click.
@@ -1855,6 +1867,12 @@ credentials, which is most of it.
   preference is `grid`, so the first run of that assertion failed against a
   build that was perfectly correct. The check writes `libraryLayout` itself
   now; the domain is already borrowed and given back, so it costs nothing.
+  **And then the identical trap sprang a second time the same day**, which is
+  why this says *every* preference rather than naming one: `hostInspector`
+  decides whether the inspector is on screen, a user who shuts it hands the
+  check a window with no inspector in it, and the assertion failed against a
+  build that was — again — perfectly correct. Pin everything the assertions
+  lean on, and do it the moment an assertion starts leaning on something.
   **Give a text probe room.** The first one stopped at depth 8 and the dump
   ended at "Jump host", so an inspector drawing everything read as one that
   had not filled in. Depth 16 reaches the bottom of it. A probe that cannot
