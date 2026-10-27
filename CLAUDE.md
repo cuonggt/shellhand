@@ -313,6 +313,44 @@ credentials, which is most of it.
   reachable from a test with a couple of values and a list. Quick Connect
   especially: driving the real palette is how a session to a live machine got
   opened during a check, which is a high price for testing a sort.
+  **`Views/Browsing.swift` is the third, and the one that reads as redundant
+  until you meet its bug** — the same shape as the trade in `Panes.picking`.
+  It answers one question: where the host pane is **looking**, which is not
+  what is selected.
+- **The host pane shows the list, always; the inspector says what a host is.**
+  The pane used to swap itself for the selected host's details, so selecting a
+  host made the list vanish — you could never click down it, and the thing
+  you had just picked was the only thing you could no longer see in context.
+  The details went to the inspector, which now opens by default
+  (`@AppStorage("hostInspector")`): with nowhere else for them to be, a window
+  that came up shut would answer a click on a host with nothing anywhere.
+  **`HostDetailView` lost its `compact` flag with that**, and the flag's whole
+  reason went with it: there were two shapes so the same view would not be
+  drawn twice, and there is only one place a host is described now. The ssh
+  line stayed despite the measured note that it wraps at 300pt — the column
+  goes to 420, `Copy` sits in its header where length cannot push it below the
+  fold, and the alternative to a wrapped line is not having it anywhere.
+  **Rows became `List(selection:)` content rather than buttons**, because
+  "selectable" has to mean more than clickable: a button could be clicked and
+  nothing else, so the keyboard reached nothing and a row drew the same
+  whether or not it was the one selected. Grid mode keeps its buttons — a
+  `LazyVGrid` has no selection — and draws the highlight by hand, with a ring
+  as well as a wash, since a tint alone reads as a hover across a page of
+  cards.
+  **Scope and selection had to come apart, and that is `Browsing`.** They were
+  one `Selection`, which is an either/or: the pane took `selectedGroup`, nil
+  whenever a host is selected. Harmless while picking a host replaced the
+  pane; with the list staying up it would have widened to every host and
+  moved the row out from under the click that picked it. A group is a
+  **place**, so picking one goes there; a host is a **thing**, so picking one
+  moves nothing. **One exception, which the sidebar forces:** its tree holds
+  hosts as well as groups, so it can select a host the pane is not showing —
+  which would be a selection with nothing highlighted anywhere while the
+  inspector described it, reading as a click that failed. The pane follows to
+  where that host is, and nothing moves when it is already on screen, which is
+  every click inside the pane itself.
+  **Do not collapse `browsing` back into `Selection`.** It reads like a
+  redundant second value and it is the only thing keeping the list still.
 - **The SFTP conversation is checked against a server written in Swift, in
   this process** — `Tests/ScriptedSFTP.swift`, on a pair of pipes, reached
   through the one seam `SFTPClient.speaking(to:from:)`. The spikes once ran a
@@ -1063,8 +1101,11 @@ credentials, which is most of it.
 - **Connect is not in the toolbar.** It was the one item that appeared and
   disappeared with the selection, so every button to its right slid sideways
   as you clicked down the list — what a width that jumps between sheets does
-  under the pointer. It was also the third copy of it: the detail pane offers
-  Connect under the host's own name, and the Host menu has ⌘↩.
+  under the pointer. It was also the third copy of it — and the three are
+  now the **inspector**, under the host's own name; the Host menu's ⌘↩; and
+  **⏎ or a double-click in the list**, which is where the hand already is
+  once you have arrowed to a row. The toolbar is still not one of them, and
+  the reason has not changed.
 - **Each column carries its own `.toolbar`**, and that is the whole trick.
   `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
   view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`
