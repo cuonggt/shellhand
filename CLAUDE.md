@@ -358,12 +358,14 @@ credentials, which is most of it.
   came back — *"a directory that arrives in one go"*, the same test as the
   third sighting — and this time it said what it was: *"the far end did not
   answer readdir within 30.0 seconds"*. That is the first thing anyone has
-  known about which request stalls, and it **rules out the first packet over a
-  fresh pair of pipes**, which was the standing theory. `speaking(to:from:)`
-  does no handshake, so that conversation is `opendir` then `readdir`, and
-  `readdir` is only sent once `opendir` has been answered and handed back a
-  handle — so a full round trip completed over those pipes before the one that
-  did not. The immediate re-run was clean at 420, so it is still episodic and
+  known about which request stalls. It looked at the time as though it ruled
+  out the first packet over a fresh pair of pipes — `speaking(to:from:)` does
+  no handshake, so that conversation is `opendir` then `readdir`, and `readdir`
+  is only sent once `opendir` has been answered. **That inference was wrong**,
+  and the reproducer below is what showed it: `opendir` stalls at least as
+  readily. One sighting named one request, and concluding anything about the
+  shape of the bug from it was the very mistake this file already warns about
+  twice. The immediate re-run was clean at 420, so it is still episodic and
   that number still proves nothing.
   **The thing to ask is `lateReplies`**, which exists for this and nothing
   else. A reply nobody is waiting for used to be a stray whatever it was;
@@ -389,8 +391,43 @@ credentials, which is most of it.
   this file already records a batch of ten with two stalls and then 49 runs
   with none, and the lesson was that the clustering is real while the
   arithmetic built on it was invented. What the two sightings do say is that
-  the minimal conversation is where to look, and that re-running that one test
-  is the cheapest way to try for a third.
+  the minimal conversation is where to look — which is what the reproducer
+  below was built out of.
+- **The stall has a reproducer now: about one conversation in 2,500.**
+  `Tests/SFTPStallHunt.swift`, **disabled**, runs the minimal conversation
+  20,000 times with 16 in flight and a five-second deadline on each: roughly
+  six stalls in seven seconds, where a suite run bought one sighting every few
+  runs. Enable it when there is a theory to test; it fails by design, which is
+  why it is not a check.
+  What it establishes, each measured rather than reasoned:
+  - **The reply never arrives.** `lateReplies` and `strayReplies` are both 0
+    after half a second's grace, every time. So it is neither a slow answer nor
+    one delivered against an id nobody holds.
+  - **Concurrency is not what provokes it.** 40 stalls in 100,000 sequential
+    conversations, 8 in 20,000 concurrent: the same rate either way.
+  - **It hits `opendir` — the first request — at least as often as `readdir`**,
+    which is what refuted the inference above.
+  - **Bytes go missing in both directions**, and this is the sharpest clue.
+    Two shapes turn up: `saw=[] sent=0`, where the server never received the
+    request at all, and `saw=[11] sent=1`, where it received it and wrote the
+    answer with no error and the client never saw it. A fault in either side's
+    own logic would not do both.
+  - **The server's reader thread is always still blocked in `read`**, never
+    broken out, so an interrupted read mistaken for an end of stream is ruled
+    out there. Worth saying because the loop does look wrong: neither reader
+    handles `EINTR` while both writers do.
+  **The cause is still not established.** The obvious candidate is a reader
+  thread holding a raw descriptor *number* while the `FileHandle` that owns it
+  can be deallocated and that number handed out again — the same family as the
+  `write(contentsOf:)` bug, a descriptor outliving its owner. **It is
+  untested.** The experiment that would have tested it, retaining every pipe so
+  no number is recycled, ran the process out of descriptors instead and
+  recorded 18,734 `EBADF` writes: that tests `Pipe()` failing and nothing else,
+  so it is evidence for neither side.
+  And note what none of this reaches. This is `ScriptedSFTP` on a pair of
+  pipes, churned far harder than the app ever churns a session. If the fault is
+  the harness's own, it would explain every sighting so far and leave the
+  shipped engine innocent — but that is a possibility, not a finding.
 - **Reading ssh's stderr waits for the child to die, so let the client go
   first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
   *before* closing, and that read ends only at an end of file, which comes only

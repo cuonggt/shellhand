@@ -39,6 +39,10 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     /// Touched from the peer's own thread and read from the test's, so both
     /// go through the lock.
     private let lock = NSLock()
+    private var stoppedBecause: String?
+    private var seenTypes: [UInt8] = []
+    private var repliesWritten = 0
+    private var handTrouble: String?
     private var storedWrites: [UInt64: Data] = [:]
     private var storedFlags: UInt32?
     private var servedBatches = 0
@@ -54,6 +58,28 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
         self.refuseWrites = refuseWrites
         self.directory = directory
         self.refusal = refusal
+    }
+
+    /// Why the serving thread stopped reading, if it has.
+    ///
+    /// A harness that quietly stops answering produces exactly the failure
+    /// this is being used to chase — the client waits for a reply that nobody
+    /// is going to write — so the reason is kept rather than dropped.
+    var readerStopped: String? { lock.withLock { stoppedBecause } }
+
+    /// The packet types this was handed, in order, and how many replies went
+    /// back — which together say whether a request that went unanswered ever
+    /// arrived at all.
+    var packetsSeen: [UInt8] { lock.withLock { seenTypes } }
+    var repliesSent: Int { lock.withLock { repliesWritten } }
+    var writeTrouble: String? { lock.withLock { handTrouble } }
+
+    private func noteSeen(_ type: UInt8) { lock.withLock { seenTypes.append(type) } }
+    private func noteWrote() { lock.withLock { repliesWritten += 1 } }
+    private func noteWriteTrouble(_ why: String) { lock.withLock { handTrouble = why } }
+
+    private func noteReaderStopped(_ why: String) {
+        lock.withLock { stoppedBecause = why }
     }
 
     /// Everything the client wrote — the file as it would have landed.
@@ -105,7 +131,15 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
             var chunk = [UInt8](repeating: 0, count: 64 << 10)
             while true {
                 let got = chunk.withUnsafeMutableBytes { Darwin.read(incoming, $0.baseAddress, $0.count) }
-                guard got > 0, let self else { break }
+                if got <= 0 {
+                    let code = errno
+                    self?.noteReaderStopped(
+                        "read returned \(got), errno \(code): \(String(cString: strerror(code)))")
+                    break
+                }
+                guard let self else {
+                    break
+                }
                 pending.append(contentsOf: chunk[0..<got])
                 // Same reassembly the client does: a length, then that many
                 // bytes, and a packet can arrive in pieces.
@@ -114,8 +148,13 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
                     guard length > 0, pending.count >= 4 + length else { break }
                     let packet = pending.subdata(in: 4..<(4 + length))
                     pending.removeSubrange(0..<(4 + length))
+                    if let first = packet.first { self.noteSeen(first) }
                     for reply in self.answer(packet) {
-                        Self.hand(reply, to: outgoing)
+                        if let why = Self.hand(reply, to: outgoing) {
+                            self.noteWriteTrouble(why)
+                        } else {
+                            self.noteWrote()
+                        }
                     }
                 }
             }
@@ -127,8 +166,8 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
     /// Writes what it can and gives up quietly. By the time this fails the
     /// test has called `stop()` and there is nobody left to tell — which is
     /// what the old `try?` was reaching for and could not do.
-    private static func hand(_ reply: Data, to descriptor: Int32) {
-        reply.withUnsafeBytes { bytes in
+    private static func hand(_ reply: Data, to descriptor: Int32) -> String? {
+        reply.withUnsafeBytes { bytes -> String? in
             var sent = 0
             while sent < bytes.count {
                 let wrote = Darwin.write(
@@ -138,9 +177,11 @@ nonisolated final class ScriptedSFTP: @unchecked Sendable {
                 } else if wrote < 0 && errno == EINTR {
                     continue
                 } else {
-                    return
+                    let code = errno
+                    return "write returned \(wrote), errno \(code): \(String(cString: strerror(code)))"
                 }
             }
+            return nil
         }
     }
 

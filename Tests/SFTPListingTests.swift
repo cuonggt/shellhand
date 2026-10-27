@@ -16,14 +16,31 @@ import Testing
 /// decodes and has nothing to wait for.
 @Suite("SFTP listings", .timeLimit(.minutes(1)))
 nonisolated struct SFTPListingTests {
+    /// The minimal conversation — one opendir, one readdir, EOF — and so the
+    /// place the stall has turned up most: it has named `readdir` here twice.
+    ///
+    /// The catch is not defensive, it is the diagnostic. The deadline's error
+    /// already says which request went unanswered; `lateReplies` is the only
+    /// thing that can say whether the answer came in late or never came at
+    /// all, and the counters have to be read *after* the failure, which a bare
+    /// `try` throws away. A second's grace is for a reply still in flight. If
+    /// the stall settles somewhere else, move this there rather than copying it.
     @Test("a directory that arrives in one go")
     func oneBatch() async throws {
         let server = ScriptedSFTP(directory: [["alpha", "beta"]])
         let client = await server.client()
         defer { server.stop() }
 
-        let entries = try await client.list("/srv")
-        #expect(entries.map(\.name) == ["alpha", "beta"])
+        do {
+            let entries = try await client.list("/srv")
+            #expect(entries.map(\.name) == ["alpha", "beta"])
+        } catch let error as SFTPError {
+            try? await Task.sleep(for: .seconds(1))
+            let late = await client.lateReplies
+            let strays = await client.strayReplies
+            Issue.record(
+                "\(error.message) — after a second: lateReplies=\(late) strayReplies=\(strays)")
+        }
     }
 
     /// The normal case for a large directory, and the reason `list` is a loop
