@@ -16,15 +16,16 @@ import Testing
 /// decodes and has nothing to wait for.
 @Suite("SFTP listings", .timeLimit(.minutes(1)))
 nonisolated struct SFTPListingTests {
-    /// The minimal conversation — one opendir, one readdir, EOF — and so the
-    /// place the stall has turned up most: it has named `readdir` here twice.
+    /// The minimal conversation — one opendir, one readdir, EOF — and the test
+    /// the stall turned up in most, naming `readdir` here twice before it was
+    /// traced to `ScriptedSFTP` itself and fixed; `SFTPChurnTests` guards that.
     ///
-    /// The catch is not defensive, it is the diagnostic. The deadline's error
-    /// already says which request went unanswered; `lateReplies` is the only
-    /// thing that can say whether the answer came in late or never came at
-    /// all, and the counters have to be read *after* the failure, which a bare
-    /// `try` throws away. A second's grace is for a reply still in flight. If
-    /// the stall settles somewhere else, move this there rather than copying it.
+    /// The catch stays as insurance rather than a hunt. Should anything like it
+    /// come back, the deadline's error already says which request went
+    /// unanswered, and `lateReplies` is the only thing that can say whether the
+    /// answer came late or never came at all — read *after* the failure, which
+    /// a bare `try` throws away. A second's grace is for a reply still in
+    /// flight.
     @Test("a directory that arrives in one go")
     func oneBatch() async throws {
         let server = ScriptedSFTP(directory: [["alpha", "beta"]])

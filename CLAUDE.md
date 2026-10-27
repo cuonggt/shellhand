@@ -320,10 +320,20 @@ credentials, which is most of it.
   builds a server with an `intruder` and asserts that very number, so it is no
   sign of anything.
   One tooling note, because it cost an afternoon: `sed`'s `\|` alternation is
-  a GNU extension and does **nothing** in the `sed` on this machine, silently.
-  It turned a test that had plainly passed into a phantom *"never finished"*,
-  which read as hard evidence that the whole process was stalling. Parse these
-  logs with something that fails loudly instead.
+  a GNU extension and does **nothing** in BSD `sed`, silently. It turned a test
+  that had plainly passed into a phantom *"never finished"*, which read as hard
+  evidence that the whole process was stalling. Parse these logs with something
+  that fails loudly instead.
+  **And which `sed` you get now depends on where you type it.** The shell
+  profile aliases `sed` to `gsed` (GNU 4.9), where `\|` works — but an alias
+  exists only where the profile is read, so in a script `sed` is still
+  `/usr/bin/sed`, BSD, where it matches nothing. A line tried at the prompt and
+  then pasted into a script changes meaning without a word: measured
+  2026-10-27, the same pipe matched two lines typed and none under `bash -c`.
+  The reverse bites too, since GNU's `-i` takes no separate suffix, so the BSD
+  spelling `sed -i ''` fails at the prompt by reading `''` as the script.
+  `release.sh` is safe because it names `/usr/bin/sed` outright; anything new
+  that edits files should do the same, or not use `sed` at all.
   So the limit is not a fix, it is what makes the next one cheap: a named
   failure instead of an unbounded wait. **It really does interrupt this, and
   that was worth checking rather than assuming**: a time limit works by

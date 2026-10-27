@@ -7,9 +7,11 @@
 # spaces in, the value in double quotes.
 cask "shellhand" do
   version "0.0.6"
-  # Replaced by scripts/release.sh with the real digest. Left as a string that
-  # is not a valid SHA-256 on purpose: if it ever reaches the tap unreplaced,
-  # Homebrew refuses it loudly instead of installing something unverified.
+  # Rewritten by scripts/release.sh with the new DMG's digest; between releases
+  # it holds the previous one's, which is real. That is what keeps a slip safe:
+  # were the version ever moved on without the digest — by hand, or by a run
+  # that half finished — Homebrew would fetch the new DMG, find it does not
+  # match, and refuse loudly instead of installing something unverified.
   sha256 "d1a4016d9e40e15a530f37f12808697e6e8f32410591899428d8c09cbab90395"
 
   url "https://github.com/cuonggt/shellhand/releases/download/v#{version}/Shellhand-#{version}.dmg"
