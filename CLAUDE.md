@@ -600,22 +600,32 @@ credentials, which is most of it.
   near-black 0.061, so they cross at L = 0.203, and the tool reports what each
   mark measured. The lowest is 4.4:1, and the first pass — a threshold picked
   by eye at 0.42 — left every green under 2.4:1.
-  **A mark and the plain glyph have to draw the same height**, which is not
-  something either can be given by setting one number: a mark is a solid
-  square and `server.rack` is wide line art, so they have to be drawn and
-  measured. Left filling its box, a mark stood a point and a half taller than
-  the glyph and read heavier again for being filled, so a list where some
-  hosts are known and some are not looked ragged down the column. The glyph
-  draws **58 of 64 pixels** at 4x — measured by rendering it and reading the
-  extent of what is not transparent — so `HostIcon.drawn` is 0.9 and the mark
-  is sized to that. **The slot stays the full size either way**, or the names
-  beside the icons stop lining up, which is the thing a reader actually
-  notices.
-  `Tests/HostIconTests.swift` renders both and compares them, the same
-  `ImageRenderer` trick the palette swatches use. Checked the way round that
-  matters: with the mark filling its box again, the heights test fails at
-  64 against 58 and the scaling one fails with it, while the slot test passes
-  — which is the point, since the slot was never what was wrong.
+  **A host with no known operating system wears a tile too**, and getting
+  there took measuring the right thing after measuring the wrong one.
+  **The wrong one was size.** A mark and a bare `server.rack` were given
+  matching bounding boxes — the glyph draws 58 of 64 pixels, so the mark was
+  sized to 0.9 — and they still did not look alike, because a filled tile
+  beside line art never will. The user said so, and the measurement said why:
+  a mark inks **79%** of its slot and the symbol **36%**. More than twice the
+  ink. Shrinking the mark only made it small *and* still heavier per point.
+  **Three ways out were drawn at 16pt and compared rather than argued
+  about**: shrink the tile further; drop the tile and use the logo alone in
+  its brand colour; or give the unknown host a tile of its own. The second
+  looks best where it works and fails where it matters — OpenBSD's Puffy
+  becomes a faint scribble without a tile behind it, light brands need
+  darkening to carry on white, and a colour darkened for white is dark on
+  dark in a dark sidebar. The third matches them **by construction**, keeps
+  the contrast an intricate logo needs, and is safe in both appearances
+  because a tile brings its own background.
+  So the fallback is a grey tile with the symbol in white, rounded by
+  `14/64` — the same fraction the generator writes into every mark — with
+  the symbol at `38/64`, the fraction a logo fills its own tile. All three
+  now ink 96%, the missing 4% being the corners. The cost is that the generic
+  icon no longer resembles the app's other SF Symbols; inside the host list,
+  which is where it lives, every row is a badge.
+  `Tests/HostIconTests.swift` weighs the ink rather than the box, which is
+  what was wrong. Checked the way round that matters: with the fallback back
+  to a bare symbol it fails at **95% against 35%**.
   **A mark nobody can read is decoration, and for half a day these were.**
   `HostIcon` set `.accessibilityHidden(true)` on both branches and carried no
   tooltip, and nothing in the app named the operating system in words
