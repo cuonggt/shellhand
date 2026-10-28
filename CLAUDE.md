@@ -592,6 +592,22 @@ credentials, which is most of it.
   near-black 0.061, so they cross at L = 0.203, and the tool reports what each
   mark measured. The lowest is 4.4:1, and the first pass — a threshold picked
   by eye at 0.42 — left every green under 2.4:1.
+  **A mark and the plain glyph have to draw the same height**, which is not
+  something either can be given by setting one number: a mark is a solid
+  square and `server.rack` is wide line art, so they have to be drawn and
+  measured. Left filling its box, a mark stood a point and a half taller than
+  the glyph and read heavier again for being filled, so a list where some
+  hosts are known and some are not looked ragged down the column. The glyph
+  draws **58 of 64 pixels** at 4x — measured by rendering it and reading the
+  extent of what is not transparent — so `HostIcon.drawn` is 0.9 and the mark
+  is sized to that. **The slot stays the full size either way**, or the names
+  beside the icons stop lining up, which is the thing a reader actually
+  notices.
+  `Tests/HostIconTests.swift` renders both and compares them, the same
+  `ImageRenderer` trick the palette swatches use. Checked the way round that
+  matters: with the mark filling its box again, the heights test fails at
+  64 against 58 and the scaling one fails with it, while the slot test passes
+  — which is the point, since the slot was never what was wrong.
   **A mark nobody can read is decoration, and for half a day these were.**
   `HostIcon` set `.accessibilityHidden(true)` on both branches and carried no
   tooltip, and nothing in the app named the operating system in words

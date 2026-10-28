@@ -17,6 +17,10 @@ import SwiftUI
 /// nobody has drawn yet is simply not drawn. All three look the same on
 /// purpose — there is nothing for a user to fix in any of them.
 struct HostIcon: View {
+    /// How much of its box the fallback glyph draws, measured at 4x rather
+    /// than guessed: 58 of 64 pixels tall, and the full width.
+    private static let drawn: CGFloat = 0.9
+
     /// The `ID` out of the host's own `/etc/os-release`, or empty.
     let os: String
     /// What to call it in words. Empty is allowed and means the mark says
@@ -47,6 +51,17 @@ struct HostIcon: View {
             Image(nsImage: mark)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                // **Not the full box, so that it matches the glyph it
+                // stands in for.** `server.rack` at this size draws 90% of
+                // the box's height — measured, by rendering it and reading
+                // the extent of what is not transparent — while a mark is a
+                // solid square filling every point of it. Left equal, the
+                // mark stands taller than the glyph and reads heavier again
+                // for being filled where the glyph is line art, so a list of
+                // hosts where some are known and some are not looks ragged.
+                .frame(width: size * Self.drawn, height: size * Self.drawn)
+                // The slot stays the full size either way, so names line up
+                // down the column whichever icon a row has.
                 .frame(width: size, height: size)
                 // A mark is somebody's artwork and carries its own colours,
                 // so it is drawn as it is rather than tinted like a glyph.
