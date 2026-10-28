@@ -2374,7 +2374,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.10 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.0.11 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
@@ -2514,6 +2514,25 @@ click wait out the system's double-click interval. No probe here could have
 seen that — a synthetic click does nothing in this app, proven with a control
 — and a user felt it on the first click. Ask for a hand on the mouse when the
 question is only answerable by one.
+
+**0.0.11 finished what 0.0.10 started**, published at `3f8e02d` and live on
+release, feed, cask and tap. Clicking a host opens the panel on the right, two
+clicks connect, a right-click gives the sidebar's own menu acting on the host
+clicked rather than the one selected, the arrow keys reach the list in rows or
+cards with Return connecting, and a file dropped from Finder that cannot be
+copied says so. The suite went 479 → 495. Verified the way the last three
+were, and Apple's notary route was flapping again — a credentials check timed
+out and answered on retry, and the DMG's submission needed one attempt before
+it went through, which is the widened pattern earning its place for the second
+release running.
+**Every one of those five came from somebody using the app**, not from a test
+or a sweep: the layout change shipped in 0.0.10 and the gaps in it showed up
+within a day of real use. The double-click alone took three attempts — see
+the pane's own note — and two of them were handed over as done before a hand
+on the mouse said otherwise. **The suite is 495 checks and it could not have
+found any of this.** That is not an argument against the suite; it is the
+reminder that what it covers and what a user meets are different sets, and
+this release is entirely the second one.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
