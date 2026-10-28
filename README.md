@@ -68,6 +68,15 @@ authentication works everywhere.
   this Mac on the left and the host on the right, with transfers that queue a
   couple at a time rather than all starting at once and competing for the one
   connection — and a question before anything already there is replaced.
+- **It knows what it is talking to.** On the first connection a host is asked
+  what it is running — its own `/etc/os-release`, read over the connection
+  rather than guessed from a banner — and from then on it is drawn with its
+  distribution's mark. Asked again once a day, so a machine rebuilt onto
+  something else corrects itself.
+- **It says what your ssh config will do**, rather than leaving you to read it.
+  A host whose name matches a `Host` entry pointing at a different machine is
+  flagged as such, and one your config routes through a bastion says so
+  instead of claiming it goes straight there.
 - **Tags**, which cut across the group tree and narrow together — `web` and
   `eu` asks for the European web servers.
 - **Import** from OpenSSH's own `~/.ssh/config`, a CSV, or Shellhand's own
@@ -152,3 +161,9 @@ details.
 Its dependencies are permissive and GPL-compatible: SwiftTerm, GRDB and Yams
 are MIT, and SwiftTerm resolves `swift-argument-parser`, `swift-png` and `h` of
 its own, which are Apache-2.0.
+
+The distribution marks are composed from [Simple Icons](https://simpleicons.org),
+whose files are CC0. That waives copyright and says nothing about trademarks:
+each mark belongs to its project, and drawing one beside a server running that
+distribution identifies the machine rather than claiming any endorsement. See
+`tools/logos/README.md` before adding or reusing one.
