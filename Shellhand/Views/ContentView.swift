@@ -498,28 +498,28 @@ struct ContentView: View {
         }
     }
 
-    /// Asks a host what it is, once, so it can be drawn with its own mark.
+    /// Asks a host what it is, so it can be drawn with its own mark.
     ///
-    /// **Only when it has never said**, which is the whole of the cost
-    /// control: this opens a second connection, and doing it on every connect
-    /// would double the authentication for every tab anyone ever opens. The
-    /// price is that a machine rebuilt onto another distribution keeps the old
-    /// mark until something clears the field — worth knowing, and cheaper than
-    /// the alternative until somebody asks for it.
+    /// **How often is `Host.shouldAskOS`**, which is a day — see it for why
+    /// neither "once ever" nor "every connect" is right. This only obeys it.
     ///
     /// After the session, not before: the terminal is what was asked for and
     /// must not wait on an icon. Everything here fails quietly — see
     /// `Core.osOf` for why none of its failures is worth reporting.
     private func learnOS(of host: Host) async {
-        guard host.os.isEmpty, !host.id.isEmpty else { return }
-        guard let os = await Core.shared.osOf(db: store.dbPath, hostID: host.id) else { return }
+        guard host.shouldAskOS() else { return }
+        let said = await Core.shared.osOf(db: store.dbPath, hostID: host.id)
         // Read again rather than editing the copy this closure captured: it
         // may be minutes old by now, and saving a stale one would undo
         // whatever was edited in between.
-        guard var fresh = store.snapshot.hosts.first(where: { $0.id == host.id }),
-              fresh.os != os
-        else { return }
-        fresh.os = os
+        guard var fresh = store.snapshot.hosts.first(where: { $0.id == host.id }) else { return }
+        // Stamped whether or not it answered. A host that cannot say — one
+        // taking only a password, a BSD, a container with no sftp subsystem —
+        // must not be asked again on the next connect, which is what asking
+        // only on success would do. An answer it did give replaces whatever
+        // was there, so a rebuilt machine corrects itself.
+        fresh.osSeen = Date().timeIntervalSince1970
+        if let said { fresh.os = said }
         _ = await store.save(fresh)
     }
 

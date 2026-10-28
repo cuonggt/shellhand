@@ -162,6 +162,18 @@ nonisolated final class Store: Sendable {
                 }
             }
         }
+        // The third round of the same append-only rule. `osSeen` is when the
+        // host was last asked what it is, which is what stops a host that
+        // cannot answer being asked on every connect for ever.
+        migrator.registerMigration("v9") { db in
+            let held = try String.fetchAll(
+                db, sql: "SELECT name FROM pragma_table_info(?)", arguments: ["hosts"])
+            if !held.contains("osSeen") {
+                try db.alter(table: "hosts") { t in
+                    t.add(column: "osSeen", .double).notNull().defaults(to: 0)
+                }
+            }
+        }
         return migrator
     }
 
@@ -315,6 +327,7 @@ extension Host: FetchableRecord, PersistableRecord {
         forwardAgent = row["forwardAgent"]
         theme = row["theme"]
         os = row["os"]
+        osSeen = row["osSeen"]
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) {
@@ -333,6 +346,7 @@ extension Host: FetchableRecord, PersistableRecord {
         // The third edit. Missing it is the recorded trap: the field reads and
         // writes as its default for ever, with no error anywhere.
         container["os"] = os
+        container["osSeen"] = osSeen
     }
 
     /// A tag list that cannot be read is no tags, not a host that fails to

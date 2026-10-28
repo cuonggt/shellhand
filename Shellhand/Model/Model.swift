@@ -26,13 +26,39 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     /// out of its own `/etc/os-release`, so `ubuntu`, `debian`, `fedora`.
     /// Empty until it has been asked, and for anything that could not answer.
     ///
-    /// Learned rather than typed, and **only once**: nothing in the editor
-    /// sets it and `ContentView.learnOS` asks only while it is empty, so a
-    /// machine rebuilt onto another distribution goes on claiming what it
-    /// used to be. There is no way to clear it today — that is the cost of
-    /// not opening a second connection per session, and the thing to change
-    /// first if it ever matters.
+    /// Learned rather than typed: nothing in the editor sets it, and
+    /// `Host.shouldAskOS` decides when to ask again.
     var os: String = ""
+    /// When this host was last **asked** what it is, as seconds since 1970,
+    /// or 0 for never.
+    ///
+    /// The asking and not the answering, which is the whole point of it: a
+    /// host that cannot say — one taking only a password, a BSD with no such
+    /// file, a container with no sftp subsystem — would otherwise be asked
+    /// again on every single connect for ever, which is the cost this exists
+    /// to bound. A failed attempt stamps this exactly as a successful one
+    /// does.
+    var osSeen: Double = 0
+
+    /// Whether to ask this host what it is.
+    ///
+    /// **Once a day, not once ever and not every connect.** Asking once ever
+    /// left a machine rebuilt onto another distribution claiming what it used
+    /// to be, with nothing anywhere able to correct it; asking every time
+    /// doubles the logins this app makes to somebody's machines, for an icon.
+    /// A day bounds the staleness and the cost at the same time, and needs no
+    /// button for somebody to find.
+    ///
+    /// Pure, and out here rather than in the view, so the schedule can be
+    /// checked without opening a connection to anything.
+    /// **The stamp alone decides, and `os.isEmpty` must not come into it.**
+    /// That looks like the obvious first condition and it undoes the whole
+    /// thing: a host that cannot say keeps an empty `os` for ever, so it
+    /// would be due on every connect for ever. Never-asked is already covered
+    /// — `osSeen` is 0 then, which is further in the past than any interval.
+    func shouldAskOS(now: Date = Date(), every: TimeInterval = 24 * 60 * 60) -> Bool {
+        !id.isEmpty && now.timeIntervalSince1970 - osSeen >= every
+    }
     /// `-o` settings for this host alone, ahead of anything a group or the
     /// config says, because ssh keeps the first value it is given.
     var sshOptions: [String] = []
