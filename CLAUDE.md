@@ -300,6 +300,17 @@ credentials, which is most of it.
   narrow one has a blind spot of its own, being token-based: a generic name is
   drowned by ordinary English in the sources, which is how it missed
   `OSRelease.name(from:)` — still uncalled, and mine.
+  **A `throws` that cannot throw is the same lie in a smaller place, and
+  `SSHConfigFile.parse` was one.** Nothing in it throws — an unreadable file
+  is an empty list, which is the right answer for having no config at all,
+  and an `Include` that loops is cut off by the depth — but the keyword made
+  `read` throw too, and three callers then wrote `try` or `try?` and read as
+  though they were handling a failure that could not happen. Dropped, with
+  the callers. It is the `async` wrapper's lesson in another key: the
+  difference between handling failure and looking as if you do.
+  `Store.replaceAll` went at the same time, superseded by `apply(_ plan:)`
+  and reachable only from its own test — the fourth round of leftovers, found
+  by the narrow sweep rather than the documented one.
   **`configProxy` was the other half, and it is wired now too.** It had the
   same shape with a different symptom: the resolver worked out what the config
   would send a host through on **every resolve** and nothing read the answer,
@@ -1714,7 +1725,9 @@ credentials, which is most of it.
   for a real reason surfaces as the copy failing a line later.
   Found by sweeping every `try?` in the app, which is the same habit that
   turned up the upload `mkdir`; **44 of them, and this was the one that
-  mattered.** Pinned with the destination made unwritable, which is how a disk
+  mattered.** (That 44 counted *lines mentioning* `try?`, prose included —
+  there are 42 real ones today against 6 comments talking about them. Count
+  the code, not the grep, before reading anything into the number moving.) Pinned with the destination made unwritable, which is how a disk
   actually refuses, and with a control that an ordinary drop still lands
   quietly — a transfer row for an instant local copy would be noise.
   **One other was weighed and deliberately left, so the next sweep need not

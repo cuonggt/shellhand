@@ -84,7 +84,7 @@ actor Core {
         // Parsed **once** for both answers. The blocks are what every later
         // question is asked of, including the per-destination one, which is
         // why they are held rather than a finished list.
-        let blocks = (try? SSHConfigFile.parse(path: path)) ?? []
+        let blocks = SSHConfigFile.parse(path: path)
         let read = SSHConfig(
             path: path, stamp: stamp, size: size,
             aliases: SSHConfigFile.aliases(in: blocks),
@@ -167,7 +167,7 @@ actor Core {
     func importSSHConfig(
         db: String, path: String = "", group: String = "", dryRun: Bool
     ) throws -> MergeResult {
-        let document = try SSHConfigFile.read(
+        let document = SSHConfigFile.read(
             path: path.isEmpty ? SSHConfigFile.defaultPath : path)
         return try apply(document.grouped(under: group), db: db, dryRun: dryRun)
     }
@@ -202,11 +202,9 @@ actor Core {
     /// there is nothing to offer.
     nonisolated func sshConfigHosts(path: String = "") -> Int? {
         let path = path.isEmpty ? SSHConfigFile.defaultPath : path
-        guard FileManager.default.fileExists(atPath: path),
-              let document = try? SSHConfigFile.read(path: path),
-              !document.hosts.isEmpty
-        else { return nil }
-        return document.hosts.count
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        let named = SSHConfigFile.read(path: path).hosts.count
+        return named == 0 ? nil : named
     }
 
     // MARK: files

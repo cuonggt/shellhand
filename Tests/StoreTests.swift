@@ -79,19 +79,6 @@ nonisolated struct StoreTests {
         #expect(saved.parentId == "")
     }
 
-    @Test("replacing everything is all or nothing, and leaves only what was given")
-    func replaceAll() throws {
-        let store = try scratch()
-        _ = try store.save(Host(name: "old", addr: "10.0.0.1"))
-        try store.replaceAll(
-            groups: [Group(id: "g", name: "Production")],
-            hosts: [Host(id: "h", name: "web", addr: "10.0.0.2", groupId: "g")])
-
-        let snapshot = try store.snapshot()
-        #expect(snapshot.hosts.map(\.name) == ["web"])
-        #expect(snapshot.groups.map(\.name) == ["Production"])
-    }
-
     @Test("the list survives being closed and opened again")
     func reopen() throws {
         let path = TestScratch.database()

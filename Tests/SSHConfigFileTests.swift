@@ -20,7 +20,7 @@ nonisolated struct SSHConfigFileTests {
                 Port 2222
                 IdentityFile ~/.ssh/id_deploy
             """)
-        let host = try #require(try SSHConfigFile.read(path: path).hosts.first)
+        let host = try #require(SSHConfigFile.read(path: path).hosts.first)
         #expect(host.name == "web")
         #expect(host.addr == "10.0.0.1")
         #expect(host.user == "deploy")
@@ -32,13 +32,13 @@ nonisolated struct SSHConfigFileTests {
     @Test("a name with no HostName is the address, which is how many are written")
     func nameIsAddress() throws {
         let path = try write("Host myserver.example.com\n    User deploy\n")
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.addr == "myserver.example.com")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.addr == "myserver.example.com")
     }
 
     @Test("port 22 is left unset, because that is what ssh does anyway")
     func defaultPort() throws {
         let path = try write("Host web\n    HostName 10.0.0.1\n    Port 22\n")
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.port == 0)
+        #expect(SSHConfigFile.read(path: path).hosts.first?.port == 0)
     }
 
     @Test("a pattern is a rule about many machines, not a machine")
@@ -51,7 +51,7 @@ nonisolated struct SSHConfigFileTests {
             Host web
                 HostName 10.0.0.1
             """)
-        #expect(try SSHConfigFile.read(path: path).hosts.map(\.name) == ["web"])
+        #expect(SSHConfigFile.read(path: path).hosts.map(\.name) == ["web"])
     }
 
     @Test("settings from a pattern still reach the hosts it covers")
@@ -62,7 +62,7 @@ nonisolated struct SSHConfigFileTests {
             Host web
                 HostName 10.0.0.1
             """)
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.user == "deploy")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.user == "deploy")
     }
 
     @Test("the first value wins, which is ssh's own rule")
@@ -73,7 +73,7 @@ nonisolated struct SSHConfigFileTests {
             Host *
                 User fromPattern
             """)
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.user == "fromOwnBlock")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.user == "fromOwnBlock")
     }
 
     @Test("settings written before any Host line reach everything")
@@ -83,7 +83,7 @@ nonisolated struct SSHConfigFileTests {
             Host web
                 HostName 10.0.0.1
             """)
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.user == "everywhere")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.user == "everywhere")
     }
 
     @Test("a jump host is taken, and none means none")
@@ -96,7 +96,7 @@ nonisolated struct SSHConfigFileTests {
                 HostName 10.0.0.2
                 ProxyJump none
             """)
-        let hosts = try SSHConfigFile.read(path: path).hosts
+        let hosts = SSHConfigFile.read(path: path).hosts
         #expect(hosts.first { $0.name == "web" }?.jump == "bastion")
         #expect(hosts.first { $0.name == "db" }?.jump == "")
     }
@@ -104,7 +104,7 @@ nonisolated struct SSHConfigFileTests {
     @Test("%h in a HostName is the name the block was written under")
     func percentH() throws {
         let path = try write("Host web\n    HostName %h.internal\n")
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.addr == "web.internal")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.addr == "web.internal")
     }
 
     @Test("a name declared twice is one host, with both blocks' settings")
@@ -115,7 +115,7 @@ nonisolated struct SSHConfigFileTests {
             Host web
                 User deploy
             """)
-        let hosts = try SSHConfigFile.read(path: path).hosts
+        let hosts = SSHConfigFile.read(path: path).hosts
         #expect(hosts.count == 1)
         #expect(hosts.first?.user == "deploy")
         #expect(hosts.first?.addr == "10.0.0.1")
@@ -124,7 +124,7 @@ nonisolated struct SSHConfigFileTests {
     @Test("several names on one Host line are several hosts")
     func severalNames() throws {
         let path = try write("Host web db\n    User deploy\n")
-        #expect(try SSHConfigFile.read(path: path).hosts.map(\.name) == ["db", "web"])
+        #expect(SSHConfigFile.read(path: path).hosts.map(\.name) == ["db", "web"])
     }
 
     @Test("an Include is read where it is written")
@@ -137,7 +137,7 @@ nonisolated struct SSHConfigFileTests {
         try "Include extra\nHost web\n    HostName 10.0.0.1\n"
             .write(toFile: main, atomically: true, encoding: .utf8)
 
-        let hosts = try SSHConfigFile.read(path: main).hosts
+        let hosts = SSHConfigFile.read(path: main).hosts
         #expect(hosts.map(\.name) == ["db", "web"])
     }
 
@@ -149,7 +149,7 @@ nonisolated struct SSHConfigFileTests {
             Host web
                 HostName 10.0.0.1
             """)
-        #expect(try SSHConfigFile.read(path: path).hosts.first?.user == "")
+        #expect(SSHConfigFile.read(path: path).hosts.first?.user == "")
     }
 
     @Test("Match all reaches everything, and Match host the names it covers")
@@ -164,7 +164,7 @@ nonisolated struct SSHConfigFileTests {
             Match all
                 Port 2222
             """)
-        let hosts = try SSHConfigFile.read(path: path).hosts
+        let hosts = SSHConfigFile.read(path: path).hosts
         #expect(hosts.first { $0.name == "web" }?.user == "onlyWeb")
         #expect(hosts.first { $0.name == "db" }?.user == "")
         #expect(hosts.allSatisfy { $0.port == 2222 })
@@ -172,13 +172,13 @@ nonisolated struct SSHConfigFileTests {
 
     @Test("a missing file is no hosts rather than a failure")
     func missing() throws {
-        #expect(try SSHConfigFile.read(path: "/nowhere/ssh/config").hosts.isEmpty)
+        #expect(SSHConfigFile.read(path: "/nowhere/ssh/config").hosts.isEmpty)
     }
 
     @Test("keyword and value may be separated by an = or by spaces")
     func separators() throws {
         let path = try write("Host web\n    HostName=10.0.0.1\n    User = deploy\n")
-        let host = try #require(try SSHConfigFile.read(path: path).hosts.first)
+        let host = try #require(SSHConfigFile.read(path: path).hosts.first)
         #expect(host.addr == "10.0.0.1")
         #expect(host.user == "deploy")
     }
@@ -202,7 +202,7 @@ nonisolated struct SSHConfigFileTests {
                 HostName 10.0.0.1
                 User deploy
             """)
-        let document = try SSHConfigFile.read(path: path)
+        let document = SSHConfigFile.read(path: path)
         let plan = try Portable.merge(document, into: Snapshot())
         #expect(plan.hosts.map(\.name) == ["web"])
         #expect(plan.hosts.first?.user == "deploy")

@@ -60,8 +60,8 @@ nonisolated enum SSHConfigFile {
     }
 
     /// The machines a config names, as a document ready to merge.
-    static func read(path: String) throws -> Portable.Document {
-        document(from: try parse(path: path))
+    static func read(path: String) -> Portable.Document {
+        document(from: parse(path: path))
     }
 
     /// The same, from blocks already parsed, so a caller wanting more than
@@ -124,7 +124,13 @@ nonisolated enum SSHConfigFile {
     }
 
     /// Reads a config and everything it includes, in order.
-    static func parse(path: String, depth: Int = 0) throws -> [Block] {
+    /// **Nothing here throws, and it must not start looking as though it
+    /// does.** A file that cannot be read is an empty list, which is the
+    /// right answer for the common case of no config at all; an `Include`
+    /// that loops is cut off by the depth. Declaring this `throws` cost
+    /// nothing at the time and made three callers write `try?`, so each read
+    /// like failure handling where there is no failure to handle.
+    static func parse(path: String, depth: Int = 0) -> [Block] {
         guard depth < 8 else { return [] }  // An Include that includes itself.
         guard let raw = try? String(contentsOfFile: path, encoding: .utf8) else { return [] }
 
@@ -152,7 +158,7 @@ nonisolated enum SSHConfigFile {
                 let header = current.header
                 blocks.append(current)
                 for included in includePaths(argument, relativeTo: path) {
-                    blocks += try parse(path: included, depth: depth + 1)
+                    blocks += parse(path: included, depth: depth + 1)
                 }
                 current = Block(header: header)
             default:

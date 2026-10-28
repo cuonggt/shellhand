@@ -245,18 +245,6 @@ nonisolated final class Store: Sendable {
         }
     }
 
-    /// Everything at once, for an import: one transaction, so a file that
-    /// fails half way through leaves the list as it was.
-    func replaceAll(groups: [Group], hosts: [Host]) throws {
-        try db.write { db in
-            for table in ["host_groups", "hosts"] {
-                try db.execute(sql: "DELETE FROM \(table)")
-            }
-            for g in groups { try g.upsert(db) }
-            for h in hosts { try h.upsert(db) }
-        }
-    }
-
     /// Writes everything an import planned, in one transaction: a document
     /// that fails half way through leaves the list as it was. The records
     /// arrive with their ids already decided, which is what lets the dry run
