@@ -17,6 +17,18 @@ struct AppActions {
     /// so this does not depend on right-clicking a row having selected it,
     /// and so New Host… in the File menu goes on making a host with no group.
     var newHostIn: (Group) -> Void = { _ in }
+    /// The row's own actions, each handed its subject rather than reading it
+    /// back out of the selection — the same reason `newHostIn` takes its
+    /// group, and **necessary** for a card in the grid: `contextMenu` on a
+    /// card does not select it, so a menu that read the selection would edit
+    /// or delete whatever happened to be picked before.
+    var onHost = HostActions()
+
+    struct HostActions {
+        var edit: (Host) -> Void = { _ in }
+        var delete: (Host) -> Void = { _ in }
+        var copyCommand: (Host) -> Void = { _ in }
+    }
     var editHost: () -> Void = {}
     /// Asks the window to open the file window. It cannot be done from here:
     /// `openWindow` is inert both in a `Commands` body and when captured into

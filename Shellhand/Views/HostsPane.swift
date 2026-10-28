@@ -23,6 +23,8 @@ struct HostsPane: View {
     let onPick: (Selection) -> Void
     let onConnect: (Host) -> Void
     let onEditGroup: (Group) -> Void
+    /// For the row menu, which is the sidebar's — see `Views/RowMenu.swift`.
+    let actions: AppActions
 
     /// How you like to read the list, so `@AppStorage` rather than
     /// `@SceneStorage`: it is about you, not about this window.
@@ -109,6 +111,21 @@ struct HostsPane: View {
             }
         }
         .listStyle(.inset)
+        // **Double-click connects, and this is the way that does not cost
+        // anything.** `primaryAction` is AppKit's own double-click action, so
+        // the first click still selects immediately. A `TapGesture(count: 2)`
+        // here instead made *every* single click wait out the system's
+        // double-click interval before the row lit up — it shipped, a user
+        // felt it at once, and it came straight back out.
+        .contextMenu(forSelectionType: Selection.self) { items in
+            rowMenu(for: items.first)
+        } primaryAction: { items in
+            guard case let .host(id) = items.first,
+                  let host = hosts.first(where: { $0.id == id })
+            else { return }
+            onConnect(host)
+        }
+        .focusEffectDisabled()
         // ⏎ as well as the Host menu's ⌘↩: in a list you have arrowed down,
         // Return is the key the hand reaches for, and the menu item is across
         // the screen. Ignored unless a host is selected, so Return on a group
@@ -159,7 +176,11 @@ struct HostsPane: View {
         // are hand-wired. Keys do reach it — that was worth checking before
         // writing any of this, since the alternative was a rule nothing could
         // use. Focus has to get here first, which a click does and Tab does.
+        // Focusable for the keys, **not** to be outlined: a ring around the
+        // whole pane is a lot of chrome for "the arrows will go here", and
+        // the selected card already says where they will land.
         .focusable()
+        .focusEffectDisabled()
         .onKeyPress(.leftArrow) { move(.left) }
         .onKeyPress(.rightArrow) { move(.right) }
         .onKeyPress(.upArrow) { move(.up) }
@@ -224,6 +245,11 @@ struct HostsPane: View {
 
     /// Whether this is the one selected, for the cards to draw.
     private func selected(_ what: Selection) -> Bool { selection == what }
+
+    /// The same menu a sidebar row carries, on the same items.
+    private func rowMenu(for item: Selection?) -> some View {
+        RowMenu(item: item, store: store, actions: actions, onConnect: onConnect)
+    }
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -339,6 +365,7 @@ struct HostsPane: View {
             .overlay(ring(for: .group(folder.id)))
         }
         .buttonStyle(.plain)
+        .contextMenu { rowMenu(for: .group(folder.id)) }
         .accessibilityLabel("\(folder.name), \(counted(folder))")
     }
 
@@ -376,6 +403,7 @@ struct HostsPane: View {
             // it costs every single click the double-click interval.
         }
         .buttonStyle(.plain)
+        .contextMenu { rowMenu(for: .host(host.id)) }
         .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
 

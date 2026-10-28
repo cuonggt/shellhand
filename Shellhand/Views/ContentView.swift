@@ -104,6 +104,7 @@ struct ContentView: View {
             DetailView(
                 store: store, sessions: sessions,
                 group: browsedGroup, selection: selection,
+                actions: actions,
                 pane: pane, beside: beside,
                 onConnect: connect, onPickTab: pick(tab:),
                 onEdit: { editing = $0 },
@@ -143,7 +144,16 @@ struct ContentView: View {
                     guard case let .host(id) = now else { return nil }
                     return store.snapshot.hosts.first { $0.id == id }?.groupId
                 }())
-            if case let .host(id) = now { storedHostID = id }
+            if case let .host(id) = now {
+                storedHostID = id
+                // **Deferred a turn of the loop on purpose.** Changing the
+                // inspector in the same update that moves the pane crashes
+                // SwiftUI — "reentrant operation", two things about one split
+                // in a single transaction — and `pane` is set three lines
+                // below. It is intermittent, so a dozen clicks is the test,
+                // not one.
+                DispatchQueue.main.async { showingInspector = true }
+            }
             // Anything picked in the sidebar is about the hosts, so the
             // hosts tab is what shows it — a host's own detail, a group's
             // list, or the whole list. No guessing between the list and a
@@ -397,6 +407,10 @@ struct ContentView: View {
             newLocalShell: { show(session: sessions.openLocalShell().id) },
             newHost: { editing = Host() },
             newHostIn: { group in editing = Host(groupId: group.id) },
+            onHost: AppActions.HostActions(
+                edit: { editing = $0 },
+                delete: { deletingHost = $0 },
+                copyCommand: { copyAsCommand(for: $0) }),
             editHost: { if let host = selectedHost { editing = host } },
             // On whatever host is selected, so that pressing this with one
             // picked opens straight onto it. With nothing picked the far
@@ -445,6 +459,12 @@ struct ContentView: View {
     /// runbook and behave the same.
     private func copyAsCommand() {
         guard let host = selectedHost else { return }
+        copyAsCommand(for: host)
+    }
+
+    /// The same, on a host handed over rather than read out of the selection,
+    /// which is what a row's own menu needs.
+    private func copyAsCommand(for host: Host) {
         Task {
             guard let argv = await store.sshArgs(for: host) else { return }
 
@@ -522,6 +542,8 @@ struct DetailView: View {
     let group: Group?
     /// What is selected, for the pane to draw as selected.
     let selection: Selection?
+    /// For the pane's row menu, which is the sidebar's own.
+    let actions: AppActions
     /// Which tab of the strip is up, and so what fills the pane.
     let pane: PaneTab
     /// What is beside it, when the split is open.
@@ -597,6 +619,7 @@ struct DetailView: View {
     private var hostsSide: some View {
         HostsPane(
             store: store, group: group, selection: selection,
-            onPick: onPick, onConnect: onConnect, onEditGroup: onEditGroup)
+            onPick: onPick, onConnect: onConnect, onEditGroup: onEditGroup,
+            actions: actions)
     }
 }

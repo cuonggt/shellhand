@@ -149,35 +149,10 @@ struct SidebarView: View {
     /// What right-clicking a row offers. Nothing clicked is the empty space
     /// below the list, where the only sensible answers are new ones.
     @ViewBuilder
+    /// The row's own menu, shared with the pane so the two cannot drift —
+    /// `Views/RowMenu.swift`.
     private func rowMenu(for item: Selection?) -> some View {
-        switch item {
-        case let .host(id):
-            if let host = store.snapshot.hosts.first(where: { $0.id == id }) {
-                Button("Connect") { onConnect(host) }
-                Button("SFTP…") { actions.openFilesOn(host) }
-                Button("Copy as ssh Command") { actions.copyAsCommand() }
-                Divider()
-                Button("Edit Host…") { actions.editHost() }
-                Button("Delete Host…") { actions.deleteHost() }
-            }
-        case let .group(id):
-            // Inside the group this menu was opened on. It used to call the
-            // same plain `newHost` the File menu does, so the one item in a
-            // group's menu that made something put it at the top of the list
-            // instead — while "New Group Inside…" directly below it nested.
-            // Both say "Inside" now, and the row it was opened on is what
-            // names the group, which is why neither label has to.
-            if let group = store.group(id) {
-                Button("New Host Inside…") { actions.newHostIn(group) }
-            }
-            Button("New Group Inside…") { actions.newGroup() }
-            Divider()
-            Button("Edit Group…") { actions.editGroup() }
-            Button("Delete Group…") { actions.deleteGroup() }
-        case nil:
-            Button("New Host…") { actions.newHost() }
-            Button("New Group…") { actions.newGroup() }
-        }
+        RowMenu(item: item, store: store, actions: actions, onConnect: onConnect)
     }
 
     private var filtering: Bool { !search.isEmpty || !chosenTags.isEmpty }

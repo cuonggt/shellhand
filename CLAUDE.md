@@ -378,6 +378,29 @@ credentials, which is most of it.
   every click inside the pane itself.
   **Do not collapse `browsing` back into `Selection`.** It reads like a
   redundant second value and it is the only thing keeping the list still.
+  **The row menu is one definition, `Views/RowMenu.swift`**, carried by a
+  sidebar row, a pane row and a grid card alike — the user asked for the same
+  menu, and two copies of a decision drift, which the local-copy error
+  handling proved by doing it for months.
+  **Everything in it is handed its subject rather than reading the
+  selection**, which `AppActions.newHostIn` already did and said why. In the
+  sidebar and the pane's list it would not matter, since
+  `contextMenu(forSelectionType:)` selects the row first — but a
+  `contextMenu` on a **card** does not, so a menu reading the selection would
+  edit
+  or delete whichever host was picked before. `AppActions.onHost` holds those
+  versions.
+  **Selecting a host opens the inspector**, since that is where a host is
+  described and a selection that shows nothing reads as a click that failed.
+  It is set from `onChange(of: selection)` **deferred a turn of the loop** —
+  the same hop the inspector has always needed, because changing it in the
+  update that also moves the pane is the "reentrant operation" crash. That is
+  intermittent, so it was driven twelve times rather than once, and the
+  process was still up at the end.
+  **No focus ring on the pane.** The grid is `.focusable()` for the arrow
+  keys, not to be outlined: a ring around the whole pane is a lot of chrome
+  for "the arrows will go here", and the selected card already says where
+  they will land. `.focusEffectDisabled()` on both the list and the grid.
 - **The SFTP conversation is checked against a server written in Swift, in
   this process** — `Tests/ScriptedSFTP.swift`, on a pair of pipes, reached
   through the one seam `SFTPClient.speaking(to:from:)`. The spikes once ran a
@@ -1133,15 +1156,20 @@ credentials, which is most of it.
   **⏎ in the list**, which is where the hand already is once you have arrowed
   to a row. The toolbar is still not one of them, and the reason has not
   changed.
-  **A double-click was the obvious fourth and it had to come out**, which is
-  the part worth keeping. It is the Finder reflex, it was two lines, and it
-  cost **every single click** the system's double-click interval — a tap
-  gesture for two clicks cannot tell one click from the first of a pair until
-  that interval has passed, so the row did not light up until it had. A user
-  felt it immediately and said so. Selecting is what the pane is for; nothing
-  that makes the main gesture feel slow is worth a shortcut. **Checking that
-  the gesture did not take the click was the wrong question** — it did not,
-  and it still had to go.
+  **A double-click connects as well, and how it is done is the whole
+  lesson.** The first attempt was a `TapGesture(count: 2)`, and it cost
+  **every single click** the system's double-click interval — a tap gesture
+  for two clicks cannot tell one click from the first of a pair until that
+  interval has passed, so the row did not light up until it had. It shipped,
+  a user felt it immediately, and it came out. **Checking that the gesture
+  did not take the click was the wrong question**: it did not, and it still
+  had to go.
+  **What works costs nothing: `primaryAction` on
+  `contextMenu(forSelectionType:)`,** which is AppKit's own double-click
+  action rather than a gesture, so the first click still selects at once. The
+  sidebar had been using it the whole time — the mechanism was already in the
+  codebase while a worse one was being invented beside it. Look for the native
+  hook before reaching for a gesture.
 - **Each column carries its own `.toolbar`**, and that is the whole trick.
   `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
   view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`
