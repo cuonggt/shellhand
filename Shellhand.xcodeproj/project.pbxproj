@@ -32,6 +32,7 @@
 		245F497D233CEF5E8A3FC57D /* os-arch.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */; };
 		25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */; };
 		262C6F45A141D70D7A8A8419 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593A5D44E7FD2E569688A062 /* Config.swift */; };
+		278F0C5D8AC300F7AD6A8E4D /* ResolveCostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C08E98A36C2D91FE3480626 /* ResolveCostTests.swift */; };
 		27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */; };
 		29673CF60720DE3068D8F4A6 /* HostStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DDE82A60175D6F5A16883 /* HostStore.swift */; };
 		2A808ADC2736B29B4D481867 /* os-ubuntu.svg in Resources */ = {isa = PBXBuildFile; fileRef = AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */; };
@@ -171,6 +172,7 @@
 		19949C3151960ACCBC25FF94 /* os-netbsd.svg */ = {isa = PBXFileReference; path = "os-netbsd.svg"; sourceTree = "<group>"; };
 		1A1E1982747B39B2219C4D67 /* SFTPRealServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRealServerTests.swift; sourceTree = "<group>"; };
 		1B9577207F3C9CA4AA309760 /* os-openbsd.svg */ = {isa = PBXFileReference; path = "os-openbsd.svg"; sourceTree = "<group>"; };
+		1C08E98A36C2D91FE3480626 /* ResolveCostTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolveCostTests.swift; sourceTree = "<group>"; };
 		1C8A25118E059F686A9F089C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		222BDDF31905C063CACE18AD /* Updates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updates.swift; sourceTree = "<group>"; };
 		2719DDE5E363B72B59964667 /* TransferQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueueTests.swift; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
 				78C4EA7A75A2EF2C9B73F5B9 /* QuickConnectTests.swift */,
 				352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */,
+				1C08E98A36C2D91FE3480626 /* ResolveCostTests.swift */,
 				467E73B5CE44F6B57382DC67 /* ResolverTests.swift */,
 				DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */,
 				D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */,
@@ -687,6 +690,7 @@
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
 				C15994E660A2E90781F49F7A /* QuickConnectTests.swift in Sources */,
 				C1483227B1300FF71FBC66FF /* ReplacingTests.swift in Sources */,
+				278F0C5D8AC300F7AD6A8E4D /* ResolveCostTests.swift in Sources */,
 				2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */,
 				5AE572372B0F0AB8210043FA /* SFTPChurnTests.swift in Sources */,
 				534C17A4FC05D21C7A467DD1 /* SFTPDeadlineTests.swift in Sources */,

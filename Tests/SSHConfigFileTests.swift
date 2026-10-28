@@ -191,6 +191,27 @@ nonisolated struct SSHConfigFileTests {
         #expect(SSHConfigFile.glob("*.example.com", "web.example.com"))
         #expect(!SSHConfigFile.glob("*.example.com", "web.example.org"))
         #expect(SSHConfigFile.glob("WEB", "web"))
+
+        // A star stands for nothing at all as well as for something.
+        #expect(SSHConfigFile.glob("*", ""))
+        #expect(SSHConfigFile.glob("", ""))
+        #expect(!SSHConfigFile.glob("", "x"))
+        #expect(SSHConfigFile.glob("a*", "a"))
+        #expect(SSHConfigFile.glob("*.example.com", ".example.com"))
+        #expect(!SSHConfigFile.glob("?", ""))
+        #expect(SSHConfigFile.glob("**", "x"))
+
+        // **The cases that need backtracking**, which are the ones a matcher
+        // gets wrong: a star has to be able to give back what it took when
+        // what follows it fails to line up further along.
+        #expect(SSHConfigFile.glob("a*b*c", "abc"))
+        #expect(SSHConfigFile.glob("a*b*c", "axxbyyc"))
+        #expect(!SSHConfigFile.glob("a*b*c", "axxbyy"))
+        #expect(SSHConfigFile.glob("*a", "aaa"))
+        #expect(SSHConfigFile.glob("*a*a", "banana"))
+        #expect(!SSHConfigFile.glob("*a*a*a*a", "banana"))
+        #expect(SSHConfigFile.glob("10.*.*.5", "10.3.44.5"))
+        #expect(!SSHConfigFile.glob("10.*.*.5", "10.3.44.55"))
         #expect(SSHConfigFile.matches("web", ["*.corp", "web"]))
         #expect(!SSHConfigFile.matches("web", ["*", "!web"]))
     }

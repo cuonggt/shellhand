@@ -333,6 +333,30 @@ credentials, which is most of it.
   address: the entry is reported as `aliasElsewhere` and its `ProxyJump` never
   applies. A test asserting otherwise failed, correctly, and is kept with the
   `HostName` that makes it true.
+  **And it was 1,268 times the cost of everything else, which is the part
+  worth remembering.** `glob` was a full dynamic-programming matrix —
+  correct, and allocating a nested array of (pattern × name) `Bool`s on every
+  pattern tried against every name. Nothing noticed for as long as its only
+  caller was an import somebody asks for; the moment the resolver began
+  asking what the config routes **each host** through, it became a walk over
+  every block for every host. A 500-host list against a 400-block config took
+  **5.1 seconds a snapshot**, and a snapshot happens on every refresh.
+  **Isolated by measurement rather than reasoning**: with the proxy lookup
+  taken back out the same list resolved in **4ms**, so the table was the whole
+  of it and nothing else in the resolve was implicated. A scan with one
+  backtrack point does the same job in **159ms** — 32× — and the shape is now
+  linear rather than quadratic in the pattern.
+  **The order of work is the lesson, not the algorithm.** `glob` had six
+  tests and **none of them backtracked**, which is exactly where a scan goes
+  wrong: a `*` has to give back what it took when what follows fails to line
+  up further along. So the hard cases went in **first**, against the old
+  matrix, where they all passed — that made them an oracle for the
+  replacement rather than a description of it. Writing them afterwards would
+  have pinned whatever the new code happened to do.
+  `Tests/ResolveCostTests.swift` is the guard, and deliberately far larger
+  than anybody's list in both directions: the question is whether the shape
+  is wrong, and a realistic list answers that too quickly to tell. It costs
+  about two seconds of the run.
   **The row's own decision lives in `Effective.jumpHost`, not the view**, for
   the reason every rule here does: a decision inside `HostDetailView` could
   only be checked by driving the view, which this app cannot be. The resolver
