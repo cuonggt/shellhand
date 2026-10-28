@@ -115,13 +115,7 @@ struct PalettePicker: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            List {
-                row(name: "", title: inherited, palette: inheritedPalette)
-                ForEach(Themes.names, id: \.self) { name in
-                    row(name: name, title: name, palette: Themes.named(name))
-                }
-            }
-            .listStyle(.inset)
+            ScrollView { rows.padding(12) }
             Divider()
             HStack {
                 Spacer()
@@ -133,6 +127,29 @@ struct PalettePicker: View {
         .frame(width: DialogSize.medium, height: 460)
     }
 
+    /// The palettes themselves, apart from the sheet around them.
+    ///
+    /// **Not private, so that a test can draw them**, which is the same seam
+    /// `TerminalSession.watch()` is left open for. Neither a `List` nor a
+    /// `ScrollView` can be rendered by `ImageRenderer` — a `List` comes out
+    /// as a "cannot render" sign and a `ScrollView` comes out blank — and a
+    /// dialog cannot be opened from a script in this app at all, so without
+    /// this the one view whose entire job is to be looked at is the one view
+    /// nothing could look at.
+    ///
+    /// A stack rather than a `List` for a reason of its own: the rows carry
+    /// their own selected background, which a palette list wants, since the
+    /// eye is comparing colours and a `List`'s selection would tint the very
+    /// swatch being judged.
+    @ViewBuilder var rows: some View {
+        LazyVStack(spacing: 2) {
+            row(name: "", title: inherited, palette: inheritedPalette)
+            ForEach(Themes.names, id: \.self) { name in
+                row(name: name, title: name, palette: Themes.named(name))
+            }
+        }
+    }
+
     private func row(name: String, title: String, palette: Palette?) -> some View {
         Button {
             onChoose(name)
@@ -140,15 +157,19 @@ struct PalettePicker: View {
             HStack(spacing: 12) {
                 TerminalMiniature(palette: palette)
                 Text(title)
+                    .foregroundStyle(name == chosen ? AnyShapeStyle(.tint)
+                                                    : AnyShapeStyle(.primary))
                 Spacer()
-                // A tick rather than a highlighted row: the row's own colours
-                // are what the eye is on, and a selection wash over a swatch
-                // changes the thing being judged.
-                Image(systemName: "checkmark")
-                    .foregroundStyle(.tint)
-                    .opacity(name == chosen ? 1 : 0)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .contentShape(Rectangle())
+            // The wash sits behind the row and never over the swatch: the
+            // eye is comparing colours, and tinting the thing being judged
+            // is the one thing this must not do.
+            .background(name == chosen ? AnyShapeStyle(.quaternary)
+                                       : AnyShapeStyle(.clear),
+                        in: RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)

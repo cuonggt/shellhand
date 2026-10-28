@@ -1018,6 +1018,26 @@ credentials, which is most of it.
   what Settings wants because you are inspecting a palette there; this one
   shows what a terminal *looks* like, which is what you want when choosing in
   a hurry. If they ever have to be one, keep the miniature.
+  **The one view whose whole job is to be looked at was the one nothing
+  could look at**, until `Tests/PaletteSwatchTests.swift`. A dialog cannot be
+  opened from a script here — `click at` is inert — so `ImageRenderer` draws
+  the miniature into a bitmap instead and the pixels are read: every shipped
+  palette must appear on its own background, in its own green, in its own
+  text colour, and **two palettes must not draw the same picture**, which is
+  the one that would catch a swatch ignoring its argument.
+  **Compare like with like, not against the palette's own bytes.**
+  `ImageRenderer` puts everything through a colour-space conversion, so
+  Nord's `#2E3440` lands as `#363E4A` — plainly the same colour and not
+  equal. The first version asserted on the raw values and failed on every
+  palette. Rather than invent a tolerance, the expected colour is rendered
+  the same way and the match is exact again.
+  **Neither a `List` nor a `ScrollView` can be rendered this way** — a `List`
+  comes out as a "cannot render" sign and a `ScrollView` comes out blank — so
+  `PalettePicker.rows` is deliberately not private, the same seam
+  `TerminalSession.watch()` is left open for. The rows are a stack rather
+  than a `List` for a reason of their own: they carry their own selected
+  background, because a `List`'s selection would tint the very swatch being
+  judged.
   **Choosing applies at once and the sheet stays open**, so two palettes can
   be compared on the terminal behind rather than from memory — which is also
   why the footer says Done and not Save, and why Escape leaves nothing

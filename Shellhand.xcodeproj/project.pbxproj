@@ -139,6 +139,7 @@
 		E9AE1D908530CE6B4B5A923B /* SFTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE0A277FFB387246A7C1825 /* SFTPClient.swift */; };
 		ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */; };
 		EDCDB2BB04830C51132FA5C4 /* os-opensuse-leap.svg in Resources */ = {isa = PBXBuildFile; fileRef = B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */; };
+		EDE4C2EDE487A7FA3E83F1AD /* PaletteSwatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D9453D23D3609297FB3A0D5 /* PaletteSwatchTests.swift */; };
 		EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11557A4783217279E63F09A /* Validation.swift */; };
 		EF5066A717E8D7E1667AD46A /* os-amzn.svg in Resources */ = {isa = PBXBuildFile; fileRef = D66CDA5E3713F79D55007FAD /* os-amzn.svg */; };
 		F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */; };
@@ -240,6 +241,7 @@
 		86761F5CC23867EE2CB3F10A /* os-gentoo.svg */ = {isa = PBXFileReference; path = "os-gentoo.svg"; sourceTree = "<group>"; };
 		86C158FFD9640188D5F7CB00 /* DialogSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogSize.swift; sourceTree = "<group>"; };
 		8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFile.swift; sourceTree = "<group>"; };
+		8D9453D23D3609297FB3A0D5 /* PaletteSwatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaletteSwatchTests.swift; sourceTree = "<group>"; };
 		8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportSheet.swift; sourceTree = "<group>"; };
 		92963BFA25E6683E3DB57652 /* SFTPTransferTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPTransferTests.swift; sourceTree = "<group>"; };
 		931C1FC210800200F259DC3B /* QuickLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLook.swift; sourceTree = "<group>"; };
@@ -343,6 +345,7 @@
 				4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */,
 				3473C3E584F456CD7438584F /* OSMarkTests.swift */,
 				D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */,
+				8D9453D23D3609297FB3A0D5 /* PaletteSwatchTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
 				E3798692706D23BAB1E792B2 /* PlacesTests.swift */,
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
@@ -692,6 +695,7 @@
 				7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */,
 				82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */,
 				DE68274B64276D6FA9CF2309 /* OSReleaseTests.swift in Sources */,
+				EDE4C2EDE487A7FA3E83F1AD /* PaletteSwatchTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
 				2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */,
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
