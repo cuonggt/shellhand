@@ -3,6 +3,35 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.11</title>
+            <pubDate>Wed, 28 Oct 2026 10:25:37 +0700</pubDate>
+            <sparkle:version>11</sparkle:version>
+            <sparkle:shortVersionString>0.0.11</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**The host list answers the mouse the way you would expect.** Clicking a host
+opens the panel on the right showing what it connects with, instead of leaving
+you to go and find it. Two clicks connect. And a right-click gives the same
+menu the sidebar's rows have always had — connect, SFTP, copy the ssh command,
+edit, delete — acting on the host you clicked rather than on whatever happened
+to be selected before.
+
+**The keyboard reaches the list too.** Arrow keys walk it, whether it is
+drawn as rows or as cards, and Return connects to the host that is picked. A
+key pressed there no longer draws a ring around the whole panel to say the
+list is listening; the highlighted host already says it.
+
+**A file dropped from Finder that could not be carried said nothing about
+it.** Dropped onto a folder you have no permission to write in, or a disk with
+no room left, the file stayed where it was and the window gave no sign that
+anything had gone wrong — while the same copy made by dragging between the two
+panes has always reported it. Both say so now.
+
+Nothing else here is visible from the outside. The suite went from 479 checks
+to 495.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.11/Shellhand-0.0.11.dmg" length="13928857" type="application/octet-stream" sparkle:edSignature="lT5NMTrwVSDlM34k9ZWDc14xwNsBLAdJUqQOmGygsBlfE63bsRhjluk04Eq/QAPqF5bMcjTgqUV0geYDyLt2Bw=="/>
+        </item>
+        <item>
             <title>0.0.10</title>
             <pubDate>Tue, 27 Oct 2026 23:30:56 +0700</pubDate>
             <sparkle:version>10</sparkle:version>
@@ -64,37 +93,6 @@ stand-in — including the one detail nothing else could settle: which way round
 that server wants the two paths of a request to make a link.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.9/Shellhand-0.0.9.dmg" length="13861235" type="application/octet-stream" sparkle:edSignature="rKtaN4QSHE11bU8OcsM36wtT+vDpcBG8gmnXhuk8V80zaA1RPNpmgucOfUixBX8U79UvZ6HzjAnkJVU49qIJDQ=="/>
-        </item>
-        <item>
-            <title>0.0.8</title>
-            <pubDate>Tue, 27 Oct 2026 12:00:38 +0700</pubDate>
-            <sparkle:version>8</sparkle:version>
-            <sparkle:shortVersionString>0.0.8</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**A folder from a host arrived without its empty folders.** Dragging a folder
-from a host onto this Mac carried every file in it, but none of the folders
-that held nothing — and dragging an empty folder brought nothing across at
-all, while the transfer said it had finished. Every folder arrives now, empty
-or not, and a folder sent up and brought back is the folder it was.
-
-**A host-key question in a narrow window could go unasked.** With large text,
-or a window narrow enough, ssh's question about a new machine's key wraps
-across several lines of the terminal. Past two of them it was not seen, so
-ssh sat waiting for an answer the app never asked you for. It is asked now
-however many lines it takes, and the dialog shows the whole question,
-fingerprint included.
-
-**Answering a host-key question could bring it back for an instant.** In the
-moment between your answer and the terminal showing it, the question could
-reappear — and a click in that moment typed into the shell. An answered
-question stays answered.
-
-Nothing else here is visible from the outside. The suite went from 448 checks
-to 459, and folders are now among what it carries for real against OpenSSH's
-own server: the first fix above was found the first time anything tested a
-folder at all.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.8/Shellhand-0.0.8.dmg" length="13850990" type="application/octet-stream" sparkle:edSignature="RDQLehSr2A4ri5ONFk3XR1sXNoXLHnHBdCMS5MuJtgrUXgvoAOyFI0eFM41axhA0yfo9rydz9mmp1n4msRs1BQ=="/>
         </item>
     </channel>
 </rss>
