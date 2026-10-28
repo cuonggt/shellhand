@@ -1008,6 +1008,20 @@ credentials, which is most of it.
   same picker the editor's Advanced tab has, down to the sentence labelling
   "inherit" — `Effective.inheritedPalette`, now a rule in `Model/` that both
   read, because two copies of a sentence drift.
+  **It opens a dialog rather than dropping a menu down**, asked for after
+  Termius and right for the reason that picture makes obvious: **the name of
+  a palette says almost nothing.** "Gruvbox Dark" and "Tomorrow Night" are
+  both dark and neither name says which is warm. `TerminalMiniature` draws a
+  few bars in a palette's own colours, so the question is answered by looking.
+  **Not `PaletteSwatch`, which already existed**, and the two are kept apart
+  on purpose: that one lays all sixteen ANSI colours out as a chart, which is
+  what Settings wants because you are inspecting a palette there; this one
+  shows what a terminal *looks* like, which is what you want when choosing in
+  a hurry. If they ever have to be one, keep the miniature.
+  **Choosing applies at once and the sheet stays open**, so two palettes can
+  be compared on the terminal behind rather than from memory — which is also
+  why the footer says Done and not Save, and why Escape leaves nothing
+  undone. `DialogSize.medium`, which the conventions give for a plain list.
   **One control in a grid of facts**, which is a deliberate exception rather
   than a drift: a palette is the setting people change most and the only one
   whose effect they want to see at once, on the tab already open. Choosing

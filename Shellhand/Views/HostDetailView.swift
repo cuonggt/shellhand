@@ -39,18 +39,24 @@ struct HostDetailView: View {
             Text("Colours")
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
-            Picker("", selection: palette) {
-                Text(preview.effective.inheritedPalette).tag("")
-                Divider()
-                ForEach(Themes.names, id: \.self) { Text($0).tag($0) }
+            Button { choosing = true } label: {
+                HStack(spacing: 7) {
+                    TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
+                    Text(host.theme.isEmpty ? preview.effective.inheritedPalette : host.theme)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .contentShape(Rectangle())
             }
-            .labelsHidden()
-            .controlSize(.small)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Colours")
         }
     }
 
-    private var palette: Binding<String> {
-        Binding(get: { host.theme }, set: { choose(palette: $0) })
+    /// The palette this host comes up in, whether it chose one or not.
+    private var shown: Palette? {
+        Themes.named(host.theme.isEmpty ? preview.effective.theme : host.theme)
     }
 
     /// Saves the choice and nothing else.
@@ -75,6 +81,7 @@ struct HostDetailView: View {
     /// this host runs.
     @State private var preview = HostPreview()
     @State private var message = ""
+    @State private var choosing = false
 
     var body: some View {
         ScrollView {
@@ -121,6 +128,13 @@ struct HostDetailView: View {
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .sheet(isPresented: $choosing) {
+            PalettePicker(
+                chosen: host.theme,
+                inherited: preview.effective.inheritedPalette,
+                inheritedPalette: Themes.named(preview.effective.theme),
+                onChoose: { choose(palette: $0) })
         }
         // `Host` is Hashable, so this re-runs for any change to it — a port
         // edited here, or a group above it changing what it passes down.

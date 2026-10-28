@@ -106,6 +106,7 @@
 		A5222C311175118B3748066D /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C1020FE3A76905A97685B4 /* Files.swift */; };
 		A888901F1498F4EE05CA99CF /* HostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */; };
 		A967E12D8A3D8405DFFFEA00 /* SidebarRowsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */; };
+		A9C4EEFCC8DAD29C08C573EF /* PalettePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */; };
 		AC82FD9C78614F4B03772E2F /* TerminalPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */; };
 		B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */; };
 		B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */; };
@@ -212,6 +213,7 @@
 		593A5D44E7FD2E569688A062 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		5B67841A2E143C6C731414FF /* os-debian.svg */ = {isa = PBXFileReference; path = "os-debian.svg"; sourceTree = "<group>"; };
 		5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */ = {isa = PBXFileReference; path = "os-nixos.svg"; sourceTree = "<group>"; };
+		5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PalettePicker.swift; sourceTree = "<group>"; };
 		6621FD97BB914B528EA0DED0 /* PanesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanesTests.swift; sourceTree = "<group>"; };
 		683EAA256A466A529CF89C0C /* Shellhand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shellhand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionTests.swift; sourceTree = "<group>"; };
@@ -523,6 +525,7 @@
 				B9F4E982180137FCADD6C9FB /* HostsPane.swift */,
 				56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */,
 				8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */,
+				5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */,
 				53922636D26F782CC80079B8 /* Panes.swift */,
 				8296330F429BBF1DC2441250 /* QuickConnect.swift */,
 				C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */,
@@ -754,6 +757,7 @@
 				8D47EFA3F81EF5C89DC1B145 /* Merge.swift in Sources */,
 				9BF3CE2BB610B88116E445FB /* Model.swift in Sources */,
 				CDE22787942D1A523B9377EA /* OSRelease.swift in Sources */,
+				A9C4EEFCC8DAD29C08C573EF /* PalettePicker.swift in Sources */,
 				78C0ACBED9BC5C20E971BB4B /* Panes.swift in Sources */,
 				B57872FBBCB2B2C9A9BFD845 /* Places.swift in Sources */,
 				67681879901F818576724761 /* Portable.swift in Sources */,
