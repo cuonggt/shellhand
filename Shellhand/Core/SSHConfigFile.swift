@@ -34,14 +34,39 @@ nonisolated enum SSHConfigFile {
     /// name — so the block written under it applies, with `HostName` pinning
     /// the address — or told that the name goes somewhere else. `Resolver`
     /// decides which; this only reports what the file says.
-    static func aliases(path: String) -> [Alias] {
-        guard let document = try? read(path: path) else { return [] }
-        return document.hosts.map { Alias(name: $0.name, addr: $0.addr, port: $0.port) }
+    static func aliases(in blocks: [Block]) -> [Alias] {
+        document(from: blocks).hosts.map { Alias(name: $0.name, addr: $0.addr, port: $0.port) }
+    }
+
+    /// What this config would send a connection to `destination` through, as
+    /// a host that can be named in a sentence. Empty when it sends it
+    /// straight there.
+    ///
+    /// Asked by the name ssh is handed — the alias where there is one, the
+    /// address otherwise — because that is what `Host` and `Match` lines are
+    /// matched against. A host reached by its address is caught by
+    /// `Host 10.0.1.*` as surely as one reached by name is by its own block.
+    ///
+    /// **`ProxyJump` only, on purpose.** A `ProxyCommand` routes a connection
+    /// too, but it is a command line rather than a jump host — `ssh -W %h:%p
+    /// gateway`, or something that is not ssh at all — and putting that in a
+    /// field labelled "Jump host" would be a different wrong answer rather
+    /// than a right one. A host reached through one still reads as having no
+    /// jump host, which is where this started; saying so needs a row of its
+    /// own, and nobody has asked for one.
+    static func proxy(reaching destination: String, in blocks: [Block]) -> String {
+        let jump = values(for: destination, in: blocks)["proxyjump"] ?? ""
+        return jump.lowercased() == "none" ? "" : jump
     }
 
     /// The machines a config names, as a document ready to merge.
     static func read(path: String) throws -> Portable.Document {
-        let blocks = try parse(path: path)
+        document(from: try parse(path: path))
+    }
+
+    /// The same, from blocks already parsed, so a caller wanting more than
+    /// one thing out of a config pays for reading it once.
+    static func document(from blocks: [Block]) -> Portable.Document {
         var document = Portable.Document()
 
         // One name may be declared more than once, its settings merging, so

@@ -34,12 +34,25 @@ actor Core {
     }
 
     private func resolver(_ snapshot: Snapshot) -> Resolver {
-        Resolver(groups: snapshot.groups, hosts: snapshot.hosts)
-            .withAliases(sshAliases())
+        let config = sshConfig()
+        return Resolver(groups: snapshot.groups, hosts: snapshot.hosts)
+            .withAliases(config.aliases)
+            .withProxies(config.proxy)
     }
 
-    /// The last read of ssh's own config, kept against the file it came from.
-    private var aliasesRead: (path: String, stamp: Date?, size: Int, aliases: [Alias])?
+    /// What ssh's own config says, kept against the file it was read from.
+    private struct SSHConfig {
+        let path: String
+        let stamp: Date?
+        let size: Int
+        /// The names it gives machines.
+        let aliases: [Alias]
+        /// What it would send a destination through, asked per host because
+        /// `Host 10.0.1.*` cannot be answered without knowing the address.
+        let proxy: @Sendable (String) -> String
+    }
+
+    private var configRead: SSHConfig?
 
     /// The names ssh's own config gives machines, re-read only when that file
     /// has changed.
@@ -58,19 +71,26 @@ actor Core {
     /// config and every file it includes on each of those is a filesystem
     /// walk nobody asked for. A `stat` is not free either, but it is one call
     /// against a walk, and a config nobody is editing is read once.
-    private func sshAliases() -> [Alias] {
+    private func sshConfig() -> SSHConfig {
         let path = SSHConfigFile.pathInUse
-        // A file that is not there answers nil, which caches as "no names"
-        // and re-reads the moment one appears.
+        // A file that is not there answers nil, which caches as "it says
+        // nothing" and re-reads the moment one appears.
         let about = try? FileManager.default.attributesOfItem(atPath: path)
         let stamp = about?[.modificationDate] as? Date
         let size = (about?[.size] as? Int) ?? 0
-        if let last = aliasesRead, last.path == path, last.stamp == stamp, last.size == size {
-            return last.aliases
+        if let last = configRead, last.path == path, last.stamp == stamp, last.size == size {
+            return last
         }
-        let found = SSHConfigFile.aliases(path: path)
-        aliasesRead = (path, stamp, size, found)
-        return found
+        // Parsed **once** for both answers. The blocks are what every later
+        // question is asked of, including the per-destination one, which is
+        // why they are held rather than a finished list.
+        let blocks = (try? SSHConfigFile.parse(path: path)) ?? []
+        let read = SSHConfig(
+            path: path, stamp: stamp, size: size,
+            aliases: SSHConfigFile.aliases(in: blocks),
+            proxy: { SSHConfigFile.proxy(reaching: $0, in: blocks) })
+        configRead = read
+        return read
     }
 
     /// What ssh would be run with to reach a host — the line the window shows

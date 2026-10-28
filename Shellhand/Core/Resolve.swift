@@ -70,7 +70,7 @@ nonisolated struct Resolved: Sendable {
             user: user, userFrom: userFrom,
             identity: identity, identityFrom: identityFrom,
             proxyJump: proxyJump, proxyJumpFrom: proxyJumpFrom,
-            port: port, aliasElsewhere: aliasElsewhere,
+            port: port, aliasElsewhere: aliasElsewhere, configProxy: configProxy,
             sshOptions: sshOptions, forwardAgent: forwardAgent,
             forwardAgentFrom: forwardAgentFrom,
             theme: theme, themeFrom: themeFrom)

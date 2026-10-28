@@ -59,6 +59,14 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     var proxyJumpFrom: String = ""
     var port: Int = 22
     var aliasElsewhere: Alias?
+    /// What ssh's own config would send this host through, when the host
+    /// itself names no jump. Empty otherwise — a jump of the host's own goes
+    /// on the command line, which ssh reads first and keeps.
+    ///
+    /// Shown because the alternative is the inspector saying a host has no
+    /// jump host while ssh quietly takes it through one, which is a worse
+    /// answer than saying nothing.
+    var configProxy: String = ""
     /// Every `-o` setting that reaches this host, nearest first.
     var sshOptions: [String] = []
     /// Whether the agent is carried, and what said so.
@@ -67,6 +75,23 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// The palette that reaches this host, and what supplied it.
     var theme: String = ""
     var themeFrom: String = ""
+
+    /// What to show as the jump host, and what supplied it.
+    ///
+    /// **Both sources, because either alone is wrong.** The host's own wins
+    /// when it is set — that goes on the command line and ssh keeps the first
+    /// value it is given — but with nothing set, a config entry matching this
+    /// destination really does route the connection, and showing nothing says
+    /// the opposite of what will happen.
+    ///
+    /// Out here rather than in `HostDetailView` for the reason every rule in
+    /// this app is: a decision inside a view can only be checked by driving
+    /// the view, and this app's dialogs do not answer to `click at`.
+    var jumpHost: (value: String, from: String) {
+        proxyJump.isEmpty && !configProxy.isEmpty
+            ? (configProxy, "your ssh config")
+            : (proxyJump, proxyJumpFrom)
+    }
 }
 
 nonisolated struct Alias: Codable, Sendable, Hashable {

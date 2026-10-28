@@ -15,6 +15,7 @@
 		084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */ = {isa = PBXBuildFile; fileRef = 125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */; };
 		08BB898DE5F756AF7F9E6DE5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7CDBA13103F885C1CB1E8B27 /* README.md */; };
 		09C95B906A367ECF575444AE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 84B8116AD7A03666013C2119 /* SwiftTerm */; };
+		0AA4EAF57EC939A59E0A3E5D /* SSHConfigReachTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */; };
 		0CB1D57648D147CBE98D20A1 /* Replacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB07464DD8500D6AE1101A /* Replacing.swift */; };
 		0E39ACF45A64685916FFB2A5 /* os-kali.svg in Resources */ = {isa = PBXBuildFile; fileRef = 39D18DD8741A587BF79749A4 /* os-kali.svg */; };
 		104B8DFC6D74547508F40770 /* os-opensuse-tumbleweed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */; };
@@ -121,7 +122,6 @@
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
 		D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B67841A2E143C6C731414FF /* os-debian.svg */; };
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
-		DB519366426E622EF303A714 /* ConfigAliasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */; };
 		DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */; };
 		DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */; };
 		DDD7BD10382364A2F7BAD3C1 /* os-void.svg in Resources */ = {isa = PBXBuildFile; fileRef = 57C923B2F6B788AD35D6A916 /* os-void.svg */; };
@@ -182,7 +182,6 @@
 		352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplacingTests.swift; sourceTree = "<group>"; };
 		36C1020FE3A76905A97685B4 /* Files.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
 		38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowsingTests.swift; sourceTree = "<group>"; };
-		39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigAliasTests.swift; sourceTree = "<group>"; };
 		39D18DD8741A587BF79749A4 /* os-kali.svg */ = {isa = PBXFileReference; path = "os-kali.svg"; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
 		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
@@ -239,6 +238,7 @@
 		931C1FC210800200F259DC3B /* QuickLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLook.swift; sourceTree = "<group>"; };
 		94626F0B77323A224E47BAC4 /* HostIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostIcon.swift; sourceTree = "<group>"; };
 		96533AFA2A884A8C792A6F5D /* FilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTests.swift; sourceTree = "<group>"; };
+		9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigReachTests.swift; sourceTree = "<group>"; };
 		9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */ = {isa = PBXFileReference; path = "os-alpine.svg"; sourceTree = "<group>"; };
 		9F30BECE69E1DA23C37953AE /* SSHArgs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgs.swift; sourceTree = "<group>"; };
 		9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostDetailView.swift; sourceTree = "<group>"; };
@@ -324,7 +324,6 @@
 			isa = PBXGroup;
 			children = (
 				38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */,
-				39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */,
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
 				96533AFA2A884A8C792A6F5D /* FilesTests.swift */,
 				7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */,
@@ -354,6 +353,7 @@
 				82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */,
 				C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */,
 				ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */,
+				9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */,
 				347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */,
 				287AE931BEA1EE294A3CD956 /* StoreTests.swift */,
 				0985F94F2EA3F4723F856A87 /* TagsTests.swift */,
@@ -670,7 +670,6 @@
 			files = (
 				B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */,
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
-				DB519366426E622EF303A714 /* ConfigAliasTests.swift in Sources */,
 				53C0DA7A90A3E4490308737B /* FilesTests.swift in Sources */,
 				DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */,
 				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
@@ -695,6 +694,7 @@
 				01139DFDBD94594EEE6A09FA /* SFTPWireTests.swift in Sources */,
 				2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */,
 				C645D14004B98E57D2525464 /* SSHConfigFileTests.swift in Sources */,
+				0AA4EAF57EC939A59E0A3E5D /* SSHConfigReachTests.swift in Sources */,
 				F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */,
 				5651C0234D94D19625AB4769 /* ScriptedSFTP.swift in Sources */,
 				04E2E5A9DDE8AC15F390A3AD /* SessionProgressTests.swift in Sources */,

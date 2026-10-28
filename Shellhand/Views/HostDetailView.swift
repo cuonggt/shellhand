@@ -51,7 +51,8 @@ struct HostDetailView: View {
                     ValueRow("Address", "\(host.addr):\(host.effective.port)")
                     ValueRow("User", host.effective.user, from: host.effective.userFrom)
                     ValueRow("Key", host.effective.identity, from: host.effective.identityFrom)
-                    ValueRow("Jump host", host.effective.proxyJump, from: host.effective.proxyJumpFrom)
+                    ValueRow("Jump host", host.effective.jumpHost.value,
+                             from: host.effective.jumpHost.from)
                     if let group = store.group(host.groupId) {
                         ValueRow("Group", store.path(of: group))
                     }

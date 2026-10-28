@@ -5,7 +5,8 @@ import Testing
 
 private typealias AppHost = Shellhand.Host
 
-/// The names in ssh's own config reaching the resolver.
+/// What ssh's own config adds to a host: the name it gives a machine, and
+/// what it would send a connection through.
 ///
 /// **This is a test about wiring, not about a rule**, which is why it goes
 /// through the store rather than calling `Resolver.withAliases` directly.
@@ -21,8 +22,8 @@ private typealias AppHost = Shellhand.Host
 /// resolves against, so a name that collided with another suite's host would
 /// change what that suite sees.
 @MainActor
-@Suite("ssh config names", .serialized)
-struct ConfigAliasTests {
+@Suite("what ssh's own config adds", .serialized)
+struct SSHConfigReachTests {
     /// Writes a config where this run reads one, and takes it away again.
     ///
     /// Not a path of this file's choosing: it asks the app where it reads, so
@@ -101,5 +102,103 @@ struct ConfigAliasTests {
             #expect(argv.last == "10.0.0.9")
             #expect(!argv.contains { $0.hasPrefix("HostName=") })
         }
+    }
+    // MARK: what it sends a host through
+
+    /// **The row that said the opposite of the truth.** With nothing set on
+    /// the host, a config entry matching where it is going really does route
+    /// the connection — ssh applies it itself — and the inspector showed
+    /// "Jump host: —". Matched here by **address**, which is the case that
+    /// cannot be answered by name: `Host 198.51.100.*` catches a host reached
+    /// by its address as surely as a block catches one reached by its name.
+    @Test("a jump the config gives an address is reported")
+    func proxiedByAddress() async {
+        await withConfig("Host 198.51.100.*\n  ProxyJump bastion.example\n") {
+            let (_, host) = await store(AppHost(name: "probe-addr", addr: "198.51.100.7"))
+            #expect(host.effective.configProxy == "bastion.example")
+        }
+    }
+
+    /// The other way a block is matched, and the subtlety this test got
+    /// wrong first time round.
+    ///
+    /// A block is only reached by name when **ssh is handed that name**, and
+    /// ssh is handed the address unless the alias was adopted — which happens
+    /// only when the config's entry points at this same machine. So the
+    /// `HostName` here is not decoration: without it the entry names a
+    /// different machine, the alias is refused as `aliasElsewhere`, ssh gets
+    /// `10.0.0.30`, and `Host probe-named` never applies. The first version
+    /// of this test left it out and failed, correctly.
+    @Test("a jump the config gives a name it also reaches is reported")
+    func proxiedByName() async {
+        let config = """
+            Host probe-named
+              HostName 10.0.0.30
+              ProxyJump gateway.example
+
+            """
+        await withConfig(config) {
+            let (_, host) = await store(AppHost(name: "probe-named", addr: "10.0.0.30"))
+            #expect(host.effective.configProxy == "gateway.example")
+        }
+    }
+
+    /// **The control that matters.** A jump of the host's own goes on the
+    /// command line, which ssh reads first and keeps — so the config's is not
+    /// what happens and must not be reported. A wiring that reported the
+    /// config's unconditionally would pass both tests above and tell every
+    /// host with a jump of its own the wrong thing.
+    @Test("a host with its own jump is not told the config's")
+    func ownJumpWins() async {
+        await withConfig("Host 198.51.100.*\n  ProxyJump bastion.example\n") {
+            var own = AppHost(name: "probe-own", addr: "198.51.100.8")
+            own.proxyJump = "chosen.example"
+            let (_, host) = await store(own)
+            #expect(host.effective.configProxy == "")
+            #expect(host.effective.proxyJump == "chosen.example")
+        }
+    }
+
+    /// `ProxyJump none` is how a config says "and this one goes straight
+    /// there", usually under a glob that would otherwise catch it. Reporting
+    /// the literal word as a jump host would be worse than reporting nothing.
+    @Test("ProxyJump none is no jump")
+    func noneIsNothing() async {
+        await withConfig("Host probe-none\n  ProxyJump none\n") {
+            let (_, host) = await store(AppHost(name: "probe-none", addr: "10.0.0.31"))
+            #expect(host.effective.configProxy == "")
+        }
+    }
+
+    @Test("a host the config does not match goes straight there")
+    func notMatched() async {
+        await withConfig("Host 203.0.113.*\n  ProxyJump bastion.example\n") {
+            let (_, host) = await store(AppHost(name: "probe-direct", addr: "10.0.0.32"))
+            #expect(host.effective.configProxy == "")
+        }
+    }
+    // MARK: which one the inspector shows
+
+    /// The row itself, as a rule rather than through a window.
+    ///
+    /// This is the half that would otherwise go unchecked — the resolver
+    /// tests above prove `configProxy` is worked out, and nothing but this
+    /// proves the inspector shows it, or that it still prefers the host's own
+    /// when there is one. A decision left inside the view could only be
+    /// checked by driving the view, which in this app cannot be done.
+    @Test("the jump host row prefers the host's own and falls back to the config's")
+    func whichJumpIsShown() {
+        var e = Effective()
+        #expect(e.jumpHost.value == "")
+        #expect(e.jumpHost.from == "")
+
+        e.configProxy = "bastion.example"
+        #expect(e.jumpHost.value == "bastion.example")
+        #expect(e.jumpHost.from == "your ssh config")
+
+        e.proxyJump = "chosen.example"
+        e.proxyJumpFrom = "Production"
+        #expect(e.jumpHost.value == "chosen.example")
+        #expect(e.jumpHost.from == "Production")
     }
 }
