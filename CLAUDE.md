@@ -1173,13 +1173,21 @@ credentials, which is most of it.
   **`primaryAction` is a `List` feature, though, and the grid is not one.**
   Wiring it covered the rows and quietly left the cards without a
   double-click at all — the half that could be tested from a script was the
-  half that got fixed, and the user is in grid mode. `Views/DoubleClick.swift`
-  is the cards' answer: an `NSClickGestureRecognizer` wanting two clicks with
-  **`delaysPrimaryMouseButtonEvents` off**, which is the knob that stops a
-  recogniser holding the first mouse-down while it waits for a second. It
-  installs on its **superview**, because a view in front of a card takes the
-  click the button needs and one behind it never sees a click — placed as a
-  background, its superview is the card.
+  half that got fixed, and the user browses in grid mode.
+  **What the cards use is three words: `NSApp.currentEvent?.clickCount`.** The
+  button already fires once per click, so the second click of a double arrives
+  in the same action carrying a count of 2; reading the triggering event is
+  the whole mechanism. Nothing is disambiguating, so the first click still
+  selects at once.
+  **Two attempts failed first and neither should be tried again.** A
+  `TapGesture(count: 2)` taxed every single click, as above. An
+  `NSClickGestureRecognizer` on the card's **superview** — with
+  `delaysPrimaryMouseButtonEvents` off, which is the right knob for that
+  approach — never fired at all: a SwiftUI `Button` consumes the clicks
+  before an AppKit recogniser above it sees them. It built, read plausibly,
+  and it
+  did nothing, which is the third time in two days that the untestable half
+  was where the defect went.
 - **Each column carries its own `.toolbar`**, and that is the whole trick.
   `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
   view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`

@@ -350,6 +350,8 @@ struct HostsPane: View {
 
     private func card(for folder: Group) -> some View {
         Button {
+            // Two clicks goes in, which is what two clicks on a folder means;
+            // one selects it, and the pane follows either way.
             onPick(.group(folder.id))
         } label: {
             VStack(alignment: .leading, spacing: 5) {
@@ -371,7 +373,21 @@ struct HostsPane: View {
 
     private func card(for host: Host) -> some View {
         Button {
-            onPick(.host(host.id))
+            // **The button already fires once per click**, so the second
+            // click of a double arrives here carrying `clickCount == 2`.
+            // Reading the triggering event is all it takes: no gesture to
+            // disambiguate, so the first click still selects at once.
+            //
+            // Two earlier attempts are worth not repeating. A
+            // `TapGesture(count: 2)` made every single click wait out the
+            // double-click interval. An `NSClickGestureRecognizer` on the
+            // card's superview never fired at all — the button consumes the
+            // clicks before an AppKit recogniser above it sees them.
+            if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                onConnect(host)
+            } else {
+                onPick(.host(host.id))
+            }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
                 Image(systemName: "server.rack").font(.title3).foregroundStyle(.tint)
@@ -403,10 +419,6 @@ struct HostsPane: View {
             // it costs every single click the double-click interval.
         }
         .buttonStyle(.plain)
-        // Two clicks connects here as it does in the list, but by the AppKit
-        // hook rather than a gesture — a `LazyVGrid` has no `primaryAction`,
-        // and a `TapGesture(count: 2)` would tax every single click again.
-        .background { DoubleClick { onConnect(host) } }
         .contextMenu { rowMenu(for: .host(host.id)) }
         .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
