@@ -37,6 +37,11 @@ struct HostsPane: View {
     /// preference. Read it first and put it back.
     @AppStorage("libraryLayout") private var layout = HostsLayout.list
 
+    /// How many cards `.adaptive` has settled on across the grid, which the
+    /// arrow keys need and SwiftUI does not publish. Measured rather than
+    /// assumed — see `gridWidth`.
+    @State private var columns = 1
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Pinned rather than scrolling away with the rows: it carries the
@@ -145,10 +150,65 @@ struct HostsPane: View {
                 }
                 Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background { gridWidth }
             .padding(.horizontal, 24)
             .padding(.bottom, 24)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        // A `LazyVGrid` has no selection and no keyboard of its own, so both
+        // are hand-wired. Keys do reach it — that was worth checking before
+        // writing any of this, since the alternative was a rule nothing could
+        // use. Focus has to get here first, which a click does and Tab does.
+        .focusable()
+        .onKeyPress(.leftArrow) { move(.left) }
+        .onKeyPress(.rightArrow) { move(.right) }
+        .onKeyPress(.upArrow) { move(.up) }
+        .onKeyPress(.downArrow) { move(.down) }
+        .onKeyPress(.return) { connectPicked() }
+    }
+
+    /// The width the grids are actually given, measured **inside** the frame
+    /// and **outside** the padding, which is exactly the width `.adaptive`
+    /// divides up. Asking the `ScrollView` instead would be 48pt too wide and
+    /// would put the column count one out at some sizes.
+    private var gridWidth: some View {
+        GeometryReader { proxy in
+            Color.clear.onChange(of: proxy.size.width, initial: true) { _, width in
+                // The arithmetic `.adaptive` does: as many cards of the
+                // minimum width as fit, counting the gap between them.
+                columns = max(1, Int((width + 10) / (230 + 10)))
+            }
+        }
+    }
+
+    /// The cards in the order they are drawn: every group, then every host.
+    private var cardOrder: [Selection] {
+        groups.map { Selection.group($0.id) } + hosts.map { Selection.host($0.id) }
+    }
+
+    private func move(_ direction: GridMove.Direction) -> KeyPress.Result {
+        let order = cardOrder
+        guard let at = selection.flatMap({ order.firstIndex(of: $0) }) else {
+            // An arrow with nothing picked starts at the first card rather
+            // than doing nothing, which is what the list does too.
+            guard let first = order.first else { return .ignored }
+            onPick(first)
+            return .handled
+        }
+        guard let landed = GridMove.next(
+            direction, from: at,
+            sections: [groups.count, hosts.count], columns: columns)
+        else { return .ignored }
+        onPick(order[landed])
+        return .handled
+    }
+
+    private func connectPicked() -> KeyPress.Result {
+        guard case let .host(id) = selection,
+              let host = hosts.first(where: { $0.id == id })
+        else { return .ignored }
+        onConnect(host)
+        return .handled
     }
 
     private var empty: some View {

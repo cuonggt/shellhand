@@ -337,6 +337,33 @@ credentials, which is most of it.
   `LazyVGrid` has no selection — and draws the highlight by hand, with a ring
   as well as a wash, since a tint alone reads as a hover across a page of
   cards.
+  **The grid has arrow keys now, and the order of work is the point.** A
+  `LazyVGrid` has no keyboard either, so the first question was whether a key
+  reaches one at all — answered with a throwaway probe before a line of the
+  rule was written, because a rule nothing could use would have been a wasted
+  afternoon. It does: `.focusable()` on the scroll view plus `.onKeyPress`,
+  and the selection walked. Focus has to arrive first, which a click does and
+  Tab does.
+  **`Views/GridMove.swift` is the rule, and it takes the sections rather than
+  one flat run of cards.** The pane draws **two** grids — the groups, then
+  the hosts — so flat arithmetic gets the boundary wrong: with two groups and
+  four columns, "down" from the first group lands four cards into the hosts
+  instead of on the card drawn beneath it.
+  **The tests found two bugs in it, and the second only because the first was
+  being fixed.** "Up" from the top row clamped to the first card, which is not
+  up. And "down" from a card already in the **last row** slid sideways to the
+  last card, because that case had been conflated with the **ragged gap** —
+  being above a column the final row never filled, where falling to the last
+  card is right. They look identical in the arithmetic and are opposite in
+  meaning; only the first had a test, and writing one for the second is what
+  made it visible.
+  **The column count is derived, not published.** `.adaptive` settles it at
+  layout time and SwiftUI says nothing, so a `GeometryReader` measures the
+  width and the view repeats `.adaptive`'s own sum: as many cards of the
+  minimum width as fit, counting the gaps. Measure **inside** the frame and
+  **outside** the padding — the scroll view is 48pt wider and puts the count
+  one out at some sizes. Checked against a real window at 1728pt wide, where
+  it settles on four and the moves matched the rule exactly.
   **Scope and selection had to come apart, and that is `Browsing`.** They were
   one `Selection`, which is an either/or: the pane took `selectedGroup`, nil
   whenever a host is selected. Harmless while picking a host replaced the
