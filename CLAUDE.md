@@ -1422,6 +1422,19 @@ credentials, which is most of it.
   mattered.** Pinned with the destination made unwritable, which is how a disk
   actually refuses, and with a control that an ordinary drop still lands
   quietly — a transfer row for an instant local copy would be noise.
+  **One other was weighed and deliberately left, so the next sweep need not
+  do it again.** `HostStore.preview(of:)` swallows a failed
+  `Core.preview(db:host:)` into an empty `HostPreview`, and the view draws an
+  empty one as *"Working it out…"* — so a failure is indistinguishable from
+  still loading, for ever. That reads like the same bug, and it is not.
+  `Core.preview` can only throw from `store(db).snapshot()`, which is the
+  identical call `refresh()` makes; `refresh` catches it into `lastError` and
+  `ContentView` puts it up as a **modal alert**. So the condition already has
+  a louder voice than a second report would be, and the only gap is the window
+  between a `refresh` that worked and a `preview` that did not — which the
+  watcher closes at the next external change. Reporting here would be a second
+  alarm for a fire already ringing. **Left on purpose; the spinner is the
+  symptom, the alert is the message.**
 - `Core/Replacing.swift` holds which names clash, worked out from the
   listings **both panes already hold**, so it costs no round trip and is
   tested without carrying a byte — the shape `TransferQueue` has. One question
