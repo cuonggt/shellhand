@@ -248,7 +248,21 @@ credentials, which is most of it.
   framework conformances**, SwiftTerm's delegates, `QLPreviewPanelDataSource`,
   `Layout`, `FileDocument`, so the sweep needs a list of what the system calls
   or it reads as a massacre.
-  **Swept again after 0.0.9: 392 functions, 15 unmentioned, and all 15 are
+  **Swept twice more on 2026-10-28, and both came back with nothing to
+  delete: 422 functions, 10 mentioned nowhere and all 10 framework
+  conformances, and — on the narrow sweep below — 2, both SwiftTerm
+  delegates.** The narrow one had found `Store.replaceAll` and `withProxies`
+  that morning; one was deleted and the other wired up, which is why it is
+  down to the two callbacks a framework calls.
+  **Run both, because each has a blind spot the other covers.** The wide
+  sweep counts a name's mentions *anywhere in the app or the suite*, so a
+  function only the **suite** calls reads as live — which is how
+  `Store.replaceAll` sat there superseded for months. The narrow one —
+  declared under `Shellhand/`, mentioned in `Tests/`, nowhere else in
+  `Shellhand/` — finds those, and has a blind spot of its own: it is
+  token-based, so a generic name is drowned by ordinary English and invisible
+  to it. That is how `OSRelease.name` escaped both.
+  **Swept after 0.0.9: 392 functions, 15 unmentioned, and all 15 are
   framework.** `LocalProcessTerminalViewDelegate` takes three
   (`sizeChanged`, `hostCurrentDirectoryUpdate`, `processFailedToStart`),
   `NSViewRepresentable` six across three types, `NSWindowDelegate` two
@@ -920,11 +934,14 @@ credentials, which is most of it.
   the minimal conversation is where to look — which is what the reproducer
   below was built out of.
 - **The stall has a reproducer now: about one conversation in 2,500.**
-  `Tests/SFTPStallHunt.swift`, **disabled**, runs the minimal conversation
-  20,000 times with 16 in flight and a five-second deadline on each: roughly
-  six stalls in seven seconds, where a suite run bought one sighting every few
-  runs. Enable it when there is a theory to test; it fails by design, which is
-  why it is not a check.
+  `Tests/SFTPStallHunt.swift` ran the minimal conversation 20,000 times with
+  16 in flight and a five-second deadline on each: roughly six stalls in
+  seven seconds, where a suite run bought one sighting every few runs.
+  **It is gone** — deleted in `cdf1317`, the commit that explained the stall,
+  and replaced by `Tests/SFTPChurnTests.swift`, which runs the same
+  conversations as a guard rather than a hunt. This file went on telling
+  people to enable a file that no longer existed; recover it from that commit
+  if a hunt is ever wanted again.
   What it establishes, each measured rather than reasoned:
   - **The reply never arrives.** `lateReplies` and `strayReplies` are both 0
     after half a second's grace, every time. So it is neither a slow answer nor
@@ -1062,7 +1079,7 @@ credentials, which is most of it.
   choosing is what a terminal will look like. Both existed for a few hours;
   the chart is deleted, so there is one way a palette is drawn in this app.
   **The one view whose whole job is to be looked at was the one nothing
-  could look at**, until `Tests/PaletteSwatchTests.swift`. A dialog cannot be
+  could look at**, until `Tests/TerminalMiniatureTests.swift`. A dialog cannot be
   opened from a script here — `click at` is inert — so `ImageRenderer` draws
   the miniature into a bitmap instead and the pixels are read: every shipped
   palette must appear on its own background, in its own green, in its own
@@ -1498,9 +1515,11 @@ credentials, which is most of it.
   is known to fire in this test host, not assumed: a temporary probe printed
   from one earlier. A crash skips it, so the worst case is one directory per
   run rather than one per test — and this suite does crash sometimes, so that
-  matters. **Nothing under `Tests/` calls `NSTemporaryDirectory` any more
-  except `TestScratch` itself**; a convention with one exception is one nobody
-  follows.
+  matters. **No test makes a scratch path of its own any more; they all go
+  through `TestScratch`.** The symbol itself appears once more, in
+  `LaunchOptionsTests`, which asserts that a path *is* under the temporary
+  directory rather than making one there — checked, because a convention
+  stated more broadly than it holds is one nobody can follow.
   Two things to know before sweeping that directory by hand. The prefix
   `shellhand-ssh-` is **both** kinds: `SSHConfigFileTests` left *directories*
   and a running app writes `shellhand-ssh-<uuid>.log` *files* for live
