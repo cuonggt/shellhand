@@ -18,11 +18,14 @@
 		0CB1D57648D147CBE98D20A1 /* Replacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB07464DD8500D6AE1101A /* Replacing.swift */; };
 		0E39ACF45A64685916FFB2A5 /* os-kali.svg in Resources */ = {isa = PBXBuildFile; fileRef = 39D18DD8741A587BF79749A4 /* os-kali.svg */; };
 		104B8DFC6D74547508F40770 /* os-opensuse-tumbleweed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */; };
+		112E11FF5A2A11CBEF445848 /* os-zorin.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5272D1A98C5EF7FEC3959C5E /* os-zorin.svg */; };
 		11B9504A8BDBC5A24F0A7A3B /* os-rocky.svg in Resources */ = {isa = PBXBuildFile; fileRef = E24971EB3F9328BF0B3811D6 /* os-rocky.svg */; };
 		18A1899D88FA1D5521B2EE49 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */; };
+		19742EBB67C7287FAB5F4DE0 /* os-elementary.svg in Resources */ = {isa = PBXBuildFile; fileRef = 56A651468BE23AC14ADD8CB4 /* os-elementary.svg */; };
 		1B7D1615E7DF81318AE0060A /* QuickLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931C1FC210800200F259DC3B /* QuickLook.swift */; };
 		1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */; };
 		1EAA23A935364BC88D3CEB2D /* os-oracle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81B2554D49E69FEE8E9AE22B /* os-oracle.svg */; };
+		229E749106327A3C3459DD50 /* os-ol.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6A356F12BA2352D959D27B31 /* os-ol.svg */; };
 		23D9FD59E64FF01321E6E42C /* DialogSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C158FFD9640188D5F7CB00 /* DialogSize.swift */; };
 		241850CCF95F6144B5DC95BC /* SFTPTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */; };
 		245F497D233CEF5E8A3FC57D /* os-arch.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */; };
@@ -114,6 +117,7 @@
 		CDAFB463546EC02CCDB803D1 /* ImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */; };
 		CDE22787942D1A523B9377EA /* OSRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90CCBBC70703651BE9ADC36 /* OSRelease.swift */; };
 		CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287AE931BEA1EE294A3CD956 /* StoreTests.swift */; };
+		CF0F07821556C71F14A89E79 /* os-pop.svg in Resources */ = {isa = PBXBuildFile; fileRef = EDFA905F2313EAE92AE2520C /* os-pop.svg */; };
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
 		D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B67841A2E143C6C731414FF /* os-debian.svg */; };
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
@@ -189,10 +193,12 @@
 		49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */ = {isa = PBXFileReference; path = "os-linuxmint.svg"; sourceTree = "<group>"; };
 		4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptionsTests.swift; sourceTree = "<group>"; };
 		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
+		5272D1A98C5EF7FEC3959C5E /* os-zorin.svg */ = {isa = PBXFileReference; path = "os-zorin.svg"; sourceTree = "<group>"; };
 		529E2D11C3179D88458A3779 /* GridMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridMove.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		53922636D26F782CC80079B8 /* Panes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panes.swift; sourceTree = "<group>"; };
 		55626C93133D56BA95614439 /* os-manjaro.svg */ = {isa = PBXFileReference; path = "os-manjaro.svg"; sourceTree = "<group>"; };
+		56A651468BE23AC14ADD8CB4 /* os-elementary.svg */ = {isa = PBXFileReference; path = "os-elementary.svg"; sourceTree = "<group>"; };
 		56CBAF06EEAEC36794910612 /* FilesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindowController.swift; sourceTree = "<group>"; };
 		56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsWindow.swift; sourceTree = "<group>"; };
 		5727B0DF68397BA5EF2CD109 /* Shellhand.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Shellhand.icon; sourceTree = "<group>"; };
@@ -205,6 +211,7 @@
 		6621FD97BB914B528EA0DED0 /* PanesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanesTests.swift; sourceTree = "<group>"; };
 		683EAA256A466A529CF89C0C /* Shellhand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shellhand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionTests.swift; sourceTree = "<group>"; };
+		6A356F12BA2352D959D27B31 /* os-ol.svg */ = {isa = PBXFileReference; path = "os-ol.svg"; sourceTree = "<group>"; };
 		6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWireTests.swift; sourceTree = "<group>"; };
 		6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */ = {isa = PBXFileReference; path = "os-arch.svg"; sourceTree = "<group>"; };
 		6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueue.swift; sourceTree = "<group>"; };
@@ -280,6 +287,7 @@
 		E8C564CAC406B2F78C655FD3 /* TagField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagField.swift; sourceTree = "<group>"; };
 		ECD25D9C629456EF78CC5021 /* os-linux.svg */ = {isa = PBXFileReference; path = "os-linux.svg"; sourceTree = "<group>"; };
 		ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPane.swift; sourceTree = "<group>"; };
+		EDFA905F2313EAE92AE2520C /* os-pop.svg */ = {isa = PBXFileReference; path = "os-pop.svg"; sourceTree = "<group>"; };
 		EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		EF6861EB3BE4AFD16FC3CAAD /* os-fedora.svg */ = {isa = PBXFileReference; path = "os-fedora.svg"; sourceTree = "<group>"; };
 		F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindow.swift; sourceTree = "<group>"; };
@@ -415,6 +423,7 @@
 				6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */,
 				D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */,
 				5B67841A2E143C6C731414FF /* os-debian.svg */,
+				56A651468BE23AC14ADD8CB4 /* os-elementary.svg */,
 				EF6861EB3BE4AFD16FC3CAAD /* os-fedora.svg */,
 				172A21087C4DF4A6CDD738DD /* os-freebsd.svg */,
 				86761F5CC23867EE2CB3F10A /* os-gentoo.svg */,
@@ -424,17 +433,20 @@
 				55626C93133D56BA95614439 /* os-manjaro.svg */,
 				19949C3151960ACCBC25FF94 /* os-netbsd.svg */,
 				5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */,
+				6A356F12BA2352D959D27B31 /* os-ol.svg */,
 				1B9577207F3C9CA4AA309760 /* os-openbsd.svg */,
 				B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */,
 				45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */,
 				125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */,
 				81B2554D49E69FEE8E9AE22B /* os-oracle.svg */,
+				EDFA905F2313EAE92AE2520C /* os-pop.svg */,
 				1067D48C871C2202CF2F0417 /* os-raspbian.svg */,
 				BF83845D3EE0A5EF096D91B0 /* os-rhel.svg */,
 				E24971EB3F9328BF0B3811D6 /* os-rocky.svg */,
 				E076F9E53ED12B3045F8A6E6 /* os-sles.svg */,
 				AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */,
 				57C923B2F6B788AD35D6A916 /* os-void.svg */,
+				5272D1A98C5EF7FEC3959C5E /* os-zorin.svg */,
 				7CDBA13103F885C1CB1E8B27 /* README.md */,
 			);
 			path = OSMarks;
@@ -622,6 +634,7 @@
 				245F497D233CEF5E8A3FC57D /* os-arch.svg in Resources */,
 				5DA9F4BE574B4E38D368B07B /* os-centos.svg in Resources */,
 				D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */,
+				19742EBB67C7287FAB5F4DE0 /* os-elementary.svg in Resources */,
 				04F67502CEE48CFFB5CAE0FC /* os-fedora.svg in Resources */,
 				E101E6491853FDE77AE6C2EC /* os-freebsd.svg in Resources */,
 				E992959C29691765F5012A8C /* os-gentoo.svg in Resources */,
@@ -631,17 +644,20 @@
 				48D93606D6251F073720B72C /* os-manjaro.svg in Resources */,
 				59647E28230487F2E6250555 /* os-netbsd.svg in Resources */,
 				9A9142B73A7544402CDF4131 /* os-nixos.svg in Resources */,
+				229E749106327A3C3459DD50 /* os-ol.svg in Resources */,
 				9D06DCA78261E386836B6DC3 /* os-openbsd.svg in Resources */,
 				EDCDB2BB04830C51132FA5C4 /* os-opensuse-leap.svg in Resources */,
 				104B8DFC6D74547508F40770 /* os-opensuse-tumbleweed.svg in Resources */,
 				084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */,
 				1EAA23A935364BC88D3CEB2D /* os-oracle.svg in Resources */,
+				CF0F07821556C71F14A89E79 /* os-pop.svg in Resources */,
 				F3DF107DB38010184BE560FF /* os-raspbian.svg in Resources */,
 				4EA514D06BF43536383A7244 /* os-rhel.svg in Resources */,
 				11B9504A8BDBC5A24F0A7A3B /* os-rocky.svg in Resources */,
 				51CEAF67B7FFE5E459CF515D /* os-sles.svg in Resources */,
 				2A808ADC2736B29B4D481867 /* os-ubuntu.svg in Resources */,
 				DDD7BD10382364A2F7BAD3C1 /* os-void.svg in Resources */,
+				112E11FF5A2A11CBEF445848 /* os-zorin.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

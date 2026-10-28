@@ -5,41 +5,27 @@ with a plain server glyph when there is not. Nothing in the code lists them:
 dropping a file in is the whole of adding one, and deleting it is the whole of
 removing one.
 
-## These are ours, not anybody's logo
-
-Every distribution's real mark is a **trademark** with its own usage policy,
-and several — Canonical's among them — restrict redistribution in a way that
-is a decision for whoever ships an app rather than something to settle by
-downloading an SVG. So none of them is here, and none should be added.
-
-What ships instead is a plain tile carrying the distribution's initial, in a
-colour that distribution is known by. It says which machine you are looking
-at, which is the whole job, and it is drawn rather than traced.
-
-**They are generated, not hand-written.** `tools/osmarks.swift` holds the
-table — id, colour, letters — and is the only way to change them, the same
-arrangement `tools/icon.py` has for the app icon:
+**These files are generated. Don't edit them here** — edit the table in
+`tools/osmarks.swift` and run it:
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-  xcrun swift tools/osmarks.swift Shellhand/Resources/OSMarks
+  xcrun swift tools/osmarks.swift Shellhand/Resources/OSMarks tools/logos
 ```
 
-Two things that tool settles rather than guesses. **A letter has to be an
-outline**: Apple's SVG support renders no `<text>` at all — measured, with a
-white glyph coming back the colour of its own background — so an SVG naming a
-font would draw as an empty tile, silently, on any Mac that lacked it. And the
-**ink is chosen by contrast**, white or near-black whichever measures higher
-against the tile, because white on amber or on a mid-green comes out around
-2.3:1 and unreadable at the size these are looked at. Every mark is reported
-with what it measures; the lowest is 4.4:1.
+## What a mark is
 
-Judge a change at the size it is seen, not at 64:
+A rounded tile in the distribution's own colour carrying its own logo. The
+logos come from [Simple Icons](https://simpleicons.org), vendored in
+`tools/logos/` under CC0 — **see `tools/logos/README.md` for what that licence
+covers and, more to the point, what it does not: these are trademarks, and
+drawing one beside a server running that distribution is nominative use, not
+branding.** Read that file before adding or moving one.
 
-```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-  xcrun swift tools/osmarks-preview.swift Shellhand/Resources/OSMarks sheet.png
-```
+A distribution with no logo to hand falls back to a tile carrying its initial.
+That is what every mark was before the logos arrived, and it is still the
+right answer for some: **NetBSD's mark is a wordmark**, which at 16pt is an
+unreadable smear rather than a small version of itself.
 
 ## Adding one
 
@@ -61,18 +47,45 @@ lowercase too. To find out what a machine calls itself, ask it:
 ssh thehost 'grep ^ID= /etc/os-release'
 ```
 
-A derivative that does not set its own `ID` is drawn with the mark of whatever
-its `ID_LIKE` names, so Raspberry Pi OS falls back to Debian's. A distribution
-whose `ID` is its own, though, does **not** fall back — which is why
-`opensuse-leap` has a file of its own rather than leaning on `opensuse`.
+Some ids are not the name: Oracle Linux says `ol`, and Pop!\_OS says `pop`.
 
-A letter that is already taken gets two, so that two distributions are never
-the same letter in two shades of one colour.
+A derivative that does not set its own `ID` is drawn with the mark of whatever
+its `ID_LIKE` names, so a Debian derivative falls back to Debian's. A
+distribution whose `ID` **is** its own, though, does not fall back — which is
+why `opensuse-leap` has a file rather than leaning on `opensuse`.
+
+## Judge it at 16pt
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcrun swift tools/osmarks-preview.swift Shellhand/Resources/OSMarks sheet.png
+```
+
+That sheet draws every mark at 48, 22 and 16 — a card's size and a row's size
+— because **16 is where a mark fails** and it is where most of them are seen.
+Fine linework goes grey there: Kali's dragon and the CentOS lattice are
+carried by their colour at a row's size and only resolve on a card. That is a
+judgement to make with the sheet in front of you, not from the full-size
+artwork.
+
+Two things the generator settles rather than guesses, both measured, both of
+which would otherwise have shipped broken:
+
+- **A letter has to be an outline.** Apple's SVG support renders no `<text>`
+  at all, so an SVG naming a font would draw as an empty tile, silently, on
+  any Mac lacking it. The letters are CoreText outlines.
+- **The ink is chosen by contrast**, white or near-black whichever measures
+  higher against the tile. White on amber or a mid-green is about 2.3:1 and
+  unreadable at this size. The generator prints what each mark measured; the
+  lowest is 4.4:1.
+
+It does honour `transform`, checked the same way, which is what lets a
+24-unit logo drop into a 64-unit tile without rewriting its path data.
 
 ## Hand-made marks still work
 
 **SVG, PDF and PNG** are all read, tried in that order, so a file dropped in
 by hand is found exactly as a generated one is — the code knows nothing about
 the generator. Square artwork at any size: it is drawn at about 16pt in a row
-and 22pt on a card, and a rectangular wordmark will look wrong at both. A mark
-that is somebody's trademark should not be one of them, for the reason above.
+and 22pt on a card, and a rectangular wordmark will look wrong at both, for
+the reason NetBSD's does.
