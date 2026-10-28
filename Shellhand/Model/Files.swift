@@ -234,11 +234,7 @@ final class FilesModel {
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64)
             ?? 0
         if target.isLocal {
-            // Removed first: `copyItem` throws onto a name already there, and
-            // the `try?` here swallowed it — a drop from Finder onto an
-            // existing file used to do nothing at all, silently.
-            try? FileManager.default.removeItem(atPath: target.path(name))
-            try? FileManager.default.copyItem(atPath: url.path, toPath: target.path(name))
+            copyOnThisDisk(from: url.path, to: target.path(name), name: name)
         } else {
             await run(session: target.session, direction: "upload",
                       remote: target.path(name), local: url.path, name: name, size: size)
@@ -284,12 +280,33 @@ final class FilesModel {
     private func copyLocally(_ entry: RemoteEntry, from source: FilePlace, to target: FilePlace) {
         let at = source.path(entry.name), into = target.path(entry.name)
         guard at != into else { return }
-        try? FileManager.default.removeItem(atPath: into)
+        copyOnThisDisk(from: at, to: into, name: entry.name)
+    }
+
+    /// A copy on this disk, with a refusal reported rather than swallowed.
+    ///
+    /// **Both local paths go through here, and that is the point.** A drag
+    /// between the two panes caught a failed `copyItem` and filed it; a drop
+    /// from Finder used `try?` for the identical call, so a copy the disk
+    /// refused — no permission on the destination, a full disk, the source
+    /// gone between the drop and the copy — did nothing and said nothing. No
+    /// row, no error, and the pane redrawn without the file, which reads as a
+    /// drop nobody asked for. Two copies of one decision is how they drifted,
+    /// the same way two copies of a write loop let the harness keep a bug the
+    /// engine had already had fixed.
+    ///
+    /// Removing first is deliberate and stays a `try?`: `copyItem` throws onto
+    /// a name already there, the replace question has been answered by the
+    /// time anything reaches here, and a remove that fails because there was
+    /// nothing to remove is not a failure. A remove that fails for a real
+    /// reason surfaces as the copy failing a line later.
+    private func copyOnThisDisk(from: String, to: String, name: String) {
+        try? FileManager.default.removeItem(atPath: to)
         do {
-            try FileManager.default.copyItem(atPath: at, toPath: into)
+            try FileManager.default.copyItem(atPath: from, toPath: to)
         } catch {
             transfers.append(Transfer(
-                id: UUID().uuidString, name: entry.name, kind: "file",
+                id: UUID().uuidString, name: name, kind: "file",
                 state: TransferQueue.failed,
                 error: error.localizedDescription))
         }

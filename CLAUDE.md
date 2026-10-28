@@ -1401,6 +1401,27 @@ credentials, which is most of it.
   way — a drop from Finder onto an existing name did nothing at all, because
   `copyItem` throws there and the `try?` swallowed it. None of the four said
   anything, and none could be undone.
+  **That `try?` outlived the fix by months, and is gone now.** The replace
+  question stopped the clash, which is what the fourth case was about — but
+  the `try?` itself stayed, so every *other* way a local copy can fail went on
+  being swallowed: no permission on the destination, a full disk, the source
+  gone between the drop and the copy. Nothing was filed, nothing was said, and
+  the pane redrew without the file, which reads as a drop nobody asked for.
+  **What makes it plainly wrong rather than a judgement call is that the pane
+  beside it already did it properly**: `copyLocally`, forty lines down, caught
+  a refused `copyItem` and filed a failed transfer. One operation, two
+  answers to failure. Both go through `copyOnThisDisk` now — two copies of a
+  decision is how they drifted, exactly as two copies of a write loop let the
+  harness keep a bug the engine had already had fixed.
+  The remove before the copy stays a `try?` on purpose: the replace question
+  has been answered by the time anything reaches there, and a remove that
+  fails because there was nothing to remove is not a failure — one that fails
+  for a real reason surfaces as the copy failing a line later.
+  Found by sweeping every `try?` in the app, which is the same habit that
+  turned up the upload `mkdir`; **44 of them, and this was the one that
+  mattered.** Pinned with the destination made unwritable, which is how a disk
+  actually refuses, and with a control that an ordinary drop still lands
+  quietly — a transfer row for an instant local copy would be noise.
 - `Core/Replacing.swift` holds which names clash, worked out from the
   listings **both panes already hold**, so it costs no round trip and is
   tested without carrying a byte — the shape `TransferQueue` has. One question

@@ -166,6 +166,54 @@ struct FilesTests {
     /// copy is parked on a continuation nothing can ever reach — and unlike
     /// every other way of leaving the question, this one is **invisible**,
     /// because the window it would have been reported in has gone.
+    // MARK: a drop that cannot land
+
+    /// The same silent shape the upload `mkdir` had, and the one the pane
+    /// beside it already avoids. `copyLocally`, forty lines down, catches a
+    /// refused copy and files a failed transfer; a drop from Finder used
+    /// `try?` for the identical call, so a copy the disk refused did nothing
+    /// and said nothing — no row, no error, and the pane redrawn without the
+    /// file as though nothing had been asked for.
+    ///
+    /// Refused the way a real disk refuses: no write permission on the
+    /// destination. Nothing here is a stand-in, so the failure is the one a
+    /// user would actually hit.
+    @Test("a drop from Finder that cannot be copied says so")
+    func droppedFileThatCannotLand() async throws {
+        let source = folder(["dropped.txt": "bytes"])
+        let into = folder()
+        let model = await twoPanes(from: source, into: into)
+        let manager = FileManager.default
+        try manager.setAttributes([.posixPermissions: 0o555], ofItemAtPath: into)
+        defer { try? manager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: into) }
+
+        await model.bring(URL(fileURLWithPath: source + "/dropped.txt"), to: model.right)
+
+        let failed = model.transfers.filter { $0.state == TransferQueue.failed }
+        #expect(
+            failed.count == 1,
+            "a refused drop reported \(model.transfers.count) transfers: \(model.transfers.map(\.state))")
+        #expect(failed.first?.name == "dropped.txt")
+        #expect(failed.first?.error.isEmpty == false, "it failed without saying why")
+        #expect(read(into + "/dropped.txt") == nil, "it landed after all")
+    }
+
+    /// The control: an ordinary drop still lands, and quietly — a transfer row
+    /// for an instant local copy would be noise.
+    @Test("a drop from Finder that can be copied lands without a fuss")
+    func droppedFileLands() async throws {
+        let source = folder(["dropped.txt": "bytes"])
+        let into = folder()
+        let model = await twoPanes(from: source, into: into)
+
+        await model.bring(URL(fileURLWithPath: source + "/dropped.txt"), to: model.right)
+
+        #expect(read(into + "/dropped.txt") == "bytes")
+        #expect(
+            model.transfers.allSatisfy { $0.state != TransferQueue.failed },
+            "a drop that worked reported a failure")
+    }
+
     @Test("closing the window answers what was being asked")
     func closingAnswersTheQuestion() async throws {
         let from = folder(["a.txt": "new"]), into = folder(["a.txt": "old"])
