@@ -129,6 +129,7 @@
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
 		DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */; };
 		DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */; };
+		DDCCD2B12151C47345A5C18C /* LearnOSTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB64165C843191AFB132FDE8 /* LearnOSTests.swift */; };
 		DDD7BD10382364A2F7BAD3C1 /* os-void.svg in Resources */ = {isa = PBXBuildFile; fileRef = 57C923B2F6B788AD35D6A916 /* os-void.svg */; };
 		DE60D970C0153BCFC6878D35 /* os-linux.svg in Resources */ = {isa = PBXBuildFile; fileRef = ECD25D9C629456EF78CC5021 /* os-linux.svg */; };
 		DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6621FD97BB914B528EA0DED0 /* PanesTests.swift */; };
@@ -257,6 +258,7 @@
 		A115AC162E4D88C396D25873 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStoreTests.swift; sourceTree = "<group>"; };
 		A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHOptionsField.swift; sourceTree = "<group>"; };
+		AB64165C843191AFB132FDE8 /* LearnOSTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnOSTests.swift; sourceTree = "<group>"; };
 		AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */ = {isa = PBXFileReference; path = "os-ubuntu.svg"; sourceTree = "<group>"; };
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
@@ -346,6 +348,7 @@
 				512570C863871D171BD66EB6 /* IncludeCycleTests.swift */,
 				DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */,
 				4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */,
+				AB64165C843191AFB132FDE8 /* LearnOSTests.swift */,
 				3473C3E584F456CD7438584F /* OSMarkTests.swift */,
 				D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
@@ -697,6 +700,7 @@
 				F7B1346F27E91095DFB9A17C /* IncludeCycleTests.swift in Sources */,
 				E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */,
 				7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */,
+				DDCCD2B12151C47345A5C18C /* LearnOSTests.swift in Sources */,
 				82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */,
 				DE68274B64276D6FA9CF2309 /* OSReleaseTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,

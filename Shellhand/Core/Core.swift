@@ -232,12 +232,24 @@ actor Core {
     /// worth telling anybody about** — the cost of failing is an icon that
     /// stays generic, which is also what a host nobody has drawn a mark for
     /// looks like.
-    func osOf(db: String, hostID: String) async -> (id: String, name: String)? {
+    /// `path` and `fixed` are both for the suite, and both follow a seam this
+    /// app already has rather than inventing one: `connect(_:fixed:)` takes
+    /// settings nothing may override — which is how **every** connection the
+    /// suite makes is kept off the user's own `~/.ssh` — and
+    /// `sshConfigHosts(path:)` takes a path the same way. Without them this
+    /// function could not be tested at all without reaching somebody's real
+    /// machine, which is why it went untested while everything around it did
+    /// not: the read, the parsing, the store and the schedule each have their
+    /// own checks and nothing held the wiring between them.
+    func osOf(
+        db: String, hostID: String,
+        path: String = "/etc/os-release", fixed: [String] = []
+    ) async -> (id: String, name: String)? {
         guard let resolved = try? resolved(db: db, hostID: hostID),
-              let client = try? await SFTPClient.connect(resolved)
+              let client = try? await SFTPClient.connect(resolved, fixed: fixed)
         else { return nil }
         defer { Task { await client.close() } }
-        guard let bytes = try? await client.contents(of: "/etc/os-release"),
+        guard let bytes = try? await client.contents(of: path),
               let text = String(data: bytes, encoding: .utf8)
         else { return nil }
         let id = OSRelease.id(from: text)

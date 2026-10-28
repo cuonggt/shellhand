@@ -712,6 +712,23 @@ credentials, which is most of it.
   `BatchMode=yes`; a BSD or a macOS has no such file; a container may have no
   sftp subsystem. The cost of failing is a generic icon, which is already what
   most hosts show.
+  **The wiring itself had no test, and that is the gap this project keeps
+  finding one layer up.** The read is held against OpenSSH's own server, the
+  parsing has eleven checks, the field round-trips through the store and the
+  schedule is checked to the hour — and `Core.osOf`, which connects, reads
+  and parses in one breath, had nothing, because testing it means connecting
+  to something. `Tests/LearnOSTests.swift` connects to macOS's own `sshd` and
+  proves the whole path: a host really does say what it is, and the id and
+  the name come back whole. Nothing had shown that before.
+  It cost two seams, and both follow one this app already has rather than
+  inventing anything: `osOf` takes a `path` the way `sshConfigHosts` does,
+  and `fixed` settings the way `connect` does.
+  **Even the refusal passes `fixed`, and that is not fussiness.** ssh reads
+  `~/.ssh/config` **before** it connects, so a test connecting to a port
+  nothing answers would still take whatever is written there — a `Host *`
+  with a `ProxyCommand` would run somebody's program on the way to a
+  connection that was never going to succeed. The first version of that test
+  left it out. Nothing in this suite connects without it, refusals included.
   `sessions.open` has **one** caller, so wiring this into `connect(_:)` covers
   every way of connecting — Return in the list, two clicks, ⌘↩, the
   inspector, Quick Connect, a grid card — rather than the one that was being
