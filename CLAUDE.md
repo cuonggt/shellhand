@@ -1170,6 +1170,16 @@ credentials, which is most of it.
   sidebar had been using it the whole time — the mechanism was already in the
   codebase while a worse one was being invented beside it. Look for the native
   hook before reaching for a gesture.
+  **`primaryAction` is a `List` feature, though, and the grid is not one.**
+  Wiring it covered the rows and quietly left the cards without a
+  double-click at all — the half that could be tested from a script was the
+  half that got fixed, and the user is in grid mode. `Views/DoubleClick.swift`
+  is the cards' answer: an `NSClickGestureRecognizer` wanting two clicks with
+  **`delaysPrimaryMouseButtonEvents` off**, which is the knob that stops a
+  recogniser holding the first mouse-down while it waits for a second. It
+  installs on its **superview**, because a view in front of a card takes the
+  click the button needs and one behind it never sees a click — placed as a
+  background, its superview is the card.
 - **Each column carries its own `.toolbar`**, and that is the whole trick.
   `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
   view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`

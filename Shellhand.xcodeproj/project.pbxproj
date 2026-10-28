@@ -101,6 +101,7 @@
 		E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */; };
 		E9AE1D908530CE6B4B5A923B /* SFTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE0A277FFB387246A7C1825 /* SFTPClient.swift */; };
 		ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */; };
+		EE70392666D1C122F7BC8E2C /* DoubleClick.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40C665A929EA6D0996AA87F /* DoubleClick.swift */; };
 		EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11557A4783217279E63F09A /* Validation.swift */; };
 		F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */; };
 		F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C58D904DA593CE634918A8 /* SettingsView.swift */; };
@@ -188,6 +189,7 @@
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
 		B20E60B26760CD52D26C77F6 /* HostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKey.swift; sourceTree = "<group>"; };
+		B40C665A929EA6D0996AA87F /* DoubleClick.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleClick.swift; sourceTree = "<group>"; };
 		B6D441F061EB58A1F727AEA0 /* TreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeTests.swift; sourceTree = "<group>"; };
 		B8E364C1F64E97AC080F1F08 /* ShellhandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellhandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9F4E982180137FCADD6C9FB /* HostsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsPane.swift; sourceTree = "<group>"; };
@@ -385,6 +387,7 @@
 				709897B4D50481E64978D1C7 /* Browsing.swift */,
 				18AEC282492A0EB7F7C69600 /* ContentView.swift */,
 				86C158FFD9640188D5F7CB00 /* DialogSize.swift */,
+				B40C665A929EA6D0996AA87F /* DoubleClick.swift */,
 				F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */,
 				56CBAF06EEAEC36794910612 /* FilesWindowController.swift */,
 				DA96D946715413445668CB3B /* FindBar.swift */,
@@ -572,6 +575,7 @@
 				7C288F30D5BD84EE03371F5D /* Core.swift in Sources */,
 				A044E587C5DBA2004A69D3FF /* Descriptors.swift in Sources */,
 				23D9FD59E64FF01321E6E42C /* DialogSize.swift in Sources */,
+				EE70392666D1C122F7BC8E2C /* DoubleClick.swift in Sources */,
 				A5222C311175118B3748066D /* Files.swift in Sources */,
 				DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */,
 				90D0957B423696CB8F482045 /* FilesWindowController.swift in Sources */,

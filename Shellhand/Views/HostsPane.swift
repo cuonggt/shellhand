@@ -403,6 +403,10 @@ struct HostsPane: View {
             // it costs every single click the double-click interval.
         }
         .buttonStyle(.plain)
+        // Two clicks connects here as it does in the list, but by the AppKit
+        // hook rather than a gesture — a `LazyVGrid` has no `primaryAction`,
+        // and a `TapGesture(count: 2)` would tax every single click again.
+        .background { DoubleClick { onConnect(host) } }
         .contextMenu { rowMenu(for: .host(host.id)) }
         .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
