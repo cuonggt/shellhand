@@ -144,6 +144,7 @@
 		F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C58D904DA593CE634918A8 /* SettingsView.swift */; };
 		F3DF107DB38010184BE560FF /* os-raspbian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1067D48C871C2202CF2F0417 /* os-raspbian.svg */; };
 		F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B0CD60231E15370665FF94 /* SidebarRows.swift */; };
+		F7B1346F27E91095DFB9A17C /* IncludeCycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512570C863871D171BD66EB6 /* IncludeCycleTests.swift */; };
 		FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0985F94F2EA3F4723F856A87 /* TagsTests.swift */; };
 		FE68496FCFD8F2500BF6C0B3 /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = C60842B8DBC5F1F3F9F08A4A /* Yams */; };
 /* End PBXBuildFile section */
@@ -195,6 +196,7 @@
 		49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */ = {isa = PBXFileReference; path = "os-linuxmint.svg"; sourceTree = "<group>"; };
 		4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptionsTests.swift; sourceTree = "<group>"; };
 		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
+		512570C863871D171BD66EB6 /* IncludeCycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncludeCycleTests.swift; sourceTree = "<group>"; };
 		5272D1A98C5EF7FEC3959C5E /* os-zorin.svg */ = {isa = PBXFileReference; path = "os-zorin.svg"; sourceTree = "<group>"; };
 		529E2D11C3179D88458A3779 /* GridMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridMove.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -334,6 +336,7 @@
 				6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */,
 				F165387269A225BDCCCE790A /* HostOSTests.swift */,
 				A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */,
+				512570C863871D171BD66EB6 /* IncludeCycleTests.swift */,
 				DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */,
 				4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */,
 				3473C3E584F456CD7438584F /* OSMarkTests.swift */,
@@ -681,6 +684,7 @@
 				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
 				7FF5A6CE2E6F2EFCEC41982E /* HostOSTests.swift in Sources */,
 				B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */,
+				F7B1346F27E91095DFB9A17C /* IncludeCycleTests.swift in Sources */,
 				E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */,
 				7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */,
 				82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */,

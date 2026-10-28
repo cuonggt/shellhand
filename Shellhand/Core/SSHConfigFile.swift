@@ -131,7 +131,30 @@ nonisolated enum SSHConfigFile {
     /// nothing at the time and made three callers write `try?`, so each read
     /// like failure handling where there is no failure to handle.
     static func parse(path: String, depth: Int = 0) -> [Block] {
-        guard depth < 8 else { return [] }  // An Include that includes itself.
+        var read: Set<String> = []
+        return parse(path: path, depth: depth, read: &read)
+    }
+
+    /// **Each file is read once per parse, and the depth cap is not what
+    /// saves you.** A cap alone terminates a cycle and does nothing about its
+    /// *width*: `Include conf.d/*` written inside a file that is itself in
+    /// `conf.d` — a plausible copy-paste — branches by however many files are
+    /// in that directory, at every level. Measured, with a cap of 8 and
+    /// nothing else: fan-out 2 took 29ms, 3 took 346ms and 4 took 2.4
+    /// seconds, so a `conf.d` of ten would not finish today. That was
+    /// survivable while the only caller was an import somebody asks for; the
+    /// resolver reads this config now, so it would be a window that never
+    /// opens.
+    ///
+    /// Reading a file once is also what ssh ends up doing with it: a setting
+    /// keeps its **first** value, so a second copy of the same blocks can
+    /// never win anything, and the names it declares are the same names. So
+    /// this is cheaper and not weaker.
+    private static func parse(path: String, depth: Int, read: inout Set<String>) -> [Block] {
+        guard depth < 8 else { return [] }
+        // Settled first, so that two spellings of one file are one file.
+        let settled = URL(fileURLWithPath: path).resolvingSymlinksInPath().path
+        guard read.insert(settled).inserted else { return [] }
         guard let raw = try? String(contentsOfFile: path, encoding: .utf8) else { return [] }
 
         var blocks: [Block] = []
@@ -158,7 +181,7 @@ nonisolated enum SSHConfigFile {
                 let header = current.header
                 blocks.append(current)
                 for included in includePaths(argument, relativeTo: path) {
-                    blocks += parse(path: included, depth: depth + 1)
+                    blocks += parse(path: included, depth: depth + 1, read: &read)
                 }
                 current = Block(header: header)
             default:

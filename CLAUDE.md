@@ -346,6 +346,28 @@ credentials, which is most of it.
   of it and nothing else in the resolve was implicated. A scan with one
   backtrack point does the same job in **159ms** — 32× — and the shape is now
   linear rather than quadratic in the pattern.
+  **The same read turned a latent config bug into a window that would not
+  open, and that is the second half of the same story.** `parse` capped
+  `Include` recursion at depth 8 — which terminates a cycle and does nothing
+  about its **width**. `Include conf.d/*` written inside a file that is
+  itself in `conf.d` is a plausible copy-paste, and it branches by however
+  many files are in that directory at every level: measured with the cap
+  alone, 29ms for two files, 346ms for three, 2.4 seconds for four, and
+  **48 seconds for six**. A real `conf.d` holds ten. That was survivable
+  while the only caller was an import somebody asks for; it is a startup hang
+  once the resolver reads the config.
+  **Each file is read once per parse now**, settled through
+  `resolvingSymlinksInPath` so two spellings are one file. That is not weaker
+  than reading it twice, which is the claim the fix rests on: a setting keeps
+  its **first** value, so a second copy of the same blocks could never win
+  anything, and the names it declares are the same names. 48 seconds became
+  about a millisecond.
+  **Three of the four tests pass without the fix**, and that is the point of
+  the one that does not: a config that includes itself and a pair that
+  include each other are both handled by the cap, so they are not the guard.
+  Only the branching one is — a cap is about depth and the bug is about
+  width, and a test for the shape you already handle proves nothing about the
+  shape you do not.
   **The order of work is the lesson, not the algorithm.** `glob` had six
   tests and **none of them backtracked**, which is exactly where a scan goes
   wrong: a `*` has to give back what it took when what follows fails to line
