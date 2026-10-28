@@ -465,4 +465,13 @@ printf '%s' "$pane_said" | grep -q "What will run" \
     || fail "the inspector is not describing a host: $pane_said"
 echo "window-check: the inspector is open and describing the host selected"
 
+# The OS row, which is the one thing beside the mark that says what a host
+# is running. These seeded hosts have never been connected to, so it reads
+# as a dash — and that is the case worth pinning: the row has to be there
+# before anything is known, because a dash beside the generic icon is what
+# explains the generic icon.
+printf '%s' "$pane_said" | grep -q "OS" \
+    || fail "the inspector does not say what the host is running: $pane_said"
+echo "window-check: the inspector names the operating system row"
+
 echo "window-check: PASSED — a window loaded a store of its own and drew it"

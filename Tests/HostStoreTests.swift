@@ -65,6 +65,7 @@ struct HostStoreTests {
         var host = AppHost(name: "web", addr: "10.0.0.1")
         host.os = "ubuntu"
         host.osSeen = 1_800_000_000
+        host.osName = "Ubuntu 22.04.3 LTS"
         _ = await store.save(host)
         #expect(store.snapshot.hosts.first?.os == "ubuntu")
 
@@ -76,6 +77,7 @@ struct HostStoreTests {
         // The stamp as well as the answer: without it a host that cannot say
         // is asked again on every connect, and nothing else would notice.
         #expect(second.snapshot.hosts.first?.osSeen == 1_800_000_000)
+        #expect(second.snapshot.hosts.first?.osName == "Ubuntu 22.04.3 LTS")
     }
 
     @Test("the tree the sidebar reads follows what was saved")

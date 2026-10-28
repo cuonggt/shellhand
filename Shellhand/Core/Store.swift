@@ -174,6 +174,16 @@ nonisolated final class Store: Sendable {
                 }
             }
         }
+        // What the machine calls itself, beside the id that finds its mark.
+        migrator.registerMigration("v10") { db in
+            let held = try String.fetchAll(
+                db, sql: "SELECT name FROM pragma_table_info(?)", arguments: ["hosts"])
+            if !held.contains("osName") {
+                try db.alter(table: "hosts") { t in
+                    t.add(column: "osName", .text).notNull().defaults(to: "")
+                }
+            }
+        }
         return migrator
     }
 
@@ -316,6 +326,7 @@ extension Host: FetchableRecord, PersistableRecord {
         theme = row["theme"]
         os = row["os"]
         osSeen = row["osSeen"]
+        osName = row["osName"]
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) {
@@ -335,6 +346,7 @@ extension Host: FetchableRecord, PersistableRecord {
         // writes as its default for ever, with no error anywhere.
         container["os"] = os
         container["osSeen"] = osSeen
+        container["osName"] = osName
     }
 
     /// A tag list that cannot be read is no tags, not a host that fails to

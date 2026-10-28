@@ -519,7 +519,10 @@ struct ContentView: View {
         // only on success would do. An answer it did give replaces whatever
         // was there, so a rebuilt machine corrects itself.
         fresh.osSeen = Date().timeIntervalSince1970
-        if let said { fresh.os = said }
+        if let said {
+            fresh.os = said.id
+            fresh.osName = said.name
+        }
         _ = await store.save(fresh)
     }
 

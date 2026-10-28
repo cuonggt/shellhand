@@ -495,7 +495,7 @@ struct HostRow: View {
                 if !host.tags.isEmpty { tags }
             }
         } icon: {
-            HostIcon(os: host.os)
+            HostIcon(os: host.os, named: host.osLabel)
         }
     }
 

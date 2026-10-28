@@ -71,6 +71,25 @@ nonisolated struct OSReleaseTests {
         #expect(OSRelease.id(from: ubuntu) == "ubuntu")
     }
 
+    // MARK: what it calls itself
+
+    @Test("the pretty name is what it says in words")
+    func prettyName() {
+        #expect(OSRelease.name(from: ubuntu) == "Ubuntu 22.04.3 LTS")
+        #expect(OSRelease.name(from: debian) == "Debian GNU/Linux 12 (bookworm)")
+    }
+
+    @Test("NAME stands in when there is no PRETTY_NAME")
+    func plainName() {
+        #expect(OSRelease.name(from: #"NAME="Void Linux""#) == "Void Linux")
+    }
+
+    @Test("a file that names nothing says nothing")
+    func noName() {
+        #expect(OSRelease.name(from: "") == "")
+        #expect(OSRelease.name(from: "ID=ubuntu") == "")
+    }
+
     // MARK: files that say nothing useful
 
     /// Somebody else's file. A line this does not understand is not a reason

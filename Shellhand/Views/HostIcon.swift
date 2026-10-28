@@ -19,9 +19,30 @@ import SwiftUI
 struct HostIcon: View {
     /// The `ID` out of the host's own `/etc/os-release`, or empty.
     let os: String
+    /// What to call it in words. Empty is allowed and means the mark says
+    /// nothing to anyone who does not recognise it, which is why every call
+    /// site that has one passes it.
+    var named: String = ""
     var size: CGFloat = 16
 
     var body: some View {
+        mark
+            // **Named, not hidden.** Hiding it was right while it was a
+            // decorative fallback glyph and wrong the moment it carried
+            // which operating system a machine runs: several of these are a
+            // coloured tile at the size a row draws them, so somebody who
+            // does not recognise one has no way to find out, and somebody
+            // using VoiceOver has no way to know it is there at all.
+            //
+            // With nothing known there is nothing to say, and an "unknown"
+            // announced on every row would be noise over the host's own name
+            // — so it stays decoration in exactly that case.
+            .accessibilityHidden(named.isEmpty)
+            .accessibilityLabel(named)
+            .help(named)
+    }
+
+    @ViewBuilder private var mark: some View {
         if let mark = OSMark.image(for: os) {
             Image(nsImage: mark)
                 .resizable()
@@ -29,7 +50,6 @@ struct HostIcon: View {
                 .frame(width: size, height: size)
                 // A mark is somebody's artwork and carries its own colours,
                 // so it is drawn as it is rather than tinted like a glyph.
-                .accessibilityHidden(true)
         } else {
             // Sized rather than left to the inherited font, so that a row
             // with a mark and a row without line up: both branches draw into
@@ -38,7 +58,6 @@ struct HostIcon: View {
                 .font(.system(size: size))
                 .foregroundStyle(.tint)
                 .frame(width: size, height: size)
-                .accessibilityHidden(true)
         }
     }
 }

@@ -232,7 +232,7 @@ actor Core {
     /// worth telling anybody about** — the cost of failing is an icon that
     /// stays generic, which is also what a host nobody has drawn a mark for
     /// looks like.
-    func osOf(db: String, hostID: String) async -> String? {
+    func osOf(db: String, hostID: String) async -> (id: String, name: String)? {
         guard let resolved = try? resolved(db: db, hostID: hostID),
               let client = try? await SFTPClient.connect(resolved)
         else { return nil }
@@ -241,7 +241,9 @@ actor Core {
               let text = String(data: bytes, encoding: .utf8)
         else { return nil }
         let id = OSRelease.id(from: text)
-        return id.isEmpty ? nil : id
+        // The id is what finds a mark, so nothing without one is an answer —
+        // but a name without an id would leave a host labelled and undrawn.
+        return id.isEmpty ? nil : (id, OSRelease.name(from: text))
     }
 
     func closeSFTP(id: String) async {

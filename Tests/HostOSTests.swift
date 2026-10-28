@@ -73,4 +73,26 @@ nonisolated struct HostOSTests {
         // ...but a day later it is due regardless of how it got there.
         #expect(ahead.shouldAskOS(now: now.addingTimeInterval(25 * 60 * 60)))
     }
+
+    // MARK: what the mark is called
+
+    /// **The mark is decoration until something says what it is.** This is
+    /// the one string the tooltip, the accessibility label and the inspector
+    /// row all read, so they cannot drift apart — and a rule rather than
+    /// three copies inside views, none of which could be checked.
+    @Test("a host is called what it said, falling back to its id")
+    func whatItIsCalled() {
+        var h = host()
+        #expect(h.osLabel == "", "nothing known says nothing")
+
+        // An id and no words: better than nothing, and what an os-release
+        // with an `ID` and no `PRETTY_NAME` gives.
+        h.os = "rhel"
+        #expect(h.osLabel == "rhel")
+
+        // The machine's own words win, which is the whole reason the name is
+        // stored rather than made up from the id.
+        h.osName = "Red Hat Enterprise Linux 9.3"
+        #expect(h.osLabel == "Red Hat Enterprise Linux 9.3")
+    }
 }

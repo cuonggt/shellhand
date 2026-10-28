@@ -39,6 +39,25 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     /// to bound. A failed attempt stamps this exactly as a successful one
     /// does.
     var osSeen: Double = 0
+    /// What the machine calls itself in words — `Ubuntu 22.04.3 LTS` — from
+    /// its own `PRETTY_NAME`. Empty when it has not said, or said only an id.
+    ///
+    /// Kept beside `os` rather than derived from it because nothing here has
+    /// a table of distributions, deliberately: the id finds a mark by
+    /// filename and this is the machine's own words for itself. Deriving
+    /// "Ubuntu 22.04.3 LTS" from "ubuntu" is not possible and inventing
+    /// "Opensuse-leap" from "opensuse-leap" would be worse than the id.
+    var osName: String = ""
+
+    /// What to call this host's operating system, in as many words as it
+    /// gave. Empty when it has never said anything.
+    ///
+    /// **A mark nobody can read is decoration**, and several of these are a
+    /// coloured tile at the size a row draws them. This is what the tooltip,
+    /// the accessibility label and the inspector all say, so the three cannot
+    /// drift — and it is out here rather than in the view because a decision
+    /// inside a view can only be checked by driving the view.
+    var osLabel: String { osName.isEmpty ? os : osName }
 
     /// Whether to ask this host what it is.
     ///

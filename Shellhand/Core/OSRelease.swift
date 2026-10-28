@@ -32,6 +32,21 @@ nonisolated enum OSRelease {
         return ""
     }
 
+    /// What the machine calls itself in words — `Ubuntu 22.04.3 LTS` — for
+    /// saying beside the mark, which is what makes the mark mean something
+    /// to somebody who does not recognise it and to anybody not looking at
+    /// it at all.
+    ///
+    /// Empty when the file does not say, which is why nothing leans on it:
+    /// the id is what a mark is found by, and this only names it.
+    ///
+    /// Deleted once, on 2026-10-28, for having no caller — correctly, on the
+    /// evidence of the day. It has one now.
+    static func name(from text: String) -> String {
+        let fields = fields(in: text)
+        return fields["PRETTY_NAME"] ?? fields["NAME"] ?? ""
+    }
+
     /// The file as a dictionary, lowercased ids and all.
     ///
     /// Values are quoted or not at the distribution's whim — `ID=ubuntu` and

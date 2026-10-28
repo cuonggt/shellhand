@@ -49,6 +49,11 @@ struct HostDetailView: View {
 
                 Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
                     ValueRow("Address", "\(host.addr):\(host.effective.port)")
+                    // Shown even when nothing is known, because a dash here
+                    // is what explains the generic icon beside the host's
+                    // name — the one row in this grid that answers a question
+                    // somebody is otherwise left asking.
+                    ValueRow("OS", host.osLabel)
                     ValueRow("User", host.effective.user, from: host.effective.userFrom)
                     ValueRow("Key", host.effective.identity, from: host.effective.identityFrom)
                     ValueRow("Jump host", host.effective.jumpHost.value,

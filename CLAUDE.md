@@ -592,6 +592,31 @@ credentials, which is most of it.
   near-black 0.061, so they cross at L = 0.203, and the tool reports what each
   mark measured. The lowest is 4.4:1, and the first pass — a threshold picked
   by eye at 0.42 — left every green under 2.4:1.
+  **A mark nobody can read is decoration, and for half a day these were.**
+  `HostIcon` set `.accessibilityHidden(true)` on both branches and carried no
+  tooltip, and nothing in the app named the operating system in words
+  anywhere — `host.os` appeared at exactly three places, all of them drawing
+  the icon. So a user meeting Kali's or CentOS's mark at a row's size had a
+  coloured tile and no way to find out what it meant, and a user on VoiceOver
+  had nothing at all. Hiding it was **right** while it was a fallback glyph
+  and wrong the moment it carried which operating system a machine runs; this
+  project had already written the rule down for itself — every icon-only
+  button gets a label, seventeen of them fixed in one pass — and it was
+  broken the same day the marks shipped.
+  It says `Host.osLabel` now, in three places that cannot drift because there
+  is one rule: the tooltip, the accessibility label and an **OS** row in the
+  inspector. With nothing known it stays decoration rather than announcing
+  "unknown" over the host's own name on every row — but the inspector row is
+  drawn even then, because a dash there is what explains the generic icon
+  beside the name.
+  **`OSRelease.name` was deleted for having no caller and restored to be
+  that caller**, which is worth recording rather than tidying away: the
+  deletion was right on the evidence of the morning, and `osName` is stored
+  beside `os` rather than derived from it because nothing here has a table of
+  distributions. "Ubuntu 22.04.3 LTS" cannot be made from "ubuntu", and
+  "Opensuse-leap" made from "opensuse-leap" would be worse than the id.
+  `window-check.sh` asserts the row is on screen, since a rule proves what
+  the string is and nothing else proves it is drawn.
   Judged at **16pt in a real window**, not on the contact sheet: twelve hosts
   across the distributions, with two controls that must stay plain — one never
   asked and one whose `ID` nobody has drawn. A letter already taken gets two,
