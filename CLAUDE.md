@@ -427,6 +427,26 @@ credentials, which is most of it.
   they would be a directory down and nothing would be found. And a mark
   dropped in really is found: proven by building with one in place and reading
   it back out of the bundle.
+  **And proven on screen, which is the half a lookup cannot reach.** A mark
+  was bundled, a scratch store seeded with three hosts — one whose `os` names
+  it, one never asked, one asked with nothing bundled — and the window
+  photographed in both layouts: the marked host draws the artwork in the row,
+  the card and the sidebar, and both controls draw the plain glyph. The mark
+  was made **two-coloured on purpose**, and that is the assertion: a tinted or
+  template image would come back monochrome, and the inner square survives, so
+  it is drawn as somebody's artwork rather than as a glyph. The fallback sits
+  in the same box beside it, which is what the sizing is for.
+  **Getting that picture cost the trap worth writing down.** The first run
+  addressed the app as `process "Shellhand"` — and another copy was open, so
+  the name was ambiguous, the wrong window came forward, and
+  `screencapture -R` photographed **the user's real host list**. It passed its
+  own frontmost check, because the frontmost process really was named
+  Shellhand. `window-check.sh` refuses to run beside another copy for exactly
+  this reason; a one-off probe written beside it had no such guard. The cure
+  is to address by **`unix id`** — `first application process whose unix id is
+  <pid>` — and to compare the frontmost process's **unix id**, not its name,
+  before and after the capture. A name is not an identity when the thing you
+  are driving is a second copy of the thing already running.
   **The guard for all of that is the folder's own `README.md`, which ships on
   purpose.** Every other test here is pure, so all of them would go on passing
   if the folder stopped reaching the bundle altogether — a dropped-in mark
@@ -2604,9 +2624,9 @@ this release is entirely the second one.
 mark.** It is learned on the first connect, by reading the host's own
 `/etc/os-release` over a connection of its own — see the convention above for
 the drop-in rule, the three things that were measured rather than assumed, and
-why no mark is bundled. The suite went 495 → 516. **Not checked on screen
-yet**: `scripts/window-check.sh` refuses to run beside another copy of the app,
-and the one in `/Applications` was holding a live session.
+why no mark is bundled. The suite went 495 → 516, `window-check.sh` passes against it, and
+a bundled mark has been photographed drawing in the row, the card and the
+sidebar with two controls beside it.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
