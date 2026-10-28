@@ -108,4 +108,38 @@ nonisolated struct PanesTests {
         #expect(Panes.following(selected: id, front: .hosts) == .hosts)
         #expect(Panes.following(selected: nil, front: .hosts) == .hosts)
     }
+    // MARK: the welcome, and what it stands in for
+
+    /// **The bug this is for**: the welcome replaced the whole window while
+    /// the list was empty, so a local shell opened on a fresh install really
+    /// started — a shell with a pid — behind it, with the tab strip hidden
+    /// too. Nothing could see it, reach it or close it.
+    @Test("a session is shown even with no hosts yet")
+    func sessionBeatsTheWelcome() {
+        let id = UUID()
+        #expect(!Panes.welcoming(hosts: 0, loading: false, front: .session(id)))
+        #expect(Panes.showsTabs(hosts: 0, loading: false, sessions: 1))
+    }
+
+    /// And the reason the welcome exists is untouched: with nothing open and
+    /// nothing in the list, "All hosts, 0 hosts" is not what to meet.
+    @Test("a fresh install still meets the welcome")
+    func freshInstallIsWelcomed() {
+        #expect(Panes.welcoming(hosts: 0, loading: false, front: .hosts))
+        #expect(!Panes.showsTabs(hosts: 0, loading: false, sessions: 0))
+    }
+
+    /// A list that has not been read yet is not an empty list — otherwise
+    /// the welcome flashes up on every launch before the store answers.
+    @Test("a list still loading is not an empty one")
+    func loadingIsNotEmpty() {
+        #expect(!Panes.welcoming(hosts: 0, loading: true, front: .hosts))
+        #expect(Panes.showsTabs(hosts: 0, loading: true, sessions: 0))
+    }
+
+    @Test("with hosts, the strip is always there to come back to")
+    func withHosts() {
+        #expect(!Panes.welcoming(hosts: 3, loading: false, front: .hosts))
+        #expect(Panes.showsTabs(hosts: 3, loading: false, sessions: 0))
+    }
 }

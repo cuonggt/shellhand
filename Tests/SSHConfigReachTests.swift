@@ -201,4 +201,45 @@ struct SSHConfigReachTests {
         #expect(e.jumpHost.value == "chosen.example")
         #expect(e.jumpHost.from == "Production")
     }
+    // MARK: a command rather than a jump host
+
+    /// **A `ProxyCommand` is not a jump host**, so it gets a row of its own
+    /// rather than being squeezed into one labelled "Jump host" — which
+    /// would be a different wrong answer rather than a right one. Before
+    /// this it was reported nowhere at all, and a host reached through one
+    /// read as going straight there.
+    @Test("a proxy command is reported as a command, not as a jump host")
+    func proxyCommand() async {
+        await withConfig("Host 198.51.100.*\n  ProxyCommand ssh -W %h:%p gateway\n") {
+            let (_, host) = await store(AppHost(name: "probe-cmd", addr: "198.51.100.20"))
+            #expect(host.effective.configProxyCommand == "ssh -W %h:%p gateway")
+            #expect(host.effective.configProxy == "", "a command is not a jump host")
+        }
+    }
+
+    /// ssh's own rule: *"this option takes precedence over the ProxyCommand
+    /// directive if both are specified"*. So a host never shows both, and
+    /// nothing above the config has to know the precedence.
+    @Test("a jump host wins over a command, as ssh has it")
+    func jumpBeatsCommand() async {
+        let config = """
+            Host 198.51.100.*
+              ProxyJump bastion.example
+              ProxyCommand ssh -W %h:%p gateway
+
+            """
+        await withConfig(config) {
+            let (_, host) = await store(AppHost(name: "probe-both", addr: "198.51.100.21"))
+            #expect(host.effective.configProxy == "bastion.example")
+            #expect(host.effective.configProxyCommand == "")
+        }
+    }
+
+    @Test("ProxyCommand none is no command")
+    func commandNone() async {
+        await withConfig("Host probe-nocmd\n  ProxyCommand none\n") {
+            let (_, host) = await store(AppHost(name: "probe-nocmd", addr: "10.0.0.40"))
+            #expect(host.effective.configProxyCommand == "")
+        }
+    }
 }

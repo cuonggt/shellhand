@@ -320,12 +320,20 @@ credentials, which is most of it.
   nothing. Both answers now come from **one parse**: `Core` holds the blocks
   rather than a finished list, because `Host 10.0.1.*` cannot be answered
   without knowing the address being asked about.
-  **`ProxyJump` only, on purpose.** A `ProxyCommand` routes a connection too,
-  but it is a command line and not a jump host — `ssh -W %h:%p gateway`, or
-  something that is not ssh at all — so putting it in a field labelled "Jump
-  host" would be a different wrong answer rather than a right one. A host
-  reached through one still reads as having none, which is where this
-  started; saying so needs a row of its own and nobody has asked for one.
+  **A `ProxyCommand` gets a row of its own, and that is the point.** It
+  routes a connection too, but it is a command line and not a jump host —
+  `ssh -W %h:%p gateway`, or something that is not ssh at all — so putting
+  one in a field labelled "Jump host" would be a different wrong answer
+  rather than a right one. For a while it was reported nowhere and such a
+  host read as going straight there; now `Effective.configProxyCommand`
+  carries it and the inspector shows it **only when there is one**, since a
+  dash for every host would be a row of noise. `SSHConfigFile.route` answers
+  both from **one** walk of the blocks, because this is asked once per host
+  per snapshot and the measurement that made `glob` a scan says not to walk
+  them twice. `ProxyJump` wins where both are given, which is ssh's own rule
+  — *"this option takes precedence over the ProxyCommand directive if both
+  are specified"* — so a route never carries both and nothing above has to
+  know the precedence.
   **A config block is only reached by name when ssh is handed that name**, and
   ssh is handed the **address** unless the alias was adopted — which happens
   only where the config's entry points at this same machine. So `Host web`
@@ -1029,11 +1037,11 @@ credentials, which is most of it.
   a palette says almost nothing.** "Gruvbox Dark" and "Tomorrow Night" are
   both dark and neither name says which is warm. `TerminalMiniature` draws a
   few bars in a palette's own colours, so the question is answered by looking.
-  **Not `PaletteSwatch`, which already existed**, and the two are kept apart
-  on purpose: that one lays all sixteen ANSI colours out as a chart, which is
-  what Settings wants because you are inspecting a palette there; this one
-  shows what a terminal *looks* like, which is what you want when choosing in
-  a hurry. If they ever have to be one, keep the miniature.
+  **It replaced `PaletteSwatch`, the chart of all sixteen ANSI colours that
+  Settings used to show.** The chart answers "what is in this palette", which
+  is a fair question and not the one anybody is asking: what you want when
+  choosing is what a terminal will look like. Both existed for a few hours;
+  the chart is deleted, so there is one way a palette is drawn in this app.
   **The one view whose whole job is to be looked at was the one nothing
   could look at**, until `Tests/PaletteSwatchTests.swift`. A dialog cannot be
   opened from a script here — `click at` is inert — so `ImageRenderer` draws
@@ -1723,9 +1731,17 @@ credentials, which is most of it.
   rather than one tab leading nowhere. With SFTP gone back to a window the
   strip can hold a single tab you are already on, which is worth revisiting
   if it reads as clutter.
-- The **welcome comes first** in that chain, ahead of the tabs. On a fresh
+- The **welcome stands in for the hosts tab, not for the window.** On a fresh
   install there is no list to look at, and "All hosts, 0 hosts" is not what to
-  meet.
+  meet — but that reason says nothing about a terminal somebody has just
+  asked for. It replaced everything while the list was empty, so **a local
+  shell opened on a fresh install really started** — a `-zsh` with a pid,
+  confirmed — behind the welcome, with the tab strip hidden too, and nothing
+  could see it, reach it or close it. `Panes.welcoming` and `Panes.showsTabs`
+  hold the rule now: the welcome only when the hosts tab is in front, and the
+  strip the moment anything is open. Found by trying to do an ordinary thing
+  — open a local shell — on an empty store, which is also the only state it
+  was ever broken in.
 - The **Window menu lists the sessions too**, with ⌘1 to ⌘9 for the first
   nine. That came in with the column and stays without it: a keyboard way to
   the fourth session is worth having whatever the switcher looks like, and

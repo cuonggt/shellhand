@@ -49,7 +49,7 @@ actor Core {
         let aliases: [Alias]
         /// What it would send a destination through, asked per host because
         /// `Host 10.0.1.*` cannot be answered without knowing the address.
-        let proxy: @Sendable (String) -> String
+        let proxy: @Sendable (String) -> SSHConfigFile.Route
     }
 
     private var configRead: SSHConfig?
@@ -88,7 +88,7 @@ actor Core {
         let read = SSHConfig(
             path: path, stamp: stamp, size: size,
             aliases: SSHConfigFile.aliases(in: blocks),
-            proxy: { SSHConfigFile.proxy(reaching: $0, in: blocks) })
+            proxy: { SSHConfigFile.route(reaching: $0, in: blocks) })
         configRead = read
         return read
     }

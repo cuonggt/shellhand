@@ -50,6 +50,11 @@ nonisolated struct Resolved: Sendable {
     /// has a jump host of its own: that goes on the command line, which ssh
     /// reads first and keeps.
     var configProxy = ""
+    /// What ssh's own config would run to reach this host, when it names a
+    /// `ProxyCommand` rather than a jump host and the host itself names no
+    /// jump. A command line is not a jump host, so it is kept apart and
+    /// shown as its own thing.
+    var configProxyCommand = ""
     /// Every `-o` setting that reaches this host, nearest first — its own,
     /// then each group above it. ssh keeps the first value for a setting, so
     /// the order is the precedence.
@@ -71,6 +76,7 @@ nonisolated struct Resolved: Sendable {
             identity: identity, identityFrom: identityFrom,
             proxyJump: proxyJump, proxyJumpFrom: proxyJumpFrom,
             port: port, aliasElsewhere: aliasElsewhere, configProxy: configProxy,
+            configProxyCommand: configProxyCommand,
             sshOptions: sshOptions, forwardAgent: forwardAgent,
             forwardAgentFrom: forwardAgentFrom,
             theme: theme, themeFrom: themeFrom)
@@ -152,7 +158,7 @@ nonisolated struct Resolver: Sendable {
     private let groupsByID: [String: Group]
     private let hostsByName: [String: Host]
     private var aliases: [String: Alias] = [:]
-    private var proxyFor: (@Sendable (String) -> String)?
+    private var proxyFor: (@Sendable (String) -> SSHConfigFile.Route)?
 
     init(groups: [Group], hosts: [Host]) {
         groupsByID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
@@ -178,7 +184,7 @@ nonisolated struct Resolver: Sendable {
 
     /// The resolver knowing what ssh's own config sends a connection through,
     /// asked by the name ssh is handed for it.
-    func withProxies(_ proxy: @escaping @Sendable (String) -> String) -> Resolver {
+    func withProxies(_ proxy: @escaping @Sendable (String) -> SSHConfigFile.Route) -> Resolver {
         var out = self
         out.proxyFor = proxy
         return out
@@ -190,7 +196,9 @@ nonisolated struct Resolver: Sendable {
         let (alias, elsewhere) = aliasFor(host)
         out.alias = alias
         out.aliasElsewhere = elsewhere
-        out.configProxy = configProxy(out)
+        let route = route(out)
+        out.configProxy = route.jump
+        out.configProxyCommand = route.command
         return out
     }
 
@@ -296,10 +304,10 @@ nonisolated struct Resolver: Sendable {
     /// are matched against. A host reached by its address is sent through a
     /// bastion by `Host 10.0.1.*` as surely as one reached by name is by its
     /// own block.
-    private func configProxy(_ resolved: Resolved) -> String {
-        guard let proxyFor, resolved.proxyJump.isEmpty else { return "" }
+    private func route(_ resolved: Resolved) -> SSHConfigFile.Route {
+        guard let proxyFor, resolved.proxyJump.isEmpty else { return .init() }
         let dest = resolved.dest
-        return dest.isEmpty ? "" : proxyFor(dest)
+        return dest.isEmpty ? .init() : proxyFor(dest)
     }
 
     /// The port ssh will use, which is 22 where none is given.

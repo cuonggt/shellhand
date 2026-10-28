@@ -2,12 +2,11 @@ import SwiftUI
 
 /// A palette shown as a scrap of terminal, rather than as its name.
 ///
-/// **Not `PaletteSwatch`, which already exists and answers a different
-/// question.** That one lays all sixteen ANSI colours out as a chart, which
-/// is what Settings wants: you are inspecting a palette there. This one
-/// shows what a terminal *looks like* in it, which is what you want when
-/// choosing between two dark themes in a hurry. Both are kept on purpose;
-/// if they ever need to be one, this is the one to keep.
+/// **It replaced a chart of all sixteen ANSI colours**, which Settings used
+/// to show. That answers "what is in this palette", which is a fair question
+/// and not the one anybody is asking: what you want when choosing is what a
+/// terminal will look like. Both existed for a few hours and the chart is
+/// gone, so there is one way a palette is drawn in this app.
 ///
 /// **The name of a palette says almost nothing**, which is the whole reason
 /// this exists: "Gruvbox Dark" and "Tomorrow Night" are both dark and

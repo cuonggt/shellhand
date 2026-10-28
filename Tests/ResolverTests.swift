@@ -134,7 +134,7 @@ nonisolated struct ResolverTests {
         let bastion = Host(id: "b", name: "bastion", addr: "10.0.0.9")
         let host = Host(id: "h", name: "web", addr: "10.0.1.5", proxyJump: "bastion")
         let out = resolver(hosts: [bastion, host])
-            .withProxies { _ in "ssh -W %h:%p gateway" }
+            .withProxies { _ in .init(jump: "bastion.example") }
             .resolve(host)
         // ssh reads the command line before the file and keeps the first route
         // it is given, so what the file says would never be used.
@@ -145,9 +145,11 @@ nonisolated struct ResolverTests {
     func configProxyAsked() {
         let host = Host(id: "h", name: "web", addr: "10.0.1.5")
         let out = resolver(hosts: [host])
-            .withProxies { dest in dest == "10.0.1.5" ? "ssh -W %h:%p gateway" : "" }
+            .withProxies { dest in
+                dest == "10.0.1.5" ? .init(jump: "gateway.example") : .init()
+            }
             .resolve(host)
-        #expect(out.configProxy == "ssh -W %h:%p gateway")
+        #expect(out.configProxy == "gateway.example")
     }
 }
 

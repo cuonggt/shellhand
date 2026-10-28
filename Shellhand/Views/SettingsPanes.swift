@@ -100,9 +100,14 @@ struct TerminalSettingsPane: View {
                 .onChange(of: theme) { _, _ in
                     NotificationCenter.default.post(name: .shellhandThemeChanged, object: nil)
                 }
-                if let palette = Themes.named(theme) {
-                    PaletteSwatch(palette: palette)
-                }
+                // The same miniature the host picker shows, at a size you
+                // can look at. It was a chart of all sixteen ANSI colours,
+                // which answers "what is in this palette" — a fair question,
+                // and not the one anybody is asking here. What you want to
+                // know when choosing is what a terminal will look like.
+                TerminalMiniature(palette: Themes.named(theme),
+                                  size: CGSize(width: 160, height: 100))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text(Themes.named(theme) == nil
                     ? "The terminal's own colours. Your settings file can add palettes under themes."
                     : "Open terminals repaint as soon as you choose. Going back to System takes a new one.")
@@ -179,30 +184,5 @@ struct PathRow: View {
     private var shown: String {
         let home = NSHomeDirectory()
         return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
-    }
-}
-
-/// The sixteen colours, so a name is not the only thing to go on.
-struct PaletteSwatch: View {
-    let palette: Palette
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            ForEach(0..<2, id: \.self) { row in
-                HStack(spacing: 3) {
-                    ForEach(0..<8, id: \.self) { column in
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(SwiftUI.Color(nsColor: NSColor(palette.ansi[row * 8 + column])))
-                            .frame(width: 16, height: 12)
-                    }
-                }
-            }
-        }
-        .padding(5)
-        .background(SwiftUI.Color(nsColor: NSColor(palette.background)),
-                    in: RoundedRectangle(cornerRadius: 5))
-        .overlay {
-            RoundedRectangle(cornerRadius: 5).strokeBorder(.separator)
-        }
     }
 }

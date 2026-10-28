@@ -19,7 +19,7 @@ import Testing
 /// palette in the list.
 @MainActor
 @Suite("a palette drawn as a terminal")
-struct PaletteSwatchTests {
+struct TerminalMiniatureTests {
     private func pixels(of view: some View, scale: CGFloat = 2) -> NSBitmapImageRep? {
         let renderer = ImageRenderer(content: view)
         renderer.scale = scale

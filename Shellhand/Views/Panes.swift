@@ -49,6 +49,31 @@ nonisolated enum Panes {
     /// and nothing about it changed. That guard is the whole reason this is
     /// safe to drive from an `onChange` when setting the old `browsing` flag
     /// was not — closing really does move the value, every time.
+    /// Whether the window meets somebody with the welcome instead of a
+    /// host list.
+    ///
+    /// **It replaces the hosts tab, not the window.** It used to replace
+    /// everything whenever the list was empty, and a local shell opened on a
+    /// fresh install really started — a `-zsh` with a pid — behind a welcome
+    /// screen, with the tab strip hidden too, so there was no way to see it,
+    /// reach it or close it. The reason the welcome exists is that "All
+    /// hosts, 0 hosts" is not what to meet; that reason says nothing about a
+    /// terminal somebody has just asked for.
+    static func welcoming(hosts: Int, loading: Bool, front: PaneTab) -> Bool {
+        guard case .hosts = front else { return false }
+        return hosts == 0 && !loading
+    }
+
+    /// Whether the strip of tabs is drawn.
+    ///
+    /// With a list, always, so the hosts tab is there to come back to. With
+    /// no list, only once something is open — a fresh install meets the
+    /// window it has always met rather than one tab leading nowhere, but a
+    /// session has to be reachable the moment it exists.
+    static func showsTabs(hosts: Int, loading: Bool, sessions: Int) -> Bool {
+        sessions > 0 || hosts > 0 || loading
+    }
+
     static func following(selected: UUID?, front: PaneTab) -> PaneTab {
         guard case .session = front else { return front }
         return selected.map(PaneTab.session) ?? .hosts

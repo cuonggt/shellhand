@@ -592,13 +592,15 @@ struct DetailView: View {
             // always there to come back to. The welcome is the exception: a
             // fresh install has no list to browse, so it meets the window it
             // has always met rather than one tab leading nowhere.
-            if !(store.snapshot.hosts.isEmpty && !store.loading) {
+            if Panes.showsTabs(hosts: store.snapshot.hosts.count,
+                               loading: store.loading, sessions: sessions.all.count) {
                 SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab)
                 Divider()
             }
-            // The welcome comes first: on a fresh install there is no list
-            // to browse, and "All hosts, 0 hosts" is not what to meet.
-            if store.snapshot.hosts.isEmpty && !store.loading {
+            // The welcome stands in for the **hosts tab** on a fresh install,
+            // not for the window: see `Panes.welcoming`.
+            if Panes.welcoming(hosts: store.snapshot.hosts.count,
+                               loading: store.loading, front: pane) {
                 WelcomeView(store: store, onImport: onImport, onNewHost: onNewHost)
             } else if case .hosts = pane {
                 hostsSide

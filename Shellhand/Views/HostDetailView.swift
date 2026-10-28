@@ -117,6 +117,14 @@ struct HostDetailView: View {
                     if !host.tags.isEmpty {
                         ValueRow("Tags", host.tags.joined(separator: ", "))
                     }
+                    // Only when there is one. Unlike the rows above, this
+                    // is a command line — long, and nothing anybody sets
+                    // from here — so a dash for every host that has none
+                    // would be a row of noise rather than an answer.
+                    if !host.effective.configProxyCommand.isEmpty {
+                        ValueRow("Proxy command", host.effective.configProxyCommand,
+                                 from: "your ssh config")
+                    }
                     colours
                 }
                 .font(.callout)

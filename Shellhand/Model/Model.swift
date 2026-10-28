@@ -112,6 +112,12 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// jump host while ssh quietly takes it through one, which is a worse
     /// answer than saying nothing.
     var configProxy: String = ""
+    /// What ssh's own config would **run** to reach this host, where it
+    /// names a `ProxyCommand` instead of a jump host. Shown as its own row:
+    /// a command line is not a jump host, and putting one in a field
+    /// labelled "Jump host" would be a different wrong answer rather than a
+    /// right one.
+    var configProxyCommand: String = ""
     /// Every `-o` setting that reaches this host, nearest first.
     var sshOptions: [String] = []
     /// Whether the agent is carried, and what said so.
