@@ -135,6 +135,10 @@ private struct TabButton: View {
 /// One session's terminal, with the things ssh says for itself shown as the
 /// app's own rather than left in the scrollback.
 struct TerminalPane: View {
+    /// Enough to read as deliberate, and small enough not to cost a column:
+    /// the terminal sizes itself from what is left after this.
+    static let inset: CGFloat = 8
+
     let session: TerminalSession
     let sessions: Sessions
     /// Whether this is the pane in front. The one beside it is shown, not
@@ -151,6 +155,23 @@ struct TerminalPane: View {
                 Divider()
             }
             TerminalRepresentable(session: session, takesKeyboard: isFront)
+                // Room inside the terminal, after Termius: the background
+                // runs edge to edge and the text is inset from it.
+                //
+                // **Three modifiers and each does a job.** `padding` insets
+                // the terminal; the `frame` makes what holds it fill the
+                // pane, so the colour reaches the edges rather than stopping
+                // where the last whole cell does; `background` then paints
+                // that whole area. Top-leading, or the leftover from
+                // rounding to whole cells is split either side and the text
+                // sits off-centre from the inset.
+                //
+                // Done here rather than in a container `NSView` around the
+                // terminal, which was the first attempt: a plain wrapper
+                // takes everything offered and painted over the tab strip.
+                .padding(TerminalPane.inset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(session.background)
                 // Identity by session, or SwiftUI keeps the first terminal it
                 // was given: the pane sits in the same place whichever tab is
                 // in front, so without this nothing tells it to swap the view

@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import SwiftUI
 import Observation
 import SwiftTerm
 
@@ -26,6 +27,19 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
 
     nonisolated let id = UUID()
     let view = FocusingTerminalView(frame: NSRect(x: 0, y: 0, width: 900, height: 560))
+
+    /// What the terminal is drawn on, for the room around it.
+    ///
+    /// **The palette's own value, not the view's.** `nativeBackgroundColor`
+    /// looks like the right source and is not: read back it answers white for
+    /// a terminal that is plainly drawing black, which is how the first
+    /// attempt at this put a white ring around a black terminal. The palette
+    /// is what this app asked for, and is the only thing here that knows.
+    ///
+    /// Black for the **System** palette, which installs no colours of ours at
+    /// all — taken off a screenshot of one rather than assumed, since there
+    /// is nothing to ask.
+    private(set) var background = SwiftUI.Color.black
     private(set) var state: State = .connecting
     private(set) var title: String
     /// What ssh said for itself, kept apart from what the remote wrote.
@@ -179,6 +193,7 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// so choosing it back takes a new session.
     func apply(theme: Palette?) {
         guard let theme, theme.isComplete else { return }
+        background = SwiftUI.Color(nsColor: NSColor(theme.background))
         view.installColors(theme.ansi.map {
             SwiftTerm.Color(red: UInt16($0.red) * 257, green: UInt16($0.green) * 257,
                             blue: UInt16($0.blue) * 257)

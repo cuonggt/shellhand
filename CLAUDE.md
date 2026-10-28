@@ -1003,6 +1003,33 @@ credentials, which is most of it.
   `connect` that runs once there is a far end — the handshake and finding home
   — so it gets the same opening the app makes rather than a test's idea of one.
   `setHome` went with that change, having no other caller.
+- **The terminal's text is inset 8pt and its background still runs edge to
+  edge.** Asked for by the user, after Termius, and the second half of that
+  sentence is the requirement: *"the terminal section should be as before,
+  just some padding inside"*. Three modifiers in `TerminalPane`, each doing a
+  job: `padding` insets the terminal, a `frame` with `maxWidth`/`maxHeight`
+  infinity and `.topLeading` makes what holds it fill the pane, and
+  `background` paints that whole area in the session's colour. Top-leading
+  because the terminal rounds to whole cells, and centred the leftover would
+  be split either side and the text would sit off its own inset.
+  **A container `NSView` was the first attempt and it is the wrong shape.**
+  A plain wrapper takes everything offered, so it painted over the **tab
+  strip** — the terminal does not fill the pane, it sizes itself to whole
+  cells, and that has to stay true. SwiftTerm offers nothing of its own here:
+  its only `padding` is a glyph-placement policy in fractions of a cell, for
+  fallback fonts.
+  **The colour comes from the palette, not from the view.**
+  `nativeBackgroundColor` is the obvious source and is wrong: read back it
+  answers **white** for a terminal that is plainly drawing black, which put a
+  white ring around the first working version. `TerminalSession.background`
+  is set in `apply(theme:)` from the palette this app asked for, and is black
+  for the **System** palette, which installs no colours of ours at all.
+  **Every step of that was found by photographing it, not by reading it.**
+  Sampling the pixels either side of the edge is what showed the ring was
+  white; painting it red for one build is what proved the modifier worked and
+  moved the suspicion to the colour. A screenshot at a glance would have
+  passed all three wrong versions — the black ring, the covered strip and the
+  white ring are each invisible until measured or compared against before.
 - **SwiftTerm leaks every descriptor not marked close-on-exec into every
   terminal's child**, and it made the new suite hang for a minute. Its
   `PseudoTerminalHelpers.fork(andExec:)` calls `forkpty` and goes straight to
