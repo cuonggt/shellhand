@@ -17,15 +17,6 @@ import SwiftUI
 /// nobody has drawn yet is simply not drawn. All three look the same on
 /// purpose — there is nothing for a user to fix in any of them.
 struct HostIcon: View {
-    /// The marks are written with `rx="14"` on a 64-unit square, so a tile
-    /// drawn here has to round by the same fraction or the two shapes do not
-    /// belong together.
-    private static let corner: CGFloat = 14.0 / 64
-
-    /// How much of its tile a mark's logo fills — 38 of 64 in the generator
-    /// — so the glyph inside this one sits at the same scale.
-    private static let inside: CGFloat = 38.0 / 64
-
     /// The `ID` out of the host's own `/etc/os-release`, or empty.
     let os: String
     /// What to call it in words. Empty is allowed and means the mark says
@@ -56,28 +47,26 @@ struct HostIcon: View {
             Image(nsImage: mark)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                // The full slot, so a mark is as big as the glyph it stands
+                // in for. It was shrunk to 0.9 once, to make the two the
+                // same *height* — the glyph is wider than it is tall — and
+                // that only made the marks look small beside it.
                 .frame(width: size, height: size)
                 // A mark is somebody's artwork and carries its own colours,
                 // so it is drawn as it is rather than tinted like a glyph.
         } else {
-            // **A tile too, and that is the whole of the fix.** This was a
-            // bare SF Symbol beside a column of filled tiles, and no size
-            // made them look like the same kind of thing: measured, a mark
-            // inks 79% of its slot and the symbol 36%, so shrinking the
-            // marks only made them small *and* still heavier. Giving the
-            // unknown host a badge of its own matches them by construction.
+            // The plain symbol, as it has always been. A tile of its own was
+            // tried, to match the marks' weight; asked for back, because a
+            // host nobody has asked yet should look like an absence rather
+            // than like a badge for "unknown".
             //
-            // It costs the generic icon its family resemblance to the rest
-            // of the app's symbols. That is the trade: inside the host list
-            // every row is a badge, which is the list this icon lives in.
-            RoundedRectangle(cornerRadius: size * Self.corner)
-                .fill(SwiftUI.Color(nsColor: .systemGray))
+            // So the two do not weigh the same, and that is accepted: a
+            // filled mark beside line art always reads heavier. What they do
+            // share is the slot and the size.
+            Image(systemName: "server.rack")
+                .font(.system(size: size))
+                .foregroundStyle(.tint)
                 .frame(width: size, height: size)
-                .overlay {
-                    Image(systemName: "server.rack")
-                        .font(.system(size: size * Self.inside))
-                        .foregroundStyle(.white)
-                }
         }
     }
 }
