@@ -44,34 +44,45 @@ nonisolated struct OSMarkTests {
         #expect(OSMark.resourceName(for: "..") == nil)
     }
 
-    /// None are bundled yet — they are trademarks and shipping them is a
-    /// decision of its own — so every host draws the fallback today. This
-    /// pins that the absence is handled rather than crashing or drawing a
-    /// broken-image placeholder.
+    /// A distribution nobody has drawn a mark for. That is an ordinary state,
+    /// not a failure: the host draws the plain glyph, exactly as one that has
+    /// never been asked does.
     @Test("a mark that is not bundled is simply not there")
     func notBundled() {
-        #expect(OSMark.image(for: "ubuntu") == nil)
+        #expect(OSMark.image(for: "slackware") == nil)
         #expect(OSMark.image(for: "") == nil)
     }
 
-    /// **The guard for the whole drop-in convention**, and the reason the
-    /// folder's `README.md` is left in the resources phase rather than
-    /// excluded from it.
+    /// **The guard for the whole drop-in convention.**
     ///
     /// Everything else here is pure, so all of it would go on passing if
-    /// `Resources/OSMarks` stopped reaching the bundle altogether — a file
-    /// dropped in would simply never be found, and the only symptom is the
-    /// generic glyph, which is also what a correct miss looks like. Nothing
-    /// could tell them apart.
+    /// `Resources/OSMarks` stopped reaching the bundle altogether — every
+    /// mark would simply never be found, and the only symptom is the generic
+    /// glyph, which is also what a correct miss looks like. Nothing could
+    /// tell them apart.
     ///
-    /// So this asserts on the one file in that folder that is certain to be
-    /// there. It is an odd thing to ship inside an app and it buys a real
-    /// check: XcodeGen walks the directory and adds each file individually,
-    /// so they land at the **top** of `Contents/Resources` — which is where
-    /// `url(forResource:withExtension:)` looks, and would not be if the
-    /// folder were ever added as a folder reference instead.
-    @Test("files in the marks folder reach the bundle where a lookup finds them")
-    func theFolderIsBundled() {
-        #expect(Bundle.main.url(forResource: "README", withExtension: "md") != nil)
+    /// So this asks for a mark that is certainly there. XcodeGen walks that
+    /// directory and adds each file individually, so they land at the **top**
+    /// of `Contents/Resources` — which is where `url(forResource:)` looks,
+    /// and would not be if the folder were ever added as a folder reference
+    /// instead. It also covers the part no lookup can: that `NSImage` reads
+    /// the SVG these are written as.
+    @Test("a bundled mark is found and readable")
+    func bundledMarkIsFound() {
+        let ubuntu = OSMark.image(for: "ubuntu")
+        #expect(ubuntu != nil)
+        #expect(ubuntu?.size.width ?? 0 > 0)
+        // Asked the way it comes off a machine, since that is the only way it
+        // is ever asked.
+        #expect(OSMark.image(for: "Ubuntu\n") != nil)
+    }
+
+    /// A derivative that names only what it is built on reaches its family's
+    /// mark, which is the whole reason `ID_LIKE` is a fallback.
+    @Test("the families a derivative falls back to are drawn")
+    func familiesAreDrawn() {
+        for family in ["debian", "rhel", "fedora", "linux"] {
+            #expect(OSMark.image(for: family) != nil, "no mark for \(family)")
+        }
     }
 }

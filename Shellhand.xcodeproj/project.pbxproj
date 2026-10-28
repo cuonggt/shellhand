@@ -10,18 +10,27 @@
 		01139DFDBD94594EEE6A09FA /* SFTPWireTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */; };
 		04759EB87D4A08C1FE7B7F68 /* CSVHosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759DA8F72FB3A8A7AF07474B /* CSVHosts.swift */; };
 		04E2E5A9DDE8AC15F390A3AD /* SessionProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */; };
+		04F67502CEE48CFFB5CAE0FC /* os-fedora.svg in Resources */ = {isa = PBXBuildFile; fileRef = EF6861EB3BE4AFD16FC3CAAD /* os-fedora.svg */; };
+		06DD0C0471C7F9A3191B0985 /* os-linuxmint.svg in Resources */ = {isa = PBXBuildFile; fileRef = 49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */; };
+		084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */ = {isa = PBXBuildFile; fileRef = 125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */; };
 		08BB898DE5F756AF7F9E6DE5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7CDBA13103F885C1CB1E8B27 /* README.md */; };
 		09C95B906A367ECF575444AE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 84B8116AD7A03666013C2119 /* SwiftTerm */; };
 		0CB1D57648D147CBE98D20A1 /* Replacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB07464DD8500D6AE1101A /* Replacing.swift */; };
+		0E39ACF45A64685916FFB2A5 /* os-kali.svg in Resources */ = {isa = PBXBuildFile; fileRef = 39D18DD8741A587BF79749A4 /* os-kali.svg */; };
+		104B8DFC6D74547508F40770 /* os-opensuse-tumbleweed.svg in Resources */ = {isa = PBXBuildFile; fileRef = 45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */; };
+		11B9504A8BDBC5A24F0A7A3B /* os-rocky.svg in Resources */ = {isa = PBXBuildFile; fileRef = E24971EB3F9328BF0B3811D6 /* os-rocky.svg */; };
 		18A1899D88FA1D5521B2EE49 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */; };
 		1B7D1615E7DF81318AE0060A /* QuickLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931C1FC210800200F259DC3B /* QuickLook.swift */; };
 		1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */; };
+		1EAA23A935364BC88D3CEB2D /* os-oracle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81B2554D49E69FEE8E9AE22B /* os-oracle.svg */; };
 		23D9FD59E64FF01321E6E42C /* DialogSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C158FFD9640188D5F7CB00 /* DialogSize.swift */; };
 		241850CCF95F6144B5DC95BC /* SFTPTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */; };
+		245F497D233CEF5E8A3FC57D /* os-arch.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */; };
 		25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */; };
 		262C6F45A141D70D7A8A8419 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593A5D44E7FD2E569688A062 /* Config.swift */; };
 		27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */; };
 		29673CF60720DE3068D8F4A6 /* HostStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DDE82A60175D6F5A16883 /* HostStore.swift */; };
+		2A808ADC2736B29B4D481867 /* os-ubuntu.svg in Resources */ = {isa = PBXBuildFile; fileRef = AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */; };
 		2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3798692706D23BAB1E792B2 /* PlacesTests.swift */; };
 		2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */; };
 		2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467E73B5CE44F6B57382DC67 /* ResolverTests.swift */; };
@@ -35,16 +44,21 @@
 		474950C3E6ECFE6BF7F32AF5 /* SFTPWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */; };
 		4764C6073CA5EBF101494184 /* SFTPFarEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17BE9EAB65DE445A9E268752 /* SFTPFarEndTests.swift */; };
 		47A24EA11E273D9B6F98905B /* RowMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F5803CE04461D7956241D13 /* RowMenu.swift */; };
+		48D93606D6251F073720B72C /* os-manjaro.svg in Resources */ = {isa = PBXBuildFile; fileRef = 55626C93133D56BA95614439 /* os-manjaro.svg */; };
 		4BD192A73383CC157A49EFF2 /* TreeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6D441F061EB58A1F727AEA0 /* TreeTests.swift */; };
+		4EA514D06BF43536383A7244 /* os-rhel.svg in Resources */ = {isa = PBXBuildFile; fileRef = BF83845D3EE0A5EF096D91B0 /* os-rhel.svg */; };
 		509091F17AAF61F636DC2043 /* ThemeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58931B72F5BD5A2BCA9AF6D4 /* ThemeTests.swift */; };
+		51CEAF67B7FFE5E459CF515D /* os-sles.svg in Resources */ = {isa = PBXBuildFile; fileRef = E076F9E53ED12B3045F8A6E6 /* os-sles.svg */; };
 		534C17A4FC05D21C7A467DD1 /* SFTPDeadlineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24EBE917B8223281F23B516 /* SFTPDeadlineTests.swift */; };
 		53C0DA7A90A3E4490308737B /* FilesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96533AFA2A884A8C792A6F5D /* FilesTests.swift */; };
 		5651C0234D94D19625AB4769 /* ScriptedSFTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */; };
 		57321BC003DA515202D4FF68 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0EF95D39299BCB708595723A /* GRDB */; };
 		575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */; };
 		595F4A50CE3646F61608793D /* HostsWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */; };
+		59647E28230487F2E6250555 /* os-netbsd.svg in Resources */ = {isa = PBXBuildFile; fileRef = 19949C3151960ACCBC25FF94 /* os-netbsd.svg */; };
 		5AE572372B0F0AB8210043FA /* SFTPChurnTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E2FD7B0D67D2818A824A9F /* SFTPChurnTests.swift */; };
 		5C87E9F25A1D27D0D53F77D4 /* Tree.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40C2A340AD1B26622F6D0AB2 /* Tree.swift */; };
+		5DA9F4BE574B4E38D368B07B /* os-centos.svg in Resources */ = {isa = PBXBuildFile; fileRef = D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */; };
 		5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 222BDDF31905C063CACE18AD /* Updates.swift */; };
 		5ECF27731478F2DBB0874D1D /* FindBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA96D946715413445668CB3B /* FindBar.swift */; };
 		61FBEB3029FED5FA50EA5AE0 /* HostIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94626F0B77323A224E47BAC4 /* HostIcon.swift */; };
@@ -63,6 +77,7 @@
 		82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3473C3E584F456CD7438584F /* OSMarkTests.swift */; };
 		8616DC3036D6892CAB562898 /* SSHConfigFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */; };
 		865CB1F564DC202052056AF5 /* QuickConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */; };
+		8729DC9DB340FF5F95048F0D /* os-alpine.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */; };
 		89247966139C2A078C36B765 /* TransferQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719DDE5E363B72B59964667 /* TransferQueueTests.swift */; };
 		8971631CB6A95A1D1D22AB7E /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8A25118E059F686A9F089C /* WelcomeView.swift */; };
 		8BAFAC09DFC6411AF577B203 /* HostEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F2EF5B501F37F17236155B /* HostEditorSheet.swift */; };
@@ -71,7 +86,10 @@
 		90B05B7092E0F280A22E9C0F /* Resolve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8192A6AF313B243CB39AE9 /* Resolve.swift */; };
 		90D0957B423696CB8F482045 /* FilesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CBAF06EEAEC36794910612 /* FilesWindowController.swift */; };
 		94CDCF4487611DD7D0E0CE87 /* SFTPFolderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B11BDA1B278165A7BB4747 /* SFTPFolderTests.swift */; };
+		96A0E900434750D98CCDAAF2 /* os-almalinux.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81D1033DC7F2F7C4F0A367EB /* os-almalinux.svg */; };
+		9A9142B73A7544402CDF4131 /* os-nixos.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */; };
 		9BF3CE2BB610B88116E445FB /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = A115AC162E4D88C396D25873 /* Model.swift */; };
+		9D06DCA78261E386836B6DC3 /* os-openbsd.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1B9577207F3C9CA4AA309760 /* os-openbsd.svg */; };
 		9EE9F8D48B36608375A43183 /* Browsing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 709897B4D50481E64978D1C7 /* Browsing.swift */; };
 		9F0104D3B8286FE2D9E4676F /* GroupEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */; };
 		9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */; };
@@ -97,20 +115,28 @@
 		CDE22787942D1A523B9377EA /* OSRelease.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90CCBBC70703651BE9ADC36 /* OSRelease.swift */; };
 		CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287AE931BEA1EE294A3CD956 /* StoreTests.swift */; };
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
+		D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B67841A2E143C6C731414FF /* os-debian.svg */; };
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
 		DB519366426E622EF303A714 /* ConfigAliasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */; };
 		DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */; };
 		DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */; };
+		DDD7BD10382364A2F7BAD3C1 /* os-void.svg in Resources */ = {isa = PBXBuildFile; fileRef = 57C923B2F6B788AD35D6A916 /* os-void.svg */; };
+		DE60D970C0153BCFC6878D35 /* os-linux.svg in Resources */ = {isa = PBXBuildFile; fileRef = ECD25D9C629456EF78CC5021 /* os-linux.svg */; };
 		DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6621FD97BB914B528EA0DED0 /* PanesTests.swift */; };
 		DE68274B64276D6FA9CF2309 /* OSReleaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */; };
 		E03A692D5C392C444E9C96CF /* Shellhand.icon in Resources */ = {isa = PBXBuildFile; fileRef = 5727B0DF68397BA5EF2CD109 /* Shellhand.icon */; };
 		E0DB9C7A33018400B36A2FFE /* TestScratch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32297DCCF2D81F82F136D103 /* TestScratch.swift */; };
+		E101E6491853FDE77AE6C2EC /* os-freebsd.svg in Resources */ = {isa = PBXBuildFile; fileRef = 172A21087C4DF4A6CDD738DD /* os-freebsd.svg */; };
 		E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */; };
+		E992959C29691765F5012A8C /* os-gentoo.svg in Resources */ = {isa = PBXBuildFile; fileRef = 86761F5CC23867EE2CB3F10A /* os-gentoo.svg */; };
 		E9AE1D908530CE6B4B5A923B /* SFTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFE0A277FFB387246A7C1825 /* SFTPClient.swift */; };
 		ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */; };
+		EDCDB2BB04830C51132FA5C4 /* os-opensuse-leap.svg in Resources */ = {isa = PBXBuildFile; fileRef = B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */; };
 		EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C11557A4783217279E63F09A /* Validation.swift */; };
+		EF5066A717E8D7E1667AD46A /* os-amzn.svg in Resources */ = {isa = PBXBuildFile; fileRef = D66CDA5E3713F79D55007FAD /* os-amzn.svg */; };
 		F231DB3C40B28A1F037712C2 /* SSHTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */; };
 		F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C58D904DA593CE634918A8 /* SettingsView.swift */; };
+		F3DF107DB38010184BE560FF /* os-raspbian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 1067D48C871C2202CF2F0417 /* os-raspbian.svg */; };
 		F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B0CD60231E15370665FF94 /* SidebarRows.swift */; };
 		FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0985F94F2EA3F4723F856A87 /* TagsTests.swift */; };
 		FE68496FCFD8F2500BF6C0B3 /* Yams in Frameworks */ = {isa = PBXBuildFile; productRef = C60842B8DBC5F1F3F9F08A4A /* Yams */; };
@@ -131,10 +157,15 @@
 		07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVHostsTests.swift; sourceTree = "<group>"; };
 		0985F94F2EA3F4723F856A87 /* TagsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsTests.swift; sourceTree = "<group>"; };
 		0E8192A6AF313B243CB39AE9 /* Resolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolve.swift; sourceTree = "<group>"; };
+		1067D48C871C2202CF2F0417 /* os-raspbian.svg */ = {isa = PBXFileReference; path = "os-raspbian.svg"; sourceTree = "<group>"; };
+		125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */ = {isa = PBXFileReference; path = "os-opensuse.svg"; sourceTree = "<group>"; };
 		159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalOverSSHTests.swift; sourceTree = "<group>"; };
+		172A21087C4DF4A6CDD738DD /* os-freebsd.svg */ = {isa = PBXFileReference; path = "os-freebsd.svg"; sourceTree = "<group>"; };
 		17BE9EAB65DE445A9E268752 /* SFTPFarEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPFarEndTests.swift; sourceTree = "<group>"; };
 		18AEC282492A0EB7F7C69600 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		19949C3151960ACCBC25FF94 /* os-netbsd.svg */ = {isa = PBXFileReference; path = "os-netbsd.svg"; sourceTree = "<group>"; };
 		1A1E1982747B39B2219C4D67 /* SFTPRealServerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPRealServerTests.swift; sourceTree = "<group>"; };
+		1B9577207F3C9CA4AA309760 /* os-openbsd.svg */ = {isa = PBXFileReference; path = "os-openbsd.svg"; sourceTree = "<group>"; };
 		1C8A25118E059F686A9F089C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		222BDDF31905C063CACE18AD /* Updates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Updates.swift; sourceTree = "<group>"; };
 		2719DDE5E363B72B59964667 /* TransferQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueueTests.swift; sourceTree = "<group>"; };
@@ -148,26 +179,34 @@
 		36C1020FE3A76905A97685B4 /* Files.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
 		38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowsingTests.swift; sourceTree = "<group>"; };
 		39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigAliasTests.swift; sourceTree = "<group>"; };
+		39D18DD8741A587BF79749A4 /* os-kali.svg */ = {isa = PBXFileReference; path = "os-kali.svg"; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
 		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
+		45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */ = {isa = PBXFileReference; path = "os-opensuse-tumbleweed.svg"; sourceTree = "<group>"; };
 		458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPListingTests.swift; sourceTree = "<group>"; };
 		467E73B5CE44F6B57382DC67 /* ResolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResolverTests.swift; sourceTree = "<group>"; };
+		49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */ = {isa = PBXFileReference; path = "os-linuxmint.svg"; sourceTree = "<group>"; };
 		4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptionsTests.swift; sourceTree = "<group>"; };
 		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
 		529E2D11C3179D88458A3779 /* GridMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridMove.swift; sourceTree = "<group>"; };
 		531C7DCC9E4C7E12F56A543C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		53922636D26F782CC80079B8 /* Panes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Panes.swift; sourceTree = "<group>"; };
+		55626C93133D56BA95614439 /* os-manjaro.svg */ = {isa = PBXFileReference; path = "os-manjaro.svg"; sourceTree = "<group>"; };
 		56CBAF06EEAEC36794910612 /* FilesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindowController.swift; sourceTree = "<group>"; };
 		56F8802AC1E99B037C0D8C6B /* HostsWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsWindow.swift; sourceTree = "<group>"; };
 		5727B0DF68397BA5EF2CD109 /* Shellhand.icon */ = {isa = PBXFileReference; lastKnownFileType = wrapper.icon; path = Shellhand.icon; sourceTree = "<group>"; };
 		57C58D904DA593CE634918A8 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		57C923B2F6B788AD35D6A916 /* os-void.svg */ = {isa = PBXFileReference; path = "os-void.svg"; sourceTree = "<group>"; };
 		58931B72F5BD5A2BCA9AF6D4 /* ThemeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeTests.swift; sourceTree = "<group>"; };
 		593A5D44E7FD2E569688A062 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		5B67841A2E143C6C731414FF /* os-debian.svg */ = {isa = PBXFileReference; path = "os-debian.svg"; sourceTree = "<group>"; };
+		5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */ = {isa = PBXFileReference; path = "os-nixos.svg"; sourceTree = "<group>"; };
 		6621FD97BB914B528EA0DED0 /* PanesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanesTests.swift; sourceTree = "<group>"; };
 		683EAA256A466A529CF89C0C /* Shellhand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Shellhand.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSessionTests.swift; sourceTree = "<group>"; };
 		6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWireTests.swift; sourceTree = "<group>"; };
+		6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */ = {isa = PBXFileReference; path = "os-arch.svg"; sourceTree = "<group>"; };
 		6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueue.swift; sourceTree = "<group>"; };
 		6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyTests.swift; sourceTree = "<group>"; };
 		709897B4D50481E64978D1C7 /* Browsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsing.swift; sourceTree = "<group>"; };
@@ -180,9 +219,12 @@
 		7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridMoveTests.swift; sourceTree = "<group>"; };
 		7CDBA13103F885C1CB1E8B27 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		7F5803CE04461D7956241D13 /* RowMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowMenu.swift; sourceTree = "<group>"; };
+		81B2554D49E69FEE8E9AE22B /* os-oracle.svg */ = {isa = PBXFileReference; path = "os-oracle.svg"; sourceTree = "<group>"; };
+		81D1033DC7F2F7C4F0A367EB /* os-almalinux.svg */ = {isa = PBXFileReference; path = "os-almalinux.svg"; sourceTree = "<group>"; };
 		8296330F429BBF1DC2441250 /* QuickConnect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickConnect.swift; sourceTree = "<group>"; };
 		82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarRowsTests.swift; sourceTree = "<group>"; };
 		82FCFFB2DBBAE09431F77EAE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		86761F5CC23867EE2CB3F10A /* os-gentoo.svg */ = {isa = PBXFileReference; path = "os-gentoo.svg"; sourceTree = "<group>"; };
 		86C158FFD9640188D5F7CB00 /* DialogSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DialogSize.swift; sourceTree = "<group>"; };
 		8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFile.swift; sourceTree = "<group>"; };
 		8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportSheet.swift; sourceTree = "<group>"; };
@@ -190,21 +232,25 @@
 		931C1FC210800200F259DC3B /* QuickLook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickLook.swift; sourceTree = "<group>"; };
 		94626F0B77323A224E47BAC4 /* HostIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostIcon.swift; sourceTree = "<group>"; };
 		96533AFA2A884A8C792A6F5D /* FilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTests.swift; sourceTree = "<group>"; };
+		9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */ = {isa = PBXFileReference; path = "os-alpine.svg"; sourceTree = "<group>"; };
 		9F30BECE69E1DA23C37953AE /* SSHArgs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgs.swift; sourceTree = "<group>"; };
 		9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostDetailView.swift; sourceTree = "<group>"; };
 		A06523BF579AB128F2163614 /* Places.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Places.swift; sourceTree = "<group>"; };
 		A115AC162E4D88C396D25873 /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStoreTests.swift; sourceTree = "<group>"; };
 		A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHOptionsField.swift; sourceTree = "<group>"; };
+		AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */ = {isa = PBXFileReference; path = "os-ubuntu.svg"; sourceTree = "<group>"; };
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
 		B20E60B26760CD52D26C77F6 /* HostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKey.swift; sourceTree = "<group>"; };
+		B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */ = {isa = PBXFileReference; path = "os-opensuse-leap.svg"; sourceTree = "<group>"; };
 		B6D441F061EB58A1F727AEA0 /* TreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeTests.swift; sourceTree = "<group>"; };
 		B8E364C1F64E97AC080F1F08 /* ShellhandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellhandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9F4E982180137FCADD6C9FB /* HostsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostsPane.swift; sourceTree = "<group>"; };
 		BDB132447DA9624773556608 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
 		BE2DDE82A60175D6F5A16883 /* HostStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStore.swift; sourceTree = "<group>"; };
 		BE455F58F183312F905772BE /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		BF83845D3EE0A5EF096D91B0 /* os-rhel.svg */ = {isa = PBXFileReference; path = "os-rhel.svg"; sourceTree = "<group>"; };
 		C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgsTests.swift; sourceTree = "<group>"; };
 		C11557A4783217279E63F09A /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		C24EBE917B8223281F23B516 /* SFTPDeadlineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPDeadlineTests.swift; sourceTree = "<group>"; };
@@ -214,13 +260,17 @@
 		CA3966F3845382E6166AE1A0 /* Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
 		CFB7415E72159874F3B55359 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSReleaseTests.swift; sourceTree = "<group>"; };
+		D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */ = {isa = PBXFileReference; path = "os-centos.svg"; sourceTree = "<group>"; };
 		D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWire.swift; sourceTree = "<group>"; };
+		D66CDA5E3713F79D55007FAD /* os-amzn.svg */ = {isa = PBXFileReference; path = "os-amzn.svg"; sourceTree = "<group>"; };
 		D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRun.swift; sourceTree = "<group>"; };
 		D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgressTests.swift; sourceTree = "<group>"; };
 		DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InheritanceTests.swift; sourceTree = "<group>"; };
 		DA96D946715413445668CB3B /* FindBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindBar.swift; sourceTree = "<group>"; };
 		DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptedSFTP.swift; sourceTree = "<group>"; };
 		DFC5B41C053B8973B6F4996E /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
+		E076F9E53ED12B3045F8A6E6 /* os-sles.svg */ = {isa = PBXFileReference; path = "os-sles.svg"; sourceTree = "<group>"; };
+		E24971EB3F9328BF0B3811D6 /* os-rocky.svg */ = {isa = PBXFileReference; path = "os-rocky.svg"; sourceTree = "<group>"; };
 		E3798692706D23BAB1E792B2 /* PlacesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesTests.swift; sourceTree = "<group>"; };
 		E3B0CD60231E15370665FF94 /* SidebarRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarRows.swift; sourceTree = "<group>"; };
 		E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPTransfer.swift; sourceTree = "<group>"; };
@@ -228,8 +278,10 @@
 		E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeInheritanceTests.swift; sourceTree = "<group>"; };
 		E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
 		E8C564CAC406B2F78C655FD3 /* TagField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagField.swift; sourceTree = "<group>"; };
+		ECD25D9C629456EF78CC5021 /* os-linux.svg */ = {isa = PBXFileReference; path = "os-linux.svg"; sourceTree = "<group>"; };
 		ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPane.swift; sourceTree = "<group>"; };
 		EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		EF6861EB3BE4AFD16FC3CAAD /* os-fedora.svg */ = {isa = PBXFileReference; path = "os-fedora.svg"; sourceTree = "<group>"; };
 		F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesWindow.swift; sourceTree = "<group>"; };
 		F5B11BDA1B278165A7BB4747 /* SFTPFolderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPFolderTests.swift; sourceTree = "<group>"; };
 		FFBB07464DD8500D6AE1101A /* Replacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Replacing.swift; sourceTree = "<group>"; };
@@ -357,6 +409,32 @@
 		9913AC24B43D368F3D9802FF /* OSMarks */ = {
 			isa = PBXGroup;
 			children = (
+				81D1033DC7F2F7C4F0A367EB /* os-almalinux.svg */,
+				9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */,
+				D66CDA5E3713F79D55007FAD /* os-amzn.svg */,
+				6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */,
+				D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */,
+				5B67841A2E143C6C731414FF /* os-debian.svg */,
+				EF6861EB3BE4AFD16FC3CAAD /* os-fedora.svg */,
+				172A21087C4DF4A6CDD738DD /* os-freebsd.svg */,
+				86761F5CC23867EE2CB3F10A /* os-gentoo.svg */,
+				39D18DD8741A587BF79749A4 /* os-kali.svg */,
+				ECD25D9C629456EF78CC5021 /* os-linux.svg */,
+				49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */,
+				55626C93133D56BA95614439 /* os-manjaro.svg */,
+				19949C3151960ACCBC25FF94 /* os-netbsd.svg */,
+				5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */,
+				1B9577207F3C9CA4AA309760 /* os-openbsd.svg */,
+				B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */,
+				45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */,
+				125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */,
+				81B2554D49E69FEE8E9AE22B /* os-oracle.svg */,
+				1067D48C871C2202CF2F0417 /* os-raspbian.svg */,
+				BF83845D3EE0A5EF096D91B0 /* os-rhel.svg */,
+				E24971EB3F9328BF0B3811D6 /* os-rocky.svg */,
+				E076F9E53ED12B3045F8A6E6 /* os-sles.svg */,
+				AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */,
+				57C923B2F6B788AD35D6A916 /* os-void.svg */,
 				7CDBA13103F885C1CB1E8B27 /* README.md */,
 			);
 			path = OSMarks;
@@ -538,6 +616,32 @@
 			files = (
 				08BB898DE5F756AF7F9E6DE5 /* README.md in Resources */,
 				E03A692D5C392C444E9C96CF /* Shellhand.icon in Resources */,
+				96A0E900434750D98CCDAAF2 /* os-almalinux.svg in Resources */,
+				8729DC9DB340FF5F95048F0D /* os-alpine.svg in Resources */,
+				EF5066A717E8D7E1667AD46A /* os-amzn.svg in Resources */,
+				245F497D233CEF5E8A3FC57D /* os-arch.svg in Resources */,
+				5DA9F4BE574B4E38D368B07B /* os-centos.svg in Resources */,
+				D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */,
+				04F67502CEE48CFFB5CAE0FC /* os-fedora.svg in Resources */,
+				E101E6491853FDE77AE6C2EC /* os-freebsd.svg in Resources */,
+				E992959C29691765F5012A8C /* os-gentoo.svg in Resources */,
+				0E39ACF45A64685916FFB2A5 /* os-kali.svg in Resources */,
+				DE60D970C0153BCFC6878D35 /* os-linux.svg in Resources */,
+				06DD0C0471C7F9A3191B0985 /* os-linuxmint.svg in Resources */,
+				48D93606D6251F073720B72C /* os-manjaro.svg in Resources */,
+				59647E28230487F2E6250555 /* os-netbsd.svg in Resources */,
+				9A9142B73A7544402CDF4131 /* os-nixos.svg in Resources */,
+				9D06DCA78261E386836B6DC3 /* os-openbsd.svg in Resources */,
+				EDCDB2BB04830C51132FA5C4 /* os-opensuse-leap.svg in Resources */,
+				104B8DFC6D74547508F40770 /* os-opensuse-tumbleweed.svg in Resources */,
+				084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */,
+				1EAA23A935364BC88D3CEB2D /* os-oracle.svg in Resources */,
+				F3DF107DB38010184BE560FF /* os-raspbian.svg in Resources */,
+				4EA514D06BF43536383A7244 /* os-rhel.svg in Resources */,
+				11B9504A8BDBC5A24F0A7A3B /* os-rocky.svg in Resources */,
+				51CEAF67B7FFE5E459CF515D /* os-sles.svg in Resources */,
+				2A808ADC2736B29B4D481867 /* os-ubuntu.svg in Resources */,
+				DDD7BD10382364A2F7BAD3C1 /* os-void.svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

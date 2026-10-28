@@ -32,13 +32,6 @@ nonisolated enum OSRelease {
         return ""
     }
 
-    /// What the machine calls itself in words — `Ubuntu 22.04.3 LTS` — for
-    /// saying beside the mark. Empty when the file does not say.
-    static func name(from text: String) -> String {
-        let fields = fields(in: text)
-        return fields["PRETTY_NAME"] ?? fields["NAME"] ?? ""
-    }
-
     /// The file as a dictionary, lowercased ids and all.
     ///
     /// Values are quoted or not at the distribution's whim — `ID=ubuntu` and
