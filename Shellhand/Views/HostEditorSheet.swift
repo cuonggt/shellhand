@@ -428,12 +428,7 @@ struct HostEditorSheet: View {
 
     /// What the terminal would come up in if this host chose nothing: the
     /// nearest group that names a palette, or the one in Settings.
-    private var inheritedTheme: String {
-        let name = preview.effective.theme
-        guard !name.isEmpty else { return "From Settings" }
-        let from = preview.effective.themeFrom
-        return from.isEmpty ? "From above — \(name)" : "From \(from) — \(name)"
-    }
+    private var inheritedTheme: String { preview.effective.inheritedPalette }
 
 
     private func save() {

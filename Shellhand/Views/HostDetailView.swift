@@ -24,6 +24,52 @@ struct HostDetailView: View {
     var onShowSession: (UUID) -> Void = { _ in }
     let onEdit: (Host) -> Void
 
+    /// The palette, changed from here rather than through the editor.
+    ///
+    /// **The one control in a grid of facts, and it earns the place**: a
+    /// palette is the setting people change most and the only one whose
+    /// effect they want to see straight away, on the tab already open. The
+    /// rest of this grid describes a host; this row changes one.
+    ///
+    /// The same picker the editor's Advanced tab has, down to the sentence
+    /// labelling "inherit" — `Effective.inheritedPalette`, so the two cannot
+    /// come to say different things about the same host.
+    @ViewBuilder private var colours: some View {
+        GridRow {
+            Text("Colours")
+                .foregroundStyle(.secondary)
+                .gridColumnAlignment(.trailing)
+            Picker("", selection: palette) {
+                Text(preview.effective.inheritedPalette).tag("")
+                Divider()
+                ForEach(Themes.names, id: \.self) { Text($0).tag($0) }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+        }
+    }
+
+    private var palette: Binding<String> {
+        Binding(get: { host.theme }, set: { choose(palette: $0) })
+    }
+
+    /// Saves the choice and nothing else.
+    ///
+    /// Read again from the snapshot rather than saving the copy this view is
+    /// drawing, which may be older than it looks — the same reason
+    /// `learnOS` does. A save is what repaints the sessions already open, so
+    /// the terminal changes colour as the picker closes: that is
+    /// `Sessions.repaint(from:)` on the host list changing, and it was built
+    /// for a group's palette reaching the tabs beneath it.
+    private func choose(palette: String) {
+        guard palette != host.theme else { return }
+        Task {
+            guard var now = store.snapshot.hosts.first(where: { $0.id == host.id }) else { return }
+            now.theme = palette
+            _ = await store.save(now)
+        }
+    }
+
     /// What ssh would be given, worked out by `Core` the same way the host
     /// editor's preview line is — so the two can never disagree about what
     /// this host runs.
@@ -64,6 +110,7 @@ struct HostDetailView: View {
                     if !host.tags.isEmpty {
                         ValueRow("Tags", host.tags.joined(separator: ", "))
                     }
+                    colours
                 }
                 .font(.callout)
 

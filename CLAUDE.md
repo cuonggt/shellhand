@@ -1003,6 +1003,28 @@ credentials, which is most of it.
   `connect` that runs once there is a far end — the handshake and finding home
   — so it gets the same opening the app makes rather than a test's idea of one.
   `setHome` went with that change, having no other caller.
+- **The palette is chosen from the inspector, not only from the editor.**
+  Asked for by the user: a quick way to pick a terminal's colours. It is the
+  same picker the editor's Advanced tab has, down to the sentence labelling
+  "inherit" — `Effective.inheritedPalette`, now a rule in `Model/` that both
+  read, because two copies of a sentence drift.
+  **One control in a grid of facts**, which is a deliberate exception rather
+  than a drift: a palette is the setting people change most and the only one
+  whose effect they want to see at once, on the tab already open. Choosing
+  saves the host, and a save is what repaints the sessions already running —
+  `Sessions.repaint(from:)` on the host list changing, built for a group's
+  palette reaching the tabs beneath it. The host is read again from the
+  snapshot before saving, for the reason `learnOS` does it.
+- **A copy running from the build products did *not* stop a suite run**, which
+  is narrower than this file has been claiming. The note above says what stops
+  `xcodebuild test` is "one launched from the same build products the test
+  host wants — the copy you have been looking at in `-derivedDataPath`".
+  Today a copy from exactly that path was running, with a live `ssh` under it,
+  and the run came back **539 passed**. So that is not the condition, or not
+  the whole of it. What *is* still true is that **`window-check.sh` cannot
+  run beside another copy** — System Events addresses a process by name and
+  two make every lookup ambiguous — and that refusal is the thing to work
+  around, by addressing the copy by its **`unix id`** rather than by name.
 - **The terminal's text is inset 8pt and its background still runs edge to
   edge.** Asked for by the user, after Termius, and the second half of that
   sentence is the requirement: *"the terminal section should be as before,

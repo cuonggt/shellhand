@@ -121,6 +121,17 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     var theme: String = ""
     var themeFrom: String = ""
 
+    /// What a host would come up in if it chose no palette of its own: the
+    /// nearest group that names one, or the one in Settings.
+    ///
+    /// Out here because the host editor and the inspector both label their
+    /// "inherit" option with it, and two copies of a sentence drift — which
+    /// this app has already watched happen with error handling.
+    var inheritedPalette: String {
+        guard !theme.isEmpty else { return "From Settings" }
+        return themeFrom.isEmpty ? "From above — \(theme)" : "From \(themeFrom) — \(theme)"
+    }
+
     /// What to show as the jump host, and what supplied it.
     ///
     /// **Both sources, because either alone is wrong.** The host's own wins

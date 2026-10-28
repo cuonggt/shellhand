@@ -474,4 +474,11 @@ printf '%s' "$pane_said" | grep -q "OS" \
     || fail "the inspector does not say what the host is running: $pane_said"
 echo "window-check: the inspector names the operating system row"
 
+# The palette picker, which is the one control among the facts — and the
+# only one of these rows that is not a `ValueRow`, so nothing else proves
+# a `GridRow` holding a control still lands in that grid.
+printf '%s' "$pane_said" | grep -q "Colours" \
+    || fail "the inspector has no palette picker: $pane_said"
+echo "window-check: the inspector offers the palette picker"
+
 echo "window-check: PASSED — a window loaded a store of its own and drew it"
