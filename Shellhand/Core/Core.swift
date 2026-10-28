@@ -35,6 +35,42 @@ actor Core {
 
     private func resolver(_ snapshot: Snapshot) -> Resolver {
         Resolver(groups: snapshot.groups, hosts: snapshot.hosts)
+            .withAliases(sshAliases())
+    }
+
+    /// The last read of ssh's own config, kept against the file it came from.
+    private var aliasesRead: (path: String, stamp: Date?, size: Int, aliases: [Alias])?
+
+    /// The names ssh's own config gives machines, re-read only when that file
+    /// has changed.
+    ///
+    /// **This wiring is the whole of the feature, and it was missing for every
+    /// release up to now.** `Resolver` has always known what to do with these
+    /// — reach a host by the name its config gives it, so the block written
+    /// under that name applies, or say that the name goes to a different
+    /// machine — `SSHArgs` has always spelled the first, and `HostDetailView`
+    /// has always drawn the second. Nothing ever handed it any names, so the
+    /// warning could not appear and the alias was always empty. The pieces
+    /// each had tests; what had none was them being connected.
+    ///
+    /// Cached because a resolver is built for every snapshot, every argv and
+    /// every preview the editor asks for as a group is picked — parsing a
+    /// config and every file it includes on each of those is a filesystem
+    /// walk nobody asked for. A `stat` is not free either, but it is one call
+    /// against a walk, and a config nobody is editing is read once.
+    private func sshAliases() -> [Alias] {
+        let path = SSHConfigFile.pathInUse
+        // A file that is not there answers nil, which caches as "no names"
+        // and re-reads the moment one appears.
+        let about = try? FileManager.default.attributesOfItem(atPath: path)
+        let stamp = about?[.modificationDate] as? Date
+        let size = (about?[.size] as? Int) ?? 0
+        if let last = aliasesRead, last.path == path, last.stamp == stamp, last.size == size {
+            return last.aliases
+        }
+        let found = SSHConfigFile.aliases(path: path)
+        aliasesRead = (path, stamp, size, found)
+        return found
     }
 
     /// What ssh would be run with to reach a host — the line the window shows

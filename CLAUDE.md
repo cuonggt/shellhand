@@ -274,6 +274,64 @@ credentials, which is most of it.
   group going up, then the config's, which apply to everything. A setting
   written against one machine beats the default written for all of them.
   Within one call, options passed as `extra` still come after the config's.
+- **The names in ssh's own config reach the resolver now, and for every
+  release up to this one they did not.** `Resolver.withAliases` has always
+  known what to do with them — a host whose own name matches a config entry
+  for the **same machine** is reached by that name, so the block written under
+  it applies, while one whose name goes to a **different** machine is reported
+  instead, since those settings are not this host's to take and a
+  `ForwardAgent` written for them would hand this machine your agent.
+  `SSHArgs` has always spelled the first, pinning the address with
+  `HostName=` so the alias decides only which settings apply and never which
+  machine is reached. `HostDetailView` has always drawn the second, a yellow
+  warning naming the entry. **Nothing ever handed the resolver any names**, so
+  `Core` built `Resolver(groups:hosts:)` and stopped: the warning could not
+  appear and the alias was always empty. Every piece had tests; what had none
+  was them being connected. This is `FilesModel.close()` again — a documented
+  capability with nothing calling it reads as working code.
+  **How it was found is worth more than the fix.** The dead-declaration sweep
+  this file prescribes counts a name's mentions *"anywhere in the app or the
+  suite"* — so a function only the **suite** calls reads as live, and
+  `withAliases`, `withProxies` and `Store.replaceAll` all sat in that blind
+  spot. The variant that finds them is narrower: declared under `Shellhand/`,
+  mentioned in `Tests/`, and nowhere else in `Shellhand/`. Run **both**. The
+  narrow one has a blind spot of its own, being token-based: a generic name is
+  drowned by ordinary English in the sources, which is how it missed
+  `OSRelease.name(from:)` — still uncalled, and mine.
+  **`configProxy` is the one left inert, deliberately.** `withProxies` feeds
+  it and `Resolved.configProxy` is read by **nothing**, so wiring it would
+  have been a second feature with no visible end. It stays on the list rather
+  than being quietly switched on beside this.
+  **Cached, because a resolver is built far more often than it looks** — every
+  snapshot, every argv, and every preview the editor asks for as a group is
+  picked. Parsing a config and every file it `Include`s on each of those is a
+  filesystem walk nobody asked for, so the read is kept against the file's
+  path, modification date and size. A file that is not there caches as "no
+  names" and re-reads the moment one appears.
+  **It cost a third redirect, and `TestRun` is where all three now live.** The
+  store goes to scratch for a run so the suite never edits the real list, and
+  this app's own config does too because its ssh options become every
+  connection's. Ssh's config had to join them the moment these names reached
+  the resolver: a run reading the real file would take whatever somebody
+  happens to have written there into every host the suite resolves, so a
+  `Host web` of theirs would quietly change what a test about a host called
+  `web` sees. The decision moved **into `Core`** because `Core` acts on two of
+  them and must not reach up into `App/`; `LaunchOptions` reads it from there,
+  so there is one copy rather than two to drift.
+  Checked the way round that matters: with the one line taken back out, the
+  two wiring tests fail on three expectations between them, and **the control
+  still passes** — a host the config does not name, reached exactly as before.
+  That control is the point, since a change that handed the resolver names
+  unconditionally would satisfy the other two and break every host nobody has
+  written a config entry for.
+  **One link the suite cannot reach, and it is the one that was broken
+  before.** Every test here runs with the path redirected, so all of them
+  would pass if the *unredirected* branch were changed to point anywhere —
+  and the feature would be inert again in exactly the way it just was.
+  Proving it needs reading the user's own `~/.ssh/config`, which is the one
+  thing this suite promises not to do. What is pinned instead is that the
+  other branch still names that file, absolute and ending `/.ssh/config`.
+  **If you touch that branch, prove it by hand.**
 - Swift 6 language mode, the app target MainActor by default. The engine is
   `nonisolated` throughout — mark extensions of its types `nonisolated` too, or
   their members pick the default back up.
@@ -2627,6 +2685,13 @@ the drop-in rule, the three things that were measured rather than assumed, and
 why no mark is bundled. The suite went 495 → 516, `window-check.sh` passes against it, and
 a bundled mark has been photographed drawing in the row, the card and the
 sidebar with two controls beside it.
+
+**Also unreleased: the ssh-config clash warning can fire.** It was built,
+drawn and tested in every release and never handed a single name — see the
+convention above for the wiring, the sweep variant that found it, and the
+third scratch redirect it cost. A host whose name matches a config entry for
+the same machine is now also reached by that name, so that block's settings
+apply, with `HostName` pinning the address. The suite went 516 → 520.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,

@@ -15,6 +15,7 @@
 		0CB1D57648D147CBE98D20A1 /* Replacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBB07464DD8500D6AE1101A /* Replacing.swift */; };
 		18A1899D88FA1D5521B2EE49 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */; };
 		1B7D1615E7DF81318AE0060A /* QuickLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931C1FC210800200F259DC3B /* QuickLook.swift */; };
+		1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */; };
 		23D9FD59E64FF01321E6E42C /* DialogSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C158FFD9640188D5F7CB00 /* DialogSize.swift */; };
 		241850CCF95F6144B5DC95BC /* SFTPTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */; };
 		25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */; };
@@ -97,6 +98,7 @@
 		CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287AE931BEA1EE294A3CD956 /* StoreTests.swift */; };
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
+		DB519366426E622EF303A714 /* ConfigAliasTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */; };
 		DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */; };
 		DCFF1E8C2E394C68C08EF932 /* FilesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */; };
 		DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6621FD97BB914B528EA0DED0 /* PanesTests.swift */; };
@@ -145,6 +147,7 @@
 		352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplacingTests.swift; sourceTree = "<group>"; };
 		36C1020FE3A76905A97685B4 /* Files.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
 		38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowsingTests.swift; sourceTree = "<group>"; };
+		39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigAliasTests.swift; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
 		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
@@ -212,6 +215,7 @@
 		CFB7415E72159874F3B55359 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSReleaseTests.swift; sourceTree = "<group>"; };
 		D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWire.swift; sourceTree = "<group>"; };
+		D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRun.swift; sourceTree = "<group>"; };
 		D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgressTests.swift; sourceTree = "<group>"; };
 		DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InheritanceTests.swift; sourceTree = "<group>"; };
 		DA96D946715413445668CB3B /* FindBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindBar.swift; sourceTree = "<group>"; };
@@ -260,6 +264,7 @@
 			isa = PBXGroup;
 			children = (
 				38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */,
+				39549C35A83684BEF71AE173 /* ConfigAliasTests.swift */,
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
 				96533AFA2A884A8C792A6F5D /* FilesTests.swift */,
 				7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */,
@@ -385,6 +390,7 @@
 				8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */,
 				74F618F3BB7CC761EA980324 /* Store.swift */,
 				CFB7415E72159874F3B55359 /* Tags.swift */,
+				D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */,
 				531C7DCC9E4C7E12F56A543C /* Theme.swift */,
 				6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */,
 				C11557A4783217279E63F09A /* Validation.swift */,
@@ -544,6 +550,7 @@
 			files = (
 				B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */,
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
+				DB519366426E622EF303A714 /* ConfigAliasTests.swift in Sources */,
 				53C0DA7A90A3E4490308737B /* FilesTests.swift in Sources */,
 				DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */,
 				27F16A1977939E99603E6D7B /* HostKeyTests.swift in Sources */,
@@ -642,6 +649,7 @@
 				B428A5C09CB4E497BA6A38F1 /* Tags.swift in Sources */,
 				AC82FD9C78614F4B03772E2F /* TerminalPane.swift in Sources */,
 				803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */,
+				1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */,
 				A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */,
 				575F3523270E8E36584CB0AB /* TransferQueue.swift in Sources */,
 				5C87E9F25A1D27D0D53F77D4 /* Tree.swift in Sources */,

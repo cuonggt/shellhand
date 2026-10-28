@@ -70,22 +70,16 @@ struct LaunchOptions {
         self.configPath = config
     }
 
-    /// Whether the suite is running. XCTest puts this in the environment of
-    /// whatever hosts it, and an app-hosted bundle means that is this app.
-    static var underTest: Bool {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
-    }
+    /// Whether the suite is running. The decision lives in `TestRun`, in
+    /// `Core`, because `Core` redirects two files on the strength of it and
+    /// cannot reach up into `App/` — and two copies of it would drift.
+    static var underTest: Bool { TestRun.active }
 
     /// A store of this run's own, thrown away with the temporary directory.
-    static var scratchStore: String {
-        NSTemporaryDirectory() + "shellhand-under-test/shellhand.sqlite"
-    }
+    static var scratchStore: String { TestRun.store }
 
     /// A config of this run's own, beside the store. Nothing writes one, and
     /// a missing config reads as an empty one, so a run's ssh options are its
     /// own: none.
-    static var scratchConfig: String {
-        NSTemporaryDirectory() + "shellhand-under-test/config.yaml"
-    }
+    static var scratchConfig: String { TestRun.config }
 }

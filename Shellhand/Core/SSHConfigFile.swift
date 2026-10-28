@@ -14,6 +14,31 @@ nonisolated enum SSHConfigFile {
         NSString(string: "~/.ssh/config").expandingTildeInPath
     }
 
+    /// The config a run actually reads, which under test is **not** the
+    /// user's own.
+    ///
+    /// The store and this app's own config are both sent to scratch for a run
+    /// (see `LaunchOptions`), and this needs it for a reason of the same size
+    /// now that these names reach the resolver: a run reading the real file
+    /// would take whatever somebody happens to have written there into every
+    /// host the suite resolves, so a `Host web` of theirs would quietly change
+    /// what a test about a host called `web` sees. Nothing writes the scratch
+    /// one, and a missing config reads as no names at all.
+    static var pathInUse: String {
+        TestRun.active ? TestRun.sshConfig : defaultPath
+    }
+
+    /// The names this config gives machines.
+    ///
+    /// A host whose own name matches one of these is either reached by that
+    /// name — so the block written under it applies, with `HostName` pinning
+    /// the address — or told that the name goes somewhere else. `Resolver`
+    /// decides which; this only reports what the file says.
+    static func aliases(path: String) -> [Alias] {
+        guard let document = try? read(path: path) else { return [] }
+        return document.hosts.map { Alias(name: $0.name, addr: $0.addr, port: $0.port) }
+    }
+
     /// The machines a config names, as a document ready to merge.
     static func read(path: String) throws -> Portable.Document {
         let blocks = try parse(path: path)
