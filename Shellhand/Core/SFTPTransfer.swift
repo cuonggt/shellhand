@@ -203,6 +203,28 @@ extension SFTPClient {
         }
     }
 
+    /// A small file read straight into memory, for the ones the app reads
+    /// rather than carries — `/etc/os-release` and nothing else today.
+    ///
+    /// **Bounded on purpose.** The path is one this app chose, but the file
+    /// behind it belongs to a machine somebody else administers, and nothing
+    /// says it is small: a `/etc/os-release` that is a symlink to a disk image
+    /// would otherwise be read into memory in its entirety. It stops at
+    /// `limit` without complaint, because a truncated answer still parses and
+    /// a hung connection does not.
+    func contents(of remote: String, limit: Int = 64 << 10) async throws -> Data {
+        let handle = try await openFile(remote, flags: .read)
+        defer { Task { try? await self.closeHandle(handle) } }
+        var out = Data()
+        while out.count < limit {
+            let want = min(SFTPClient.chunk, limit - out.count)
+            let piece = try await read(handle, at: UInt64(out.count), count: UInt32(want))
+            if piece.isEmpty { break }
+            out.append(piece)
+        }
+        return out
+    }
+
     /// Makes a folder, treating one already there as made and every other
     /// refusal as a failure.
     ///

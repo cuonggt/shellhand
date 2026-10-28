@@ -53,6 +53,27 @@ struct HostStoreTests {
         #expect(store.ungrouped.map(\.name) == ["web"])
     }
 
+    /// **The test that catches the three-edit trap.** A field needs the
+    /// model, a migration *and* the hand-written row mapping at the bottom of
+    /// `Store.swift`; miss the third and it reads and writes as its default
+    /// for ever, with no error anywhere. Nothing but a round trip through the
+    /// store notices, which is how the last one was found.
+    @Test("what a host said it was survives the store")
+    func osRoundTrips() async {
+        let store = scratch()
+        await store.refresh()
+        var host = AppHost(name: "web", addr: "10.0.0.1")
+        host.os = "ubuntu"
+        _ = await store.save(host)
+        #expect(store.snapshot.hosts.first?.os == "ubuntu")
+
+        // And back out again, through a reader that has not seen the write —
+        // which is what makes this a round trip rather than a cache check.
+        let second = HostStore(dbPath: store.dbPath)
+        await second.refresh()
+        #expect(second.snapshot.hosts.first?.os == "ubuntu")
+    }
+
     @Test("the tree the sidebar reads follows what was saved")
     func rebuildsTheTree() async {
         let (store, prod, eu) = await peopled()

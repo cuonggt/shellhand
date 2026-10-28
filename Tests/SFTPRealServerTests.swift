@@ -162,6 +162,56 @@ nonisolated struct SFTPRealServerTests {
     static func bytes(_ count: Int) -> Data {
         Data((0..<count).map { UInt8(truncatingIfNeeded: ($0 &* 2_654_435_761) >> 13) })
     }
+
+    // MARK: a small file read straight into memory
+
+    /// `contents(of:)` is how the app reads the one file it reads rather than
+    /// carries — a host's own `/etc/os-release`, to draw it with its
+    /// distribution's mark. Held against the real server because it is a
+    /// different path through the protocol from `download`: no local file, no
+    /// progress, and a stop condition of its own.
+    @Test("a small file reads straight into memory, byte for byte")
+    func readsASmallFile() async throws {
+        let said = "PRETTY_NAME=\"Ubuntu 22.04.3 LTS\"\nID=ubuntu\nID_LIKE=debian\n"
+        let server = try RealSFTPServer(readOnly: true) { root in
+            try said.write(toFile: root + "/os-release", atomically: true, encoding: .utf8)
+        }
+        defer { server.stop() }
+
+        let client = try await server.client()
+        let bytes = try await client.contents(of: server.root + "/os-release")
+
+        #expect(String(data: bytes, encoding: .utf8) == said)
+        // And the whole point of reading it: the id the mark is named after.
+        #expect(OSRelease.id(from: String(data: bytes, encoding: .utf8) ?? "") == "ubuntu")
+    }
+
+    /// The path is one this app chose, but the file behind it belongs to
+    /// somebody else's machine and nothing promises it is small. The read
+    /// stops rather than pulling an arbitrary amount into memory.
+    @Test("a file larger than the limit stops at the limit")
+    func stopsAtTheLimit() async throws {
+        let server = try RealSFTPServer(readOnly: true) { root in
+            try Data(repeating: 0x61, count: 200_000).write(to: URL(fileURLWithPath: root + "/big"))
+        }
+        defer { server.stop() }
+
+        let client = try await server.client()
+        let bytes = try await client.contents(of: server.root + "/big", limit: 4096)
+
+        #expect(bytes.count == 4096)
+    }
+
+    @Test("a file that is not there is a failure, not an empty answer")
+    func missingFile() async throws {
+        let server = try RealSFTPServer(readOnly: true)
+        defer { server.stop() }
+
+        let client = try await server.client()
+        await #expect(throws: SFTPError.self) {
+            _ = try await client.contents(of: server.root + "/nothing-here")
+        }
+    }
 }
 
 /// One `sftp-server`, started over pipes and stopped by letting go of them.

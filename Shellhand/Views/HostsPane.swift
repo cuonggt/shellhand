@@ -317,7 +317,7 @@ struct HostsPane: View {
 
     private func row(for host: Host) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: "server.rack").foregroundStyle(.tint)
+            HostIcon(os: host.os)
             // A set width, not a minimum: with a minimum the destination
             // starts wherever the name happens to end, so the second
             // column is ragged down the page and cannot be scanned.
@@ -390,7 +390,7 @@ struct HostsPane: View {
             }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
-                Image(systemName: "server.rack").font(.title3).foregroundStyle(.tint)
+                HostIcon(os: host.os, size: 22)
                 Text(host.name).lineLimit(1).truncationMode(.middle)
                 Text(destination(of: host))
                     .font(.caption)

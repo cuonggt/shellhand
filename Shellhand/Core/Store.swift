@@ -150,6 +150,18 @@ nonisolated final class Store: Sendable {
                 }
             }
         }
+        // **Append-only, like every migration here.** Every store in
+        // existence has already run v1, so adding this column there would
+        // leave those stores holding one the migrator believes it made.
+        migrator.registerMigration("v8") { db in
+            let held = try String.fetchAll(
+                db, sql: "SELECT name FROM pragma_table_info(?)", arguments: ["hosts"])
+            if !held.contains("os") {
+                try db.alter(table: "hosts") { t in
+                    t.add(column: "os", .text).notNull().defaults(to: "")
+                }
+            }
+        }
         return migrator
     }
 
@@ -302,6 +314,7 @@ extension Host: FetchableRecord, PersistableRecord {
         sshOptions = Host.decodeTags(row["sshOptions"])
         forwardAgent = row["forwardAgent"]
         theme = row["theme"]
+        os = row["os"]
     }
 
     nonisolated func encode(to container: inout PersistenceContainer) {
@@ -317,6 +330,9 @@ extension Host: FetchableRecord, PersistableRecord {
         container["sshOptions"] = Host.encodeTags(sshOptions)
         container["forwardAgent"] = forwardAgent
         container["theme"] = theme
+        // The third edit. Missing it is the recorded trap: the field reads and
+        // writes as its default for ever, with no error anywhere.
+        container["os"] = os
     }
 
     /// A tag list that cannot be read is no tags, not a host that fails to

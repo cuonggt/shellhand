@@ -495,7 +495,7 @@ struct HostRow: View {
                 if !host.tags.isEmpty { tags }
             }
         } icon: {
-            Image(systemName: "server.rack")
+            HostIcon(os: host.os)
         }
     }
 

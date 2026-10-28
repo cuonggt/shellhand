@@ -22,6 +22,17 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     var proxyJump: String = ""
     var groupId: String = ""
     var tags: [String] = []
+    /// What this machine said it was the last time it was reached — the `ID`
+    /// out of its own `/etc/os-release`, so `ubuntu`, `debian`, `fedora`.
+    /// Empty until it has been asked, and for anything that could not answer.
+    ///
+    /// Learned rather than typed, and **only once**: nothing in the editor
+    /// sets it and `ContentView.learnOS` asks only while it is empty, so a
+    /// machine rebuilt onto another distribution goes on claiming what it
+    /// used to be. There is no way to clear it today — that is the cost of
+    /// not opening a second connection per session, and the thing to change
+    /// first if it ever matters.
+    var os: String = ""
     /// `-o` settings for this host alone, ahead of anything a group or the
     /// config says, because ssh keeps the first value it is given.
     var sshOptions: [String] = []

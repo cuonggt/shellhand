@@ -494,7 +494,33 @@ struct ContentView: View {
         Task {
             guard let argv = await store.sshArgs(for: host) else { return }
             show(session: sessions.open(host: host, argv: argv).id)
+            await learnOS(of: host)
         }
+    }
+
+    /// Asks a host what it is, once, so it can be drawn with its own mark.
+    ///
+    /// **Only when it has never said**, which is the whole of the cost
+    /// control: this opens a second connection, and doing it on every connect
+    /// would double the authentication for every tab anyone ever opens. The
+    /// price is that a machine rebuilt onto another distribution keeps the old
+    /// mark until something clears the field — worth knowing, and cheaper than
+    /// the alternative until somebody asks for it.
+    ///
+    /// After the session, not before: the terminal is what was asked for and
+    /// must not wait on an icon. Everything here fails quietly — see
+    /// `Core.osOf` for why none of its failures is worth reporting.
+    private func learnOS(of host: Host) async {
+        guard host.os.isEmpty, !host.id.isEmpty else { return }
+        guard let os = await Core.shared.osOf(db: store.dbPath, hostID: host.id) else { return }
+        // Read again rather than editing the copy this closure captured: it
+        // may be minutes old by now, and saving a stale one would undo
+        // whatever was edited in between.
+        guard var fresh = store.snapshot.hosts.first(where: { $0.id == host.id }),
+              fresh.os != os
+        else { return }
+        fresh.os = os
+        _ = await store.save(fresh)
     }
 
     /// Shows a tab. The strip, the sidebar and everything that opens a

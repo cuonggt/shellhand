@@ -401,6 +401,72 @@ credentials, which is most of it.
   keys, not to be outlined: a ring around the whole pane is a lot of chrome
   for "the arrows will go here", and the selected card already says where
   they will land. `.focusEffectDisabled()` on both the list and the grid.
+- **A host is drawn with its operating system's own mark, learned on the first
+  connect.** `Core.osOf` opens a connection of its own, reads
+  `/etc/os-release` — a plain `KEY=value` file every modern Linux ships, so
+  the app can **read** the answer over SFTP rather than run a command for it,
+  which would mean bringing back the process machinery deleted as dead code —
+  and `OSRelease` parses it. `Views/HostIcon.swift` draws the mark where there
+  is one and `server.rack` where there is not.
+  **Nothing lists the distributions, and no mark is bundled.** A mark is found
+  by filename: `os-ubuntu.svg` for a machine whose `ID` is `ubuntu`, so adding
+  one is dropping a file into `Shellhand/Resources/OSMarks` and removing one is
+  deleting it. These are **trademarks** with their own usage policies, several
+  restricting redistribution, so which of them ship is a decision somebody has
+  to be able to change without touching code — the user is supplying the files.
+  `ID_LIKE` is the fallback, so a derivative that forgets `ID` gets its
+  family's mark; that is how Raspberry Pi OS draws Debian's without one of its
+  own.
+  **Three measurements, because all three could have been assumed wrong.**
+  `NSImage(contentsOf:)` **does** read an SVG — `_NSSVGImageRep`, checked with
+  a real file — so the README's promise of svg/pdf/png in that order holds
+  rather than being a guess about ImageIO. XcodeGen **walks that folder and
+  adds each file individually**, so they land at the **top** of
+  `Contents/Resources`, which is exactly where
+  `url(forResource:withExtension:)` looks; added as a folder reference instead
+  they would be a directory down and nothing would be found. And a mark
+  dropped in really is found: proven by building with one in place and reading
+  it back out of the bundle.
+  **The guard for all of that is the folder's own `README.md`, which ships on
+  purpose.** Every other test here is pure, so all of them would go on passing
+  if the folder stopped reaching the bundle altogether — a dropped-in mark
+  would never be found, and the only symptom is the generic glyph, which is
+  also what a correct miss looks like. Nothing else could tell those two
+  apart. Checked the way round that matters: with the README moved out,
+  `theFolderIsBundled` fails and the other five pass. **Don't exclude it**
+  without replacing the guard.
+  **Only on the first connect**, which is the whole of the cost control: a
+  second connection per tab would double the authentication for every session
+  anyone opens. The price is that a machine rebuilt onto another distribution
+  keeps its old mark, and **nothing clears the field** — not the editor, not
+  a reconnect — so that is a wrong icon with no way out today rather than a
+  slow correction. Stated rather than solved: the alternative is a second
+  connection per session, which is a change to how often this app logs in to
+  somebody's machines and so is theirs to choose. Everything about
+  it fails quietly and all the failures are ordinary: a host that only takes a
+  password cannot be reached this way at all, since `connect` fixes
+  `BatchMode=yes`; a BSD or a macOS has no such file; a container may have no
+  sftp subsystem. The cost of failing is a generic icon, which is already what
+  most hosts show.
+  `sessions.open` has **one** caller, so wiring this into `connect(_:)` covers
+  every way of connecting — Return in the list, two clicks, ⌘↩, the
+  inspector, Quick Connect, a grid card — rather than the one that was being
+  looked at.
+  **The fallback has to be sized, and nearly was not.** The grid card drew its
+  glyph with `.font(.title3)`; replacing that with a `HostIcon` that only
+  *framed* the symbol would have made the card's icon **smaller** than before,
+  and a 22pt mark beside a body-sized glyph on the next card is exactly the
+  inconsistency the box is meant to prevent. Both branches draw into the same
+  box.
+  It cost `SFTPClient.contents(of:limit:)`, a bounded read into memory — a
+  different path through the protocol from `download`, with no local file, no
+  progress and a stop condition of its own, so it is held against OpenSSH's
+  own server rather than reasoned about. The limit is not decoration: the path
+  is one this app chose but the file behind it is on somebody else's machine
+  and nothing promises it is small. Adding `os` to `Host` took the documented
+  **three** edits — the model, migration **v8**, and the hand-written GRDB
+  `init(row:)` and `encode(to:)` — and the real store's timestamp is unchanged
+  across the run that proves it.
 - **The SFTP conversation is checked against a server written in Swift, in
   this process** — `Tests/ScriptedSFTP.swift`, on a pair of pipes, reached
   through the one seam `SFTPClient.speaking(to:from:)`. The spikes once ran a
@@ -2533,6 +2599,14 @@ on the mouse said otherwise. **The suite is 495 checks and it could not have
 found any of this.** That is not an argument against the suite; it is the
 reminder that what it covers and what a user meets are different sets, and
 this release is entirely the second one.
+
+**On `main` and unreleased: a host is drawn with its operating system's own
+mark.** It is learned on the first connect, by reading the host's own
+`/etc/os-release` over a connection of its own — see the convention above for
+the drop-in rule, the three things that were measured rather than assumed, and
+why no mark is bundled. The suite went 495 → 516. **Not checked on screen
+yet**: `scripts/window-check.sh` refuses to run beside another copy of the app,
+and the one in `/Applications` was holding a live session.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,

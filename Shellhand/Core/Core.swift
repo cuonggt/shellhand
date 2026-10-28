@@ -164,6 +164,32 @@ actor Core {
         return ["id": id, "label": resolved.host.name, "home": await client.home]
     }
 
+    /// What a host says it is, read from its own `/etc/os-release`.
+    ///
+    /// A connection of its own, opened and closed for this one small file.
+    /// The terminal's pty cannot be asked questions — it belongs to whoever is
+    /// typing — so the only ways to learn this are a second connection or
+    /// guessing from the screen, and a login banner is not a fact.
+    ///
+    /// Returns nil for every kind of "did not find out", and they are all
+    /// ordinary: a host that only takes a password cannot be reached this way
+    /// at all, since `connect` fixes `BatchMode=yes`; a BSD or a macOS has no
+    /// such file; a container may have no sftp subsystem. **None of them is
+    /// worth telling anybody about** — the cost of failing is an icon that
+    /// stays generic, which is also what a host nobody has drawn a mark for
+    /// looks like.
+    func osOf(db: String, hostID: String) async -> String? {
+        guard let resolved = try? resolved(db: db, hostID: hostID),
+              let client = try? await SFTPClient.connect(resolved)
+        else { return nil }
+        defer { Task { await client.close() } }
+        guard let bytes = try? await client.contents(of: "/etc/os-release"),
+              let text = String(data: bytes, encoding: .utf8)
+        else { return nil }
+        let id = OSRelease.id(from: text)
+        return id.isEmpty ? nil : id
+    }
+
     func closeSFTP(id: String) async {
         guard let client = sessions.removeValue(forKey: id) else { return }
         await client.close()
