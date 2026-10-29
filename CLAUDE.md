@@ -1185,6 +1185,25 @@ credentials, which is most of it.
   offered from the next launch. Checked the way round that matters: with the
   font taken out of `takeSettings`, only the test for following Settings
   fails.
+- **Clear Scrollback is ⌥⌘K, in the Terminal menu** — Terminal.app's own
+  key for it. ⌘K, which clears in Terminal.app, iTerm2 and Ghostty, stays
+  Quick Connect's: the user's call. It drops every line above the screen and
+  keeps the screen, the vim in front of it included.
+  **It shrinks the history to nothing and back**, through the view's public
+  `changeScrollback`, because `Terminal.clearScrollback` is out of reach — the
+  view keeps its terminal internal. Feeding it `ESC [3J`, which is what a
+  shell's `clear` sends, was the obvious alternative and is worse twice over:
+  it acts on the buffer in front only, so nothing at all while vim has the
+  alternate screen, and it goes through the parser, where it could land in
+  the middle of an escape sequence the far end is half way through sending.
+  **Putting the size back needs the size**, and SwiftTerm will not say what
+  it is, so `TerminalSession.scrollback` now sets it at creation: 500, its
+  own default, so nothing changed by being named. The test fills a terminal
+  fed by hand, clears it, and feeds it again — checked the way round that
+  matters, with the size left at nothing only the "kept again" half fails.
+  **500 lines is not much** for an ssh client, and raising it is now a
+  one-line change; it was left alone here because it is a different
+  decision.
 - **"Ask before closing a live session" switched nothing for every release up
   to 0.0.11.** The toggle was in Settings from the day it was added and no
   code read its key: ⌘W, a tab's ×, the window's close button and ⌘Q all

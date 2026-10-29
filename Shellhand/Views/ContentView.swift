@@ -481,6 +481,7 @@ struct ContentView: View {
             find: { frontSession?.findOpen.toggle() },
             findNext: { _ = frontSession?.findNext() },
             findPrevious: { _ = frontSession?.findPrevious() },
+            clearScrollback: { frontSession?.clearScrollback() },
             biggerText: { frontSession?.changeFontSize(by: 1) },
             smallerText: { frontSession?.changeFontSize(by: -1) },
             actualSize: { frontSession?.resetFontSize() },

@@ -79,6 +79,7 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         view.processDelegate = self
         view.font = TerminalFont.font(named: fontFamily, size: Self.preferredFontSize)
         view.optionAsMetaKey = optionAsMeta
+        view.changeScrollback(Self.scrollback)
         apply(theme: Self.theme(for: host))
         // Settings is a scene of its own and cannot reach the sessions a
         // window holds, so the change is announced and each one listens.
@@ -203,6 +204,27 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         let font = view.font
         let size = min(28, max(9, font.pointSize + delta))
         view.font = NSFont(descriptor: font.fontDescriptor, size: size) ?? font
+    }
+
+    /// How many lines a terminal keeps above its screen: SwiftTerm's own
+    /// default, set here so this app knows the number — SwiftTerm will not
+    /// say what it is, and Clear Scrollback has to put it back exactly.
+    static let scrollback = 500
+
+    /// Clear Scrollback, ⌥⌘K: drops every line above the screen and keeps
+    /// the screen itself — the shell's prompt, or the vim in front of it.
+    ///
+    /// **By shrinking the history to nothing and back.** `Terminal`'s own
+    /// `clearScrollback` is out of reach, its view keeping the terminal
+    /// internal. Feeding it the `ESC [3J` a shell's `clear` sends would work
+    /// on the buffer in front only — nothing at all while vim has the
+    /// alternate screen — and could land in the middle of an escape sequence
+    /// the far end is half way through sending, and garble it. This acts on
+    /// the normal buffer whatever is in front, and never goes near the
+    /// parser.
+    func clearScrollback() {
+        view.changeScrollback(0)
+        view.changeScrollback(Self.scrollback)
     }
 
     /// Actual Size: Settings' size, in the font this session is drawn in —

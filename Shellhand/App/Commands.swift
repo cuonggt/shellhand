@@ -56,6 +56,7 @@ struct AppActions {
     var find: () -> Void = {}
     var findNext: () -> Void = {}
     var findPrevious: () -> Void = {}
+    var clearScrollback: () -> Void = {}
     var biggerText: () -> Void = {}
     var smallerText: () -> Void = {}
     var actualSize: () -> Void = {}
@@ -255,6 +256,12 @@ struct ShellhandCommands: Commands {
             Button("Show Beside") { actions?.toggleSplit() }
                 .keyboardShortcut("d", modifiers: .command)
                 .disabled(!(actions?.canSplit ?? false))
+            Divider()
+            // ⌥⌘K, Terminal.app's own key for this. ⌘K, which clears in
+            // Terminal.app, iTerm2 and Ghostty, stays Quick Connect's.
+            Button("Clear Scrollback") { actions?.clearScrollback() }
+                .keyboardShortcut("k", modifiers: [.command, .option])
+                .disabled(!(actions?.hasSession ?? false))
             Divider()
             // Here rather than in View, where "Bigger Text" does not say
             // bigger than what. These size the terminal and nothing else.

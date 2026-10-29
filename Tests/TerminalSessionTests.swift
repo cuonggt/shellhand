@@ -184,6 +184,31 @@ struct TerminalSessionTests {
         #expect(session.view.font.pointSize == size)
     }
 
+    // MARK: clearing the scrollback
+
+    /// Numbered so that no line's text is the start of another's.
+    private static func lines(_ prefix: String, _ range: ClosedRange<Int>) -> String {
+        range.map { "\(prefix) \(String(format: "%03d", $0))\r\n" }.joined()
+    }
+
+    /// A hundred lines into a screen a few dozen high leaves the first ones
+    /// above it. Clearing drops those and keeps what is on the screen — and
+    /// lines that arrive afterwards are kept again, which is the half that
+    /// would fail if the history were left shrunk to nothing.
+    @Test("clearing the scrollback drops what is above the screen, and only that")
+    func clearsTheScrollback() {
+        let session = session()
+        session.view.feed(text: Self.lines("old", 1...100))
+        #expect(session.screen.contains("old 001"), "the first line never reached the scrollback")
+
+        session.clearScrollback()
+        #expect(!session.screen.contains("old 001"))
+        #expect(session.screen.contains("old 100"), "the screen itself went too")
+
+        session.view.feed(text: Self.lines("new", 1...100))
+        #expect(session.screen.contains("new 001"), "the scrollback no longer keeps anything")
+    }
+
     /// Actual Size used to put back SF Mono outright, which was harmless
     /// while there was nothing else and would undo the choice now.
     @Test("Actual Size goes back to Settings' size in the session's own font")
