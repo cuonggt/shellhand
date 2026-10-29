@@ -68,6 +68,10 @@ struct AppActions {
     /// terminal. This is so collapsing it does not take the switcher away.
     var openSessions: [SessionItem] = []
     var showSession: (UUID) -> Void = { _ in }
+    /// The next or previous tab of the strip, round from the last to the
+    /// first — `Panes.stepping` says which.
+    var nextTab: () -> Void = {}
+    var previousTab: () -> Void = {}
 
     /// The group a new group would go inside, named, so the menu item can
     /// say so — empty when it would go to the top of the list. The sidebar's
@@ -82,6 +86,8 @@ struct AppActions {
     /// Whether there are two things that could go side by side — terminals
     /// and SFTP tabs alike — and the one in front is one of them.
     var canSplit = false
+    /// Whether the strip holds more than the hosts, so stepping goes anywhere.
+    var canStepTabs = false
 }
 
 /// One open session, named short enough for a menu.
@@ -253,7 +259,18 @@ struct ShellhandCommands: Commands {
         // nine. The sidebar is where you switch between them; this is what
         // still works when the sidebar has been collapsed to widen the
         // terminal, which is exactly what somebody with six of them does.
+        //
+        // Stepping comes first, on ⇧⌘[ and ⇧⌘] as in Terminal.app and
+        // Safari. ⌃⇧⇥ and ⌃⇥ do the same, and are not here: an item holds one
+        // key, so those are `StepsTabs`'s, behind the host list.
         CommandGroup(before: .windowList) {
+            Button("Show Previous Tab") { actions?.previousTab() }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+                .disabled(!(actions?.canStepTabs ?? false))
+            Button("Show Next Tab") { actions?.nextTab() }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
+                .disabled(!(actions?.canStepTabs ?? false))
+            Divider()
             let open = actions?.openSessions ?? []
             if !open.isEmpty {
                 ForEach(Array(open.prefix(9).enumerated()), id: \.element.id) { index, item in

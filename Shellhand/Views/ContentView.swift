@@ -125,6 +125,9 @@ struct ContentView: View {
         // delegate, which is where this stands. (⌘W never reaches the window:
         // Close Tab holds it, and SwiftUI's Close is left with no key at all.)
         .background(GuardsClosing(sessions: sessions))
+        // ⌃⇥ and ⌃⇧⇥ through the strip, which the Window menu cannot carry
+        // beside ⇧⌘] and ⇧⌘[ — an item holds one key.
+        .background(StepsTabs(step: step(by:)))
         .navigationTitle(windowTitle)
         .navigationSubtitle(windowSubtitle)
         .inspector(isPresented: $showingInspector) {
@@ -468,11 +471,14 @@ struct ContentView: View {
                 SessionItem(id: $0.id, title: Sessions.shortTitle(of: $0))
             },
             showSession: show(session:),
+            nextTab: { step(by: 1) },
+            previousTab: { step(by: -1) },
             groupInside: selectedGroup?.name ?? "",
             hasHost: selectedHost != nil,
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
-            canSplit: Panes.canSplit(front: pane, open: openTabs))
+            canSplit: Panes.canSplit(front: pane, open: openTabs),
+            canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil)
     }
 
     /// A tab waiting on an answer, and what it was going to do.
@@ -580,6 +586,17 @@ struct ContentView: View {
     private func pick(tab: PaneTab) {
         (pane, beside) = Panes.picking(tab, front: pane, beside: beside)
         if case let .session(id) = tab { sessions.selected = id }
+    }
+
+    /// The next or previous tab of the strip, through `pick` so that a tab
+    /// shown beside trades places exactly as a click on it does. False when
+    /// there is nowhere to go, so ⌃⇥ can be let through to whatever wants it.
+    @discardableResult
+    private func step(by offset: Int) -> Bool {
+        guard let tab = Panes.stepping(by: offset, from: pane, sessions: openTabs)
+        else { return false }
+        pick(tab: tab)
+        return true
     }
 
     /// Opens the split on the next thing that is not already in front, or

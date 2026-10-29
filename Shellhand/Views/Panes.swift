@@ -41,14 +41,26 @@ nonisolated enum Panes {
         front != .hosts && open.count > 1
     }
 
-    /// Where the front pane lands when the current terminal moves under it,
-    /// which is what closing a tab does — to another session, or to nothing
-    /// when that was the last one.
+    /// ⌘⇧] and ⌘⇧[, and ⌃⇥ and ⌃⇧⇥: the tab after or before the one in
+    /// front, in the order the strip draws them — the hosts, then each
+    /// session as it was opened — and round from the last to the first, the
+    /// way Terminal.app and Safari go. Nil when the strip holds nothing else
+    /// to go to, which is what greys the menu items out.
     ///
-    /// A pane showing the hosts stays where it is: the list is not a session
-    /// and nothing about it changed. That guard is the whole reason this is
-    /// safe to drive from an `onChange` when setting the old `browsing` flag
-    /// was not — closing really does move the value, every time.
+    /// **The hosts are a stop, unlike in `splitting`.** They lead the strip
+    /// and cannot be closed, so stepping that skipped them would leave a tab
+    /// on screen that the keys could not reach.
+    ///
+    /// A front the strip no longer holds — a session closed under it — counts
+    /// as the hosts, where the strip begins.
+    static func stepping(by offset: Int, from front: PaneTab, sessions: [PaneTab]) -> PaneTab? {
+        let strip = [PaneTab.hosts] + sessions
+        guard strip.count > 1 else { return nil }
+        let here = strip.firstIndex(of: front) ?? 0
+        let count = strip.count
+        return strip[((here + offset) % count + count) % count]
+    }
+
     /// Whether the window meets somebody with the welcome instead of a
     /// host list.
     ///
@@ -74,6 +86,14 @@ nonisolated enum Panes {
         sessions > 0 || hosts > 0 || loading
     }
 
+    /// Where the front pane lands when the current terminal moves under it,
+    /// which is what closing a tab does — to another session, or to nothing
+    /// when that was the last one.
+    ///
+    /// A pane showing the hosts stays where it is: the list is not a session
+    /// and nothing about it changed. That guard is the whole reason this is
+    /// safe to drive from an `onChange` when setting the old `browsing` flag
+    /// was not — closing really does move the value, every time.
     static func following(selected: UUID?, front: PaneTab) -> PaneTab {
         guard case .session = front else { return front }
         return selected.map(PaneTab.session) ?? .hosts

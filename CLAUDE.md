@@ -1875,6 +1875,29 @@ credentials, which is most of it.
   nine. That came in with the column and stays without it: a keyboard way to
   the fourth session is worth having whatever the switcher looks like, and
   one menu is cheaper than a second switcher.
+- **⇧⌘] and ⇧⌘[ step through the strip, and so do ⌃⇥ and ⌃⇧⇥.** The rule
+  is `Panes.stepping`: the hosts, then the sessions as they were opened,
+  round from the last to the first, the way Terminal.app and Safari go. **The
+  hosts are a stop**, unlike in `splitting` — they lead the strip and cannot
+  be closed, so skipping them would leave a tab the keys could not reach. It
+  goes through `pick`, so a tab shown beside trades places exactly as a click
+  on it does. Nil when only the hosts are there, which greys the items out.
+  **An item holds one key**, so the Window menu carries "Show Previous Tab"
+  and "Show Next Tab" on ⇧⌘[ and ⇧⌘], and ⌃⇥ is `StepsTabs`'s: a local key
+  monitor behind the host list, which also sees the key before the terminal
+  in front can take it as a control key. It acts only on keys meant for the
+  host window — a sheet is a window of its own — and lets ⌃⇥ through when
+  there was nowhere to step to. Measured before choosing either: the Window
+  menu held no "Show Next Tab" of AppKit's, since no window here is a native
+  tab, so neither pair was taken. `Tests/TabKeysTests.swift` asks real
+  `NSEvent`s which keys count, Caps Lock included and ⌃⌥⇥ not.
+  **Driven on a scratch copy on 2026-10-29**, with the front tab read two
+  ways — the window's title, and whether the Terminal menu is live — since
+  the strip's own buttons publish no selection: all four keys moved it, ⇧⌘]
+  on a US keyboard included, where the chord types `}`. ⌃⇥ missed once in
+  five presses and did not miss again in the identical sequence run straight
+  after, which reads as the dropped synthetic keystrokes noted under Quick
+  Connect rather than as the monitor. A hand on the keyboard settles it.
 - **Making each session its own `NSWindow`,
   so that macOS draws them as a real tab bar with the host list as the first
   tab, was built and thrown away** — it worked, tab overview and `⌘⇧[` and

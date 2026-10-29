@@ -89,6 +89,59 @@ nonisolated struct PanesTests {
         #expect(Panes.canSplit(front: one, open: [one, two]) == true)
     }
 
+    // MARK: stepping through the strip
+
+    @Test("the next tab after the hosts is the first session, and so on along the strip")
+    func stepsForward() {
+        let open = [one, two, three]
+        #expect(Panes.stepping(by: 1, from: .hosts, sessions: open) == one)
+        #expect(Panes.stepping(by: 1, from: one, sessions: open) == two)
+        #expect(Panes.stepping(by: 1, from: two, sessions: open) == three)
+    }
+
+    @Test("the previous tab walks the strip the other way")
+    func stepsBack() {
+        let open = [one, two, three]
+        #expect(Panes.stepping(by: -1, from: three, sessions: open) == two)
+        #expect(Panes.stepping(by: -1, from: one, sessions: open) == .hosts)
+    }
+
+    /// Round from the last to the first and back, the way Terminal.app and
+    /// Safari go — stopping at an end would make the key do nothing exactly
+    /// where somebody pressing it twice expects to come back round.
+    @Test("stepping goes round at both ends")
+    func wraps() {
+        let open = [one, two, three]
+        #expect(Panes.stepping(by: 1, from: three, sessions: open) == .hosts)
+        #expect(Panes.stepping(by: -1, from: .hosts, sessions: open) == three)
+    }
+
+    /// Hosts and one session is the common case, and the two keys are then
+    /// both a toggle between them.
+    @Test("with one session, either key moves between it and the hosts")
+    func togglesWithOne() {
+        #expect(Panes.stepping(by: 1, from: .hosts, sessions: [one]) == one)
+        #expect(Panes.stepping(by: 1, from: one, sessions: [one]) == .hosts)
+        #expect(Panes.stepping(by: -1, from: .hosts, sessions: [one]) == one)
+        #expect(Panes.stepping(by: -1, from: one, sessions: [one]) == .hosts)
+    }
+
+    @Test("with only the hosts there is nowhere to go, which greys the items out")
+    func nowhereToGo() {
+        #expect(Panes.stepping(by: 1, from: .hosts, sessions: []) == nil)
+        #expect(Panes.stepping(by: -1, from: .hosts, sessions: []) == nil)
+    }
+
+    /// A front the strip no longer holds is where a closed session leaves
+    /// the pane for an instant; it counts as the hosts, where the strip
+    /// begins, rather than as nowhere.
+    @Test("a front no longer in the strip steps from the hosts")
+    func strayFront() {
+        let gone = PaneTab.session(UUID())
+        #expect(Panes.stepping(by: 1, from: gone, sessions: [one, two]) == one)
+        #expect(Panes.stepping(by: -1, from: gone, sessions: [one, two]) == two)
+    }
+
     // MARK: closing a tab moves the selection under the pane
 
     @Test("a pane on a session follows the selection to another session")

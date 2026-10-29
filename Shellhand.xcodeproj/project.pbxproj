@@ -39,6 +39,7 @@
 		29673CF60720DE3068D8F4A6 /* HostStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE2DDE82A60175D6F5A16883 /* HostStore.swift */; };
 		2A808ADC2736B29B4D481867 /* os-ubuntu.svg in Resources */ = {isa = PBXBuildFile; fileRef = AC1AEFAB8DCEE81C36BC3350 /* os-ubuntu.svg */; };
 		2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3798692706D23BAB1E792B2 /* PlacesTests.swift */; };
+		2E390979637313C7C5F70738 /* TabKeysTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37BC7F86231E227C032BF8E /* TabKeysTests.swift */; };
 		2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */; };
 		2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467E73B5CE44F6B57382DC67 /* ResolverTests.swift */; };
 		3243D1D24C643C4DB18495CD /* TagField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C564CAC406B2F78C655FD3 /* TagField.swift */; };
@@ -285,6 +286,7 @@
 		CFB7415E72159874F3B55359 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSReleaseTests.swift; sourceTree = "<group>"; };
 		D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */ = {isa = PBXFileReference; path = "os-centos.svg"; sourceTree = "<group>"; };
+		D37BC7F86231E227C032BF8E /* TabKeysTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabKeysTests.swift; sourceTree = "<group>"; };
 		D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWire.swift; sourceTree = "<group>"; };
 		D66CDA5E3713F79D55007FAD /* os-amzn.svg */ = {isa = PBXFileReference; path = "os-amzn.svg"; sourceTree = "<group>"; };
 		D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRun.swift; sourceTree = "<group>"; };
@@ -380,6 +382,7 @@
 				9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */,
 				347E307C5B541D903A2ED8CD /* SSHTransportTests.swift */,
 				287AE931BEA1EE294A3CD956 /* StoreTests.swift */,
+				D37BC7F86231E227C032BF8E /* TabKeysTests.swift */,
 				0985F94F2EA3F4723F856A87 /* TagsTests.swift */,
 				14F8276C242B769D3A601DE1 /* TerminalMiniatureTests.swift */,
 				159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */,
@@ -734,6 +737,7 @@
 				458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */,
 				A967E12D8A3D8405DFFFEA00 /* SidebarRowsTests.swift in Sources */,
 				CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */,
+				2E390979637313C7C5F70738 /* TabKeysTests.swift in Sources */,
 				FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */,
 				2335CC12D9EDDCDF8151D53B /* TerminalMiniatureTests.swift in Sources */,
 				7B454809056124EEB3401DA8 /* TerminalOverSSHTests.swift in Sources */,

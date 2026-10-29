@@ -46,6 +46,62 @@ struct TagsHostsWindow: NSViewRepresentable {
     }
 }
 
+/// Put behind the host list, so ⌃⇥ and ⌃⇧⇥ step through the strip the way
+/// ⇧⌘] and ⇧⌘[ do from the Window menu.
+///
+/// **A monitor, because a menu item holds one key** and the menu's are
+/// spent on ⇧⌘] and ⇧⌘[. It also gets there first: a local monitor sees a
+/// key before any view does, so the terminal in front cannot take ⌃⇥ for
+/// itself the way it takes every other control key.
+///
+/// It acts only on keys meant for this window — a sheet over it is a window
+/// of its own, so Quick Connect and the closing questions keep their ⌃⇥ —
+/// and lets the key go when `step` says there was nowhere to step to.
+struct StepsTabs: NSViewRepresentable {
+    let step: (Int) -> Bool
+
+    final class Coordinator {
+        var step: (Int) -> Bool = { _ in false }
+        var monitor: Any?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        let coordinator = context.coordinator
+        coordinator.step = step
+        coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            [weak view, weak coordinator] event in
+            guard let coordinator, let window = view?.window, event.window === window,
+                  let offset = StepsTabs.offset(for: event)
+            else { return event }
+            return coordinator.step(offset) ? nil : event
+        }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        context.coordinator.step = step
+    }
+
+    static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
+        if let monitor = coordinator.monitor { NSEvent.removeMonitor(monitor) }
+    }
+
+    /// +1 for ⌃⇥, -1 for ⌃⇧⇥, nil for anything else — Caps Lock and the
+    /// like ignored, any other modifier held meaning it is some other key.
+    static func offset(for event: NSEvent) -> Int? {
+        let tab: UInt16 = 48
+        guard event.keyCode == tab else { return nil }
+        switch event.modifierFlags.intersection([.command, .control, .option, .shift]) {
+        case [.control]: return 1
+        case [.control, .shift]: return -1
+        default: return nil
+        }
+    }
+}
+
 /// Put behind the host list, to stand a `ClosingGuard` in front of its
 /// window's delegate — on update rather than on make, for the reason
 /// `TagsHostsWindow` gives.
