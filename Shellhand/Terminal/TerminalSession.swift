@@ -57,18 +57,27 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     let logPath: String
     private var watchdog: Task<Void, Never>?
     private var themeObserver: (any NSObjectProtocol)?
+    private var optionObserver: (any NSObjectProtocol)?
+    /// The Option setting as this session last took it from Settings, which
+    /// is not always what its terminal is doing — see `watchOptionKey`.
+    private var optionSetting: Bool
 
-    init(title: String, host: Host?) {
+    /// `optionAsMeta` is a parameter so that a test can hand a session either
+    /// value without writing the user's own defaults to do it.
+    init(title: String, host: Host?, optionAsMeta: Bool = TerminalSession.prefersOptionAsMeta) {
         self.title = title
         self.host = host
+        self.optionSetting = optionAsMeta
         self.logPath = NSTemporaryDirectory() + "shellhand-ssh-\(UUID().uuidString).log"
         view.processDelegate = self
         view.font = NSFont.monospacedSystemFont(
             ofSize: Self.preferredFontSize, weight: .regular)
+        view.optionAsMetaKey = optionAsMeta
         apply(theme: Self.theme(for: host))
         // Settings is a scene of its own and cannot reach the sessions a
         // window holds, so the change is announced and each one listens.
         watchTheme()
+        watchOptionKey()
     }
 
     private func watchTheme() {
@@ -85,11 +94,35 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         }
     }
 
+    /// Follows the Option switch in Settings while the session is open.
+    ///
+    /// **Any change to the defaults, not a notice Settings has to remember
+    /// to post.** The switch writing its key is then the whole of the wiring,
+    /// with no second step to forget — which is how `confirmCloseLiveSession`
+    /// has switched nothing since the day it was added. The price is hearing
+    /// every other write too, so only a change to the setting itself reaches
+    /// the terminal: otherwise a window saving its frame would undo SwiftTerm's
+    /// own ⌥⌘O, which flips the one terminal it is pressed in.
+    private func watchOptionKey() {
+        optionObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let now = TerminalSession.prefersOptionAsMeta
+                guard now != self.optionSetting else { return }
+                self.optionSetting = now
+                self.view.optionAsMetaKey = now
+            }
+        }
+    }
+
     isolated deinit {
         // A block observer is held by the centre until it is handed back —
         // `weak self` keeps the session from being pinned, but the block
         // itself would outlive every tab that was ever opened.
         if let themeObserver { NotificationCenter.default.removeObserver(themeObserver) }
+        if let optionObserver { NotificationCenter.default.removeObserver(optionObserver) }
     }
 
     /// Starts ssh with the argv the core built, plus the one option the app
@@ -162,6 +195,23 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     static var preferredFontSize: CGFloat {
         let stored = UserDefaults.standard.double(forKey: "defaultFontSize")
         return stored > 0 ? CGFloat(stored) : 12
+    }
+
+    /// Where Settings keeps whether Option is Meta, named once so the switch
+    /// and the sessions cannot read two different keys.
+    nonisolated static let optionAsMetaSetting = "optionAsMeta"
+
+    /// Whether a new terminal treats Option as Meta: what Settings says, and
+    /// **off** while nobody has touched the switch.
+    ///
+    /// Off, Option types what the keyboard puts on it. Meta turns that into
+    /// Esc and the bare key instead, so on the many layouts that put `@`,
+    /// `|`, `{}` or `[]` on Option those could not be typed into a session at
+    /// all — and Meta is SwiftTerm's own default, which this app left alone
+    /// for every release up to 0.0.11. Off is where Terminal.app, iTerm2 and
+    /// Ghostty start too.
+    nonisolated static var prefersOptionAsMeta: Bool {
+        UserDefaults.standard.bool(forKey: optionAsMetaSetting)
     }
 
     /// The palette Settings has chosen, or nil for SwiftTerm's own.

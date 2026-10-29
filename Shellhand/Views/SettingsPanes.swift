@@ -71,6 +71,10 @@ struct GeneralSettingsPane: View {
 struct TerminalSettingsPane: View {
     @AppStorage("defaultFontSize") private var fontSize = 12.0
     @AppStorage("terminalTheme") private var theme = Themes.systemName
+    /// False, which is also what `TerminalSession.prefersOptionAsMeta` reads
+    /// when nothing is stored — so the switch and the terminals agree on a
+    /// fresh install. Writing it is all that reaches the open sessions.
+    @AppStorage(TerminalSession.optionAsMetaSetting) private var optionAsMeta = false
 
     var body: some View {
         Form {
@@ -113,6 +117,19 @@ struct TerminalSettingsPane: View {
                     : "Open terminals repaint as soon as you choose. Going back to System takes a new one.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Keyboard") {
+                Toggle(isOn: $optionAsMeta) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Use Option as Meta key")
+                        Text("On for shell shortcuts like ⌥B and ⌥F. Off, Option types what "
+                            + "your keyboard puts on it, like @ or | on many layouts outside the US.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
             }
         }
         .formStyle(.grouped)

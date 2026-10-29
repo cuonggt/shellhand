@@ -1146,6 +1146,25 @@ credentials, which is most of it.
   moved the suspicion to the colour. A screenshot at a glance would have
   passed all three wrong versions — the black ring, the covered strip and the
   white ring are each invisible until measured or compared against before.
+- **Option types characters unless Settings says Meta.** SwiftTerm's
+  `optionAsMetaKey` defaults to `true` and nothing here set it, so in every
+  release up to 0.0.11 ⌥ plus any key sent Esc and the bare key. On the many
+  layouts that put `@`, `|`, `{}` or `[]` on Option, those could not be typed
+  into a session at all. Found by reading SwiftTerm's `keyDown`, not from a
+  report: on a US keyboard nothing looks wrong. Off is the default, as in
+  Terminal.app, iTerm2 and Ghostty — the user's call — and Settings ▸
+  Terminal ▸ Keyboard turns Meta on.
+  **An open session follows the switch through
+  `UserDefaults.didChangeNotification`, not a notice Settings posts.** The
+  switch writing its key is then the whole of the wiring, with no second step
+  to forget — `confirmCloseLiveSession` is what forgetting looks like. It
+  hears every other write too, so a session acts only when the setting
+  differs from the one it last took; otherwise a window saving its frame
+  would undo SwiftTerm's own ⌥⌘O, which flips one terminal. Both sides name
+  the key through `TerminalSession.optionAsMetaSetting`.
+  The tests post that notification rather than write the key, since the test
+  host's defaults are the user's own, and ask the terminal both ways round:
+  SwiftTerm's default would pass one of them.
 - **SwiftTerm leaks every descriptor not marked close-on-exec into every
   terminal's child**, and it made the new suite hang for a minute. Its
   `PseudoTerminalHelpers.fork(andExec:)` calls `forkpty` and goes straight to

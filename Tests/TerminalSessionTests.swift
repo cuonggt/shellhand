@@ -120,6 +120,35 @@ struct TerminalSessionTests {
         #expect(session.host == nil)
     }
 
+    // MARK: the Option key
+
+    /// Both ways round, because SwiftTerm's own default is Meta: a session
+    /// that never handed its setting to the terminal would pass the second
+    /// and fail only the first — and that terminal is the bug, Option turning
+    /// the `@` or `|` a keyboard puts on it into Esc and a letter.
+    @Test("a session's terminal takes the Option setting it is given")
+    func takesTheOptionSetting() {
+        #expect(!TerminalSession(title: "web", host: nil, optionAsMeta: false).view.optionAsMetaKey)
+        #expect(TerminalSession(title: "web", host: nil, optionAsMeta: true).view.optionAsMetaKey)
+    }
+
+    /// Started the other way round from what Settings holds, then told the
+    /// defaults changed: it has to come round to what Settings says. The
+    /// notification is posted rather than the key written, because the test
+    /// host shares the app's bundle id and its defaults are the user's own —
+    /// and posting it holds whichever way the user's switch happens to be.
+    @Test("an open session follows the Option switch in Settings")
+    func followsTheOptionSwitch() async {
+        let stored = TerminalSession.prefersOptionAsMeta
+        let session = TerminalSession(title: "web", host: nil, optionAsMeta: !stored)
+        #expect(session.view.optionAsMetaKey == !stored)
+
+        NotificationCenter.default.post(
+            name: UserDefaults.didChangeNotification, object: UserDefaults.standard)
+        await settle { session.view.optionAsMetaKey == stored }
+        #expect(session.view.optionAsMetaKey == stored)
+    }
+
     /// The watchdog sleeps 200ms between looks, so yielding is not enough
     /// here: this one waits on the clock, with a ceiling so a rule that never
     /// fires fails rather than hangs.
