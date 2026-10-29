@@ -3190,8 +3190,8 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.12, and then 0.1.0, are out**, each tagged at the commit
-its DMG was built from, with the appcast on `main` and the cask in
+**0.0.1 through 0.0.12, and then 0.1.0 and 0.1.1, are out**, each tagged at
+the commit its DMG was built from, with the appcast on `main` and the cask in
 `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's own, under
 `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before a cask is
 copied in.
@@ -3446,6 +3446,50 @@ out of `gh api repos/cuonggt/shellhand/releases/tags/v<version>`, read as JSON
 that was no delivery failing: its `SULastCheckTime` was 23:26 on 28 October,
 before 0.0.12 went out at 10:18 the next morning, so it had not looked since
 either release existed. Nothing here asked it to, which is still the rule.
+
+**0.1.1 is the first release from the list for a second user, and most of it
+is things that used to fail without a word**, published at `4a1a8a3` and live
+on release, feed, cask and tap. A terminal keeps 10,000 lines, which waited
+on the watchdog reading the screen only around connecting — see its note
+above, and the jump-chain catch that shaped it. A settings file that cannot
+be used is named by an alert when the window opens, where every release before
+ignored it, and a YAML import with a mistake in it is refused with the line
+and column instead of arriving as an empty list. Settings ▸ General has a
+switch for asking hosts what they run, on as before, and Report a Problem…
+opens the issue form, with Discussions on for questions. The suite went
+622 → 643.
+Verified the way 0.1.0 was, and everything passed both times. **Before
+publishing:** the script's own checks — signed, timestamped, universal, 0.1.1
+(14), both notarizations accepted on the first attempt, Gatekeeper accepting
+the app and the DMG — and on top of them Gatekeeper, `codesign --deep
+--strict` and `stapler validate` on the app **inside** the DMG; the DMG's
+staple; all three feed items' notes identical to their files, each served
+from its own release; the 0.1.1 item's length equal to the DMG's size; the
+signature reproduced by re-signing; and the cask's digest the DMG's.
+**After:** every appcast URL answering 200 at the length the feed claims; the
+DMG streamed back from GitHub hashing to the built one and to **both** casks,
+which say 0.1.1 and are the same file; the feed's blob on `main` matching the
+local one through the API; and the release page's notes byte-identical to the
+file, compared as JSON this time. The CDN had nothing cached for either path
+again, and the tap's clone was level with its remote, so the cask went
+straight in, its diff the `version` and the `sha256`.
+**Warnings, and one false alarm, none of them the release's.**
+`generate_appcast` printed ten "failed to move" warnings: it retires every DMG
+past the feed's few into `build/updates/old_updates`, and copies of them from
+earlier runs sit both there and in the folder, so every move collides. It is
+local housekeeping, and the feed checked out. The false alarm was the
+pre-publish check calling the signature mismatched when it was identical:
+**a base64 signature ends in `=`, so a greedy `sed 's/.*="//'` runs on to its
+padding and leaves nothing.** Anchor the extraction at the attribute's name.
+It is the `--jq` lesson in another key — when a check fails, read both values
+before believing either.
+**Two things it ships are still unseen working.** The Hosts section was built
+and never looked at, and the issue form's version fields arriving filled in
+rests on GitHub's documentation, since nothing here could open the page
+signed in.
+**The copy in `/Applications` still has 0.0.11, and that is no puzzle any
+more**: it is not running, and Sparkle only looks while the app is open — its
+`SULastCheckTime` was still 23:26 on 28 October after 0.1.1 went out.
 
 **The README's picture was retaken on 2026-10-29**, from a scratch copy on a
 host list of its own: Production with EU and US inside it, Staging, a few
