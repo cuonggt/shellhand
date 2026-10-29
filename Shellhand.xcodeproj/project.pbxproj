@@ -75,6 +75,7 @@
 		6EBA2CD112A014B8F179A929 /* HostsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F4E982180137FCADD6C9FB /* HostsPane.swift */; };
 		73F26B08F735641E17288C9F /* SFTPRealServerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A1E1982747B39B2219C4D67 /* SFTPRealServerTests.swift */; };
 		73F718188AE077E2AE4559EE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18AEC282492A0EB7F7C69600 /* ContentView.swift */; };
+		76429E44B843A6D45F746C99 /* TerminalFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1296ADE4A2645E725ABFCE03 /* TerminalFont.swift */; };
 		78C0ACBED9BC5C20E971BB4B /* Panes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53922636D26F782CC80079B8 /* Panes.swift */; };
 		7A151960D143D2D93DCBDC59 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE455F58F183312F905772BE /* SidebarView.swift */; };
 		7B454809056124EEB3401DA8 /* TerminalOverSSHTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */; };
@@ -91,6 +92,7 @@
 		89247966139C2A078C36B765 /* TransferQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719DDE5E363B72B59964667 /* TransferQueueTests.swift */; };
 		8971631CB6A95A1D1D22AB7E /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8A25118E059F686A9F089C /* WelcomeView.swift */; };
 		8BAFAC09DFC6411AF577B203 /* HostEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F2EF5B501F37F17236155B /* HostEditorSheet.swift */; };
+		8BD41D54AC48CA302D407764 /* TerminalFontTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F809CAC7550CDC2B2A1235 /* TerminalFontTests.swift */; };
 		8D47EFA3F81EF5C89DC1B145 /* Merge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73F634D1B0D27FBB8ECFB95E /* Merge.swift */; };
 		8E23CA0238D0E009763C676A /* SettingsPanes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7641273D876FDBB807FCBED0 /* SettingsPanes.swift */; };
 		90B05B7092E0F280A22E9C0F /* Resolve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8192A6AF313B243CB39AE9 /* Resolve.swift */; };
@@ -173,6 +175,7 @@
 		0E8192A6AF313B243CB39AE9 /* Resolve.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resolve.swift; sourceTree = "<group>"; };
 		1067D48C871C2202CF2F0417 /* os-raspbian.svg */ = {isa = PBXFileReference; path = "os-raspbian.svg"; sourceTree = "<group>"; };
 		125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */ = {isa = PBXFileReference; path = "os-opensuse.svg"; sourceTree = "<group>"; };
+		1296ADE4A2645E725ABFCE03 /* TerminalFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFont.swift; sourceTree = "<group>"; };
 		14F8276C242B769D3A601DE1 /* TerminalMiniatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalMiniatureTests.swift; sourceTree = "<group>"; };
 		159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalOverSSHTests.swift; sourceTree = "<group>"; };
 		172A21087C4DF4A6CDD738DD /* os-freebsd.svg */ = {isa = PBXFileReference; path = "os-freebsd.svg"; sourceTree = "<group>"; };
@@ -267,6 +270,7 @@
 		ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigFileTests.swift; sourceTree = "<group>"; };
 		AFE0A277FFB387246A7C1825 /* SFTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPClient.swift; sourceTree = "<group>"; };
 		B20E60B26760CD52D26C77F6 /* HostKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKey.swift; sourceTree = "<group>"; };
+		B2F809CAC7550CDC2B2A1235 /* TerminalFontTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalFontTests.swift; sourceTree = "<group>"; };
 		B4072F4E05827C82AF9EBCCF /* os-opensuse-leap.svg */ = {isa = PBXFileReference; path = "os-opensuse-leap.svg"; sourceTree = "<group>"; };
 		B6D441F061EB58A1F727AEA0 /* TreeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeTests.swift; sourceTree = "<group>"; };
 		B8E364C1F64E97AC080F1F08 /* ShellhandTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShellhandTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -384,6 +388,7 @@
 				287AE931BEA1EE294A3CD956 /* StoreTests.swift */,
 				D37BC7F86231E227C032BF8E /* TabKeysTests.swift */,
 				0985F94F2EA3F4723F856A87 /* TagsTests.swift */,
+				B2F809CAC7550CDC2B2A1235 /* TerminalFontTests.swift */,
 				14F8276C242B769D3A601DE1 /* TerminalMiniatureTests.swift */,
 				159201749663A2AEA7459D2F /* TerminalOverSSHTests.swift */,
 				698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */,
@@ -402,6 +407,7 @@
 			children = (
 				B20E60B26760CD52D26C77F6 /* HostKey.swift */,
 				32E39F04CC1F0098ECB930EE /* SessionProgress.swift */,
+				1296ADE4A2645E725ABFCE03 /* TerminalFont.swift */,
 				BDB132447DA9624773556608 /* TerminalSession.swift */,
 			);
 			path = Terminal;
@@ -739,6 +745,7 @@
 				CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */,
 				2E390979637313C7C5F70738 /* TabKeysTests.swift in Sources */,
 				FC4E0A0CF2FC6F28B1DA0D67 /* TagsTests.swift in Sources */,
+				8BD41D54AC48CA302D407764 /* TerminalFontTests.swift in Sources */,
 				2335CC12D9EDDCDF8151D53B /* TerminalMiniatureTests.swift in Sources */,
 				7B454809056124EEB3401DA8 /* TerminalOverSSHTests.swift in Sources */,
 				4014E7F5E27F15C047D144A3 /* TerminalSessionTests.swift in Sources */,
@@ -807,6 +814,7 @@
 				B87D4AFF1469A46ACD14E3E8 /* Store.swift in Sources */,
 				3243D1D24C643C4DB18495CD /* TagField.swift in Sources */,
 				B428A5C09CB4E497BA6A38F1 /* Tags.swift in Sources */,
+				76429E44B843A6D45F746C99 /* TerminalFont.swift in Sources */,
 				AC82FD9C78614F4B03772E2F /* TerminalPane.swift in Sources */,
 				803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */,
 				1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */,

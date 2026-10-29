@@ -1165,6 +1165,26 @@ credentials, which is most of it.
   The tests post that notification rather than write the key, since the test
   host's defaults are the user's own, and ask the terminal both ways round:
   SwiftTerm's default would pass one of them.
+- **The terminal's font is a choice in Settings ▸ Terminal**: SF Mono — the
+  system's own monospaced face, and what nothing stored means — or any
+  monospaced family installed, a Nerd Font for a prompt that draws glyphs
+  included. `TerminalFont` decides, out of the session and the pane: what
+  the picker offers (monospaced families in reading order, the system's
+  hidden dot-families and a second SF Mono left out), and what a stored name
+  comes to, which is **SF Mono for a family not installed or not
+  monospaced** — the setting travels with a migrated Mac, and SwiftTerm lays
+  text on a grid of one cell width. The tests ask real fonts, since Menlo is
+  monospaced and Helvetica is not on every Mac.
+  Open sessions follow through the **same** defaults observer as the Option
+  key, widened to `takeSettings`, and keep the size they are at: ⌘+ may have
+  put a tab somewhere other than Settings' size, and a new font is no reason
+  to undo that. **Actual Size kept SwiftTerm's SF Mono until now** — harmless
+  while nothing else existed, and it would have thrown the choice away on
+  ⌘0 — so it is Settings' size in the session's own family now. The list is
+  worked out once a run, so a font installed while the app is open is
+  offered from the next launch. Checked the way round that matters: with the
+  font taken out of `takeSettings`, only the test for following Settings
+  fails.
 - **"Ask before closing a live session" switched nothing for every release up
   to 0.0.11.** The toggle was in Settings from the day it was added and no
   code read its key: ⌘W, a tab's ×, the window's close button and ⌘Q all

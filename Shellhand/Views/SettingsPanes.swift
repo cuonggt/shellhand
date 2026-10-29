@@ -74,6 +74,9 @@ struct GeneralSettingsPane: View {
 /// What a new terminal comes up looking like.
 struct TerminalSettingsPane: View {
     @AppStorage("defaultFontSize") private var fontSize = 12.0
+    /// Empty for SF Mono, which is also what `TerminalFont.preferred` reads
+    /// when nothing is stored. Writing it is all that reaches open sessions.
+    @AppStorage(TerminalFont.setting) private var fontFamily = ""
     @AppStorage("terminalTheme") private var theme = Themes.systemName
     /// False, which is also what `TerminalSession.prefersOptionAsMeta` reads
     /// when nothing is stored — so the switch and the terminals agree on a
@@ -83,6 +86,20 @@ struct TerminalSettingsPane: View {
     var body: some View {
         Form {
             Section("Text") {
+                Picker("Font", selection: $fontFamily) {
+                    Text(TerminalFont.systemName).tag("")
+                    // Stored but not on this Mac — the setting came with a
+                    // migration — so the picker says what is stored while the
+                    // terminals fall back to SF Mono.
+                    if !fontFamily.isEmpty && !TerminalFont.onThisMac.contains(fontFamily) {
+                        Text("\(fontFamily) (not installed)").tag(fontFamily)
+                    }
+                    Divider()
+                    ForEach(TerminalFont.onThisMac, id: \.self) { family in
+                        Text(family).tag(family)
+                    }
+                }
+                .pickerStyle(.menu)
                 LabeledContent("Size") {
                     HStack(spacing: 12) {
                         Slider(value: $fontSize, in: 9...24, step: 1)
@@ -93,7 +110,15 @@ struct TerminalSettingsPane: View {
                             .frame(width: 24, alignment: .trailing)
                     }
                 }
-                Text("New sessions start at this size. ⌘+ and ⌘- change the one in front.")
+                // A font is chosen by looking at it, as a palette is: a line
+                // a terminal might show, in the font and size chosen, with the
+                // characters fonts most often confuse.
+                Text("deploy@web:~$ ls -l  0O 1lI {} [] =>")
+                    .font(Font(TerminalFont.font(named: fontFamily, size: fontSize) as CTFont))
+                    .lineLimit(1)
+                    .textSelection(.enabled)
+                Text("Sessions take the font as soon as you choose. New ones start at this size; "
+                    + "⌘+ and ⌘- change the one in front.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -1,5 +1,7 @@
 // `Foundation` is imported for the log-file write, which brings
 // `Foundation.Host` with it -- hence `Shellhand.Host` spelled out below.
+// `AppKit`, for the terminal's font, brings it too.
+import AppKit
 import Foundation
 import SwiftTerm
 import Testing
@@ -147,6 +149,50 @@ struct TerminalSessionTests {
             name: UserDefaults.didChangeNotification, object: UserDefaults.standard)
         await settle { session.view.optionAsMetaKey == stored }
         #expect(session.view.optionAsMetaKey == stored)
+    }
+
+    // MARK: the font
+
+    @Test("a session's terminal is drawn in the font it is given")
+    func takesTheFont() {
+        #expect(TerminalSession(title: "web", host: nil, fontFamily: "Menlo").view.font.familyName
+            == "Menlo")
+        let system = NSFont.monospacedSystemFont(
+            ofSize: TerminalSession.preferredFontSize, weight: .regular)
+        #expect(TerminalSession(title: "web", host: nil, fontFamily: "").view.font.fontName
+            == system.fontName)
+    }
+
+    /// Started in a family other than the one stored and made bigger, then
+    /// told the defaults changed: it takes Settings' family and keeps its own
+    /// size, which ⌘+ put somewhere other than Settings'. Posted rather than
+    /// written, as the Option test is, so it holds whichever font the user
+    /// has chosen.
+    @Test("an open session follows the font chosen in Settings, keeping its size")
+    func followsTheFont() async {
+        let stored = TerminalFont.preferred
+        let session = TerminalSession(
+            title: "web", host: nil, fontFamily: stored == "Menlo" ? "" : "Menlo")
+        session.changeFontSize(by: 3)
+        let size = session.view.font.pointSize
+        let wanted = TerminalFont.font(named: stored, size: size).fontName
+
+        NotificationCenter.default.post(
+            name: UserDefaults.didChangeNotification, object: UserDefaults.standard)
+        await settle { session.view.font.fontName == wanted }
+        #expect(session.view.font.fontName == wanted)
+        #expect(session.view.font.pointSize == size)
+    }
+
+    /// Actual Size used to put back SF Mono outright, which was harmless
+    /// while there was nothing else and would undo the choice now.
+    @Test("Actual Size goes back to Settings' size in the session's own font")
+    func actualSizeKeepsTheFont() {
+        let session = TerminalSession(title: "web", host: nil, fontFamily: "Menlo")
+        session.changeFontSize(by: 4)
+        session.resetFontSize()
+        #expect(session.view.font.familyName == "Menlo")
+        #expect(session.view.font.pointSize == TerminalSession.preferredFontSize)
     }
 
     /// The watchdog sleeps 200ms between looks, so yielding is not enough

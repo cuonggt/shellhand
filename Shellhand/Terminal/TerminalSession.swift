@@ -57,27 +57,33 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     let logPath: String
     private var watchdog: Task<Void, Never>?
     private var themeObserver: (any NSObjectProtocol)?
-    private var optionObserver: (any NSObjectProtocol)?
+    private var settingsObserver: (any NSObjectProtocol)?
     /// The Option setting as this session last took it from Settings, which
-    /// is not always what its terminal is doing — see `watchOptionKey`.
+    /// is not always what its terminal is doing — see `watchSettings`.
     private var optionSetting: Bool
+    /// The font family as this session last took it from Settings, empty for
+    /// SF Mono — and what Actual Size goes back to, at Settings' size.
+    private var fontSetting: String
 
-    /// `optionAsMeta` is a parameter so that a test can hand a session either
-    /// value without writing the user's own defaults to do it.
-    init(title: String, host: Host?, optionAsMeta: Bool = TerminalSession.prefersOptionAsMeta) {
+    /// `optionAsMeta` and `fontFamily` are parameters so that a test can hand
+    /// a session either value without writing the user's own defaults to do
+    /// it.
+    init(title: String, host: Host?,
+         optionAsMeta: Bool = TerminalSession.prefersOptionAsMeta,
+         fontFamily: String = TerminalFont.preferred) {
         self.title = title
         self.host = host
         self.optionSetting = optionAsMeta
+        self.fontSetting = fontFamily
         self.logPath = NSTemporaryDirectory() + "shellhand-ssh-\(UUID().uuidString).log"
         view.processDelegate = self
-        view.font = NSFont.monospacedSystemFont(
-            ofSize: Self.preferredFontSize, weight: .regular)
+        view.font = TerminalFont.font(named: fontFamily, size: Self.preferredFontSize)
         view.optionAsMetaKey = optionAsMeta
         apply(theme: Self.theme(for: host))
         // Settings is a scene of its own and cannot reach the sessions a
         // window holds, so the change is announced and each one listens.
         watchTheme()
-        watchOptionKey()
+        watchSettings()
     }
 
     private func watchTheme() {
@@ -94,27 +100,38 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         }
     }
 
-    /// Follows the Option switch in Settings while the session is open.
+    /// Follows the Option switch and the font in Settings while the session
+    /// is open.
     ///
     /// **Any change to the defaults, not a notice Settings has to remember
-    /// to post.** The switch writing its key is then the whole of the wiring,
+    /// to post.** A setting writing its key is then the whole of the wiring,
     /// with no second step to forget — which is how `confirmCloseLiveSession`
-    /// switched nothing from the day it was added until it was wired up. The
-    /// price is hearing
-    /// every other write too, so only a change to the setting itself reaches
-    /// the terminal: otherwise a window saving its frame would undo SwiftTerm's
-    /// own ⌥⌘O, which flips the one terminal it is pressed in.
-    private func watchOptionKey() {
-        optionObserver = NotificationCenter.default.addObserver(
+    /// switched nothing from the day it was added until it was wired up.
+    /// The price is hearing every other write too, so only a change to a
+    /// setting itself reaches the terminal: otherwise a window saving its
+    /// frame would undo SwiftTerm's own ⌥⌘O, which flips the one terminal it
+    /// is pressed in.
+    private func watchSettings() {
+        settingsObserver = NotificationCenter.default.addObserver(
             forName: UserDefaults.didChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                let now = TerminalSession.prefersOptionAsMeta
-                guard now != self.optionSetting else { return }
-                self.optionSetting = now
-                self.view.optionAsMetaKey = now
-            }
+            MainActor.assumeIsolated { self?.takeSettings() }
+        }
+    }
+
+    /// Takes whichever of Settings' choices changed since this session last
+    /// took them. A new font keeps the size this session is at, since ⌘+ and
+    /// ⌘- may have put it somewhere other than Settings' size.
+    private func takeSettings() {
+        let option = Self.prefersOptionAsMeta
+        if option != optionSetting {
+            optionSetting = option
+            view.optionAsMetaKey = option
+        }
+        let family = TerminalFont.preferred
+        if family != fontSetting {
+            fontSetting = family
+            view.font = TerminalFont.font(named: family, size: view.font.pointSize)
         }
     }
 
@@ -123,7 +140,7 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         // `weak self` keeps the session from being pinned, but the block
         // itself would outlive every tab that was ever opened.
         if let themeObserver { NotificationCenter.default.removeObserver(themeObserver) }
-        if let optionObserver { NotificationCenter.default.removeObserver(optionObserver) }
+        if let settingsObserver { NotificationCenter.default.removeObserver(settingsObserver) }
     }
 
     /// Starts ssh with the argv the core built, plus the one option the app
@@ -188,8 +205,10 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         view.font = NSFont(descriptor: font.fontDescriptor, size: size) ?? font
     }
 
+    /// Actual Size: Settings' size, in the font this session is drawn in —
+    /// not SF Mono, which is what it went back to before there was a choice.
     func resetFontSize() {
-        view.font = NSFont.monospacedSystemFont(ofSize: Self.preferredFontSize, weight: .regular)
+        view.font = TerminalFont.font(named: fontSetting, size: Self.preferredFontSize)
     }
 
     /// What Settings asks new sessions to start at.
