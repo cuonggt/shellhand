@@ -3,6 +3,54 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.1.1</title>
+            <pubDate>Fri, 30 Oct 2026 06:37:03 +0700</pubDate>
+            <sparkle:version>14</sparkle:version>
+            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**A terminal keeps 10,000 lines of history.** It kept 500 — SwiftTerm's own
+default — so a log or a long build scrolled out of reach within a few
+screens, and Find could only search what was left. Raising it waited on
+something else: every ssh session read its whole screen five times a second,
+history and all, to watch for a host-key question, which already cost a
+session up to 6% of the main thread at 500 lines and would have cost far more
+at 10,000. A session now reads its screen only while it is connecting, while a
+question is up, and for two minutes after it comes through, which covers every
+hop of a jump chain. After that, a host-key question asked by something you
+run inside the session — an `ssh` typed there, `git` over ssh — is answered in
+the terminal itself, as in Terminal.app, rather than through Shellhand's
+dialog.
+
+**Shellhand asks a host what it runs only while you let it.** Asking is a
+second login, once a day per host, and on a machine with login alerts or a
+session recorder that is something somebody sees. Settings ▸ General has a
+Hosts section now, with a switch that turns the asking off. It starts on, as
+asking always has, and turning it off keeps the marks already learned.
+
+**Report a Problem opens a form.** Help ▸ Report a Problem… opens a new issue
+on a form that asks what happened and what you expected, with the versions of
+Shellhand and macOS already filled in. Questions and ideas have a place of
+their own now, in the repository's Discussions.
+
+**A settings file Shellhand cannot use says so now, and so does an import.**
+A mistake in `config.yaml` — an unclosed quote, a setting spelled wrong, an
+option ssh would refuse — left Shellhand running without the file, its ssh
+options and palettes quietly not applied, and a YAML import with a mistake in
+it came in as an empty list. Neither said a word, in any release so far. Now
+the window says what is wrong with the settings file when it opens, the import
+refuses the file with its reason, and a YAML mistake comes with its line and
+column. The settings file is read when Shellhand opens, so a fix takes effect
+the next time it does.
+
+Nothing else here is visible from the outside. The suite went from 622 checks
+to 643, the history's size was measured before it was chosen — about 8 bytes
+a column for each line, so 8 to 16 MB a session at 10,000 lines — and the
+settings file's message was checked on screen, against a copy of the app with
+a broken file of its own.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.1/Shellhand-0.1.1.dmg" length="14289105" type="application/octet-stream" sparkle:edSignature="rBVRTTx0EsEVrtBMo6drrIfQ42D/X824piBsw495GJ9nh0bpsc2vkMrPxScHEx1z9+uXmXGKlXB/xYi8FdQXDQ=="/>
+        </item>
+        <item>
             <title>0.1.0</title>
             <pubDate>Thu, 29 Oct 2026 17:21:10 +0700</pubDate>
             <sparkle:version>13</sparkle:version>
@@ -134,35 +182,6 @@ copy of the app with a host list of its own: every one came up in its own
 words, and Cancel left everything open.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.12/Shellhand-0.0.12.dmg" length="14167960" type="application/octet-stream" sparkle:edSignature="Q7VdjKVUIoU9eqentqoiQMv0ZtbWGpMIQNkTpD1xbpn8J23q0yXo1DjYHNd7FfC9cDOdBM2sXzci8Xs5SOOPCw=="/>
-        </item>
-        <item>
-            <title>0.0.11</title>
-            <pubDate>Wed, 28 Oct 2026 10:25:37 +0700</pubDate>
-            <sparkle:version>11</sparkle:version>
-            <sparkle:shortVersionString>0.0.11</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**The host list answers the mouse the way you would expect.** Clicking a host
-opens the panel on the right showing what it connects with, instead of leaving
-you to go and find it. Two clicks connect. And a right-click gives the same
-menu the sidebar's rows have always had — connect, SFTP, copy the ssh command,
-edit, delete — acting on the host you clicked rather than on whatever happened
-to be selected before.
-
-**The keyboard reaches the list too.** Arrow keys walk it, whether it is
-drawn as rows or as cards, and Return connects to the host that is picked. A
-key pressed there no longer draws a ring around the whole panel to say the
-list is listening; the highlighted host already says it.
-
-**A file dropped from Finder that could not be carried said nothing about
-it.** Dropped onto a folder you have no permission to write in, or a disk with
-no room left, the file stayed where it was and the window gave no sign that
-anything had gone wrong — while the same copy made by dragging between the two
-panes has always reported it. Both say so now.
-
-Nothing else here is visible from the outside. The suite went from 479 checks
-to 495.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.11/Shellhand-0.0.11.dmg" length="13928857" type="application/octet-stream" sparkle:edSignature="lT5NMTrwVSDlM34k9ZWDc14xwNsBLAdJUqQOmGygsBlfE63bsRhjluk04Eq/QAPqF5bMcjTgqUV0geYDyLt2Bw=="/>
         </item>
     </channel>
 </rss>
