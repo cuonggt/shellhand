@@ -24,6 +24,10 @@ nonisolated struct Config: Sendable, Equatable {
             .expandingTildeInPath
     }
 
+    /// The file a run reads: the one named on the command line, or the usual
+    /// one when none was.
+    static func path(_ named: String) -> String { named.isEmpty ? defaultPath : named }
+
     /// Reads the file, or returns the defaults when there is none — a missing
     /// config is a config that sets nothing, which is what a fresh install has.
     static func load(path: String) throws -> Config {

@@ -11,16 +11,16 @@ struct ShellhandApp: App {
     /// has no way to ask the app.
     @NSApplicationDelegateAdaptor(ShellhandAppDelegate.self) private var appDelegate
     private let options: LaunchOptions
-    /// Where the ssh options came from, for Settings to show.
-    private let configPath: String
+    /// Where the ssh options came from, for Settings to show, and what was
+    /// wrong with the file, for the window to say.
+    private let config: LaunchConfig
 
     init() {
         let options = LaunchOptions()
         self.options = options
         // Before any window, so nothing connects without the settings the
         // file names.
-        self.configPath = (try? Core.configure(configPath: options.configPath))?.path
-            ?? options.configPath
+        self.config = LaunchConfig.read(options.configPath)
         // Sparkle wants its controller made before any window exists, which
         // is here; `start()` holds the first look until launching is done.
         // That hop was written when there was no app delegate to put it in;
@@ -30,11 +30,41 @@ struct ShellhandApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(dbPath: options.db, configPath: options.configPath)
+            ContentView(dbPath: options.db, configPath: config.path, configProblem: config.problem)
         }
         .defaultSize(width: 1100, height: 720)
         .commands {
-            ShellhandCommands(storePath: options.db, configPath: configPath)
+            ShellhandCommands(storePath: options.db, configPath: config.path)
+        }
+    }
+}
+
+/// What launching made of the settings file: where it is, and what was wrong
+/// with it, if anything was.
+///
+/// **A settings file that could not be used was dropped without a word, in
+/// every release up to 0.1.0.** The read was a `try?`, so a typo that broke
+/// the YAML, a key that is not a setting and an option ssh would refuse all
+/// left the app running without the file's ssh options and palettes, with
+/// nothing anywhere to say so — undoing the very refusals `Config.parse`
+/// exists to make. The window says it now.
+nonisolated struct LaunchConfig: Equatable {
+    /// The file read, the usual one when none was named, for Settings.
+    var path: String
+    /// What was wrong, ready to say, or nil when the file was used.
+    var problem: String?
+
+    /// Reads the file and applies it, keeping what went wrong rather than
+    /// dropping it. A file with a problem applies nothing at all: `configure`
+    /// throws before it sets anything.
+    static func read(_ configPath: String) -> LaunchConfig {
+        do {
+            return LaunchConfig(path: try Core.configure(configPath: configPath).path)
+        } catch {
+            return LaunchConfig(
+                path: Config.path(configPath),
+                problem: "\(error.localizedDescription)\n\nNothing in it applies until it "
+                    + "is fixed and Shellhand is opened again.")
         }
     }
 }

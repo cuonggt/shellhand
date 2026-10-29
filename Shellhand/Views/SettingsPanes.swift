@@ -77,7 +77,7 @@ struct GeneralSettingsPane: View {
                 PathRow(label: "Host list", path: storePath)
                 PathRow(label: "ssh options", path: configPath)
                 Text("The list is this app's own. The options file is yours to "
-                    + "edit; this window follows along.")
+                    + "edit, and is read each time Shellhand opens.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

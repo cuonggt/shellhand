@@ -2850,6 +2850,29 @@ credentials, which is most of it.
   the one both readers used. Checked the way round: with the line that asks
   the sequence for its error taken out, the four not-YAML tests fail and
   the empty-file and two-document ones still pass.
+- **A settings file that could not be used was ignored without a word, in
+  every release up to 0.1.0** — and not only a broken one: an unknown key
+  and an option ssh would refuse too, the very refusals `Config.parse` is
+  written to make loudly. The app read it once, at launch, with
+  `try? Core.configure(…)`, so the error went nowhere and the app ran
+  without the file's ssh options and palettes. The fix above made
+  `Config.parse` throw for broken YAML and changed nothing anybody could
+  see; tracing where that error lands, while writing 0.1.1's notes, is what
+  found this. `LaunchConfig.read` keeps the problem now, and the window says
+  it through its one alert — in state of its own, because a refresh that
+  works clears `store.lastError` and the first one lands just after the
+  window opens. **The sweep of every `try?` passed over this one**: a `try?`
+  whose fallback is a plausible value — here, the path it was asked for —
+  reads as handling a failure rather than dropping it.
+  The tests read only files that fail, since one that works would set the
+  ssh options of every connection the rest of the suite makes beside them;
+  with the old `try?` put back, only the two problem tests fail. **Driven on
+  screen on 2026-10-30**: a scratch copy opened with `open -g` and an
+  unclosed quote in its settings put up the alert, Yams's line and column
+  and all, and AXPress on its one button took it down — SwiftUI's buttons
+  publish no name to System Events, so it was pressed for being the only
+  one. The file is still read only at launch, which the alert and the
+  Settings caption both say.
 - **Swift reads CRLF as ONE `Character`.** `"\r\n"` is a single grapheme
   cluster, so a parser that matches `"\r"` and looks ahead for the `"\n"`
   matches neither: the lookahead eats the next value and the row never ends.

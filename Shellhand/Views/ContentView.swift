@@ -72,10 +72,16 @@ struct ContentView: View {
     @SceneStorage("selectedHost") private var storedHostID = ""
 
     private let configPath: String
+    /// What was wrong with the settings file at launch, until it is read.
+    ///
+    /// Its own state rather than `store.report`: a refresh that works clears
+    /// `lastError`, and the first one lands right after the window opens.
+    @State private var configProblem: String?
 
-    init(dbPath: String, configPath: String = "") {
+    init(dbPath: String, configPath: String = "", configProblem: String? = nil) {
         _store = State(initialValue: HostStore(dbPath: dbPath))
         self.configPath = configPath
+        _configProblem = State(initialValue: configProblem)
     }
 
     private var selectedHost: Host? {
@@ -265,14 +271,20 @@ struct ContentView: View {
         }
         // A constant binding cannot be dismissed: the alert came back the
         // moment it was closed, because nothing ever cleared the error.
+        // One alert for both, the store's first: dismissing clears only the
+        // one shown, so a settings problem behind it comes up next.
         .alert("Shellhand", isPresented: Binding(
-            get: { store.lastError != nil },
-            set: { shown in if !shown { store.clearError() } }
+            get: { store.lastError != nil || configProblem != nil },
+            set: { shown in if !shown { dismissProblem() } }
         )) {
-            Button("OK") { store.clearError() }
+            Button("OK") { dismissProblem() }
         } message: {
-            Text(store.lastError ?? "")
+            Text(store.lastError ?? configProblem ?? "")
         }
+    }
+
+    private func dismissProblem() {
+        if store.lastError != nil { store.clearError() } else { configProblem = nil }
     }
 
     /// Placed by what each item acts on, the way the menus are named. Quick

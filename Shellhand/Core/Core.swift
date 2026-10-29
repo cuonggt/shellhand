@@ -141,7 +141,7 @@ actor Core {
     /// window and before anything can connect, and there is nothing to
     /// serialise it against yet.
     nonisolated static func configure(configPath: String = "") throws -> Configured {
-        let path = configPath.isEmpty ? Config.defaultPath : configPath
+        let path = Config.path(configPath)
         let config = try Config.load(path: path)
         SSHArgs.setGlobalOptions(config.sshOptions)
         Themes.setCustom(config.themes)
