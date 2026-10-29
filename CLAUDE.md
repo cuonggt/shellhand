@@ -3056,10 +3056,11 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.0.12 are out**, each tagged at the commit its DMG was built
-from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap` —
-whose clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`;
-see 0.0.12 for what it needs before a cask is copied in.
+**0.0.1 through 0.0.12, and then 0.1.0, are out**, each tagged at the commit
+its DMG was built from, with the appcast on `main` and the cask in
+`cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's own, under
+`/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before a cask is
+copied in.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
 write one per version or the update window comes up blank.
@@ -3267,6 +3268,50 @@ feature. A review that grepped one preference key and read SwiftTerm's
 questions on screen corrected a claim the code and this file had both just
 made — that ⌘W with the Hosts tab in front closes the window. It closes
 nothing.
+
+**0.1.0 is what people expect of a terminal before they expect anything
+new**, published at `00c7b77` and live on release, feed, cask and tap. It
+leads with Quick Connect reaching machines that are not in the list —
+`user@host:port`, a bare host, `[v6]:port` or an `ssh://` link, offered as one
+more row and opened as a `Host` with an empty id, so nothing is saved. Then
+the tabs: ⇧⌘] and ⇧⌘[, and ⌃⇥ and ⌃⇧⇥, step through the strip, ⌘T opens
+another of the session in front rather than the host selected, and a tab has
+a menu of its own. Behind those, the terminal's font can be any monospaced
+family installed, Clear Scrollback is on ⌥⌘K, Export… and a Help menu are
+where people look for them, and the inspector's destination has a line of its
+own instead of breaking inside an address. The suite went 570 → 622.
+Verified the way 0.0.12 was, and everything passed both times. **Before
+publishing:** Gatekeeper, `codesign --deep --strict` and `stapler validate`
+on the app **inside** the DMG as well as the one in the build products; the
+DMG's staple; all three feed items' notes identical to their
+`docs/release-notes` files; the 0.1.0 item's length equal to the DMG's size;
+the signature reproduced by re-signing; and the cask's digest the DMG's.
+**After:** every appcast URL answering 200 at the length the feed claims; the
+DMG streamed back from GitHub hashing to the built one and to **both** casks,
+this repository's and the tap's as GitHub serves them, which say 0.1.0 and
+are the same file; the feed's blob on `main` matching the local one through
+the API; and the release page's notes byte-identical to the file. Both
+notarizations went through on the first attempt again, the CDN had nothing
+cached for the feed or the tap's cask and served 0.1.0 at `source-age 0`, and
+the tap's clone was level with its remote this time — 0.0.12 was committed
+from it — so the cask went straight in, its diff the `version` and the
+`sha256` and nothing else.
+**The first version past 0.0.x, and nothing in the pipeline leaned on the old
+shape**: the per-version rewrite put `Shellhand-0.1.0.dmg` under `v0.1.0`,
+and the feed came out by build — 13, 12, 11 — with 0.0.10 retired as old
+versions are. As text `0.1.0` sorts above `0.0.12` anyway, so this release
+could not have caught a string comparison; 0.0.10 was the one that could, and
+it held.
+**`gh … --jq .body` reads one line longer than the notes it came from**, and
+that is the check, not the release. The body keeps the file's own final
+newline and `--jq` prints one more, so a `cmp` against the file fails on a
+blank last line that nobody wrote. Compare the exact string instead — `body`
+out of `gh api repos/cuonggt/shellhand/releases/tags/v<version>`, read as JSON
+— which came back identical, 2,954 characters each.
+**The copy in `/Applications` was still on 0.0.11 half an hour later**, and
+that was no delivery failing: its `SULastCheckTime` was 23:26 on 28 October,
+before 0.0.12 went out at 10:18 the next morning, so it had not looked since
+either release existed. Nothing here asked it to, which is still the rule.
 
 **The README's picture was retaken on 2026-10-29**, from a scratch copy on a
 host list of its own: Production with EU and US inside it, Staging, a few
