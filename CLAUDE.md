@@ -2391,6 +2391,33 @@ credentials, which is most of it.
   that grid: ⌘K, type, return, the shape Spotlight has, where a footer would
   be noise. What a palette does owe you is a way out, and with no button bound
   to `.cancelAction` nothing answers Escape — `onExitCommand` is what does.
+- **⌘K connects to machines that are not in the list**: `host`, `user@host`,
+  `host:port`, `[v6]:port`, or an `ssh://` link, read by
+  `QuickConnect.destination` and offered as one more row, "Connect to …".
+  **Where that row goes is the rule**, in `QuickConnect.rows`: a saved host
+  that what was typed names exactly comes first — its name, or its address
+  with no user or port typed that says otherwise — so its key and jump host
+  still apply; then the typed row when it could only be a destination (a
+  user, a port, a dot or IPv6), so `10.0.1.5` is not beaten by a host at
+  `10.0.1.50`; and a bare word stays a search, its row last, so `web` is
+  `web-1` before it is a machine called `web`.
+  **Nothing may start with `-`**: the destination ends ssh's command line and
+  ssh reads such an argument as an option, so `-p` typed here would not be a
+  host. Checked the way round that matters — with that refusal out, only the
+  test for it fails, on `-p`, `-l@web` and `-x@web:22`; `-oProxyCommand=…`
+  is refused anyway, since `=` is no part of a name.
+  **The machine is a `Host` with an empty id**, made by
+  `QuickConnect.unsaved` and named as typed. The empty id is the whole
+  mechanism: `HostStore.sshArgs` resolves it as it stands, the way the editor
+  previews a draft, where a saved host is looked up (`HostStoreTests` pins
+  it: with that branch out, the typed host gets no line and an error saying
+  it "is no longer in the list") — and it keeps the host
+  out of the list, out of the inspector, out of a group's repaint and out of
+  the once-a-day OS question, whose `shouldAskOS` already refuses an empty
+  id. ⌘R reconnects it the same way, and ⌘T opens another of it through
+  `Panes.Opening.unsaved`, carried whole since there is nowhere to look it
+  up. The inspector says "Nothing selected" for its tab: there is no saved
+  host to describe.
 - A button on `.cancelAction` is **the Escape key**, so it must say what
   leaving means. Copy Key and Import both labelled theirs "Done" while sitting
   beside the button that actually does the thing, so Escape claimed something

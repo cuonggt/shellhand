@@ -485,7 +485,8 @@ struct ContentView: View {
     /// What ⌘T would open now — see `Panes.newTab`.
     private var newTabOpening: Panes.Opening? {
         let inFront: Panes.Opening? = frontSession.map { session in
-            session.host.map { Panes.Opening.host($0.id) } ?? .localShell
+            guard let host = session.host else { return .localShell }
+            return host.id.isEmpty ? .unsaved(host) : .host(host.id)
         }
         return Panes.newTab(
             inFront: inFront, selected: selectedHost?.id,
@@ -498,6 +499,8 @@ struct ContentView: View {
         switch newTabOpening {
         case let .host(id)?:
             if let host = store.snapshot.hosts.first(where: { $0.id == id }) { connect(host) }
+        case let .unsaved(host)?:
+            connect(host)
         case .localShell?:
             show(session: sessions.openLocalShell().id)
         case nil:

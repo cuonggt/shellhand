@@ -110,7 +110,7 @@ nonisolated struct QuickConnectTests {
 
     @Test("an empty list has nothing to highlight")
     func empty() {
-        #expect(QuickConnect.moved(from: "1", by: 1, over: []) == nil)
+        #expect(QuickConnect.moved(from: "1", by: 1, over: [Host]()) == nil)
     }
 
     /// Documented rather than endorsed. With nothing highlighted, Down lands
@@ -124,5 +124,144 @@ nonisolated struct QuickConnectTests {
         let list = QuickConnect.matches(among: hosts, for: "")
         #expect(QuickConnect.moved(from: nil, by: 1, over: list) == list[1].id)
         #expect(QuickConnect.moved(from: nil, by: -1, over: list) == list[0].id)
+    }
+
+    // MARK: reading what was typed as somewhere to connect
+
+    private typealias Destination = QuickConnect.Destination
+
+    private func read(_ typed: String) -> Destination? {
+        QuickConnect.destination(from: typed)
+    }
+
+    @Test("a host, with or without a user and a port")
+    func readsTheParts() {
+        #expect(read("db.example.com") == Destination(host: "db.example.com"))
+        #expect(read("deploy@db.example.com") == Destination(user: "deploy", host: "db.example.com"))
+        #expect(read("db.example.com:2222") == Destination(host: "db.example.com", port: 2222))
+        #expect(read("deploy@10.0.1.5:2222") == Destination(user: "deploy", host: "10.0.1.5", port: 2222))
+        #expect(read("  web  ") == Destination(host: "web"), "the spaces either side are typing, not the name")
+    }
+
+    /// Several colons are an IPv6 address with no port; a port after one has
+    /// to come after brackets, the way ssh's own users write it.
+    @Test("an IPv6 address, bare or bracketed with a port")
+    func readsIPv6() {
+        #expect(read("fe80::1") == Destination(host: "fe80::1"))
+        #expect(read("[2001:db8::7]:2222") == Destination(host: "2001:db8::7", port: 2222))
+        #expect(read("root@[fe80::1%en0]:22") == Destination(user: "root", host: "fe80::1%en0", port: 22))
+        #expect(read("[::1]") == Destination(host: "::1"))
+    }
+
+    @Test("an ssh:// link reads as what follows it")
+    func readsALink() {
+        #expect(read("ssh://deploy@db.example.com:2222") == Destination(user: "deploy", host: "db.example.com", port: 2222))
+        #expect(read("SSH://db.example.com/") == Destination(host: "db.example.com"))
+    }
+
+    @Test("a port has to be one: plain digits, 1 to 65535")
+    func refusesABadPort() {
+        for typed in ["web:", "web:0", "web:65536", "web:22x", "web:+22", "[::1]:", "[::1]x"] {
+            #expect(read(typed) == nil, "\(typed) read as a destination")
+        }
+    }
+
+    /// **The case the refusal is for.** The destination ends ssh's command
+    /// line, and ssh reads anything starting with `-` as an option.
+    @Test("nothing that ssh would read as an option")
+    func refusesAnOption() {
+        for typed in ["-oProxyCommand=sh", "-p", "deploy@-oProxyCommand=sh", "-l@web", "-x@web:22"] {
+            #expect(read(typed) == nil, "\(typed) read as a destination")
+        }
+    }
+
+    @Test("nothing with spaces, an empty part, or marks no name uses")
+    func refusesTheRest() {
+        for typed in ["", "   ", "web prod", "@web", "deploy@", "a@b@c", "web/etc", "we;b", "wéb", "[::1"] {
+            #expect(read(typed) == nil, "\(typed) read as a destination")
+        }
+    }
+
+    @Test("it is written back the way ssh is typed")
+    func spelling() {
+        #expect(QuickConnect.Destination(host: "web").spelled == "web")
+        #expect(QuickConnect.Destination(user: "deploy", host: "web", port: 2222).spelled == "deploy@web:2222")
+        #expect(QuickConnect.Destination(host: "fe80::1").spelled == "fe80::1")
+        #expect(QuickConnect.Destination(user: "root", host: "::1", port: 22).spelled == "root@[::1]:22")
+    }
+
+    @Test("a typed destination is connected as a host saved nowhere, named as typed")
+    func unsaved() {
+        let host = QuickConnect.unsaved(.init(user: "deploy", host: "10.0.1.5", port: 2222))
+        #expect(host.id.isEmpty, "an id would put it in the list, the inspector and the OS question")
+        #expect(host.name == "deploy@10.0.1.5:2222")
+        #expect(host.addr == "10.0.1.5")
+        #expect(host.user == "deploy")
+        #expect(host.port == 2222)
+        #expect(host.groupId.isEmpty)
+    }
+
+    // MARK: where the typed row goes
+
+    private func ids(_ typed: String, among list: [Host]) -> [String] {
+        QuickConnect.rows(among: list, for: typed).map(\.id)
+    }
+
+    @Test("nothing typed, or nothing that reads as a destination, adds no row")
+    func noTypedRow() {
+        #expect(QuickConnect.rows(among: hosts, for: "").count == hosts.count)
+        #expect(!ids("web prod", among: hosts).contains { $0.hasPrefix("typed:") })
+    }
+
+    /// A bare word is a search first, as ⌘K always was: `web` is
+    /// `web-staging` before it is a machine called `web`.
+    @Test("a bare word lists the saved hosts first and itself last")
+    func bareWordLast() {
+        let out = ids("web", among: hosts)
+        #expect(out.count == 4)
+        #expect(out.last == "typed:web")
+    }
+
+    @Test("something no saved host matches is the only row")
+    func onlyTheTypedRow() {
+        #expect(ids("nas", among: hosts) == ["typed:nas"])
+        #expect(ids("deploy@db.example.com:2222", among: hosts) == ["typed:deploy@db.example.com:2222"])
+    }
+
+    /// `10.0.1.5` must not lose to a host at `10.0.1.50`, which merely
+    /// contains it — but the host saved at exactly that address keeps its key
+    /// and its jump host by coming first.
+    @Test("an address leads its own row unless a saved host is at exactly that address")
+    func addressRanking() {
+        let list = [Self.host("near", "near", addr: "10.0.1.50"), Self.host("here", "here", addr: "10.0.1.5")]
+        #expect(ids("10.0.1.5", among: list) == ["here", "typed:10.0.1.5", "near"])
+        #expect(ids("10.0.1.5", among: [Self.host("near", "near", addr: "10.0.1.50")])
+            == ["typed:10.0.1.5", "near"])
+    }
+
+    /// A user or a port typed is a request: a saved host at that address
+    /// logging in as somebody else, or on another port, is not what was asked
+    /// for, so it does not get to go first.
+    @Test("a user or port that says otherwise keeps a saved host from going first")
+    func userAndPortDecide() {
+        var saved = Self.host("db", "db", addr: "10.0.1.5")
+        saved.effective.user = "deploy"
+        #expect(ids("deploy@10.0.1.5", among: [saved]) == ["db", "typed:deploy@10.0.1.5"])
+        #expect(ids("root@10.0.1.5", among: [saved]) == ["typed:root@10.0.1.5"])
+        #expect(ids("10.0.1.5:2222", among: [saved]) == ["typed:10.0.1.5:2222"])
+        #expect(ids("10.0.1.5:22", among: [saved]) == ["db", "typed:10.0.1.5:22"])
+    }
+
+    @Test("a saved host named exactly what was typed comes first")
+    func exactNameFirst() {
+        let list = [Self.host("1", "db.prod"), Self.host("2", "db.prod-old")]
+        #expect(ids("db.prod", among: list) == ["1", "typed:db.prod", "2"])
+    }
+
+    @Test("the arrows move over the typed row like any other")
+    func movesOverTheTypedRow() {
+        let rows = QuickConnect.rows(among: hosts, for: "web")
+        #expect(QuickConnect.moved(from: rows[2].id, by: 1, over: rows) == "typed:web")
+        #expect(QuickConnect.moved(from: "typed:web", by: 1, over: rows) == "typed:web")
     }
 }

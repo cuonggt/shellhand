@@ -215,6 +215,10 @@ final class HostStore {
         let path = dbPath
         let id = host.id
         do {
+            // A host typed into ⌘K is in no list to look it up in, so it is
+            // resolved as it stands — the way the editor previews one not yet
+            // saved — and takes the settings file's options like any other.
+            if id.isEmpty { return try await Core.shared.preview(db: path, host: host).argv }
             return try await Core.shared.sshArgs(db: path, hostID: id)
         } catch {
             lastError = error.localizedDescription

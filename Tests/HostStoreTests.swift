@@ -32,6 +32,20 @@ struct HostStoreTests {
 
     // MARK: reading
 
+    /// ⌘K hands over a host saved nowhere, so there is no id to look up: it
+    /// has to be resolved as it stands. Looked up instead, it comes back as
+    /// "that host is no longer in the list" and connects to nothing.
+    @Test("a host typed into ⌘K gets its ssh line without being saved")
+    func unsavedHostConnects() async {
+        let store = scratch()
+        await store.refresh()
+        let typed = QuickConnect.unsaved(.init(user: "deploy", host: "10.0.1.5", port: 2222))
+        #expect(await store.sshArgs(for: typed) == ["-p", "2222", "deploy@10.0.1.5"])
+        #expect(store.lastError == nil)
+        await store.refresh()
+        #expect(store.snapshot.hosts.isEmpty, "connecting to it saved it")
+    }
+
     @Test("an empty store reads as an empty list, with no error")
     func empty() async {
         let store = scratch()

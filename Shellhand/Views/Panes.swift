@@ -61,10 +61,13 @@ nonisolated enum Panes {
         return strip[((here + offset) % count + count) % count]
     }
 
-    /// What a session is a session of — a host, by id, or this Mac — which
-    /// is also what ⌘T opens another of.
+    /// What a session is a session of — a host, by id, one typed into ⌘K
+    /// and saved nowhere, or this Mac — which is also what ⌘T opens another
+    /// of.
     nonisolated enum Opening: Equatable {
         case host(String)
+        /// Carried whole, since there is no list to look it up in.
+        case unsaved(Host)
         case localShell
     }
 
@@ -89,6 +92,7 @@ nonisolated enum Panes {
     ) -> Opening? {
         switch inFront {
         case let .host(id)?: isListed(id) ? .host(id) : nil
+        case let .unsaved(host)?: .unsaved(host)
         case .localShell?: .localShell
         case nil: selected.flatMap { isListed($0) ? .host($0) : nil }
         }

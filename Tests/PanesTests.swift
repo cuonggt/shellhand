@@ -184,6 +184,15 @@ nonisolated struct PanesTests {
         #expect(Panes.newTab(inFront: nil, selected: "gone", isListed: listed) == nil)
     }
 
+    /// Typed into ⌘K, it is in no list to be looked up in, so it is carried
+    /// whole — and is never "deleted since", having never been saved.
+    @Test("a session to a machine typed into ⌘K opens another of itself")
+    func newTabOnAnUnsavedHost() {
+        let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
+        #expect(Panes.newTab(inFront: .unsaved(typed), selected: "web", isListed: listed)
+            == .unsaved(typed))
+    }
+
     // MARK: closing a tab moves the selection under the pane
 
     @Test("a pane on a session follows the selection to another session")
