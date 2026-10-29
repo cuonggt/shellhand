@@ -1,5 +1,4 @@
 import Foundation
-import Yams
 
 /// Shellhand's settings file.
 ///
@@ -39,9 +38,14 @@ nonisolated struct Config: Sendable, Equatable {
 
     /// Split out so it can be tested without a file on disk.
     static func parse(_ raw: String, path: String = "config") throws -> Config {
+        let documents: [Any]
+        do {
+            documents = try YAMLDocuments.read(raw)
+        } catch {
+            throw ConfigError("\(path): this is not valid YAML — \(error)")
+        }
         // A stream can hold several documents, and anything after the second
         // --- would be skipped in exactly the silent way an unknown key would.
-        let documents = try Yams.load_all(yaml: raw).compactMap { $0 }
         guard documents.count <= 1 else {
             throw ConfigError(
                 "\(path): this is more than one YAML document — settings after the --- "

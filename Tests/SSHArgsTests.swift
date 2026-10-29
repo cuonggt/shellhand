@@ -224,6 +224,23 @@ nonisolated struct ConfigTests {
             try Config.parse("ssh_options: []\n---\nssh_options:\n  - BatchMode=yes\n")
         }
     }
+
+    /// An unclosed quote used to read as no documents at all, so a config
+    /// with one sets nothing and says nothing — see `YAMLDocuments`.
+    @Test("a file that is not YAML is an error, not a config that sets nothing")
+    func notYAML() {
+        let error = #expect(throws: ConfigError.self) {
+            try Config.parse("ssh_options:\n  - \"ServerAliveInterval=30\n")
+        }
+        #expect(error?.message.contains("line 2") == true, "the error does not say where")
+    }
+
+    @Test("a second document that is not YAML is an error too, not one dropped")
+    func secondDocumentNotYAML() {
+        #expect(throws: ConfigError.self) {
+            try Config.parse("ssh_options: []\n---\nssh_options:\n  - \"BatchMode=yes\n")
+        }
+    }
 }
 
 @Suite("Per-host options", .serialized)

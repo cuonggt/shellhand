@@ -79,7 +79,12 @@ nonisolated enum Portable {
     /// past: a file whose `hosts` were spelled `host` would import nothing and
     /// say nothing, which is the one outcome worth ruling out.
     static func parse(_ raw: String) throws -> Document {
-        let documents = try Yams.load_all(yaml: raw).compactMap { $0 }
+        let documents: [Any]
+        do {
+            documents = try YAMLDocuments.read(raw)
+        } catch {
+            throw PortableError("this is not valid YAML — \(error)")
+        }
         guard documents.count <= 1 else {
             throw PortableError(
                 "this is more than one YAML document — everything after the --- would be skipped")

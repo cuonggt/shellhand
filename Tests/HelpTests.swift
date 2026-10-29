@@ -50,11 +50,6 @@ nonisolated struct HelpTests {
 
     /// GitHub serves the form from `main`, and the only copy the suite can
     /// see is this tree's, beside this file.
-    ///
-    /// Read line by line rather than through Yams: the suite would have to
-    /// link a second copy of it to import it, and the form is this
-    /// repository's own, written with each field's `type` leading and its
-    /// `id` under it.
     private static let templates = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent()
         .deletingLastPathComponent()
@@ -67,8 +62,7 @@ nonisolated struct HelpTests {
     func reportMatchesForm() throws {
         let items = Self.items(of: Help.report(version: "0.0.12", build: "12", system: "26.1.0"))
         let name = try #require(Self.value("template", in: items))
-        let form = try String(contentsOf: Self.templates.appendingPathComponent(name), encoding: .utf8)
-        let fields = Self.fields(of: form)
+        let fields = Self.fields(of: try Self.document(named: name))
         #expect(fields.count > 1, "read no fields, so this checks nothing")
         for item in items where item.name != "template" {
             let field = fields.first { $0.id == item.name }
@@ -82,9 +76,8 @@ nonisolated struct HelpTests {
     /// the body, and every copy of it will go on doing so.
     @Test("blank issues stay allowed, for the link 0.1.0 shipped")
     func blankIssuesStay() throws {
-        let config = try String(
-            contentsOf: Self.templates.appendingPathComponent("config.yml"), encoding: .utf8)
-        #expect(config.split(separator: "\n").contains("blank_issues_enabled: true"))
+        let config = try Self.document(named: "config.yml")
+        #expect(config["blank_issues_enabled"] as? Bool == true)
     }
 
     // MARK: reading them
@@ -97,18 +90,20 @@ nonisolated struct HelpTests {
         items.first { $0.name == name }?.value
     }
 
+    /// A template, read the way the app reads YAML, so one that is not YAML
+    /// at all fails here, with Yams's own line and column, rather than on
+    /// GitHub.
+    private static func document(named name: String) throws -> [String: Any] {
+        let text = try String(contentsOf: templates.appendingPathComponent(name), encoding: .utf8)
+        let documents = try YAMLDocuments.read(text)
+        return try #require(documents.first as? [String: Any], "\(name) is not a mapping")
+    }
+
     /// Each field of a form, its type and its id, in order.
-    private static func fields(of form: String) -> [(type: String, id: String)] {
-        var fields: [(type: String, id: String)] = []
-        var type = ""
-        for line in form.split(separator: "\n") {
-            let text = line.trimmingCharacters(in: .whitespaces)
-            if text.hasPrefix("- type:") {
-                type = text.dropFirst("- type:".count).trimmingCharacters(in: .whitespaces)
-            } else if text.hasPrefix("id:") {
-                fields.append((type, text.dropFirst("id:".count).trimmingCharacters(in: .whitespaces)))
-            }
+    private static func fields(of form: [String: Any]) -> [(type: String, id: String)] {
+        (form["body"] as? [[String: Any]] ?? []).compactMap { field in
+            guard let type = field["type"] as? String, let id = field["id"] as? String else { return nil }
+            return (type, id)
         }
-        return fields
     }
 }

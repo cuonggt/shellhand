@@ -159,6 +159,30 @@ nonisolated struct PortableTests {
         #expect(try Portable.parse("# only a comment\n").isEmpty)
     }
 
+    @Test("a second document would be skipped silently, so it is refused")
+    func twoDocuments() {
+        #expect(throws: PortableError.self) {
+            try Portable.parse("hosts: []\n---\nhosts:\n  - name: web\n    addr: 10.0.0.1\n")
+        }
+    }
+
+    /// An unclosed quote used to read as an empty document, so importing
+    /// one added nothing and said nothing about why — see `YAMLDocuments`.
+    @Test("a file that is not YAML is refused, not read as an empty one")
+    func notYAML() {
+        let error = #expect(throws: PortableError.self) {
+            try Portable.parse("hosts:\n  - name: \"web\n    addr: 10.0.0.1\n")
+        }
+        #expect(error?.message.contains("line 2") == true, "the error does not say where")
+    }
+
+    @Test("a second document that is not YAML is refused too, not dropped")
+    func secondDocumentNotYAML() {
+        #expect(throws: PortableError.self) {
+            try Portable.parse("hosts: []\n---\nhosts:\n  - name: \"web\n")
+        }
+    }
+
     // MARK: writing
 
     @Test("an export reads back as the same list")

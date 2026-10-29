@@ -47,6 +47,7 @@
 		3A2EB394976CF16932AA9BF0 /* SSHArgs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F30BECE69E1DA23C37953AE /* SSHArgs.swift */; };
 		3A3665741D034387ED16AEEF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5F1C9A8EC9E8345D811B6F3C /* Sparkle */; };
 		3BCCCCA1FCE58A325424678F /* HostHeaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4C89B31825E734E49A057E /* HostHeaderTests.swift */; };
+		3F90EECAEB4C66925537D6EA /* YAMLDocuments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C19A882D9D32CC6EEFFC555 /* YAMLDocuments.swift */; };
 		4014E7F5E27F15C047D144A3 /* TerminalSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */; };
 		41010B3442CF0D67DB46B249 /* HelpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB4E77B205AE7FFEDB57909 /* HelpTests.swift */; };
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
@@ -237,6 +238,7 @@
 		6A356F12BA2352D959D27B31 /* os-ol.svg */ = {isa = PBXFileReference; path = "os-ol.svg"; sourceTree = "<group>"; };
 		6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPWireTests.swift; sourceTree = "<group>"; };
 		6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */ = {isa = PBXFileReference; path = "os-arch.svg"; sourceTree = "<group>"; };
+		6C19A882D9D32CC6EEFFC555 /* YAMLDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YAMLDocuments.swift; sourceTree = "<group>"; };
 		6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueue.swift; sourceTree = "<group>"; };
 		6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyTests.swift; sourceTree = "<group>"; };
 		709897B4D50481E64978D1C7 /* Browsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsing.swift; sourceTree = "<group>"; };
@@ -527,6 +529,7 @@
 				531C7DCC9E4C7E12F56A543C /* Theme.swift */,
 				6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */,
 				C11557A4783217279E63F09A /* Validation.swift */,
+				6C19A882D9D32CC6EEFFC555 /* YAMLDocuments.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -836,6 +839,7 @@
 				5E88FC2F2FEDB01C20BAE1A8 /* Updates.swift in Sources */,
 				EF2A0E3D9F71930E1FD2D64A /* Validation.swift in Sources */,
 				8971631CB6A95A1D1D22AB7E /* WelcomeView.swift in Sources */,
+				3F90EECAEB4C66925537D6EA /* YAMLDocuments.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

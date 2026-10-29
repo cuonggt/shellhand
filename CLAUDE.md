@@ -1979,10 +1979,19 @@ credentials, which is most of it.
   own Help item, replaced, only said help was not available.
   **Those ids are as permanent as `SUFeedURL`**: a build opens the link it
   was born with for ever, so a field renamed in the form arrives empty from
-  every copy already out. `HelpTests` reads the form from this tree — by its
-  `type:` and `id:` lines, since importing Yams into the suite would link a
-  second copy of it — and fails when the link names a field the form lacks;
-  with `macos` renamed in the form, only that test fails. **0.1.0 shipped
+  every copy already out. `HelpTests` reads the form from this tree the way
+  the app reads YAML, through `YAMLDocuments`, and fails when the link names
+  a field the form lacks or the form is not YAML at all: with `macos`
+  renamed in the form only that test fails, and an unclosed quote fails it
+  with Yams's own line and column.
+  **The suite can import Yams the way it imports SwiftTerm**, taking the
+  code from the app's build rather than linking a copy — with `import Yams`
+  in a test, the only Yams symbols its binary defined were the glue any
+  caller emits, metadata caches and `load_all`'s default arguments. This
+  note said the opposite for a day, and the test read lines instead;
+  `import SwiftTerm` in `TerminalSessionTests` was the counterexample all
+  along.
+  **0.1.0 shipped
   the older link**, a blank issue with the questions in its body, so
   `config.yml` keeps `blank_issues_enabled: true`, and a test holds that too.
   **Live since 2026-10-29, and checked as far as no sign-in allowed.**
@@ -2764,6 +2773,24 @@ credentials, which is most of it.
   app's own YAML — and all three become a `Portable.Document`, so the merge,
   the dry run and the apply are one path rather than three. The preview is the
   plan the import applies, not a second implementation that predicts it.
+- **A YAML file that is not YAML used to read as an empty one, in every
+  release up to 0.1.0.** `Yams.load_all` throws only when a parser cannot
+  be made at all; a scan error while reading — an unclosed quote, a tab
+  where an indent belongs — is caught by the sequence it returns, kept in
+  its `error`, and the sequence simply ends. `Config.parse` and
+  `Portable.parse` both read with `try load_all(…).compactMap { $0 }`, so a
+  broken `config.yaml` came back as a config that set nothing and a broken
+  import as a document with nothing in it, said nowhere — the outcome both
+  functions' own comments call the one worth ruling out. A second document
+  that broke was dropped the same way, behind the very guard that refuses a
+  second document. Both read through `Core/YAMLDocuments.swift` now, which
+  drains the sequence by hand and throws what it kept, so they say "this is
+  not valid YAML" with Yams's own line and column. **Found by a control,
+  not a report**: the issue form's test, broken on purpose, came back "not
+  a mapping" rather than a YAML error, and the expression behind that was
+  the one both readers used. Checked the way round: with the line that asks
+  the sequence for its error taken out, the four not-YAML tests fail and
+  the empty-file and two-document ones still pass.
 - **Swift reads CRLF as ONE `Character`.** `"\r\n"` is a single grapheme
   cluster, so a parser that matches `"\r"` and looks ahead for the `"\n"`
   matches neither: the lookahead eats the next value and the row never ends.
