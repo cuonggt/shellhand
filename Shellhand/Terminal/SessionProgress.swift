@@ -65,4 +65,40 @@ nonisolated enum SessionProgress {
             return nil
         }
     }
+
+    /// How long after a session comes through its screen is still read, in
+    /// seconds. **Through is not settled.** An answered question on screen
+    /// reads as being through, so a jump chain's next hop asks after
+    /// `.connected`, and so does a host behind a bastion that printed a
+    /// banner first. Two minutes covers both with room to spare.
+    static let settling: TimeInterval = 120
+
+    /// Whether the watchdog reads the screen at all on this look.
+    ///
+    /// **Reading it means reading the whole history.** SwiftTerm 1.99 gives
+    /// the app no part of the buffer, only all of it, and at 10,000 lines
+    /// that measured 90–214ms a look in an optimized build — five looks a
+    /// second, on the main thread, for every session. So it is read only
+    /// while there can be something of this app's to ask: connecting, a
+    /// question up, and `settling` seconds after coming through. Every
+    /// connect is a fresh session, so the history is short whenever it is
+    /// read. After that a host-key question is something run inside the
+    /// session asking — an `ssh` typed there — and it is answered in the
+    /// terminal, as in any terminal, rather than with this app's dialog.
+    ///
+    /// A session through with no time on it is read, as every session was
+    /// before there was a rule.
+    static func watches(
+        _ state: TerminalSession.State, connectedAt: Date?, now: Date = Date()
+    ) -> Bool {
+        switch state {
+        case .connecting, .askingHostKey:
+            return true
+        case .ended:
+            return false
+        case .connected:
+            guard let connectedAt else { return true }
+            return now.timeIntervalSince(connectedAt) < settling
+        }
+    }
 }

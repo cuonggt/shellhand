@@ -1201,9 +1201,9 @@ credentials, which is most of it.
   own default, so nothing changed by being named. The test fills a terminal
   fed by hand, clears it, and feeds it again — checked the way round that
   matters, with the size left at nothing only the "kept again" half fails.
-  **500 lines is not much** for an ssh client, and raising it is now a
-  one-line change; it was left alone here because it is a different
-  decision.
+  **It is 10,000 now, and raising it was not the one-line change this note
+  once called it** — the watchdog had to stop reading the whole history
+  first; see its settling, further down.
 - **"Ask before closing a live session" switched nothing for every release up
   to 0.0.11.** The toggle was in Settings from the day it was added and no
   code read its key: ⌘W, a tab's ×, the window's close button and ⌘Q all
@@ -2448,6 +2448,52 @@ credentials, which is most of it.
   `feed(text:)` — no pty, no process, no unknown host. `ticks` is what tells
   "the watchdog ran and the state did not move" from "the watchdog never ran",
   and there is a test for each.
+- **The scrollback is 10,000 lines, and what held it at 500 was the
+  watchdog, not memory.** Measured on a session fed by hand, at 80 and 200
+  columns, in a Debug build compiled with `-O`. Plain Debug overstated what
+  ships four to forty times, and a Release test host would start Sparkle
+  against the real preferences, since only `#if DEBUG` gates it — so this is
+  the stand-in, and an upper bound, keeping SwiftTerm's debug-only checks:
+
+      lines     memory     watchdog look   search, no match   rewrap
+      500       0.6–1MB    5–12ms          5–11ms             ~1ms
+      10,000    8.5–16MB   90–214ms        83–210ms           10–14ms
+      100,000   72–141MB   0.9–2.1s        0.8–2.1s           98–177ms
+
+  A line costs about 8 bytes a column. **The look was the problem**: every
+  200ms, on the main thread, for every ssh session, `screen` turned the
+  whole buffer into one string and `HostKey` split it into rows to find the
+  last few — so even at 500 lines a session cost 2.5–6% of the main thread,
+  idle or not. Find runs on Return, not on every keystroke, which is what
+  makes a tenth of a second at 10,000 lines acceptable.
+  **SwiftTerm 1.99 gives the app no part of the buffer.** The view keeps its
+  `Terminal` internal — `var terminal: Terminal!`, no `getTerminal()` — and
+  every public read on the view is the whole buffer. `Terminal` does publish
+  `getLine(row:)`, `bufferLine(atRow:)` and `getText(start:end:)`, and a
+  bounded read built on them was proposed and approved before anyone found
+  that nothing could reach them: **check the view, not the class, before
+  planning on SwiftTerm's API.** `getLine` would have been wrong anyway — it
+  counts from where the view is *scrolled*, so it reads old rows whenever
+  somebody has scrolled back.
+  **So the screen is read only while it can matter.**
+  `SessionProgress.watches` says yes while connecting, while a question is
+  up, and for `settling`, two minutes, after the session last came through;
+  then no. Every connect is a fresh session, so the history is short
+  whenever it is read. **Stopping at `.connected` would have broken jump
+  chains**: an answered question on screen reads as being through, so the
+  next hop asks after `.connected`, and so does a host behind a bastion
+  that prints a banner first. The two minutes are for those.
+  **What it gives up, decided rather than drifted into:** a host-key
+  question from something run inside a settled session — an `ssh` typed
+  there, `git` over ssh — is answered in the terminal, as in Terminal.app,
+  where this app's dialog used to pop over it. No test had pinned the old
+  behaviour; `lateQuestionIsLeft` pins the new one. `looks` counts the reads
+  beside `ticks`, so "the watchdog ran and read nothing" is a fact a test
+  can see. Checked the way round that matters, three ways: with the loop's
+  guard taken out, only the settled and late-question tests fail; with no
+  settling window, the jump chain's next hop, the just-through control and
+  the rule's own timing fail; with the scrollback back at 500, only the
+  long-history test fails, its screen starting at line 473.
 - **Settings is a window this app makes itself**, not a SwiftUI `Settings`
   scene: the glass chrome macOS 26 draws comes from `.fullSizeContentView` in
   the window's style mask, and a scene does not expose it — setting it

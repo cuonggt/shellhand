@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Shellhand
 
@@ -107,5 +108,38 @@ nonisolated struct SessionProgressTests {
         let ended = TerminalSession.State.ended(code: 255, diagnostic: "")
         #expect(SessionProgress.next(from: ended, screen: "deploy@web:~$ ") == nil)
         #expect(SessionProgress.next(from: ended, screen: Self.asking) == nil)
+    }
+
+    // MARK: whether the screen is read at all
+
+    /// Connecting and a question up are the whole reason the watchdog
+    /// exists, however long ago anything happened.
+    @Test("connecting and asking are always read")
+    func readWhileConnecting() {
+        let longAgo = Date(timeIntervalSinceNow: -3600)
+        #expect(SessionProgress.watches(.connecting, connectedAt: longAgo))
+        #expect(SessionProgress.watches(.askingHostKey(Self.asking), connectedAt: longAgo))
+    }
+
+    /// Two minutes, so a jump chain's next hop is still asked: the answered
+    /// question on screen reads as being through before that hop asks.
+    @Test("a session through is read while it settles, and not after")
+    func readWhileSettling() {
+        let now = Date()
+        let settling = SessionProgress.settling
+        #expect(SessionProgress.watches(.connected, connectedAt: now, now: now))
+        #expect(SessionProgress.watches(.connected, connectedAt: now - (settling - 1), now: now))
+        #expect(!SessionProgress.watches(.connected, connectedAt: now - settling, now: now))
+        #expect(!SessionProgress.watches(.connected, connectedAt: now - 3600, now: now))
+    }
+
+    @Test("an ended session is never read")
+    func endedIsNotRead() {
+        #expect(!SessionProgress.watches(.ended(code: 0, diagnostic: ""), connectedAt: nil))
+    }
+
+    @Test("a session through with no time on it is read, as before there was a rule")
+    func untimedIsRead() {
+        #expect(SessionProgress.watches(.connected, connectedAt: nil))
     }
 }

@@ -240,6 +240,13 @@ struct TerminalSessionTests {
         + "ED25519 key fingerprint is SHA256:abcdefgh.\r\n"
         + "Are you sure you want to continue connecting (yes/no)?"
 
+    /// The next hop of a jump chain asking: another host and another key, so
+    /// it is a new question rather than `prompt` again.
+    private static let nextHop =
+        "\r\nThe authenticity of host 'db' can't be established.\r\n"
+        + "ED25519 key fingerprint is SHA256:ijklmnop.\r\n"
+        + "Are you sure you want to continue connecting (yes/no)?"
+
     // MARK: reading the screen
 
     /// **The buffer is not empty, and that was a bug.** A terminal that has
@@ -360,6 +367,103 @@ struct TerminalSessionTests {
             return false
         }
         #expect(asked, "screen was: \(session.screen.debugDescription)")
+    }
+
+    // MARK: the watchdog, once a session settles
+
+    /// What the 10,000-line scrollback rests on: the screen is the whole
+    /// history, so once a session has settled the watchdog goes on ticking —
+    /// ssh's log is still read — but stops reading it.
+    @Test("a settled session's screen is not read")
+    func settledIsNotRead() async {
+        let session = session()
+        defer { session.close() }
+        session.view.feed(text: "deploy@web:~$ \r\n")
+        session.watch()
+        #expect(await waitUntil { session.state == .connected })
+        #expect(session.looks > 0, "the watchdog never read the screen at all")
+
+        session.connectedAt = Date(timeIntervalSinceNow: -SessionProgress.settling - 1)
+        let looked = session.looks
+        let ticked = session.ticks
+        #expect(await waitUntil { session.ticks >= ticked + 3 }, "the watchdog stopped ticking")
+        #expect(session.looks == looked,
+                "the screen was read \(session.looks - looked) times after settling")
+    }
+
+    /// The control for the one above: a rule that never read a connected
+    /// session's screen would pass that and lose a jump chain's next hop.
+    @Test("a session just through is still read")
+    func justThroughIsRead() async {
+        let session = session()
+        defer { session.close() }
+        session.view.feed(text: "deploy@web:~$ \r\n")
+        session.watch()
+        #expect(await waitUntil { session.state == .connected })
+        let looked = session.looks
+        #expect(await waitUntil { session.looks >= looked + 3 },
+                "a session just through stopped being read")
+    }
+
+    /// A jump chain asks once per hop, and the first answer on screen reads
+    /// as being through — so the next hop asks after `.connected`. The echo
+    /// is fed by hand: a fed view has no pty to echo the answer.
+    @Test("a jump chain's next hop is still asked, after the first is answered")
+    func nextHopIsAsked() async {
+        let session = session()
+        defer { session.close() }
+        session.view.feed(text: Self.prompt)
+        session.watch()
+        let first = await waitUntil {
+            if case .askingHostKey = session.state { return true }
+            return false
+        }
+        guard first else {
+            Issue.record("the first hop's question was never asked")
+            return
+        }
+        session.answerHostKey(accept: true)
+        session.view.feed(text: " yes\r\n")
+        #expect(await waitUntil { session.state == .connected })
+
+        session.view.feed(text: Self.nextHop)
+        let next = await waitUntil {
+            if case let .askingHostKey(question) = session.state {
+                return question.contains("SHA256:ijklmnop")
+            }
+            return false
+        }
+        #expect(next, "the next hop was not asked: \(session.state)")
+    }
+
+    /// What the rule gives up, pinned so that it is a decision rather than an
+    /// accident: a question turning up after the session settled is something
+    /// run inside it asking — an `ssh` typed there — and the terminal is where
+    /// it gets answered, as in any terminal.
+    @Test("a question long after coming through is left to the terminal")
+    func lateQuestionIsLeft() async {
+        let session = session()
+        defer { session.close() }
+        session.view.feed(text: "deploy@web:~$ ssh db\r\n")
+        session.watch()
+        #expect(await waitUntil { session.state == .connected })
+        session.connectedAt = Date(timeIntervalSinceNow: -SessionProgress.settling - 1)
+
+        session.view.feed(text: Self.nextHop)
+        let ticked = session.ticks
+        #expect(await waitUntil { session.ticks >= ticked + 3 }, "the watchdog stopped ticking")
+        #expect(session.state == .connected, "this app asked: \(session.state)")
+    }
+
+    // MARK: the history
+
+    /// SwiftTerm's own default kept 500 lines, so a thousand in, the first
+    /// was gone.
+    @Test("a session keeps a long history")
+    func keepsALongHistory() {
+        let session = session()
+        session.view.feed(text: Self.lines("line", 1...1000))
+        #expect(session.screen.contains("line 001"), "the first of a thousand lines was not kept")
     }
 
     // MARK: a real shell on a real pty

@@ -51,6 +51,13 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// How many times the watchdog has looked, so a state that never moves can
     /// be told from a watchdog that never ran.
     private(set) var ticks = 0
+    /// How many of those looks read the screen: all of them while there can
+    /// be a question to ask, none once the session has settled — see
+    /// `SessionProgress.watches`.
+    private(set) var looks = 0
+    /// When the watchdog last took the session through. Settable so that a
+    /// test can settle a session without waiting two minutes for it.
+    var connectedAt: Date?
     private(set) var host: Host?
 
     /// Readable so that a test can put an ssh log where the watchdog looks.
@@ -206,10 +213,18 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         view.font = NSFont(descriptor: font.fontDescriptor, size: size) ?? font
     }
 
-    /// How many lines a terminal keeps above its screen: SwiftTerm's own
-    /// default, set here so this app knows the number — SwiftTerm will not
-    /// say what it is, and Clear Scrollback has to put it back exactly.
-    static let scrollback = 500
+    /// How many lines a terminal keeps above its screen, set here so this app
+    /// knows the number — SwiftTerm will not say what it is, and Clear
+    /// Scrollback has to put it back exactly.
+    ///
+    /// **10,000, where SwiftTerm's own default is 500**, and measured rather
+    /// than picked: a line costs about 8 bytes a column, so 8–16MB a session
+    /// at 80–200 columns; a search that finds nothing takes 0.1–0.2s and a
+    /// resize that rewraps every line 10–14ms. 100,000 cost 70–140MB, 1–2s
+    /// searches and 0.1–0.2s rewraps. Raising it waited on the watchdog,
+    /// which read the whole history five times a second until
+    /// `SessionProgress.watches` stopped it once a session settles.
+    static let scrollback = 10_000
 
     /// Clear Scrollback, ⌥⌘K: drops every line above the screen and keeps
     /// the screen itself — the shell's prompt, or the vim in front of it.
@@ -334,7 +349,9 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     ///
     /// What it *decides* is `SessionProgress`; this is only the looking. Not
     /// private, so that a test can run the loop against a view it has fed by
-    /// hand rather than a real `ssh` on a real pty.
+    /// hand rather than a real `ssh` on a real pty. The log is read on every
+    /// look and the screen only while `SessionProgress.watches` says so,
+    /// because the screen is the whole history.
     func watch() {
         watchdog?.cancel()
         watchdog = Task { [weak self] in
@@ -344,14 +361,21 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                 self.ticks += 1
                 self.readDiagnostics()
                 if case .ended = self.state { return }
+                guard SessionProgress.watches(self.state, connectedAt: self.connectedAt) else {
+                    continue
+                }
 
+                self.looks += 1
                 if let next = SessionProgress.next(
                     from: self.state, screen: self.screen, answered: self.answered)
                 {
                     self.state = next
                     // Through, so any question after this is a new one, even
                     // one worded exactly like the last.
-                    if next == .connected { self.answered = nil }
+                    if next == .connected {
+                        self.answered = nil
+                        self.connectedAt = Date()
+                    }
                 }
             }
         }
