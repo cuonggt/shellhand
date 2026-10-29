@@ -3295,7 +3295,8 @@ from US. Four things to know before taking it again:
   with a control first, plain text that long wrapping at that width, since
   without it a renderer handing back one fixed size would pass for nothing.
   Checked the way round: with `.lineLimit(1)` taken off, only the long
-  destination's check fails. The picture in the README predates the fix.
+  destination's check fails. The README's picture was taken again after the
+  fix, with the same list and drive, so it shows the header as it is now.
 - **Size the window before arrowing**, through System Events, at
   1220×798 points — the old picture's — or it comes up at whatever frame
   this Mac last saved. The preference domain is borrowed for the run anyway,
