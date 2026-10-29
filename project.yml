@@ -11,8 +11,8 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.0.11"
-    CURRENT_PROJECT_VERSION: "11"
+    MARKETING_VERSION: "0.0.12"
+    CURRENT_PROJECT_VERSION: "12"
     SWIFT_VERSION: "6.0"
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     # The Developer ID the releases are signed with, so a spike sees what a
