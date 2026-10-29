@@ -69,6 +69,24 @@ nonisolated enum Panes {
         /// Carried whole, since there is no list to look it up in.
         case unsaved(Host)
         case localShell
+
+        /// What a session on this host is a session of: a local shell for
+        /// none, the machine itself for one saved nowhere — its id is empty —
+        /// and the list's entry for the rest.
+        static func of(_ host: Host?) -> Opening {
+            guard let host else { return .localShell }
+            return host.id.isEmpty ? .unsaved(host) : .host(host.id)
+        }
+    }
+
+    /// Which saved host a tab's SFTP opens on: the one its session is on,
+    /// while the list still has it. A local shell is this Mac, which the SFTP
+    /// window's left side already is, and a machine typed into ⌘K has no
+    /// list entry for a file session to be opened from — so neither offers
+    /// it.
+    static func sftp(for opening: Opening, isListed: (String) -> Bool) -> String? {
+        guard case let .host(id) = opening, isListed(id) else { return nil }
+        return id
     }
 
     /// ⌘T: another session like the one in front — to the same host, or

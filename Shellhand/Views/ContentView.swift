@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// What the sidebar has selected. A group stands for everything beneath it,
 /// however deep.
@@ -38,6 +39,9 @@ struct ContentView: View {
     @State private var deletingGroup: Group?
     /// A tab waiting on an answer before it is closed or reconnected.
     @State private var closing: PendingClose?
+    /// File ▸ Export…: the list as written, and whether the save panel is up.
+    @State private var exportText = ""
+    @State private var exportingList = false
     @State private var showingQuickConnect = false
     /// Which way in the import sheet opens on, and whether it is open at all.
     ///
@@ -109,7 +113,7 @@ struct ContentView: View {
                 actions: actions,
                 pane: pane, beside: beside,
                 onConnect: connect, onPickTab: pick(tab:),
-                onCloseTab: { end($0) },
+                tabActions: tabActions,
                 onEdit: { editing = $0 },
                 onEditGroup: { editingGroup = $0 },
                 onPick: { selection = $0 },
@@ -213,7 +217,8 @@ struct ContentView: View {
         ) {
             Button(closing?.question.confirm ?? "Close", role: .destructive) {
                 if let pending = closing {
-                    finish(pending.session, reconnecting: pending.reconnecting)
+                    finish(pending.sessions, reconnecting: pending.reconnecting,
+                           keeping: pending.keeping)
                 }
             }
         } message: {
@@ -244,6 +249,19 @@ struct ContentView: View {
         // after the update instead, which is the whole difference.
         .sheet(item: $importing) { source in
             ImportSheet(store: store, start: source)
+        }
+        .fileExporter(
+            isPresented: $exportingList,
+            document: YAMLDocument(text: exportText),
+            contentType: .yaml,
+            defaultFilename: YAMLDocument.defaultFilename
+        ) { result in
+            // Cancelling is an answer, not a failure; anything else the disk
+            // refused is said rather than dropped.
+            if case let .failure(error) = result,
+               (error as? CocoaError)?.code != .userCancelled {
+                store.report("The list could not be exported: \(error.localizedDescription)")
+            }
         }
         // A constant binding cannot be dismissed: the alert came back the
         // moment it was closed, because nothing ever cleared the error.
@@ -479,24 +497,36 @@ struct ContentView: View {
             hasSession: frontSession != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
+            exportList: {
+                Task {
+                    exportText = await store.exportYAML() ?? ""
+                    exportingList = !exportText.isEmpty
+                }
+            },
+            canExport: !store.snapshot.hosts.isEmpty || !store.snapshot.groups.isEmpty,
             canNewTab: newTabOpening != nil)
     }
 
     /// What ⌘T would open now — see `Panes.newTab`.
     private var newTabOpening: Panes.Opening? {
-        let inFront: Panes.Opening? = frontSession.map { session in
-            guard let host = session.host else { return .localShell }
-            return host.id.isEmpty ? .unsaved(host) : .host(host.id)
-        }
-        return Panes.newTab(
-            inFront: inFront, selected: selectedHost?.id,
-            isListed: { id in store.snapshot.hosts.contains { $0.id == id } })
+        Panes.newTab(
+            inFront: frontSession.map { Panes.Opening.of($0.host) },
+            selected: selectedHost?.id, isListed: isListed)
+    }
+
+    /// Whether the list still holds a host, for the rules that ask.
+    private func isListed(_ id: String) -> Bool {
+        store.snapshot.hosts.contains { $0.id == id }
     }
 
     /// ⌘T. A host is connected to as the list has it now rather than as the
     /// session in front was opened, so an edit made since is the one used.
-    private func openNewTab() {
-        switch newTabOpening {
+    private func openNewTab() { open(newTabOpening) }
+
+    /// Opens another session of what an `Opening` names — ⌘T's, or a tab's
+    /// Duplicate.
+    private func open(_ opening: Panes.Opening?) {
+        switch opening {
         case let .host(id)?:
             if let host = store.snapshot.hosts.first(where: { $0.id == id }) { connect(host) }
         case let .unsaved(host)?:
@@ -508,32 +538,76 @@ struct ContentView: View {
         }
     }
 
-    /// A tab waiting on an answer, and what it was going to do.
+    /// What a tab's × and its own menu do, each to the session it is on.
+    private var tabActions: TabActions {
+        TabActions(
+            reconnect: { end($0, reconnecting: true) },
+            duplicate: { open(duplicate(of: $0)) },
+            openSFTP: { session in
+                if let id = Panes.sftp(for: .of(session.host), isListed: isListed),
+                   let host = store.snapshot.hosts.first(where: { $0.id == id }) {
+                    openFiles(on: host)
+                }
+            },
+            close: { end($0) },
+            closeOthers: closeOthers(keeping:),
+            canDuplicate: { duplicate(of: $0) != nil },
+            canOpenSFTP: { Panes.sftp(for: .of($0.host), isListed: isListed) != nil })
+    }
+
+    /// What a tab's Duplicate opens: ⌘T's rule, asked of that tab rather
+    /// than of the one in front.
+    private func duplicate(of session: TerminalSession) -> Panes.Opening? {
+        Panes.newTab(inFront: .of(session.host), selected: nil, isListed: isListed)
+    }
+
+    /// Tabs waiting on an answer, and what was going to happen to them.
     private struct PendingClose {
-        let session: TerminalSession
+        let sessions: [TerminalSession]
         let reconnecting: Bool
+        /// The tab to bring in front afterwards: the one Close Other Tabs
+        /// kept.
+        let keeping: TerminalSession?
         let question: Closing.Question
     }
 
     /// Closes a tab — or reconnects it — asking first when that would drop a
-    /// session somebody is in. ⌘W, ⌘R and a tab's × all come through here,
-    /// so there is one place the question is put.
+    /// session somebody is in. ⌘W, ⌘R, a tab's × and its menu all come
+    /// through here, so there is one place the question is put.
     private func end(_ session: TerminalSession, reconnecting: Bool = false) {
         if let question = Closing.question(
             reconnecting ? .reconnecting : .closingTab,
             dropping: [Closing.Open(session)], confirming: Closing.confirmsNow)
         {
-            closing = PendingClose(session: session, reconnecting: reconnecting, question: question)
+            closing = PendingClose(
+                sessions: [session], reconnecting: reconnecting, keeping: nil, question: question)
         } else {
-            finish(session, reconnecting: reconnecting)
+            finish([session], reconnecting: reconnecting, keeping: nil)
         }
     }
 
-    /// What `end` does once nothing is left to ask. Reconnecting rebuilds
-    /// the argv rather than reusing it, since the host may have been edited.
-    private func finish(_ session: TerminalSession, reconnecting: Bool) {
-        sessions.close(session)
-        if reconnecting, let host = session.host { connect(host) }
+    /// A tab's Close Other Tabs: every session but this one, asked about as
+    /// one question, and this one brought in front.
+    private func closeOthers(keeping session: TerminalSession) {
+        let others = sessions.all.filter { $0.id != session.id }
+        if let question = Closing.question(
+            .closingOthers, dropping: others.map(Closing.Open.init),
+            confirming: Closing.confirmsNow)
+        {
+            closing = PendingClose(
+                sessions: others, reconnecting: false, keeping: session, question: question)
+        } else {
+            finish(others, reconnecting: false, keeping: session)
+        }
+    }
+
+    /// What `end` and `closeOthers` do once nothing is left to ask.
+    /// Reconnecting rebuilds the argv rather than reusing it, since the host
+    /// may have been edited.
+    private func finish(_ ending: [TerminalSession], reconnecting: Bool, keeping: TerminalSession?) {
+        for session in ending { sessions.close(session) }
+        if reconnecting, let host = ending.first?.host { connect(host) }
+        if let keeping { pick(tab: .session(keeping.id)) }
     }
 
     /// The ssh command for the selected host, on the pasteboard — the same
@@ -673,8 +747,8 @@ struct DetailView: View {
     let onConnect: (Host) -> Void
     /// Picking a tab in the strip, or a session under "Open now".
     let onPickTab: (PaneTab) -> Void
-    /// A tab's ×, which asks first the way ⌘W does.
-    let onCloseTab: (TerminalSession) -> Void
+    /// A tab's × and its own menu, each acting on the tab's own session.
+    let tabActions: TabActions
     let onEdit: (Host) -> Void
     let onEditGroup: (Group) -> Void
     let onPick: (Selection) -> Void
@@ -690,7 +764,7 @@ struct DetailView: View {
             if Panes.showsTabs(hosts: store.snapshot.hosts.count,
                                loading: store.loading, sessions: sessions.all.count) {
                 SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab,
-                              onClose: onCloseTab)
+                              actions: tabActions)
                 Divider()
             }
             // The welcome stands in for the **hosts tab** on a fresh install,

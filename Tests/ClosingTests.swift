@@ -36,14 +36,14 @@ struct ClosingTests {
 
     @Test("with the switch off, nothing asks")
     func switchedOff() {
-        for act in [Closing.Act.closingTab, .reconnecting, .closingWindow, .quitting] {
+        for act in [Closing.Act.closingTab, .reconnecting, .closingOthers, .closingWindow, .quitting] {
             #expect(Closing.question(act, dropping: [web, shell], confirming: false) == nil)
         }
     }
 
     @Test("nothing asks when nothing would be lost")
     func nothingLive() {
-        for act in [Closing.Act.closingTab, .reconnecting, .closingWindow, .quitting] {
+        for act in [Closing.Act.closingTab, .reconnecting, .closingOthers, .closingWindow, .quitting] {
             #expect(Closing.question(act, dropping: [], confirming: true) == nil)
             #expect(Closing.question(act, dropping: [ended, connecting], confirming: true) == nil)
         }
@@ -78,6 +78,19 @@ struct ClosingTests {
         #expect(several?.message == "They are all still running.")
         #expect(Closing.question(.closingWindow, dropping: [ended, web], confirming: true)?.title
             == "Close the window and end the session on web?")
+    }
+
+    /// The tabs counted are every one going; the sessions named are only the
+    /// live ones among them, since closing an ended tab loses nothing.
+    @Test("Close Other Tabs counts the tabs going and names what is live among them")
+    func others() {
+        #expect(Closing.question(.closingOthers, dropping: [web], confirming: true)?.title
+            == "Close the other tab and end the session on web?")
+        #expect(Closing.question(.closingOthers, dropping: [web, ended], confirming: true)?.title
+            == "Close the other tabs and end the session on web?")
+        #expect(Closing.question(.closingOthers, dropping: [web, db, ended], confirming: true)?.title
+            == "Close the other tabs and end 2 sessions?")
+        #expect(Closing.question(.closingOthers, dropping: [ended, connecting], confirming: true) == nil)
     }
 
     @Test("quitting asks the same way, with its own button")

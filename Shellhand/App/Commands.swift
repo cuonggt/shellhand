@@ -88,6 +88,12 @@ struct AppActions {
     var canSplit = false
     /// Whether the strip holds more than the hosts, so stepping goes anywhere.
     var canStepTabs = false
+    /// File ▸ Export…: the list as YAML, the way the import sheet's Export…
+    /// writes it. It lived only in that sheet, behind a button labelled
+    /// Import.
+    var exportList: () -> Void = {}
+    /// Whether there is a list to export.
+    var canExport = false
     /// Whether ⌘T has anything to open — another of the session in front,
     /// or with the hosts in front the host selected. `Panes.newTab` decides;
     /// it used to be `hasHost`, which greyed ⌘T out in a terminal whenever
@@ -193,6 +199,9 @@ struct ShellhandCommands: Commands {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
             Button("Import…") { actions?.openImport() }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
+            // No key: ⇧⌘E, the usual one, is Edit Group's here.
+            Button("Export…") { actions?.exportList() }
+                .disabled(!(actions?.canExport ?? false))
         }
 
         CommandGroup(after: .newItem) {
@@ -307,6 +316,13 @@ struct ShellhandCommands: Commands {
         CommandGroup(after: .toolbar) {
             Button("Toggle Host Details") { actions?.toggleInspector() }
                 .keyboardShortcut("i", modifiers: [.command, .option])
+        }
+
+        // Replacing the system's own "Shellhand Help", which only said help
+        // was not available. Needs nothing selected, like the app menu's.
+        CommandGroup(replacing: .help) {
+            Button("Shellhand Help") { NSWorkspace.shared.open(Help.readme) }
+            Button("Report a Problem…") { NSWorkspace.shared.open(Help.reportFromHere) }
         }
     }
 }

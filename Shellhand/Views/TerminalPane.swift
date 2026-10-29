@@ -14,10 +14,10 @@ struct SessionTabBar: View {
     let sessions: Sessions
     let pane: PaneTab
     let onPick: (PaneTab) -> Void
-    /// A tab's ×. Handed back to the window rather than closing here, so it
-    /// asks first exactly as ⌘W does — it used to close a live session on
-    /// the spot.
-    let onClose: (TerminalSession) -> Void
+    /// A tab's × and its own menu, handed back to the window rather than
+    /// acted on here — so the × asks first exactly as ⌘W does, where it used
+    /// to close a live session on the spot.
+    let actions: TabActions
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -28,8 +28,9 @@ struct SessionTabBar: View {
                     TabButton(
                         session: session,
                         selected: pane == .session(session.id),
-                        onShow: { onPick(.session(session.id)) },
-                        onClose: { onClose(session) })
+                        hasOthers: sessions.all.count > 1,
+                        actions: actions,
+                        onShow: { onPick(.session(session.id)) })
                 }
             }
             .padding(.horizontal, 10)
@@ -72,11 +73,33 @@ private struct FixedTab: View {
     }
 }
 
+/// What a tab's × and its own menu do to the session the tab is on.
+///
+/// **Each is handed its session**, the way a row's menu is handed its host:
+/// a right-click on a tab does not bring it in front, so a menu that read the
+/// session in front would reconnect or close some other tab. The decisions —
+/// what Duplicate opens, whether SFTP can reach the machine, what closing
+/// asks — are `Panes` and `Closing`; the window wires them in.
+struct TabActions {
+    var reconnect: (TerminalSession) -> Void = { _ in }
+    var duplicate: (TerminalSession) -> Void = { _ in }
+    var openSFTP: (TerminalSession) -> Void = { _ in }
+    var close: (TerminalSession) -> Void = { _ in }
+    var closeOthers: (TerminalSession) -> Void = { _ in }
+    /// Whether Duplicate has anything to open — not for a host since deleted.
+    var canDuplicate: (TerminalSession) -> Bool = { _ in false }
+    /// Whether the session's machine can be opened over SFTP — a saved host,
+    /// not a local shell or one typed into ⌘K.
+    var canOpenSFTP: (TerminalSession) -> Bool = { _ in false }
+}
+
 private struct TabButton: View {
     let session: TerminalSession
     let selected: Bool
+    /// Whether there is another tab for Close Other Tabs to close.
+    let hasOthers: Bool
+    let actions: TabActions
     let onShow: () -> Void
-    let onClose: () -> Void
 
     var body: some View {
         Button {
@@ -95,7 +118,7 @@ private struct TabButton: View {
                     .truncationMode(.middle)
                     .frame(maxWidth: 180)
                     .fixedSize(horizontal: false, vertical: true)
-                Button(action: onClose) {
+                Button { actions.close(session) } label: {
                     Image(systemName: "xmark").font(.caption2)
                 }
                 .buttonStyle(.plain)
@@ -113,6 +136,20 @@ private struct TabButton: View {
         // cut it: a truncated name should always be readable somewhere.
         .help(session.title)
         .accessibilityLabel(session.title)
+        // Reconnecting and closing go through the same questions ⌘R and ⌘W
+        // put; Duplicate is ⌘T for this tab rather than the one in front.
+        .contextMenu {
+            Button("Reconnect") { actions.reconnect(session) }
+                .disabled(session.host == nil)
+            Button("Duplicate") { actions.duplicate(session) }
+                .disabled(!actions.canDuplicate(session))
+            Button("SFTP") { actions.openSFTP(session) }
+                .disabled(!actions.canOpenSFTP(session))
+            Divider()
+            Button("Close Tab") { actions.close(session) }
+            Button("Close Other Tabs") { actions.closeOthers(session) }
+                .disabled(!hasOthers)
+        }
     }
 
     /// Keyed off the strip's own selection, not `Sessions.selected`: with

@@ -40,6 +40,10 @@ final class HostStore {
     /// back, because `lastError` was still set.
     func clearError() { lastError = nil }
 
+    /// Puts up something that went wrong outside the store, through the same
+    /// alert as its own errors — an export the disk would not take, say.
+    func report(_ message: String) { lastError = message }
+
     func refresh() async {
         loading = true
         ignoringChanges = true

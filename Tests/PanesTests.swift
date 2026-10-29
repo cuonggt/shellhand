@@ -193,6 +193,29 @@ nonisolated struct PanesTests {
             == .unsaved(typed))
     }
 
+    // MARK: what a session is a session of, and what its tab can open
+
+    @Test("a session is of a saved host by id, of a typed one whole, or of this Mac")
+    func openingOfASession() {
+        let saved = Shellhand.Host(id: "db", name: "db", addr: "10.0.1.5")
+        let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
+        #expect(Panes.Opening.of(saved) == .host("db"))
+        #expect(Panes.Opening.of(typed) == .unsaved(typed))
+        #expect(Panes.Opening.of(nil) == .localShell)
+    }
+
+    /// SFTP opens from a list entry, so only a saved host still listed
+    /// offers it — a local shell is this Mac, which the window's left side
+    /// already is, and a typed machine has no entry.
+    @Test("a tab offers SFTP only for a saved host the list still holds")
+    func sftpFromATab() {
+        let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
+        #expect(Panes.sftp(for: .host("db"), isListed: listed) == "db")
+        #expect(Panes.sftp(for: .host("gone"), isListed: listed) == nil)
+        #expect(Panes.sftp(for: .localShell, isListed: listed) == nil)
+        #expect(Panes.sftp(for: .unsaved(typed), isListed: listed) == nil)
+    }
+
     // MARK: closing a tab moves the selection under the pane
 
     @Test("a pane on a session follows the selection to another session")

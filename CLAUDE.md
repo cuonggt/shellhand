@@ -1929,6 +1929,32 @@ credentials, which is most of it.
   the list, and opening some other machine instead is the surprise this
   exists to end. The host is taken from the list as it is now, not from the
   session's copy, so an edit made since is the one connected with.
+- **A tab has a menu of its own**: Reconnect, Duplicate, SFTP, Close Tab and
+  Close Other Tabs. **Each is handed its session** through `TabActions`, the
+  rule a row's menu already keeps: right-clicking a tab does not bring it in
+  front, so a menu that read the session in front would reconnect or close
+  some other tab. Nothing in it decides anything of its own. Reconnect and
+  Close go through `end`, so they put ⌘R's and ⌘W's questions; Duplicate is
+  `Panes.newTab` asked of that tab, so it is ⌘T for it and greys out for a
+  host since deleted; SFTP is `Panes.sftp`, offered only for a saved host the
+  list still holds — a local shell is this Mac, the window's left side
+  already, and a machine typed into ⌘K has no entry to open a file session
+  from. Close Other Tabs asks once for all of them — `Closing.closingOthers`
+  counts every tab going and names only the live ones — and brings the kept
+  tab in front. Close Tab was not asked for and is there because a tab menu
+  with Close Others and no Close reads as a mistake.
+- **File ▸ Export…** writes the list the way the import sheet's Export… does,
+  where it used to live alone — behind a sheet called Import. No key: ⇧⌘E,
+  the usual one, is Edit Group's. `YAMLDocument.defaultFilename` names the
+  file once for both, and a save the disk refuses is said through the
+  window's alert (`HostStore.report`) rather than dropped; Cancel is not a
+  failure.
+- **Help has two items now**: Shellhand Help opens the README, and Report a
+  Problem… opens a new issue whose body asks what happened and what was
+  expected, signed with the version, the build and the macOS version. The
+  link is `Help.report`, pure and tested, and carries **nothing else** — a
+  URL lives on in a browser's history, so no host name goes near it. The
+  system's own Help item, replaced, only said help was not available.
 - **Making each session its own `NSWindow`,
   so that macOS draws them as a real tab bar with the host list as the first
   tab, was built and thrown away** — it worked, tab overview and `⌘⇧[` and

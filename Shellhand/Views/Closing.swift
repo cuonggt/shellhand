@@ -21,6 +21,8 @@ nonisolated enum Closing {
         /// ⌘R on a session that is still up closes it before opening the
         /// new one, which drops it as surely as ⌘W does.
         case reconnecting
+        /// A tab's Close Other Tabs: every session but the one clicked.
+        case closingOthers
         case closingWindow
         case quitting
     }
@@ -77,6 +79,12 @@ nonisolated enum Closing {
                 message: "The session is still running, and reconnecting ends it "
                     + "before opening a new one.",
                 confirm: "Reconnect")
+        case .closingOthers:
+            // The tabs counted are every one going, live or not; the
+            // sessions named are only the live ones among them.
+            let tabs = sessions.count == 1 ? "tab" : "tabs"
+            return Question(
+                title: "Close the other \(tabs) and end \(them)?", message: still, confirm: "Close")
         case .closingWindow:
             return Question(
                 title: "Close the window and end \(them)?", message: still, confirm: "Close")

@@ -103,7 +103,7 @@ struct ImportSheet: View {
             isPresented: $exporting,
             document: YAMLDocument(text: exportText),
             contentType: .yaml,
-            defaultFilename: "shellhand-hosts"
+            defaultFilename: YAMLDocument.defaultFilename
         ) { result in
             if case let .success(url) = result { note = "Exported to \(url.lastPathComponent)." }
         }
@@ -387,6 +387,9 @@ struct ImportSheet: View {
 /// The export, written as the CLI writes it.
 struct YAMLDocument: FileDocument {
     static var readableContentTypes: [UTType] { [.yaml, .text] }
+    /// What an export is called until somebody names it — one name for the
+    /// import sheet's Export… and the File menu's, so the two cannot drift.
+    static let defaultFilename = "shellhand-hosts"
     var text: String
 
     init(text: String) { self.text = text }
