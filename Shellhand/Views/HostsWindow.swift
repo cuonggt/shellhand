@@ -45,3 +45,105 @@ struct TagsHostsWindow: NSViewRepresentable {
         }
     }
 }
+
+/// Put behind the host list, to stand a `ClosingGuard` in front of its
+/// window's delegate — on update rather than on make, for the reason
+/// `TagsHostsWindow` gives.
+struct GuardsClosing: NSViewRepresentable {
+    let sessions: Sessions
+
+    func makeNSView(context: Context) -> NSView { NSView(frame: .zero) }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        DispatchQueue.main.async {
+            guard let window = view.window else { return }
+            ClosingGuard.stand(in: window, for: sessions)
+        }
+    }
+}
+
+/// Asks before the host window closes on sessions somebody is in.
+///
+/// **In front of SwiftUI's own delegate, never instead of it.** The window
+/// is the `WindowGroup`'s, and its delegate is SwiftUI's window controller —
+/// measured, not assumed — which answers `windowShouldClose` itself and is
+/// told when the window becomes key, resizes and closes. Cut it off and
+/// SwiftUI loses track of its own window. So every message this does not
+/// answer goes straight through to it, and once the question here is
+/// answered yes, it is asked as well.
+///
+/// **The window keeps it, not a view.** A delegate is held weakly: a guard
+/// owned by a view that SwiftUI rebuilt would vanish and leave the window
+/// with no delegate at all, SwiftUI's included. Hung on the window, it lasts
+/// exactly as long as the window does.
+final class ClosingGuard: NSObject, NSWindowDelegate {
+    /// SwiftUI's delegate, held weakly: it holds the window, which holds this.
+    /// Read by the two overrides below, which the runtime calls from no actor.
+    private nonisolated(unsafe) weak var behind: (any NSWindowDelegate)?
+    private weak var sessions: Sessions?
+    /// Set when the question has been answered yes, so the close that answer
+    /// starts goes through rather than being asked about again.
+    private var answered = false
+
+    /// Where the window keeps its guard.
+    private static let key = UnsafeMutableRawPointer.allocate(byteCount: 1, alignment: 1)
+
+    /// Puts a guard in front of the window's delegate, or points the one
+    /// already there at these sessions.
+    static func stand(in window: NSWindow, for sessions: Sessions) {
+        if let standing = window.delegate as? ClosingGuard {
+            standing.sessions = sessions
+            return
+        }
+        let guarding = ClosingGuard()
+        guarding.behind = window.delegate
+        guarding.sessions = sessions
+        objc_setAssociatedObject(window, key, guarding, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+        window.delegate = guarding
+    }
+
+    /// What closing the window would ask now, or nil to let it close.
+    func question(confirming: Bool = Closing.confirmsNow) -> Closing.Question? {
+        Closing.question(
+            .closingWindow, dropping: (sessions?.all ?? []).map(Closing.Open.init),
+            confirming: confirming)
+    }
+
+    /// The delegate this stands in front of, so a test can see the chain is
+    /// whole: SwiftUI's window controller, for the host window.
+    var inFrontOf: (any NSWindowDelegate)? { behind }
+
+    func windowShouldClose(_ window: NSWindow) -> Bool {
+        if !answered, let question = question() {
+            NSAlert(asking: question).beginSheetModal(for: window) { [weak self, weak window] in
+                guard $0 == .alertFirstButtonReturn, let self, let window else { return }
+                self.answered = true
+                window.performClose(nil)
+            }
+            return false
+        }
+        answered = false
+        return behind?.windowShouldClose?(window) ?? true
+    }
+
+    nonisolated override func responds(to selector: Selector!) -> Bool {
+        super.responds(to: selector) || (behind?.responds(to: selector) ?? false)
+    }
+
+    nonisolated override func forwardingTarget(for selector: Selector!) -> Any? {
+        if let behind, behind.responds(to: selector) { return behind }
+        return super.forwardingTarget(for: selector)
+    }
+}
+
+extension NSAlert {
+    /// One of `Closing`'s questions, with the button that goes ahead first —
+    /// so Return answers it, as it does in Terminal.app — and Cancel on Escape.
+    convenience init(asking question: Closing.Question) {
+        self.init()
+        messageText = question.title
+        informativeText = question.message
+        addButton(withTitle: question.confirm)
+        addButton(withTitle: "Cancel")
+    }
+}

@@ -14,6 +14,10 @@ struct SessionTabBar: View {
     let sessions: Sessions
     let pane: PaneTab
     let onPick: (PaneTab) -> Void
+    /// A tab's ×. Handed back to the window rather than closing here, so it
+    /// asks first exactly as ⌘W does — it used to close a live session on
+    /// the spot.
+    let onClose: (TerminalSession) -> Void
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -22,9 +26,10 @@ struct SessionTabBar: View {
                          selected: pane == .hosts) { onPick(.hosts) }
                 ForEach(sessions.all) { session in
                     TabButton(
-                        session: session, sessions: sessions,
+                        session: session,
                         selected: pane == .session(session.id),
-                        onShow: { onPick(.session(session.id)) })
+                        onShow: { onPick(.session(session.id)) },
+                        onClose: { onClose(session) })
                 }
             }
             .padding(.horizontal, 10)
@@ -69,9 +74,9 @@ private struct FixedTab: View {
 
 private struct TabButton: View {
     let session: TerminalSession
-    let sessions: Sessions
     let selected: Bool
     let onShow: () -> Void
+    let onClose: () -> Void
 
     var body: some View {
         Button {
@@ -90,9 +95,7 @@ private struct TabButton: View {
                     .truncationMode(.middle)
                     .frame(maxWidth: 180)
                     .fixedSize(horizontal: false, vertical: true)
-                Button {
-                    sessions.close(session)
-                } label: {
+                Button(action: onClose) {
                     Image(systemName: "xmark").font(.caption2)
                 }
                 .buttonStyle(.plain)

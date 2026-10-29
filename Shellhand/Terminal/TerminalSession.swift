@@ -99,7 +99,8 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// **Any change to the defaults, not a notice Settings has to remember
     /// to post.** The switch writing its key is then the whole of the wiring,
     /// with no second step to forget — which is how `confirmCloseLiveSession`
-    /// has switched nothing since the day it was added. The price is hearing
+    /// switched nothing from the day it was added until it was wired up. The
+    /// price is hearing
     /// every other write too, so only a change to the setting itself reaches
     /// the terminal: otherwise a window saving its frame would undo SwiftTerm's
     /// own ⌥⌘O, which flips the one terminal it is pressed in.
@@ -393,6 +394,15 @@ final class FocusingTerminalView: LocalProcessTerminalView {
 @MainActor
 final class Sessions {
     private(set) var all: [TerminalSession] = []
+
+    /// Every window's sessions, held weakly, for what quitting has to ask
+    /// about: the app's delegate has no other way into a window's state.
+    private static let everywhere = NSHashTable<Sessions>.weakObjects()
+
+    /// Every session open in any window.
+    static var inEveryWindow: [TerminalSession] { everywhere.allObjects.flatMap(\.all) }
+
+    init() { Self.everywhere.add(self) }
     /// Which terminal is the current one. Not which tab is in front — that
     /// is `ContentView`'s `PaneTab`, because the hosts and an SFTP browser
     /// can be in front too, and neither is a session.

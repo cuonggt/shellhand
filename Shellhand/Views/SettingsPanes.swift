@@ -8,7 +8,10 @@ import SwiftUI
 
 /// How the app behaves, and where it keeps what it knows.
 struct GeneralSettingsPane: View {
-    @AppStorage("confirmCloseLiveSession") private var confirmClose = true
+    /// True, which is also what `Closing.confirms` answers when nothing is
+    /// stored. Nothing read this key from the day the switch was added until
+    /// `Closing` did.
+    @AppStorage(Closing.setting) private var confirmClose = true
     @State private var updates = Updates.shared
     let storePath: String
     let configPath: String
@@ -44,7 +47,8 @@ struct GeneralSettingsPane: View {
                 Toggle(isOn: $confirmClose) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Ask before closing a live session")
-                        Text("A tab with something still running on it asks first.")
+                        Text("Closing a tab or the window, reconnecting, or quitting asks "
+                            + "first while a session is still running.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

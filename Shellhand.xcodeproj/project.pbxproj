@@ -83,6 +83,7 @@
 		803CC1ACD0FD98D7CCAB8B38 /* TerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDB132447DA9624773556608 /* TerminalSession.swift */; };
 		8086DD275B95B625F1291FCF /* SessionProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E39F04CC1F0098ECB930EE /* SessionProgress.swift */; };
 		82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3473C3E584F456CD7438584F /* OSMarkTests.swift */; };
+		859DE5BE2E4F84E2820353C5 /* ClosingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF621E4651793C0613EFA8B2 /* ClosingTests.swift */; };
 		8616DC3036D6892CAB562898 /* SSHConfigFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */; };
 		865CB1F564DC202052056AF5 /* QuickConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */; };
 		8729DC9DB340FF5F95048F0D /* os-alpine.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */; };
@@ -109,6 +110,7 @@
 		A888901F1498F4EE05CA99CF /* HostDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */; };
 		A967E12D8A3D8405DFFFEA00 /* SidebarRowsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */; };
 		A9C4EEFCC8DAD29C08C573EF /* PalettePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */; };
+		AA8438BD92FFC71D2378A1E1 /* Closing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C254730119CB66E5B4582AD /* Closing.swift */; };
 		AC82FD9C78614F4B03772E2F /* TerminalPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */; };
 		B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */; };
 		B3D5370B49F11AC5EE224F75 /* HostStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A515CFA7668FD3B7721BCDBF /* HostStoreTests.swift */; };
@@ -251,6 +253,7 @@
 		94626F0B77323A224E47BAC4 /* HostIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostIcon.swift; sourceTree = "<group>"; };
 		96533AFA2A884A8C792A6F5D /* FilesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesTests.swift; sourceTree = "<group>"; };
 		9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigReachTests.swift; sourceTree = "<group>"; };
+		9C254730119CB66E5B4582AD /* Closing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Closing.swift; sourceTree = "<group>"; };
 		9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */ = {isa = PBXFileReference; path = "os-alpine.svg"; sourceTree = "<group>"; };
 		9F30BECE69E1DA23C37953AE /* SSHArgs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgs.swift; sourceTree = "<group>"; };
 		9F5B0D0ADECF7F7795DDD415 /* HostDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostDetailView.swift; sourceTree = "<group>"; };
@@ -270,6 +273,7 @@
 		BDB132447DA9624773556608 /* TerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalSession.swift; sourceTree = "<group>"; };
 		BE2DDE82A60175D6F5A16883 /* HostStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostStore.swift; sourceTree = "<group>"; };
 		BE455F58F183312F905772BE /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		BF621E4651793C0613EFA8B2 /* ClosingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosingTests.swift; sourceTree = "<group>"; };
 		BF83845D3EE0A5EF096D91B0 /* os-rhel.svg */ = {isa = PBXFileReference; path = "os-rhel.svg"; sourceTree = "<group>"; };
 		C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHArgsTests.swift; sourceTree = "<group>"; };
 		C11557A4783217279E63F09A /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
@@ -338,6 +342,7 @@
 			isa = PBXGroup;
 			children = (
 				38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */,
+				BF621E4651793C0613EFA8B2 /* ClosingTests.swift */,
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
 				96533AFA2A884A8C792A6F5D /* FilesTests.swift */,
 				7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */,
@@ -521,6 +526,7 @@
 			isa = PBXGroup;
 			children = (
 				709897B4D50481E64978D1C7 /* Browsing.swift */,
+				9C254730119CB66E5B4582AD /* Closing.swift */,
 				18AEC282492A0EB7F7C69600 /* ContentView.swift */,
 				86C158FFD9640188D5F7CB00 /* DialogSize.swift */,
 				F27F9464EAD6829A527CCBD7 /* FilesWindow.swift */,
@@ -691,6 +697,7 @@
 			files = (
 				B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */,
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
+				859DE5BE2E4F84E2820353C5 /* ClosingTests.swift in Sources */,
 				53C0DA7A90A3E4490308737B /* FilesTests.swift in Sources */,
 				DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */,
 				0C61DE7F90B8987A39C2F283 /* HostIconTests.swift in Sources */,
@@ -746,6 +753,7 @@
 			files = (
 				9EE9F8D48B36608375A43183 /* Browsing.swift in Sources */,
 				04759EB87D4A08C1FE7B7F68 /* CSVHosts.swift in Sources */,
+				AA8438BD92FFC71D2378A1E1 /* Closing.swift in Sources */,
 				C0A2550D1969F2F6C19A4CE8 /* Commands.swift in Sources */,
 				262C6F45A141D70D7A8A8419 /* Config.swift in Sources */,
 				73F718188AE077E2AE4559EE /* ContentView.swift in Sources */,

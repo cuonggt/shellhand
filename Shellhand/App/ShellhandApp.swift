@@ -7,6 +7,9 @@ import SwiftUI
 /// `--config <path>` at ssh options somewhere other than their usual place.
 @main
 struct ShellhandApp: App {
+    /// For ⌘Q and nothing else: whether to quit is the one question SwiftUI
+    /// has no way to ask the app.
+    @NSApplicationDelegateAdaptor(ShellhandAppDelegate.self) private var appDelegate
     private let options: LaunchOptions
     /// Where the ssh options came from, for Settings to show.
     private let configPath: String
@@ -19,8 +22,9 @@ struct ShellhandApp: App {
         self.configPath = (try? Core.configure(configPath: options.configPath))?.path
             ?? options.configPath
         // Sparkle wants its controller made before any window exists, which
-        // is here; `start()` holds the first look until launching is done,
-        // because there is no app delegate to put it in.
+        // is here; `start()` holds the first look until launching is done.
+        // That hop was written when there was no app delegate to put it in;
+        // there is one now, for ⌘Q, and the hop is left because it works.
         Updates.shared.start()
     }
 
@@ -32,6 +36,26 @@ struct ShellhandApp: App {
         .commands {
             ShellhandCommands(storePath: options.db, configPath: configPath)
         }
+    }
+}
+
+/// Asks before quitting takes live sessions down with it.
+///
+/// Every window's sessions, not only the front one's, which is why `Sessions`
+/// keeps a list of itself: quitting ends all of them, and this delegate has
+/// no way into a window's state otherwise.
+final class ShellhandAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let question = Self.question() else { return .terminateNow }
+        return NSAlert(asking: question).runModal() == .alertFirstButtonReturn
+            ? .terminateNow : .terminateCancel
+    }
+
+    /// What quitting would ask now, or nil to quit straight away.
+    static func question(confirming: Bool = Closing.confirmsNow) -> Closing.Question? {
+        Closing.question(
+            .quitting, dropping: Sessions.inEveryWindow.map(Closing.Open.init),
+            confirming: confirming)
     }
 }
 

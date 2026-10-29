@@ -36,6 +36,8 @@ struct ContentView: View {
     @State private var editingGroup: Group?
     @State private var deletingHost: Host?
     @State private var deletingGroup: Group?
+    /// A tab waiting on an answer before it is closed or reconnected.
+    @State private var closing: PendingClose?
     @State private var showingQuickConnect = false
     /// Which way in the import sheet opens on, and whether it is open at all.
     ///
@@ -107,6 +109,7 @@ struct ContentView: View {
                 actions: actions,
                 pane: pane, beside: beside,
                 onConnect: connect, onPickTab: pick(tab:),
+                onCloseTab: { end($0) },
                 onEdit: { editing = $0 },
                 onEditGroup: { editingGroup = $0 },
                 onPick: { selection = $0 },
@@ -117,6 +120,11 @@ struct ContentView: View {
         // SFTP window or from Settings, where this scene's actions are not
         // in focus.
         .background(TagsHostsWindow())
+        // And asks before the window closes on sessions somebody is in: the
+        // close button, File ▸ Close and Close All all go through its
+        // delegate, which is where this stands. (⌘W never reaches the window:
+        // Close Tab holds it, and SwiftUI's Close is left with no key at all.)
+        .background(GuardsClosing(sessions: sessions))
         .navigationTitle(windowTitle)
         .navigationSubtitle(windowSubtitle)
         .inspector(isPresented: $showingInspector) {
@@ -193,6 +201,20 @@ struct ContentView: View {
             }
         } message: {
             Text(deletingGroup.map { store.deletionWarning(for: $0) } ?? "")
+        }
+        .confirmationDialog(
+            closing?.question.title ?? "",
+            isPresented: Binding(get: { closing != nil },
+                                 set: { if !$0 { closing = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button(closing?.question.confirm ?? "Close", role: .destructive) {
+                if let pending = closing {
+                    finish(pending.session, reconnecting: pending.reconnecting)
+                }
+            }
+        } message: {
+            Text(closing?.question.message ?? "")
         }
         .sheet(isPresented: $showingQuickConnect) {
             QuickConnectSheet(store: store, onConnect: connect)
@@ -427,12 +449,11 @@ struct ContentView: View {
             copyAsCommand: copyAsCommand,
             connect: { if let host = selectedHost { connect(host) } },
             reconnect: {
-                if let session = frontSession, let host = session.host {
-                    sessions.close(session)
-                    connect(host)
+                if let session = frontSession, session.host != nil {
+                    end(session, reconnecting: true)
                 }
             },
-            closeTab: { if let session = frontSession { sessions.close(session) } },
+            closeTab: { if let session = frontSession { end(session) } },
             toggleSplit: toggleSplit,
             quickConnect: { showingQuickConnect = true },
             openImport: { open(import: .sshConfig) },
@@ -452,6 +473,34 @@ struct ContentView: View {
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs))
+    }
+
+    /// A tab waiting on an answer, and what it was going to do.
+    private struct PendingClose {
+        let session: TerminalSession
+        let reconnecting: Bool
+        let question: Closing.Question
+    }
+
+    /// Closes a tab — or reconnects it — asking first when that would drop a
+    /// session somebody is in. ⌘W, ⌘R and a tab's × all come through here,
+    /// so there is one place the question is put.
+    private func end(_ session: TerminalSession, reconnecting: Bool = false) {
+        if let question = Closing.question(
+            reconnecting ? .reconnecting : .closingTab,
+            dropping: [Closing.Open(session)], confirming: Closing.confirmsNow)
+        {
+            closing = PendingClose(session: session, reconnecting: reconnecting, question: question)
+        } else {
+            finish(session, reconnecting: reconnecting)
+        }
+    }
+
+    /// What `end` does once nothing is left to ask. Reconnecting rebuilds
+    /// the argv rather than reusing it, since the host may have been edited.
+    private func finish(_ session: TerminalSession, reconnecting: Bool) {
+        sessions.close(session)
+        if reconnecting, let host = session.host { connect(host) }
     }
 
     /// The ssh command for the selected host, on the pasteboard — the same
@@ -580,6 +629,8 @@ struct DetailView: View {
     let onConnect: (Host) -> Void
     /// Picking a tab in the strip, or a session under "Open now".
     let onPickTab: (PaneTab) -> Void
+    /// A tab's ×, which asks first the way ⌘W does.
+    let onCloseTab: (TerminalSession) -> Void
     let onEdit: (Host) -> Void
     let onEditGroup: (Group) -> Void
     let onPick: (Selection) -> Void
@@ -594,7 +645,8 @@ struct DetailView: View {
             // has always met rather than one tab leading nowhere.
             if Panes.showsTabs(hosts: store.snapshot.hosts.count,
                                loading: store.loading, sessions: sessions.all.count) {
-                SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab)
+                SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab,
+                              onClose: onCloseTab)
                 Divider()
             }
             // The welcome stands in for the **hosts tab** on a fresh install,

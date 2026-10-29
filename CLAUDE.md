@@ -1157,14 +1157,86 @@ credentials, which is most of it.
   **An open session follows the switch through
   `UserDefaults.didChangeNotification`, not a notice Settings posts.** The
   switch writing its key is then the whole of the wiring, with no second step
-  to forget — `confirmCloseLiveSession` is what forgetting looks like. It
-  hears every other write too, so a session acts only when the setting
-  differs from the one it last took; otherwise a window saving its frame
-  would undo SwiftTerm's own ⌥⌘O, which flips one terminal. Both sides name
-  the key through `TerminalSession.optionAsMetaSetting`.
+  to forget — `confirmCloseLiveSession`, below, is what forgetting looked
+  like. It hears every other write too, so a session acts only when the
+  setting differs from the one it last took; otherwise a window saving its
+  frame would undo SwiftTerm's own ⌥⌘O, which flips one terminal. Both sides
+  name the key through `TerminalSession.optionAsMetaSetting`.
   The tests post that notification rather than write the key, since the test
   host's defaults are the user's own, and ask the terminal both ways round:
   SwiftTerm's default would pass one of them.
+- **"Ask before closing a live session" switched nothing for every release up
+  to 0.0.11.** The toggle was in Settings from the day it was added and no
+  code read its key: ⌘W, a tab's ×, the window's close button and ⌘Q all
+  dropped live sessions while Settings said they would ask. **The sweep for
+  dead declarations cannot see this shape** — it counts functions, and a
+  preference key is a string — so sweep the keys as well: every
+  `@AppStorage` key against every place that acts on it. A key whose only
+  reader is the switch that writes it is this bug; a key mentioned once and
+  read by the very view that declares it, like `hostInspector`, is fine.
+  Run on 2026-10-29, this was the only one.
+  The rule is `Views/Closing.swift`, pure: a session is **live** when it is
+  `.connected` — somebody is in it — so one still connecting, one waiting on
+  a host-key answer and one that has ended all close without a word; a local
+  shell is connected from the start. ⌘R asks too, since reconnecting a live
+  session drops it as surely as ⌘W does. Absent means **ask**, which is what
+  the switch shows — `UserDefaults.bool(forKey:)` would have said no, so it
+  is not used. Three places put the question, each where it can be put:
+  - **⌘W, ⌘R and a tab's ×** go through `ContentView.end`, a
+    `confirmationDialog` like the delete ones. The × used to call
+    `sessions.close` itself, so it is handed back to the window now.
+  - **The window** asks through `ClosingGuard`, which stands **in front of**
+    SwiftUI's own delegate rather than replacing it. Measured before it was
+    written: the host window's delegate is SwiftUI's `AppKitWindowController`,
+    which answers `windowShouldClose` itself and hears the window become key,
+    resize and close — cut it off and SwiftUI loses its own window. So
+    everything the guard does not answer is forwarded, and once the question
+    is answered yes, SwiftUI's own answer is asked too. The **window** holds
+    the guard, as an associated object: a delegate is held weakly, and a
+    guard owned by a view SwiftUI rebuilt would have left the window with no
+    delegate at all. This catches the close button, File ▸ Close and Close
+    All. **⌘W never reaches the window**, which was written here the other
+    way round until a drive measured it: "Close Tab" holds ⌘W, SwiftUI's own
+    File ▸ Close is left with **no key equivalent at all**, so with the Hosts
+    tab in front ⌘W does nothing — neither asks nor closes.
+  - **⌘Q** asks in `ShellhandAppDelegate.applicationShouldTerminate`, through
+    `@NSApplicationDelegateAdaptor` — the app's first delegate. It needs
+    every window's sessions, and a delegate cannot reach a window's state,
+    so `Sessions` keeps a weak list of itself. Sparkle relaunching for an
+    update goes through here too, and that is wanted: an install should not
+    drop sessions behind somebody's back either.
+  `Tests/ClosingTests.swift` holds the rule and three of the links, each
+  checked the way round that matters: with `Sessions` not listing itself the
+  quit test fails; with the guard not put up the window test fails; and with
+  a guard that **replaces** SwiftUI's delegate rather than standing in front
+  of it, the window test fails on all three counts and nothing else does.
+  **What no test reaches** is the presenting — the dialog, the sheet, the
+  alert — and the delegate adaptor's hook-up. Those were proven on
+  2026-10-29 by driving a scratch copy, cancelling each: ⌘W and File ▸ Close
+  Tab on a local shell, ⌘R on a live ssh session, the close button, File ▸
+  Close and ⌘Q all put their question with the right words, Cancel left
+  everything open, and a second ⌘Q answered Quit did quit. ⌘R on a local
+  shell asks nothing, since it has no host to reconnect to. If you touch any
+  of it, drive it again; three things made that cheap:
+  - **A live ssh session needs no machine of yours**: macOS's own `sshd`
+    as you on `127.0.0.1`, as `LocalSSHD` makes one, with the host's own
+    `-o` settings pinning it — `HostName`, `ProxyJump=none`,
+    `ProxyCommand=none`, known hosts in scratch, no agent, no control
+    socket — since a real session reads `~/.ssh/config` and a `Host *`
+    `ProxyJump` there would otherwise take it through a real bastion.
+    Expect **two** logins per connect, not one: the second is the
+    once-a-day OS probe.
+  - **A menu item answers AXPress**, so File ▸ New Local Shell and Close
+    Tab can be clicked with no keystroke at all, and a sheet's Cancel the
+    same way. Keys still need the copy in front, checked before every one,
+    and the lock checked too: behind a lock a key goes to the login window.
+  - **`kind` is a reserved word in System Events.** `set kind to …` fails
+    with *"Can't set kind"*, and a helper that hid its stderr turned that
+    into five pictures silently not taken.
+  The two kinds of question look slightly different: the tab's is SwiftUI's
+  `confirmationDialog`, with a red Close that is not the default, while the
+  window's and quitting's are `NSAlert`s whose Close or Quit is the blue
+  default, so Return answers those and not the tab's.
 - **SwiftTerm leaks every descriptor not marked close-on-exec into every
   terminal's child**, and it made the new suite hang for a minute. Its
   `PseudoTerminalHelpers.fork(andExec:)` calls `forkpty` and goes straight to
@@ -2738,12 +2810,13 @@ credentials, which is most of it.
   hop to the main actor to be legal under Swift 6 — all to grey the menu item
   out for the second a check is already running, which is harmless to ask
   twice. The menu reads it when it is built, which is often enough.
-- **There is no app delegate, so the updater starts a turn of the run loop
-  late.** Sparkle wants its controller made before any window, which is
-  `ShellhandApp.init()` — but that runs *during* launching, too early to start
-  checking. `start()` hops through `DispatchQueue.main.async`, the same
+- **The updater starts a turn of the run loop late, from before there was an
+  app delegate.** Sparkle wants its controller made before any window, which
+  is `ShellhandApp.init()` — but that runs *during* launching, too early to
+  start checking. `start()` hops through `DispatchQueue.main.async`, the same
   deferral the inspector needs, rather than adding an `AppDelegate` to reach a
-  single notification.
+  single notification. There is one now, `ShellhandAppDelegate`, for ⌘Q; the
+  hop works, so it was left where it is.
 - **notarytool words a timed-out upload more than one way, and matching one of
   them is as good as no retry at all.** The retry loop tested for the literal
   string `timed out`. 0.0.4's run printed *"The request timed out"* and
