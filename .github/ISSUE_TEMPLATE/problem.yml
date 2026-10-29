@@ -1,0 +1,41 @@
+# The form behind Help ▸ Report a Problem…, which fills in `version` and
+# `macos` from the link it opens. A build carries that link for ever, so those
+# two ids are permanent: renaming one leaves every report from a copy already
+# out with that field empty. Tests/HelpTests.swift holds the link and this file
+# to each other.
+name: Report a problem
+description: Something in Shellhand did not do what you expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This page is public, so leave out host names, addresses, user names and keys: `web-1` or `203.0.113.5` explains a problem as well as the real thing does.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, and what Shellhand did. Steps that make it happen again help most.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Shellhand version
+      description: Shellhand ▸ About Shellhand shows it, and Help ▸ Report a Problem… fills it in for you.
+      placeholder: "0.1.0 (13)"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "26.1"
+    validations:
+      required: true

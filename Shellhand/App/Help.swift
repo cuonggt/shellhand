@@ -1,7 +1,7 @@
 import Foundation
 
-/// Where the Help menu sends somebody: the README, and a new issue on the
-/// repository already holding what a report needs.
+/// Where the Help menu sends somebody: the README, and the repository's
+/// problem form with what the app knows about itself already filled in.
 ///
 /// The link is made here rather than in the menu so what it carries can be
 /// checked without opening a browser — and what it carries is deliberately
@@ -10,20 +10,25 @@ import Foundation
 nonisolated enum Help {
     static let readme = URL(string: "https://github.com/cuonggt/shellhand#readme")!
 
-    /// A new issue, its body asking the two questions every report needs
-    /// answered and signed with what the app knows about itself. No title:
-    /// GitHub asks for one, and a title written here would be a guess.
+    /// The problem form, `.github/ISSUE_TEMPLATE/problem.yml`, with its
+    /// version and macOS fields filled in: GitHub fills a form's field from
+    /// the query item named for its `id`. The form asks the two questions
+    /// every report needs answered. No title: GitHub asks for one, and a
+    /// title written here would be a guess.
+    ///
+    /// **Those ids are as permanent as the feed's URL.** A build opens the
+    /// link it was born with for ever, so renaming a field in the form
+    /// leaves it empty in every report from a copy already out — `HelpTests`
+    /// reads the form and holds the two to each other. 0.1.0 shipped a blank
+    /// issue with the questions in its body instead, which is why the
+    /// template config keeps blank issues allowed.
     static func report(version: String, build: String, system: String) -> URL {
         var link = URLComponents(string: "https://github.com/cuonggt/shellhand/issues/new")!
-        link.queryItems = [URLQueryItem(name: "body", value: """
-            What happened:
-
-
-            What you expected instead:
-
-
-            Shellhand \(version) (\(build)) on macOS \(system)
-            """)]
+        link.queryItems = [
+            URLQueryItem(name: "template", value: "problem.yml"),
+            URLQueryItem(name: "version", value: "\(version) (\(build))"),
+            URLQueryItem(name: "macos", value: system),
+        ]
         return link.url!
     }
 

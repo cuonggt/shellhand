@@ -1969,11 +1969,28 @@ credentials, which is most of it.
   window's alert (`HostStore.report`) rather than dropped; Cancel is not a
   failure.
 - **Help has two items now**: Shellhand Help opens the README, and Report a
-  Problem… opens a new issue whose body asks what happened and what was
-  expected, signed with the version, the build and the macOS version. The
-  link is `Help.report`, pure and tested, and carries **nothing else** — a
-  URL lives on in a browser's history, so no host name goes near it. The
-  system's own Help item, replaced, only said help was not available.
+  Problem… opens the problem form, `.github/ISSUE_TEMPLATE/problem.yml`,
+  with its version and macOS fields filled in — GitHub's form schema fills a
+  field from the query item named for its `id`. The link is `Help.report`,
+  pure and tested, and carries **nothing else** — a URL lives on in a
+  browser's history, so no host name goes near it, and the form asks people
+  to leave theirs out of a public issue too. Questions go to Discussions,
+  through the contact link in the same folder's `config.yml`. The system's
+  own Help item, replaced, only said help was not available.
+  **Those ids are as permanent as `SUFeedURL`**: a build opens the link it
+  was born with for ever, so a field renamed in the form arrives empty from
+  every copy already out. `HelpTests` reads the form from this tree — by its
+  `type:` and `id:` lines, since importing Yams into the suite would link a
+  second copy of it — and fails when the link names a field the form lacks;
+  with `macos` renamed in the form, only that test fails. **0.1.0 shipped
+  the older link**, a blank issue with the questions in its body, so
+  `config.yml` keeps `blank_issues_enabled: true`, and a test holds that too.
+  What GitHub does with that link once there are templates is not in its
+  documentation, and checking it needs the form on `main`.
+  **Quote a placeholder that looks like a number**: `26.1` bare is a float,
+  and the schema wants a string. Ruby's YAML, which macOS ships, checked both
+  files against the rules GitHub documents, and caught exactly that in a
+  control copy.
 - **Making each session its own `NSWindow`,
   so that macOS draws them as a real tab bar with the host list as the first
   tab, was built and thrown away** — it worked, tab overview and `⌘⇧[` and

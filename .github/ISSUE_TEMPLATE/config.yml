@@ -1,0 +1,7 @@
+# Blank issues stay allowed: 0.1.0's Help ▸ Report a Problem… opens one with
+# its body filled in, and a link compiled into a build is permanent.
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a question or suggest something
+    url: https://github.com/cuonggt/shellhand/discussions
+    about: For anything that is not a problem with the app.
