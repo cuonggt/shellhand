@@ -152,17 +152,32 @@ struct HostDetailView: View {
         }
     }
 
+    /// The name with what acts on it, then where it goes, on a line of its
+    /// own.
+    ///
+    /// **The destination has the whole width, and keeps to one line.** It
+    /// used to sit under the name beside Edit and Connect, in whatever they
+    /// left — about half the inspector — so `deploy@203.0.113.21 port 2222`
+    /// broke as `deploy@203.0.113.2` / `1 port 2222`, inside the address,
+    /// since there was nowhere else to break it. A destination longer even
+    /// than the full width — a cloud machine's own name is — is cut in the
+    /// middle, which keeps the user and the port, and is whole on the
+    /// tooltip. The name beside the buttons is cut the same way, for the
+    /// same reason.
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(host.name).font(.title2).bold()
-                Text(destination).font(.callout).foregroundStyle(.secondary).textSelection(.enabled)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .help(host.name)
+                Spacer()
+                Button("Edit") { onEdit(host) }
+                Button("Connect") { onConnect(host) }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.return, modifiers: .command)
             }
-            Spacer()
-            Button("Edit") { onEdit(host) }
-            Button("Connect") { onConnect(host) }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.return, modifiers: .command)
+            DestinationLine(text: host.destinationLine)
         }
     }
 
@@ -240,11 +255,36 @@ struct HostDetailView: View {
     private var openHere: [TerminalSession] {
         (sessions?.all ?? []).filter { $0.host?.id == host.id }
     }
+}
 
-    private var destination: String {
-        let user = host.effective.user
-        let port = host.effective.port
-        return (user.isEmpty ? host.addr : "\(user)@\(host.addr)") + (port == 22 ? "" : " port \(port)")
+nonisolated extension Host {
+    /// Where this host goes, as the inspector's header says it: the user it
+    /// logs in as, the address, and the port when it is not 22 — each as
+    /// inheritance left it.
+    var destinationLine: String {
+        let user = effective.user
+        let port = effective.port
+        return (user.isEmpty ? addr : "\(user)@\(addr)") + (port == 22 ? "" : " port \(port)")
+    }
+}
+
+/// A host's destination as the inspector's header draws it: one line, cut in
+/// the middle when it is longer than the line, and whole on the tooltip.
+///
+/// Its own view, and not private, so a test can render it at a narrow width
+/// and measure that it stayed on one line — a layout nothing else could
+/// check without driving the inspector.
+struct DestinationLine: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .textSelection(.enabled)
+            .help(text)
     }
 }
 

@@ -3284,11 +3284,18 @@ from US. Four things to know before taking it again:
   and arrowing onto a group goes into it — Down from nothing walked into
   Production, then EU. Up from nothing starts at the last host and climbs
   through hosts alone, so the pane stays on all of them.
-- **The inspector's header wraps inside an address.** Its subtitle shares a
-  row with Edit and Connect, so `deploy@203.0.113.21 port 2222` broke as
-  `deploy@203.0.113.2` / `1 port 2222`. Shorter addresses put the break at
-  the space; the layout itself is worth fixing, since a real machine's name
-  is longer than any address here.
+- **The inspector's header wrapped inside an address**, which is why that
+  picture's addresses are short. Its subtitle shared a row with Edit and
+  Connect, so `deploy@203.0.113.21 port 2222` broke as `deploy@203.0.113.2` /
+  `1 port 2222`. **Fixed since**: the destination has a full-width line of
+  its own under the name and the buttons, keeps to one line and is cut in
+  the middle when longer, with the whole of it on the tooltip; the name
+  beside the buttons is cut the same way. `DestinationLine` is its own view
+  so `HostHeaderTests` can render it at 200pt and measure one line's height —
+  with a control first, plain text that long wrapping at that width, since
+  without it a renderer handing back one fixed size would pass for nothing.
+  Checked the way round: with `.lineLimit(1)` taken off, only the long
+  destination's check fails. The picture in the README predates the fix.
 - **Size the window before arrowing**, through System Events, at
   1220×798 points — the old picture's — or it comes up at whatever frame
   this Mac last saved. The preference domain is borrowed for the run anyway,

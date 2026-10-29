@@ -1,0 +1,57 @@
+import AppKit
+import SwiftUI
+import Testing
+
+@testable import Shellhand
+
+/// The inspector header's destination: what it says, and that it keeps to
+/// one line however long the address.
+///
+/// The layout is checked by rendering, the way `TerminalMiniatureTests`
+/// reads a palette's pixels: the line is drawn into a bitmap at a narrow
+/// width and its height is the number of lines, near enough. A header that
+/// wrapped inside an address is a thing nobody could check without driving
+/// the inspector, which this app's views do not answer to.
+///
+/// `Shellhand.Host` spelled out: SwiftUI brings `Foundation.Host` with it.
+@MainActor
+@Suite("Host header")
+struct HostHeaderTests {
+    private let width: CGFloat = 200
+    private let short = "deploy@192.0.2.21"
+    private let long = "deploy@ip-10-0-13-223.eu-west-1.compute.internal port 2222"
+
+    /// How tall a view comes out at a width narrower than the inspector's.
+    private func height(of view: some View) -> CGFloat {
+        ImageRenderer(content: view.frame(width: width, alignment: .leading)).nsImage?.size.height ?? 0
+    }
+
+    /// **The control first**: plain text this long at this width does wrap,
+    /// so the renderer is measuring a layout rather than handing back one
+    /// size whatever it is given — without that, the last check would pass
+    /// for nothing. And a short line has to come out as tall as plain text,
+    /// or the line is not being drawn as text at all.
+    @Test("a destination longer than its line keeps to one line")
+    func oneLine() {
+        let plainShort = height(of: Text(short).font(.callout))
+        let plainLong = height(of: Text(long).font(.callout))
+        #expect(plainShort > 0)
+        #expect(plainLong > plainShort * 1.5, "plain text did not wrap, so this measures nothing")
+        #expect(abs(height(of: DestinationLine(text: short)) - plainShort) < 1,
+                "a short destination is not drawn like a line of text")
+        #expect(abs(height(of: DestinationLine(text: long)) - plainShort) < 1,
+                "a long destination wrapped")
+    }
+
+    @Test("it says the user, the address, and a port other than 22")
+    func wording() {
+        var host = Shellhand.Host(name: "db-01", addr: "192.0.2.21")
+        host.effective.user = "deploy"
+        host.effective.port = 2222
+        #expect(host.destinationLine == "deploy@192.0.2.21 port 2222")
+        host.effective.port = 22
+        #expect(host.destinationLine == "deploy@192.0.2.21")
+        host.effective.user = ""
+        #expect(host.destinationLine == "192.0.2.21")
+    }
+}
