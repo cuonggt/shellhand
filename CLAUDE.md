@@ -717,6 +717,19 @@ credentials, which is most of it.
   like the obvious first condition — and that disjunct undoes the entire
   mechanism. Never-asked is already covered without it: `osSeen` is 0 then,
   which is further in the past than any interval. The stamp alone decides.
+  **A switch in Settings ▸ General stops the asking, and it outranks the
+  schedule.** `Host.askingSetting`, read through `Host.asks`, where nothing
+  stored means on. It is a required argument of `shouldAskOS`, so no caller
+  can ask without consulting it, and off means no host is due — not even
+  one never asked. Turning it off keeps the marks already learned. Asking
+  is a second login, quiet and promptless, and on a machine with login
+  alerts or a session recorder somebody sees it. **On by default was the
+  user's call**: every copy since 0.0.12 has asked, the marks are what the
+  README leads with, and the caption says plainly what it does for whoever
+  goes looking. Off was weighed for the launch — an ssh client logging in to
+  somebody's servers unasked is what a Hacker News thread picks at — and
+  cost the marks for nearly everybody. Checked the way round: with `allowed`
+  taken out of the rule, only the switched-off test fails.
   Adding the field took the documented **three** edits again — model,
   migration **v9**, and the hand-written row mapping — and the round trip
   asserts the stamp as well as the answer, since nothing else would notice a

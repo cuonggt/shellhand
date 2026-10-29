@@ -12,6 +12,8 @@ struct GeneralSettingsPane: View {
     /// stored. Nothing read this key from the day the switch was added until
     /// `Closing` did.
     @AppStorage(Closing.setting) private var confirmClose = true
+    /// True, which is also what `Host.asks` answers when nothing is stored.
+    @AppStorage(Host.askingSetting) private var asksHosts = true
     @State private var updates = Updates.shared
     let storePath: String
     let configPath: String
@@ -49,6 +51,21 @@ struct GeneralSettingsPane: View {
                         Text("Ask before closing a live session")
                         Text("Closing a tab or the window, reconnecting, or quitting asks "
                             + "first while a session is still running.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+            }
+
+            Section("Hosts") {
+                Toggle(isOn: $asksHosts) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Ask each host what system it runs")
+                        Text("Once a day, when you connect, Shellhand logs in a second time, "
+                            + "without a prompt, to read /etc/os-release and draw the system's "
+                            + "mark. Turn this off if a second login would set off an alert. "
+                            + "Marks already learned stay.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

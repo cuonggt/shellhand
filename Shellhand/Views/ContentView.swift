@@ -658,13 +658,14 @@ struct ContentView: View {
     /// Asks a host what it is, so it can be drawn with its own mark.
     ///
     /// **How often is `Host.shouldAskOS`**, which is a day — see it for why
-    /// neither "once ever" nor "every connect" is right. This only obeys it.
+    /// neither "once ever" nor "every connect" is right — and whether at all
+    /// is the switch in Settings ▸ General. This only obeys them.
     ///
     /// After the session, not before: the terminal is what was asked for and
     /// must not wait on an icon. Everything here fails quietly — see
     /// `Core.osOf` for why none of its failures is worth reporting.
     private func learnOS(of host: Host) async {
-        guard host.shouldAskOS() else { return }
+        guard host.shouldAskOS(allowed: Host.asksNow) else { return }
         let said = await Core.shared.osOf(db: store.dbPath, hostID: host.id)
         // Read again rather than editing the copy this closure captured: it
         // may be minutes old by now, and saving a stale one would undo

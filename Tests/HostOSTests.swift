@@ -25,12 +25,12 @@ nonisolated struct HostOSTests {
 
     @Test("a host that has never been asked is asked")
     func neverAsked() {
-        #expect(host().shouldAskOS(now: now))
+        #expect(host().shouldAskOS(allowed: true, now: now))
     }
 
     @Test("a host asked just now is left alone")
     func askedJustNow() {
-        #expect(!host(os: "ubuntu", seen: now.timeIntervalSince1970 - 60).shouldAskOS(now: now))
+        #expect(!host(os: "ubuntu", seen: now.timeIntervalSince1970 - 60).shouldAskOS(allowed: true, now: now))
     }
 
     /// **The case the first version got wrong**, and the reason `osSeen`
@@ -42,15 +42,15 @@ nonisolated struct HostOSTests {
     @Test("a host that could not answer is not asked again until tomorrow")
     func answeredNothing() {
         let asked = host(os: "", seen: now.timeIntervalSince1970 - 60)
-        #expect(!asked.shouldAskOS(now: now))
+        #expect(!asked.shouldAskOS(allowed: true, now: now))
     }
 
     /// What makes a rebuilt machine correct itself, which asking once ever
     /// never did.
     @Test("a host asked a day ago is asked again")
     func aDayLater() {
-        #expect(host(os: "ubuntu", seen: aDayAgo).shouldAskOS(now: now))
-        #expect(host(os: "ubuntu", seen: aDayAgo + 1).shouldAskOS(now: now) == false)
+        #expect(host(os: "ubuntu", seen: aDayAgo).shouldAskOS(allowed: true, now: now))
+        #expect(host(os: "ubuntu", seen: aDayAgo + 1).shouldAskOS(allowed: true, now: now) == false)
     }
 
     /// A host not yet saved has no id to ask about, and `Core.osOf` takes
@@ -60,7 +60,7 @@ nonisolated struct HostOSTests {
     func noID() {
         var draft = host()
         draft.id = ""
-        #expect(!draft.shouldAskOS(now: now))
+        #expect(!draft.shouldAskOS(allowed: true, now: now))
     }
 
     /// A clock that has gone backwards — a laptop waking in another
@@ -69,9 +69,28 @@ nonisolated struct HostOSTests {
     @Test("a stamp in the future does not lock a host out for ever")
     func futureStamp() {
         let ahead = host(os: "ubuntu", seen: now.timeIntervalSince1970 + 60 * 60)
-        #expect(!ahead.shouldAskOS(now: now))
+        #expect(!ahead.shouldAskOS(allowed: true, now: now))
         // ...but a day later it is due regardless of how it got there.
-        #expect(ahead.shouldAskOS(now: now.addingTimeInterval(25 * 60 * 60)))
+        #expect(ahead.shouldAskOS(allowed: true, now: now.addingTimeInterval(25 * 60 * 60)))
+    }
+
+    // MARK: the switch in Settings
+
+    /// **The switch outranks the schedule.** Off, nothing is due — not even a
+    /// host never asked, which the schedule alone asks first.
+    @Test("with the switch off, no host is asked, not even one never asked")
+    func switchedOff() {
+        #expect(!host().shouldAskOS(allowed: false, now: now))
+        #expect(!host(os: "ubuntu", seen: aDayAgo).shouldAskOS(allowed: false, now: now))
+    }
+
+    /// Nothing stored is how every copy behaved before there was a switch,
+    /// so it means on, and only a stored false turns it off.
+    @Test("the switch is on unless it was turned off")
+    func onUnlessTurnedOff() {
+        #expect(AppHost.asks(nil))
+        #expect(AppHost.asks(true))
+        #expect(!AppHost.asks(false))
     }
 
     // MARK: what the mark is called

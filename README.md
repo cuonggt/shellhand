@@ -68,11 +68,12 @@ authentication works everywhere.
   this Mac on the left and the host on the right, with transfers that queue a
   couple at a time rather than all starting at once and competing for the one
   connection — and a question before anything already there is replaced.
-- **It knows what it is talking to.** On the first connection a host is asked
-  what it is running — its own `/etc/os-release`, read over the connection
-  rather than guessed from a banner — and from then on it is drawn with its
-  distribution's mark. Asked again once a day, so a machine rebuilt onto
-  something else corrects itself.
+- **It knows what it is talking to.** When you first connect to a host,
+  Shellhand logs in a second time, without a prompt, to read its own
+  `/etc/os-release` rather than guess from a banner — and from then on it is
+  drawn with its distribution's mark. It asks again once a day, so a machine
+  rebuilt onto something else corrects itself, and a switch in Settings turns
+  the asking off if a second login would set off an alert.
 - **It says what your ssh config will do**, rather than leaving you to read it.
   A host whose name matches a `Host` entry pointing at a different machine is
   flagged as such, and one your config routes through a bastion says so

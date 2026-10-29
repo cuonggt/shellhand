@@ -75,9 +75,26 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     /// thing: a host that cannot say keeps an empty `os` for ever, so it
     /// would be due on every connect for ever. Never-asked is already covered
     /// — `osSeen` is 0 then, which is further in the past than any interval.
-    func shouldAskOS(now: Date = Date(), every: TimeInterval = 24 * 60 * 60) -> Bool {
-        !id.isEmpty && now.timeIntervalSince1970 - osSeen >= every
+    ///
+    /// **`allowed` is the switch in Settings ▸ General, and it outranks the
+    /// schedule**: off, no host is due, not even one never asked. Required
+    /// rather than defaulted, so no caller can ask without consulting it.
+    func shouldAskOS(
+        allowed: Bool, now: Date = Date(), every: TimeInterval = 24 * 60 * 60
+    ) -> Bool {
+        allowed && !id.isEmpty && now.timeIntervalSince1970 - osSeen >= every
     }
+
+    /// The switch `allowed` comes from: whether this app asks hosts what they
+    /// run at all. Asking is a second login, which on some machines sets off
+    /// an alert or a session recorder.
+    static let askingSetting = "askHostsWhatTheyRun"
+
+    /// On unless it was turned off: nothing stored is how every copy behaved
+    /// from 0.0.12, before there was a switch.
+    static func asks(_ stored: Any?) -> Bool { stored as? Bool ?? true }
+
+    static var asksNow: Bool { asks(UserDefaults.standard.object(forKey: askingSetting)) }
     /// `-o` settings for this host alone, ahead of anything a group or the
     /// config says, because ssh keeps the first value it is given.
     var sshOptions: [String] = []
