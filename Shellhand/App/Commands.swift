@@ -88,6 +88,11 @@ struct AppActions {
     var canSplit = false
     /// Whether the strip holds more than the hosts, so stepping goes anywhere.
     var canStepTabs = false
+    /// Whether ⌘T has anything to open — another of the session in front,
+    /// or with the hosts in front the host selected. `Panes.newTab` decides;
+    /// it used to be `hasHost`, which greyed ⌘T out in a terminal whenever
+    /// the list had a group picked.
+    var canNewTab = false
 }
 
 /// One open session, named short enough for a menu.
@@ -178,7 +183,7 @@ struct ShellhandCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Tab") { actions?.newTab() }
                 .keyboardShortcut("t", modifiers: .command)
-                .disabled(!(actions?.hasHost ?? false))
+                .disabled(!(actions?.canNewTab ?? false))
             Button("New Local Shell") { actions?.newLocalShell() }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
             Divider()

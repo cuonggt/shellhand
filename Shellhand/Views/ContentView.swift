@@ -428,7 +428,7 @@ struct ContentView: View {
     /// What the menu bar can ask this window to do, and what is possible now.
     private var actions: AppActions {
         AppActions(
-            newTab: { if let host = selectedHost { connect(host) } },
+            newTab: openNewTab,
             newLocalShell: { show(session: sessions.openLocalShell().id) },
             newHost: { editing = Host() },
             newHostIn: { group in editing = Host(groupId: group.id) },
@@ -478,7 +478,31 @@ struct ContentView: View {
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
-            canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil)
+            canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
+            canNewTab: newTabOpening != nil)
+    }
+
+    /// What ⌘T would open now — see `Panes.newTab`.
+    private var newTabOpening: Panes.Opening? {
+        let inFront: Panes.Opening? = frontSession.map { session in
+            session.host.map { Panes.Opening.host($0.id) } ?? .localShell
+        }
+        return Panes.newTab(
+            inFront: inFront, selected: selectedHost?.id,
+            isListed: { id in store.snapshot.hosts.contains { $0.id == id } })
+    }
+
+    /// ⌘T. A host is connected to as the list has it now rather than as the
+    /// session in front was opened, so an edit made since is the one used.
+    private func openNewTab() {
+        switch newTabOpening {
+        case let .host(id)?:
+            if let host = store.snapshot.hosts.first(where: { $0.id == id }) { connect(host) }
+        case .localShell?:
+            show(session: sessions.openLocalShell().id)
+        case nil:
+            break
+        }
     }
 
     /// A tab waiting on an answer, and what it was going to do.

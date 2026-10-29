@@ -61,6 +61,39 @@ nonisolated enum Panes {
         return strip[((here + offset) % count + count) % count]
     }
 
+    /// What a session is a session of — a host, by id, or this Mac — which
+    /// is also what ⌘T opens another of.
+    nonisolated enum Opening: Equatable {
+        case host(String)
+        case localShell
+    }
+
+    /// ⌘T: another session like the one in front — to the same host, or
+    /// another local shell for a local shell — and with the hosts in front,
+    /// the host the list has selected. Nil when there is nothing to open,
+    /// which greys the item out.
+    ///
+    /// **The session in front wins over the selection.** ⌘T used to open
+    /// whatever the list had selected, whatever was in front, and the two
+    /// need not be the same machine: connect to `db` through ⌘K with `web`
+    /// picked in the list and ⌘T opened `web`, and with a group picked it was
+    /// greyed out with a terminal right there. In every terminal app ⌘T
+    /// means another of this one.
+    ///
+    /// A session on a host since deleted opens **nothing** rather than
+    /// falling back to the selection: the argv is built from the list, and
+    /// quietly opening some other machine is the surprise this is here to
+    /// end.
+    static func newTab(
+        inFront: Opening?, selected: String?, isListed: (String) -> Bool
+    ) -> Opening? {
+        switch inFront {
+        case let .host(id)?: isListed(id) ? .host(id) : nil
+        case .localShell?: .localShell
+        case nil: selected.flatMap { isListed($0) ? .host($0) : nil }
+        }
+    }
+
     /// Whether the window meets somebody with the welcome instead of a
     /// host list.
     ///

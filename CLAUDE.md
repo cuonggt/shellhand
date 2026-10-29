@@ -1898,6 +1898,17 @@ credentials, which is most of it.
   five presses and did not miss again in the identical sequence run straight
   after, which reads as the dropped synthetic keystrokes noted under Quick
   Connect rather than as the monitor. A hand on the keyboard settles it.
+- **⌘T opens another of the session in front**: the same host, or another
+  local shell for a local shell. Only with the hosts in front does it open
+  the host the list has selected. It used to open the selection whatever was
+  in front — connected to `db` through ⌘K with `web` picked, ⌘T opened
+  `web`, and with a group picked it was greyed out beside a live terminal —
+  because it was gated on `hasHost`, which is about the list. The rule is
+  `Panes.newTab`, and the item is gated on what it returns. **A session on a
+  host since deleted opens nothing**, not the selection: the argv comes from
+  the list, and opening some other machine instead is the surprise this
+  exists to end. The host is taken from the list as it is now, not from the
+  session's copy, so an edit made since is the one connected with.
 - **Making each session its own `NSWindow`,
   so that macOS draws them as a real tab bar with the host list as the first
   tab, was built and thrown away** — it worked, tab overview and `⌘⇧[` and

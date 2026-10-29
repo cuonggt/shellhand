@@ -142,6 +142,48 @@ nonisolated struct PanesTests {
         #expect(Panes.stepping(by: -1, from: gone, sessions: [one, two]) == two)
     }
 
+    // MARK: what ⌘T opens
+
+    private let listed: (String) -> Bool = { ["web", "db"].contains($0) }
+
+    /// **The bug this is for**: connected to `db` with `web` picked in the
+    /// list, ⌘T opened `web`.
+    @Test("with a session on a host in front, ⌘T opens that host, not the one selected")
+    func newTabFollowsTheSession() {
+        #expect(Panes.newTab(inFront: .host("db"), selected: "web", isListed: listed) == .host("db"))
+    }
+
+    @Test("with a local shell in front, ⌘T opens another local shell")
+    func newTabOnALocalShell() {
+        #expect(Panes.newTab(inFront: .localShell, selected: "web", isListed: listed) == .localShell)
+    }
+
+    /// A group picked in the list, or nothing, greyed ⌘T out with a terminal
+    /// right there.
+    @Test("a terminal in front opens another of itself whatever the list has picked")
+    func newTabIgnoresTheSelection() {
+        #expect(Panes.newTab(inFront: .host("db"), selected: nil, isListed: listed) == .host("db"))
+        #expect(Panes.newTab(inFront: .localShell, selected: nil, isListed: listed) == .localShell)
+    }
+
+    @Test("with the hosts in front, ⌘T opens the host selected, and nothing without one")
+    func newTabFromTheList() {
+        #expect(Panes.newTab(inFront: nil, selected: "web", isListed: listed) == .host("web"))
+        #expect(Panes.newTab(inFront: nil, selected: nil, isListed: listed) == nil)
+    }
+
+    /// Falling back to the selection here would open some other machine,
+    /// which is the very surprise the rule exists to end.
+    @Test("a session on a host since deleted opens nothing, not the selection")
+    func newTabOnADeletedHost() {
+        #expect(Panes.newTab(inFront: .host("gone"), selected: "web", isListed: listed) == nil)
+    }
+
+    @Test("a selection the list no longer holds opens nothing")
+    func newTabOnAStaleSelection() {
+        #expect(Panes.newTab(inFront: nil, selected: "gone", isListed: listed) == nil)
+    }
+
     // MARK: closing a tab moves the selection under the pane
 
     @Test("a pane on a session follows the selection to another session")
