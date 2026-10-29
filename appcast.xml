@@ -3,6 +3,65 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.1.0</title>
+            <pubDate>Thu, 29 Oct 2026 17:21:10 +0700</pubDate>
+            <sparkle:version>13</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**Quick Connect reaches machines that are not in your list.** Type
+`user@host:port` into ⌘K — or `host`, `host:port`, `[v6]:port`, or paste an
+`ssh://` link — and the palette offers to connect to it as typed, under "Not
+in your list". A host you have saved still comes first when what you typed
+names it exactly, so its key and its jump host still apply; an address, or a
+destination with a user or a port, comes next, ahead of saved hosts that
+merely contain it; and a bare word is still a search, its own row last.
+Nothing typed this way is saved, and ⌘R and ⌘T work on it like on any other
+session.
+
+**The tabs answer the keys every other Mac app gives them.** ⇧⌘] and ⇧⌘[
+move to the next and the previous tab, and so do ⌃⇥ and ⌃⇧⇥, going round
+from the last to the first and taking in the Hosts tab on the way. ⌘T opens
+another session like the one in front — to the same machine, or another
+local shell — where it used to open whatever the list had selected, which
+need not have been the machine you were looking at. With the Hosts tab in
+front it still opens the host selected.
+
+**A tab has a menu of its own.** Right-click one for Reconnect, Duplicate,
+SFTP, Close Tab and Close Other Tabs, each acting on the tab you clicked
+rather than the one in front. Reconnecting or closing a session that is still
+running asks first, exactly as ⌘R and ⌘W do, and closing the others asks
+once for all of them.
+
+**The terminal's font is yours to choose.** Settings ▸ Terminal has a Font
+picker now: SF Mono, as before, or any monospaced font installed — a Nerd
+Font for a prompt that draws its own glyphs included — with a line of sample
+text drawn in it, so it is chosen by looking. Open sessions change at once
+and keep the size they are at, and Actual Size keeps the font rather than
+going back to SF Mono. A font that is no longer installed falls back to SF
+Mono rather than leaving a terminal in one it cannot draw.
+
+**⌥⌘K clears the scrollback.** Clear Scrollback, in the Terminal menu, drops
+everything above the screen and keeps what is on it — vim or less in front
+included — on the key Terminal.app gives it. ⌘K stays Quick Connect.
+
+**Export and Help are where you would look for them.** File ▸ Export… writes
+your list as YAML, where it used to be found only inside the Import window.
+The Help menu opens the README, and Report a Problem… opens a new issue
+already holding the version and the macOS it came from — and nothing else.
+
+**The host panel no longer breaks an address in two.** The line saying where
+a host goes — `deploy@203.0.113.21 port 2222` — sat beside Edit and Connect
+in whatever room they left, and wrapped inside the address. It has a full
+line of its own now, and one too long even for that is shortened in the
+middle, whole on its tooltip.
+
+Nothing else here is visible from the outside. The suite went from 570 checks
+to 622, and the tab keys were also pressed on a copy of the app on screen,
+each moving the tab in front.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.0/Shellhand-0.1.0.dmg" length="14306237" type="application/octet-stream" sparkle:edSignature="+7o6hniC6w2Yj71mhh0D+iuST9HoU4QP0DY1vVp1FARJ9exdy8Y3ORnH2k0/jt57tss3POS3FUIwSMibirP2DA=="/>
+        </item>
+        <item>
             <title>0.0.12</title>
             <pubDate>Thu, 29 Oct 2026 10:15:47 +0700</pubDate>
             <sparkle:version>12</sparkle:version>
@@ -104,39 +163,6 @@ Nothing else here is visible from the outside. The suite went from 479 checks
 to 495.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.11/Shellhand-0.0.11.dmg" length="13928857" type="application/octet-stream" sparkle:edSignature="lT5NMTrwVSDlM34k9ZWDc14xwNsBLAdJUqQOmGygsBlfE63bsRhjluk04Eq/QAPqF5bMcjTgqUV0geYDyLt2Bw=="/>
-        </item>
-        <item>
-            <title>0.0.10</title>
-            <pubDate>Tue, 27 Oct 2026 23:30:56 +0700</pubDate>
-            <sparkle:version>10</sparkle:version>
-            <sparkle:shortVersionString>0.0.10</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**Picking a host no longer takes the list away.** Clicking a host used to
-replace the whole list with that host's details, so you could never click down
-a list of machines — the one you had just picked was the only one you could no
-longer see. The list stays now, with the host you picked highlighted, and what
-it connects with appears in a panel on the right. Arrow keys walk the list and
-Return connects, so a machine three rows down is three keys away.
-
-**And the list stays where you left it.** Looking inside a group and picking a
-host there used to widen the list back to every host you have, moving the row
-out from under the pointer. Where you are looking and what you have picked are
-two different things now: a group is somewhere to go, a host is something to
-choose. Picking a host in the sidebar that is filed somewhere else brings the
-list to it, so what is selected is always something you can see.
-
-The panel on the right is the one the button at the end of the toolbar has
-always opened, and it now carries the whole of a host: the address, the user,
-the key and the jump host — each saying where it was inherited from — the ssh
-command that will actually run, and the sessions already open on that machine.
-It opens by itself the first time; the same button shuts it again, and it
-stays however you leave it.
-
-Nothing else here is visible from the outside. The suite went from 466 checks
-to 479, and the one check that drives a real window now reads the list and the
-panel as well as the sidebar.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.10/Shellhand-0.0.10.dmg" length="13896634" type="application/octet-stream" sparkle:edSignature="GGhH12J4Ij3AzqmAU0LoOosmhFyhdP0UZNQTzzLVVncbf+U5CZaV9mNC62XjK6bZ50qkICPkbRDlB/nzGHHDAA=="/>
         </item>
     </channel>
 </rss>
