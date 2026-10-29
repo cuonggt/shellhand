@@ -7,7 +7,7 @@ Shellhand keeps your machines in a list you can file into groups and find by
 tag, opens each session as a tab running the system's own `ssh`, and browses
 and moves files over SFTP.
 
-![The host list: groups in the sidebar, and a selected host showing the user, key and jump host it inherited from the groups above it beside the exact ssh command it will run](docs/screenshot.png)
+![The host list: groups in the sidebar, every host drawn with its system's mark, and the inspector on the host selected — the user, key and jump host it inherits from the groups above it, its palette, and the exact ssh command it will run](docs/screenshot.png)
 
 ## Install
 

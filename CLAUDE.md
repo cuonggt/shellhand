@@ -2715,8 +2715,13 @@ credentials, which is most of it.
   rectangle, not that window** — if the app loses focus between reading its
   bounds and capturing, you get whatever is on top, which may be the user's own
   work. Check the app is frontmost immediately before and after, and throw the
-  capture away if it was not. `-l<windowid>` is no help: it quietly falls back
-  to the whole screen.
+  capture away if it was not. **`-l` does photograph one window alone** — the
+  window and nothing over it, transparent corners and all — but only given a
+  CoreGraphics window number: `kCGWindowNumber` out of
+  `CGWindowListCopyWindowInfo`, filtered to the process's pid and layer 0.
+  This file used to say `-l` falls back to the whole screen; that was
+  measured with some other number, and a window id from System Events is
+  not one. Proven taking the README's picture on 2026-10-29.
 - One rule for reading tags, in `Core/Tags.swift`: a comma, a semicolon, a bar
   or a space all separate — `Tags.separates` for one character, `Tags.clean`
   for a string. The editor's field asks the first to know when what has been
@@ -3262,6 +3267,32 @@ feature. A review that grepped one preference key and read SwiftTerm's
 questions on screen corrected a claim the code and this file had both just
 made — that ⌘W with the Hosts tab in front closes the window. It closes
 nothing.
+
+**The README's picture was retaken on 2026-10-29**, from a scratch copy on a
+host list of its own: Production with EU and US inside it, Staging, a few
+ungrouped machines, the marks of eight distributions and one host never
+asked, all on documentation addresses — and `db-01` in the inspector, since
+it inherits its user, key and palette from Production and its jump host
+from US. Four things to know before taking it again:
+- **Launch it with `XCTestSessionIdentifier` set**, which is `TestRun`'s
+  switch. A copy launched the ordinary way reads the real `~/.ssh/config`
+  into the inspector, and a `Host *` there would put somebody's own bastion
+  or `ProxyCommand` into a public image. The switch sends ssh's config to an
+  empty scratch file and changes nothing else that `--db` and `--config` do
+  not already override.
+- **Arrow Up through the pane, not Down.** Its list leads with its groups,
+  and arrowing onto a group goes into it — Down from nothing walked into
+  Production, then EU. Up from nothing starts at the last host and climbs
+  through hosts alone, so the pane stays on all of them.
+- **The inspector's header wraps inside an address.** Its subtitle shares a
+  row with Edit and Connect, so `deploy@203.0.113.21 port 2222` broke as
+  `deploy@203.0.113.2` / `1 port 2222`. Shorter addresses put the break at
+  the space; the layout itself is worth fixing, since a real machine's name
+  is longer than any address here.
+- **Size the window before arrowing**, through System Events, at
+  1220×798 points — the old picture's — or it comes up at whatever frame
+  this Mac last saved. The preference domain is borrowed for the run anyway,
+  for `libraryLayout` and `hostInspector`.
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask
 from a tap outside Homebrew's own must be trusted once before it will load,
