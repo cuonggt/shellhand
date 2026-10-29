@@ -3,6 +3,80 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.0.12</title>
+            <pubDate>Thu, 29 Oct 2026 10:15:47 +0700</pubDate>
+            <sparkle:version>12</sparkle:version>
+            <sparkle:shortVersionString>0.0.12</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**A host is drawn with the mark of the system it runs.** The first time you
+connect to a machine, Shellhand asks it what it is — by reading its own
+`/etc/os-release` over a connection of its own, rather than guessing from what
+it says when you log in — and from then on the host carries that
+distribution's mark in the list, the cards and the sidebar: Ubuntu, Debian,
+Fedora, Alpine, Arch, NixOS and two dozen more. Hover over one and it names the
+system in words, and the panel on the right says so on a row of its own.
+Asking is a login of its own, so a machine is asked once a day rather than on
+every connect, which is also how one rebuilt onto something else corrects
+itself. A machine that cannot say — one reached only with a password, or with
+no such file — keeps the plain icon.
+
+**What your ssh config does to a host is shown rather than left for you to
+work out.** A host whose name matches a `Host` entry in your `~/.ssh/config`
+that points at a different machine is flagged, since the settings written
+there are not this host's. A host your config sends through a bastion shows
+that jump host instead of a dash, and one it reaches through a `ProxyCommand`
+shows the command on a row of its own. And where a host's name matches an
+entry for the same machine, connecting now uses that name, so the settings
+written under it apply — exactly as they do when you type `ssh` with that name
+yourself. Most of this was built in earlier releases and never switched on:
+nothing handed it your config.
+
+**An ssh config that includes itself could hold the app up for a minute or
+more.** A config that pulls in a folder of files, one of which includes that
+same folder again — an easy line to copy — was read over and over, on the
+welcome screen and on every import. Each file is read once now, and the same
+config takes a moment.
+
+**Option types what your keyboard puts on it.** Option was always treated as
+Meta, so ⌥ and a key sent Escape and the bare key — and on the many layouts
+outside the US that put `@`, `|`, `{}` or `[]` on Option, those could not be
+typed into a session at all. It types the character now, as Terminal.app
+does. If you use Option to move by word in the shell — ⌥B, ⌥F — turn on **Use
+Option as Meta key** in Settings ▸ Terminal; sessions already open change at
+once.
+
+**Closing a live session asks first, as Settings always said it did.** "Ask
+before closing a live session" has been a switch in Settings since the first
+release, and nothing ever read it: ⌘W, a tab's ×, the window's close button
+and ⌘Q all ended sessions that were still running, without a word. Each of
+them asks now, and so does ⌘R, since reconnecting a session that is still up
+ends it first; quitting counts the sessions in every window. A session still
+connecting, or one that has already ended, closes without a question, and the
+switch in Settings ▸ General still turns all of it off.
+
+**A terminal's colours are chosen by looking at them.** The panel on the right
+has a Colours row now, and it opens every palette drawn as a small terminal in
+its own colours — because "Gruvbox Dark" and "Tomorrow Night" are both dark
+and neither name says which is warm. A choice applies to that host's open tabs
+at once and the list stays up, so two can be compared on the terminal behind
+it. Settings draws its palette the same way, in place of the chart of sixteen
+colours it used to show. And the terminal's text sits a little in from the
+edges now, with its background still running all the way to them.
+
+**On a fresh install, New Local Shell opened a shell you could not see.** With
+no hosts in the list yet, the welcome took the whole window, so a local shell
+started behind it — running, with no tab and nothing on screen to show it was
+there. The welcome stands in only for the host list now, and the shell comes
+up in a tab like any other.
+
+Nothing else here is visible from the outside. The suite went from 495 checks
+to 570, and each closing question above was also checked on screen, against a
+copy of the app with a host list of its own: every one came up in its own
+words, and Cancel left everything open.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.12/Shellhand-0.0.12.dmg" length="14167960" type="application/octet-stream" sparkle:edSignature="Q7VdjKVUIoU9eqentqoiQMv0ZtbWGpMIQNkTpD1xbpn8J23q0yXo1DjYHNd7FfC9cDOdBM2sXzci8Xs5SOOPCw=="/>
+        </item>
+        <item>
             <title>0.0.11</title>
             <pubDate>Wed, 28 Oct 2026 10:25:37 +0700</pubDate>
             <sparkle:version>11</sparkle:version>
@@ -63,36 +137,6 @@ to 479, and the one check that drives a real window now reads the list and the
 panel as well as the sidebar.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.10/Shellhand-0.0.10.dmg" length="13896634" type="application/octet-stream" sparkle:edSignature="GGhH12J4Ij3AzqmAU0LoOosmhFyhdP0UZNQTzzLVVncbf+U5CZaV9mNC62XjK6bZ50qkICPkbRDlB/nzGHHDAA=="/>
-        </item>
-        <item>
-            <title>0.0.9</title>
-            <pubDate>Tue, 27 Oct 2026 17:09:07 +0700</pubDate>
-            <sparkle:version>9</sparkle:version>
-            <sparkle:shortVersionString>0.0.9</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**Symbolic links were left behind coming down, and carried wrongly going up.**
-A folder dragged from a host onto this Mac arrived without any of its symlinks
-at all. Sent the other way, a link to a file arrived as a full copy of that
-file, a link to a folder arrived as a folder with nothing inside it, and a
-link pointing at something that is not there arrived not at all — each of them
-without a word, while the transfer reported success. A link is now carried as
-a link, pointing exactly where it pointed, whether that is a file, a folder,
-somewhere absolute, or nowhere. A folder sent up and brought back down is the
-folder it was, links included.
-
-**A folder that could not be made on a host said nothing about it.** Uploading
-a folder into a place that will not take it — somewhere you have no permission
-to write, or where a file already has that name — the folder simply did not
-appear, and the transfer still said it had finished. It fails now, and passes
-on what the far end said about it. Carrying a folder onto one that is already
-there still merges, exactly as before.
-
-Nothing else here is visible from the outside. The suite went from 459 checks
-to 466, and both of these are held against OpenSSH's own server rather than a
-stand-in — including the one detail nothing else could settle: which way round
-that server wants the two paths of a request to make a link.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.0.9/Shellhand-0.0.9.dmg" length="13861235" type="application/octet-stream" sparkle:edSignature="rKtaN4QSHE11bU8OcsM36wtT+vDpcBG8gmnXhuk8V80zaA1RPNpmgucOfUixBX8U79UvZ6HzjAnkJVU49qIJDQ=="/>
         </item>
     </channel>
 </rss>
