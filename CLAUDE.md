@@ -1985,8 +1985,16 @@ credentials, which is most of it.
   with `macos` renamed in the form, only that test fails. **0.1.0 shipped
   the older link**, a blank issue with the questions in its body, so
   `config.yml` keeps `blank_issues_enabled: true`, and a test holds that too.
-  What GitHub does with that link once there are templates is not in its
-  documentation, and checking it needs the form on `main`.
+  **Live since 2026-10-29, and checked as far as no sign-in allowed.**
+  GitHub's page for the file renders it as a form — the four fields, each
+  required, with the label and the privacy note — and no error, so GitHub
+  parses it; the API serves the contact link, and the Discussions page it
+  opens answers 200. GraphQL's `issueTemplates` came back empty and the
+  community profile said `issue_template: false` while that page rendered
+  the form, so neither is evidence about a form either way. **Not checked:**
+  what the new link opens, and what 0.1.0's blank-issue link opens now that
+  there are templates — both pages need a browser signed in to GitHub, and
+  none was to hand. Open both, signed in, before relying on either.
   **Quote a placeholder that looks like a number**: `26.1` bare is a float,
   and the schema wants a string. Ruby's YAML, which macOS ships, checked both
   files against the rules GitHub documents, and caught exactly that in a
