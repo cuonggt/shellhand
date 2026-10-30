@@ -3483,10 +3483,16 @@ pre-publish check calling the signature mismatched when it was identical:
 padding and leaves nothing.** Anchor the extraction at the attribute's name.
 It is the `--jq` lesson in another key — when a check fails, read both values
 before believing either.
-**Two things it ships are still unseen working.** The Hosts section was built
-and never looked at, and the issue form's version fields arriving filled in
-rests on GitHub's documentation, since nothing here could open the page
-signed in.
+**One thing it ships is still unseen working**: the issue form's version
+fields arriving filled in rests on GitHub's documentation, since nothing here
+could open the page signed in. The Hosts section was looked at after
+publishing, on a scratch copy opened with `open -g` and Settings opened by
+AXPress on its menu item: the switch, its caption and the corrected "read
+each time Shellhand opens" all read back, and the window photographed as
+built. **System Events would not name that window**: matching `name of` it
+against "General" found nothing and `size of` it failed, while
+`value of attribute "AXTitle"` said "General". Find a Settings window by
+that attribute or by what it holds.
 **The copy in `/Applications` still has 0.0.11, and that is no puzzle any
 more**: it is not running, and Sparkle only looks while the app is open — its
 `SULastCheckTime` was still 23:26 on 28 October after 0.1.1 went out.
