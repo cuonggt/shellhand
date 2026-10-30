@@ -509,8 +509,9 @@ struct TerminalSessionTests {
     func localShellWaitsForTheLock() {
         let session = session()
         defer { session.close() }
-        let waited = Self.secondsTaken(whileTheLockIsHeld: { session.startLocalShell() })
-        #expect(waited >= 0.3, "the shell started \(waited)s in, with the lock still held")
+        let timing = Self.timing(whileTheLockIsHeld: { session.startLocalShell() })
+        #expect(timing.waited, "the shell started with the lock still held")
+        #expect(timing.conclusive, "this thread woke after the lock was let go, so this shows nothing")
     }
 
     /// To `127.0.0.1` port 1, which refuses at once and reaches nothing.
@@ -518,25 +519,60 @@ struct TerminalSessionTests {
     func sshWaitsForTheLock() {
         let session = session()
         defer { session.close() }
-        let waited = Self.secondsTaken(whileTheLockIsHeld: {
+        let timing = Self.timing(whileTheLockIsHeld: {
             session.start(argv: ["-o", "BatchMode=yes", "-p", "1", "127.0.0.1"])
         })
-        #expect(waited >= 0.3, "ssh started \(waited)s in, with the lock still held")
+        #expect(timing.waited, "ssh started with the lock still held")
+        #expect(timing.conclusive, "this thread woke after the lock was let go, so this shows nothing")
     }
 
-    /// Holds the lock on another thread for 0.4s, and times `start` from the
-    /// moment the lock is certainly held.
-    private static func secondsTaken(whileTheLockIsHeld start: () -> Void) -> Double {
+    /// The measurement's own control. A start that never takes the lock comes
+    /// back while it is held, and has to read as not having waited, or the two
+    /// tests above would pass whatever `TerminalSession` did.
+    @Test("a start that skips the lock reads as not having waited")
+    func skippingTheLockIsCaught() {
+        let timing = Self.timing(whileTheLockIsHeld: {})
+        #expect(!timing.waited, "a start that took no lock read as having waited for it")
+    }
+
+    /// Holds the lock on another thread for 0.4s and calls `start` while it
+    /// is certainly held. **Waiting for it means coming back after it was let
+    /// go**, so that is what this checks — against the moment of release, not
+    /// as a duration from when this thread woke. Timed from waking, a CI
+    /// runner that woke this thread 0.13s after the lock was taken read a
+    /// start that had waited as one that had not: 0.27s against the 0.3 asked
+    /// for. Only a thread that wakes after the release can't tell, and says so.
+    private static func timing(
+        whileTheLockIsHeld start: () -> Void
+    ) -> (waited: Bool, conclusive: Bool) {
         let held = DispatchSemaphore(value: 0)
+        let letGo = Moment()
         Thread.detachNewThread {
             Forking.exclusively {
                 held.signal()
                 usleep(400_000)
+                letGo.mark()
             }
         }
         held.wait()
         let began = Date()
         start()
-        return Date().timeIntervalSince(began)
+        // Marked inside the lock, just before it is let go, so a start that
+        // waited for the lock always finds it marked, and one that did not
+        // came back while the other thread was still asleep holding it.
+        guard let release = letGo.time else { return (false, true) }
+        return (true, began < release)
     }
+}
+
+/// A time one thread marks and another reads. `nonisolated`, as every type a
+/// test touches from another thread has to be: the target's default is the
+/// main actor, and `mark()` called from the lock's thread trapped on the
+/// runtime's isolation check.
+private nonisolated final class Moment: @unchecked Sendable {
+    private let lock = NSLock()
+    private var at: Date?
+
+    func mark() { lock.withLock { at = Date() } }
+    var time: Date? { lock.withLock { at } }
 }
