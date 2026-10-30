@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shellhand — a native SSH client for macOS</title>
+<meta name="description" content="Shellhand keeps your machines in a list you file into groups and find by tag, opens each session as a tab on the system's own ssh, and moves files over SFTP. Free and open-source, for macOS 26.">
+<link rel="canonical" href="https://shellhand.com/">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0B0C12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="images/icon-64.png">
+<link rel="stylesheet" href="styles.css">
+<script src="main.js" defer></script>
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Shellhand">
+<meta property="og:title" content="Shellhand — a native SSH client for macOS">
+<meta property="og:description" content="The host list, tabs on real ssh, and files over SFTP, in one window. Free and open-source.">
+<meta property="og:url" content="https://shellhand.com/">
+<meta property="og:image" content="https://shellhand.com/images/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Shellhand window: groups of hosts in the sidebar, the host list, and the inspector with the ssh command it will run.">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Shellhand",
+  "description": "A native SSH client for macOS: the host list, tabs on real ssh, and files over SFTP, in a window.",
+  "url": "https://shellhand.com/",
+  "operatingSystem": "macOS 26 or later",
+  "applicationCategory": "DeveloperApplication",
+  "downloadUrl": "https://github.com/cuonggt/shellhand/releases/latest",
+  "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="./">
+      <img src="images/icon-64.png" width="32" height="32" alt="">
+      <span>Shellhand</span>
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li class="wide"><a href="#features">Features</a></li>
+        <li><a href="#install">Install</a></li>
+        <li class="wide"><a href="#questions">Questions</a></li>
+        <li><a href="https://github.com/cuonggt/shellhand">GitHub</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap center">
+      <img class="hero-icon" src="images/icon-256.png" width="128" height="128" alt="">
+      <p class="eyebrow">Free and open-source · for macOS 26</p>
+      <h1 id="hero-title">Every machine you SSH into, in one window.</h1>
+      <p class="lead">Shellhand keeps your hosts in a list you file into groups and find by tag, opens each session as a tab on the system's own <code>ssh</code>, and moves files over SFTP. It is a native Mac app, written in Swift all the way down.</p>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/cuonggt/shellhand/releases/latest" data-download>Download for Mac</a>
+        <a class="button secondary" href="#install">Install with Homebrew</a>
+      </div>
+      <p class="meta"><span data-version></span>macOS 26 or later · Universal · Notarized</p>
+    </div>
+    <figure class="shot">
+      <picture>
+        <source type="image/avif"
+                srcset="images/screenshot-1220.avif 1220w, images/screenshot-2440.avif 2440w"
+                sizes="(min-width: 1296px) 1200px, calc(100vw - 40px)">
+        <img src="images/screenshot-1220.png" width="1220" height="798" fetchpriority="high"
+             alt="The host list: groups in the sidebar, every host drawn with its system's mark, and the inspector on the host selected — the user, key and jump host it inherits from the groups above it, its palette, and the exact ssh command it will run.">
+      </picture>
+    </figure>
+  </section>
+
+  <section class="section" id="features" aria-labelledby="ssh-title">
+    <div class="wrap split">
+      <div class="copy">
+        <p class="eyebrow">Real ssh</p>
+        <h2 id="ssh-title">It runs the ssh you already have.</h2>
+        <p>Every session is <code>/usr/bin/ssh</code> on a pty, so your config, your agent and your keys behave exactly as they do in Terminal. Shellhand writes the command line from your list, and shows you what will run before it does.</p>
+        <p>A jump chain is spelled out hop by hop, each with its own port, user and key, as a nested <code>ProxyCommand</code>.</p>
+      </div>
+      <figure class="code">
+        <pre class="wrapping" tabindex="0" aria-label="The ssh command for db-01"><code><span class="line"><span class="c-ok">ssh</span> <span class="c-key">-p</span> 2222 <span class="c-key">-i</span> '~/.ssh/id_ed25519' \</span><span class="line">  <span class="c-key">-o</span> "ProxyCommand=ssh -i '~/.ssh/id_ed25519' -W '[192.0.2.21]:2222' deploy@192.0.2.10" \</span><span class="line">  deploy@192.0.2.21</span></code></pre>
+        <figcaption>What runs for db-01, in the picture above. It sets none of this itself: the user and the key come from Production, the jump host from US.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section alt" aria-labelledby="groups-title">
+    <div class="wrap split">
+      <div class="copy">
+        <p class="eyebrow">Groups and tags</p>
+        <h2 id="groups-title">File hosts into groups. Settings come down.</h2>
+        <p>A host takes its own value first, then the nearest group above it that sets one. Groups pass down the user, the key, the jump host, ssh options, agent forwarding and the terminal's colours — so production need not look like staging.</p>
+        <p>Tags cut across the tree and narrow together: <code>web</code> and <code>eu</code> asks for the European web servers.</p>
+        <p>The whole list exports as plain YAML for your dotfiles. It names things rather than carrying ids, and holds no secrets: an identity is a path to a key, never the key.</p>
+      </div>
+      <figure class="code">
+        <pre class="wrapping" tabindex="0" aria-label="An exported host list"><code><span class="line note c-dim"># Shellhand host list. Fold it into another machine with File ▸ Import.</span><span class="line note c-dim"># Records match by name, so ids differing between machines does not matter.</span><span class="line note c-dim"># No secrets here: identity is a path to a key, never the key.</span>
+<span class="c-key">version:</span> 1
+<span class="c-key">groups:</span>
+- <span class="c-key">name:</span> Production
+  <span class="c-key">user:</span> deploy
+  <span class="c-key">identity:</span> ~/.ssh/id_ed25519
+  <span class="c-key">theme:</span> Gruvbox Dark
+- <span class="c-key">name:</span> US
+  <span class="c-key">parent:</span> Production
+  <span class="c-key">jump:</span> bastion
+<span class="c-key">hosts:</span>
+- <span class="c-key">name:</span> bastion
+  <span class="c-key">addr:</span> 192.0.2.10
+  <span class="c-key">group:</span> Production
+  <span class="c-key">tags:</span> [bastion]
+- <span class="c-key">name:</span> db-01
+  <span class="c-key">addr:</span> 192.0.2.21
+  <span class="c-key">port:</span> 2222
+  <span class="c-key">group:</span> US
+  <span class="c-key">tags:</span> [db, us]</code></pre>
+        <figcaption>An export, cut down to two groups and two hosts.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="more-title">
+    <div class="wrap">
+      <h2 id="more-title" class="center">Everything around the session.</h2>
+      <ul class="grid">
+        <li class="card">
+          <p class="tag">tabs</p>
+          <h3>A terminal you can live in</h3>
+          <p>Tabs take the keys every Mac app gives them, ⇧⌘] and ⌃⇥ among them, and a menu of their own. Any monospaced font you have, Nerd Fonts included; 10,000 lines of history to search in every tab; and Option types what your keyboard puts on it, or acts as Meta if you ask.</p>
+        </li>
+        <li class="card">
+          <p class="tag">⌘K</p>
+          <h3>Connect to anything</h3>
+          <p>Type a name from your list, or any <code>user@host:port</code>, <code>[v6]:port</code> or <code>ssh://</code> link, and press return. A machine reached that way is not added to your list.</p>
+        </li>
+        <li class="card">
+          <p class="tag">sftp</p>
+          <h3>Files beside the terminal</h3>
+          <p>SFTP opens in a window of its own, this Mac on the left and the host on the right. Transfers queue a couple at a time rather than fighting over one connection, and nothing already there is replaced without asking.</p>
+        </li>
+        <li class="card">
+          <p class="tag">/etc/os-release</p>
+          <h3>It knows what it is talking to</h3>
+          <p>When you connect, Shellhand logs in a second time, without a prompt, to read the host's own <code>/etc/os-release</code>, and draws its system's mark. It asks again once a day; a switch in Settings turns the asking off.</p>
+        </li>
+        <li class="card">
+          <p class="tag">~/.ssh/config</p>
+          <h3>It reads your ssh config for you</h3>
+          <p>A host whose name your config points at a different machine is flagged as such, and one your config routes through a bastion says so, instead of claiming it goes straight there.</p>
+        </li>
+        <li class="card">
+          <p class="tag">import</p>
+          <h3>Bring the list you have</h3>
+          <p>Import from OpenSSH's own <code>~/.ssh/config</code>, a CSV, or Shellhand's YAML, with a preview of exactly what will change first. A fresh install offers the machines already in your ssh config.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section alt" id="install" aria-labelledby="install-title">
+    <div class="wrap">
+      <h2 id="install-title">Install</h2>
+      <p class="lead left">macOS 26 or later. One universal build, signed and notarized, that keeps itself up to date.</p>
+      <div class="install-grid">
+        <div class="panel">
+          <h3>Download</h3>
+          <p>The disk image from the latest release, straight from GitHub.</p>
+          <a class="button primary" href="https://github.com/cuonggt/shellhand/releases/latest" data-download>Download for Mac</a>
+          <p class="meta"><span data-version></span>Every release is on <a href="https://github.com/cuonggt/shellhand/releases">GitHub</a>.</p>
+        </div>
+        <div class="panel">
+          <h3>Homebrew</h3>
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span>In Terminal</span>
+              <button class="copy-button" type="button" data-copy="brew" hidden>Copy</button>
+            </div>
+            <pre tabindex="0" aria-label="The Homebrew commands"><code id="brew">brew tap cuonggt/tap
+brew trust --cask cuonggt/tap/shellhand
+brew install --cask shellhand</code></pre>
+          </div>
+          <p>The <code>brew trust</code> line is Homebrew's own: since Homebrew 7, a cask from a tap outside Homebrew's own has to be trusted once before it will load. <a href="https://github.com/cuonggt/homebrew-tap/blob/master/Casks/shellhand.rb">Read the cask</a> first if you would rather see what you are trusting — it carries no install scripts at all.</p>
+        </div>
+        <div class="panel">
+          <h3>Build it yourself</h3>
+          <p>The source is all there, under the GPL: <code>xcodegen generate</code>, then open the project. The README says what building without the project's own signing certificate takes.</p>
+          <p><a href="https://github.com/cuonggt/shellhand#building">Building from source</a></p>
+        </div>
+      </div>
+      <p class="visually-hidden" id="copy-status" role="status"></p>
+    </div>
+  </section>
+
+  <section class="section" id="questions" aria-labelledby="questions-title">
+    <div class="wrap">
+      <h2 id="questions-title">Questions</h2>
+      <div class="faq">
+        <div class="qa">
+          <h3>What does it cost?</h3>
+          <p>Nothing. Shellhand is free and open-source, under the GNU GPL, version 3 or later: no trial, no account and no licence key.</p>
+        </div>
+        <div class="qa">
+          <h3>Does it keep my passwords?</h3>
+          <p>No, and it does not answer a password prompt for you. A host that takes only a password still opens in a tab — ssh asks in the terminal and you type it, exactly as in Terminal — but the SFTP window needs a key or an agent to log in.</p>
+        </div>
+        <div class="qa">
+          <h3>What does it send, and where?</h3>
+          <p>Nothing but your own ssh connections, and its check for updates, which goes to GitHub. There is no analytics, and no account to make.</p>
+        </div>
+        <div class="qa">
+          <h3>Where is my list kept?</h3>
+          <p>On your Mac, in a SQLite database under <code>~/Library/Application Support/Shellhand/</code>. File ▸ Export… writes the whole list out as YAML whenever you like.</p>
+        </div>
+        <div class="qa">
+          <h3>Which Macs does it run on?</h3>
+          <p>Any Mac on macOS 26 or later, Apple silicon or Intel: the build is universal.</p>
+        </div>
+        <div class="qa">
+          <h3>Where are port forwarding, snippets and key management?</h3>
+          <p>They were built, then taken out so that the core could be made solid first. If you need one back, say so in <a href="https://github.com/cuonggt/shellhand/discussions">Discussions</a>: a request from someone who would use it is what brings a feature back.</p>
+        </div>
+        <div class="qa">
+          <h3>Something is wrong. Where do I say?</h3>
+          <p>Help ▸ Report a Problem… in the app opens <a href="https://github.com/cuonggt/shellhand/issues/new/choose">an issue</a> with your version already filled in. Issues are public, so leave out host names, addresses and keys. Questions and ideas go to <a href="https://github.com/cuonggt/shellhand/discussions">Discussions</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" aria-labelledby="cta-title">
+    <div class="wrap center">
+      <img src="images/icon-256.png" width="88" height="88" alt="" loading="lazy">
+      <h2 id="cta-title">Try it on your own list.</h2>
+      <p class="lead">A fresh install offers the machines already in your <code>~/.ssh/config</code>, so there is nothing to type in.</p>
+      <div class="actions">
+        <a class="button primary" href="https://github.com/cuonggt/shellhand/releases/latest" data-download>Download for Mac</a>
+        <a class="button secondary" href="https://github.com/cuonggt/shellhand">Source on GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <p>© 2026 Cuong Giang. Shellhand is free software under the <a href="https://github.com/cuonggt/shellhand/blob/main/LICENSE">GPL-3.0-or-later</a>.</p>
+    <ul class="footer-links">
+      <li><a href="https://github.com/cuonggt/shellhand">Source</a></li>
+      <li><a href="https://github.com/cuonggt/shellhand/releases">Releases</a></li>
+      <li><a href="https://github.com/cuonggt/shellhand/discussions">Discussions</a></li>
+      <li><a href="https://github.com/cuonggt/shellhand/issues/new/choose">Report a problem</a></li>
+    </ul>
+    <p class="fine">The distribution marks in the app belong to their projects; Shellhand draws them to identify a machine, not to claim an endorsement. Mac and macOS are trademarks of Apple Inc.</p>
+  </div>
+</footer>
+</body>
+</html>

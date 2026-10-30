@@ -109,6 +109,11 @@ credentials, which is most of it.
 - `Casks/shellhand.rb` — the Homebrew cask, copied into the tap on release.
 - `appcast.xml` — the update feed, served from `main`. Generated, never
   hand-edited.
+- `site/` — shellhand.com: one static page with no build step, published to
+  GitHub Pages by `.github/workflows/site.yml` whenever it changes on `main`.
+  `tools/site-images.swift` makes its images from `docs/screenshot.png` and
+  the rendered icon. Like the README it names no version: its download
+  buttons ask GitHub for the latest release.
 - `docs/` — the architecture, the Phase 0 measurements, the engine comparison,
   the app icon, and the name.
 - `docs/notes/` — the stories behind the rules below, one file per subject,
