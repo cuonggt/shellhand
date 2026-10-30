@@ -343,3 +343,26 @@ guard taken out, only the settled and late-question tests fail; with no
 settling window, the jump chain's next hop, the just-through control and
 the rule's own timing fail; with the scrollback back at 500, only the
 long-history test fails, its screen starting at line 473.
+
+## The watchdog's shape
+
+**The watchdog's decision is `SessionProgress`; `watch()` is only the
+looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
+of the screen is one pure function, which is why there are tests for it at
+all. `watch()` is deliberately not private, and `logPath` is readable, so a
+test can run the real loop against a view it has fed through SwiftTerm's own
+`feed(text:)` — no pty, no process, no unknown host. `ticks` is what tells
+"the watchdog ran and the state did not move" from "the watchdog never ran",
+and there is a test for each.
+
+## Palettes
+
+Terminal colours live in `Core/Theme.swift`; a palette of one's own goes in
+the config under `themes:` rather than in a form, because eighteen colours is
+a thing to paste. SwiftTerm's `installColors` wants components in 0–65535, so
+an 8-bit channel is multiplied by **257**, not 256 — otherwise 255 lands on
+65280 and every white comes out a shade under. A palette missing a colour, or
+holding something that is not one, is refused whole: a terminal painted with
+fifteen of sixteen is worse than one left alone. "System" means SwiftTerm's
+own colours, left alone, so choosing it back repaints nothing until a new
+session.

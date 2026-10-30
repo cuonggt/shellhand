@@ -764,13 +764,10 @@ credentials, which is most of it.
   chain's next hop is still asked.
   → [answered questions](docs/notes/terminal.md#answered-questions)
 - **The watchdog's decision is `SessionProgress`; `watch()` is only the
-  looking.** The loop sleeps, ticks, reads ssh's log and looks; what it makes
-  of the screen is one pure function, which is why there are tests for it at
-  all. `watch()` is deliberately not private, and `logPath` is readable, so a
-  test can run the real loop against a view it has fed through SwiftTerm's own
-  `feed(text:)` — no pty, no process, no unknown host. `ticks` is what tells
-  "the watchdog ran and the state did not move" from "the watchdog never ran",
-  and there is a test for each.
+  looking**, left open with `logPath` so a test can run the real loop on a fed
+  view. `ticks` tells a watchdog that ran from one that never did, and `looks`
+  one that read the screen.
+  → [the watchdog's shape](docs/notes/terminal.md#the-watchdogs-shape)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a
   question is up and for `settling`, two minutes, after coming through. Every
@@ -979,15 +976,11 @@ credentials, which is most of it.
   before its background and border — never `.accessibilityElement(children:
   .ignore)`, which leaves a button that does nothing when pressed.
   → [naming a stack](docs/notes/window.md#naming-a-stack)
-- Terminal colours live in `Core/Theme.swift`; a palette of one's own goes in
-  the config under `themes:` rather than in a form, because eighteen colours is
-  a thing to paste. SwiftTerm's `installColors` wants components in 0–65535, so
-  an 8-bit channel is multiplied by **257**, not 256 — otherwise 255 lands on
-  65280 and every white comes out a shade under. A palette missing a colour, or
-  holding something that is not one, is refused whole: a terminal painted with
-  fifteen of sixteen is worse than one left alone. "System" means SwiftTerm's
-  own colours, left alone, so choosing it back repaints nothing until a new
-  session.
+- **A palette is eighteen colours**, kept in `Core/Theme.swift` and pasted
+  under `themes:` in the config. A channel is multiplied by **257**, not 256; a
+  palette missing a colour is refused whole; and "System" means SwiftTerm's own
+  colours, left alone.
+  → [palettes](docs/notes/terminal.md#palettes)
 - The app icon is an **Icon Composer bundle**, not an appiconset:
   `Shellhand/Resources/Shellhand.icon`, written by `tools/icon.py`. It is a
   directory of text — `icon.json` beside an SVG — and XcodeGen knows the
