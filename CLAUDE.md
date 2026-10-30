@@ -196,18 +196,11 @@ credentials, which is most of it.
   with it, which groups could hold another — live in `Core/Validation.swift`,
   not in the sheet that shows them. A rule in a view can only be tested by
   driving the view, and this app's dialogs do not answer to `click at`.
-- **The same rule now applies upward, not just to data.** `Views/Panes.swift`
-  and `Views/QuickConnect.swift` hold decisions that used to be `private`
-  inside `ContentView` and `QuickConnectSheet`: which tab is in front and what
-  is beside it, and how ⌘K ranks what you typed. They keep no state — the
-  views still own that and simply obey — so the whole of each behaviour is
-  reachable from a test with a couple of values and a list. Quick Connect
-  especially: driving the real palette is how a session to a live machine got
-  opened during a check, which is a high price for testing a sort.
-  **`Views/Browsing.swift` is the third, and the one that reads as redundant
-  until you meet its bug** — the same shape as the trade in `Panes.picking`.
-  It answers one question: where the host pane is **looking**, which is not
-  what is selected.
+- **Decisions lifted out of the views live beside them**: `Views/Panes.swift`,
+  `Views/QuickConnect.swift` and `Views/Browsing.swift` keep no state, so each
+  behaviour is a test with a couple of values — and testing ⌘K by driving it
+  once connected a live machine.
+  → [rules upward](docs/notes/window.md#rules-upward)
 - **The host pane shows the list, always, and the inspector says what a
   host is.** Where the pane is *looking*, `Browsing`, is kept apart from what
   is *selected* — a group is a place, a host a thing — so **don't collapse
@@ -433,17 +426,11 @@ credentials, which is most of it.
   alone at the trailing edge. Keep `paneToolbar` even with one item, since
   each column needs its own `.toolbar`.
   → [the toolbar](docs/notes/window.md#the-toolbar)
-- **It is called SFTP, everywhere**: the app menu, the toolbar, a row's menu,
-  the window's title and the Settings pane. It was "Files" and was renamed at
-  the user's word. The argument for "Files" is on the record and lost: the
-  window is two panes and the left one is *this Mac*, so local-to-local
-  copying is part of what it does and is not SFTP at all. **Don't re-argue
-  it.** If anything is still called Files, that is a spot the rename missed —
-  except `setFrameAutosaveName("FilesWindow")`, which must **not** change, or
-  every saved window frame is lost.
-  Its icon is `arrow.left.arrow.right` rather than a folder, because the
-  toolbar draws icons only: a folder reads as "a folder on this Mac", while
-  two arrows say *between*, which is the window's whole shape.
+- **It is called SFTP, everywhere**, at the user's word — **don't re-argue
+  it**. Anything still called Files is a spot the rename missed, except
+  `setFrameAutosaveName("FilesWindow")`, which must not change or every saved
+  frame is lost.
+  → [the name SFTP](docs/notes/window.md#the-name-sftp)
 - **Connect is not in the toolbar**: it is in the inspector, on ⌘↩ in the
   Host menu, and on ⏎ in the list. A double-click connects through
   `contextMenu(forSelectionType:)`'s `primaryAction` on rows and
@@ -451,17 +438,10 @@ credentials, which is most of it.
   which made every single click wait**. Look for the native hook before
   reaching for a gesture.
   → [connecting from the list](docs/notes/window.md#connecting-from-the-list)
-- **Each column carries its own `.toolbar`**, and that is the whole trick.
-  `listToolbar` hangs off the sidebar view and `paneToolbar` off the detail
-  view, inside the `NavigationSplitView`'s two closures — not one `.toolbar`
-  on the split view itself. Hung off the split view the detail's items land
-  hard against the divider **whatever** you do: `placement: .navigation` puts
-  them on the detail side but at its leading edge, `.primaryAction` is *not*
-  the trailing edge and measured at x=316 back beside the sidebar toggle, a
-  `ToolbarSpacer(.flexible)` does not expand, and nor does a plain `Spacer`
-  inside the group. Give the detail view its own toolbar with
-  `.primaryAction` and the items measure at 1636 and 1679 in a 1728pt window,
-  which is the right edge.
+- **Each column carries its own `.toolbar`**: hung on the split view, the
+  detail's items land against the divider whatever the placement; with a
+  toolbar of its own and `.primaryAction`, they sit at the trailing edge.
+  → [a toolbar per column](docs/notes/window.md#a-toolbar-per-column)
 - **Measure the toolbar, do not trust the placement names.** Its buttons
   publish `AXHelp`, so walking the window's `AXToolbar` and printing each
   button's x against the window's width says where they really are — and it
@@ -476,21 +456,14 @@ credentials, which is most of it.
 - Two `.disabled` on one menu item **compose**, so both have to be true for it
   to be usable. "Delete Group…" carried one on `hasGroup` and a second on
   `hasHost`, which meant deleting a group needed a host selected as well.
-- **New Group… lives in File**, beside New Host… and Import… — it makes
-  something rather than acting on what is selected, so it is not in Host.
-  It does read the selection, though: a group selected means the new one goes
-  inside it. So the item **says where it will land** — "New Group Inside
-  Production…" — rather than leaving you to open the editor and read its
-  parent picker. An item that quietly does two things has earned a longer
-  label. The sidebar's own version can say just "Inside" because the row it
-  came from names the group; the menu bar has no row, so it names it.
-- **A menu on a row acts on that row**, and a group's menu is handed the
-  group rather than reading it back out of the selection. "New Host…" there
-  called the same plain action the File menu does, so the one item in a
-  group's menu that made something made it at the top of the list instead,
-  while "New Group Inside…" directly below it nested. `newHostIn` takes the
-  group, which also means ⌘N in the File menu still makes an unfiled host —
-  two items that look alike must not quietly become one action.
+- **New Group… lives in File and says where it will land** — "New Group Inside
+  Production…" — because it reads the selection; an item that quietly does two
+  things has earned a longer label.
+  → [New Group](docs/notes/window.md#new-group)
+- **A menu on a row acts on that row**, handed it rather than reading the
+  selection: a group's New Host… is `newHostIn` that group, while ⌘N in File
+  still makes an unfiled host.
+  → [a row's menu](docs/notes/window.md#a-rows-menu)
 - A file session is opened **once** per pane, guarded by a flag set before the
   first await. Checking only whether the session exists let two opens through
   together: the second one's walk to the home directory landed after the first
@@ -498,80 +471,40 @@ credentials, which is most of it.
   reporting success. The `.task` that used to re-run on every tab switch is a
   window's now and runs once, but the guard stays — it is cheap, and what it
   protects against is a race rather than a particular way of re-entering.
-- **The sessions open are a strip of tabs across the top of the terminal**,
-  and the sidebar is the host list and nothing else. Standing them on end at
-  the bottom of the sidebar was built instead and taken out again at the
-  user's word: it is their window and they run the sessions in it.
-  What the column was answering is answered in the label instead: a tab is as
-  wide as what it says, so it does not say what the shell sent. It shows
-  `Sessions.shortTitle` — the machine and the tail of the path — capped at
-  180pt and **truncated in the middle**, because the two ends are the two
-  things that say which session this is (`prod-api-cha…/current/public`); cut
-  either end off and two tabs on one machine look alike. The whole title is
-  on the tab's tooltip and in its accessibility label, so nothing is lost.
-  If the strip ever fills anyway, shorten it further — don't move the
-  sessions back to the sidebar.
+- **Sessions are a strip of tabs across the terminal**, at the user's word, and
+  the sidebar is the host list alone. A tab shows `Sessions.shortTitle`, capped
+  at 180pt and cut in the middle; if the strip fills, shorten it further —
+  **don't move sessions back to the sidebar**.
+  → [the strip](docs/notes/window.md#the-strip)
 - The strip is **not there at all when nothing is open**, so a fresh install
   sees the window it has always seen.
-- **`Sessions` does not say what is on screen, and must not be asked.** It
-  had a `current` meaning "the session whose id is selected", which was the
-  same thing as "the session in front" right up until the hosts could be in
-  front too. Then it quietly became wrong in four places at once: the host in
-  the inspector, the name in the title bar, the subtitle, and every item in
-  the **Terminal** menu — where it left ⌘W closing a session off screen.
-  `current` is gone so it cannot be asked again; `ContentView.frontSession`
-  reads `pane`, and anything about what is on screen goes through that.
-  `Sessions.selected` survives and still means which terminal is current,
-  which is a different and narrower claim.
-- **The strip's selection is what the pane shows** — `PaneTab`: `.hosts` or
-  `.session(id)`. `ContentView` holds two of them: `pane` for what is in
-  front and `beside` for the split's other side. It carried a `.files(id)`
-  too while SFTP was a tab, and the split took either kind; that went back to
-  a window, so the split is two terminals again — but the shape is still the
-  general one, and a third kind would drop straight back in.
-  The split used to live in `Sessions`
-  as a `secondary: UUID?` guarded against `selected`, which stopped working
-  the moment "in front" could mean the hosts — a session can be the current
-  one while something else is on screen. Both halves of the split belong
-  where "what is in front" is decided.
-  Picking the tab already shown beside this one **trades the two places**
-  rather than drawing the same thing twice: a terminal is one view and can
-  only be in one place, so the second pane drew nothing.
+- **`Sessions` does not say what is on screen, and must not be asked**: what is
+  in front is `ContentView.pane`, read through `frontSession`. `current` was
+  removed after it went wrong in four places at once.
+  → [what is on screen](docs/notes/window.md#what-is-on-screen)
+- **The strip's selection is what the pane shows**: a `PaneTab`, held as `pane`
+  in front and `beside` for the split. Picking the tab shown beside trades the
+  two places, since a terminal is one view and can be in one place.
+  → [the strip's selection](docs/notes/window.md#the-strips-selection)
 - **Never change the inspector in the same update that swaps the pane**:
   it crashes, intermittently, as a reentrant table-view operation. Defer it a
   turn of the loop with `DispatchQueue.main.async`, and prove a change here
   with a dozen round trips, the previous build as the control.
   → [the inspector crash](docs/notes/window.md#the-inspector-crash)
-- That replaced a `Bool` called `browsing`, and **the reason it had to go is
-  the rule worth keeping**. A mode nobody can point at has to be set as a side
-  effect of something else, and twice the side effect silently did not happen.
-  Clearing it hung off `.onChange(of: sessions.selected)`, so **clicking the
-  tab you were already on** wrote an unchanged value, nothing fired, and with
-  one session open — the common case — the strip never worked at all. The
-  sidebar had it mirrored: **clicking the row you were already on** writes
-  nothing through `List(selection:)`, so it could not ask for the list back.
-  Both were the same bug. **An `onChange` sees a value, never the act — so
-  before driving any state off one, ask what happens when the value is set to
-  what it already holds.** An `onChange` is still right for keeping derived
-  state in step, which is what the one on `sessions.selected` now does: a
-  closed tab really does move it, and the strip follows.
+- **An `onChange` sees a value, never the act**: before driving state off one,
+  ask what happens when the value is set to what it already holds. A `Bool`
+  mode set that way silently broke the strip, and the sidebar with it.
+  → [onChange](docs/notes/window.md#onchange)
 - The strip is **drawn whenever there is a list at all**, so the hosts tab is
   always there to come back to. The **welcome is the exception**: a fresh
   install has no list to browse, so it meets the window it has always met
   rather than one tab leading nowhere. With SFTP gone back to a window the
   strip can hold a single tab you are already on, which is worth revisiting
   if it reads as clutter.
-- The **welcome stands in for the hosts tab, not for the window.** On a fresh
-  install there is no list to look at, and "All hosts, 0 hosts" is not what to
-  meet — but that reason says nothing about a terminal somebody has just
-  asked for. It replaced everything while the list was empty, so **a local
-  shell opened on a fresh install really started** — a `-zsh` with a pid,
-  confirmed — behind the welcome, with the tab strip hidden too, and nothing
-  could see it, reach it or close it. `Panes.welcoming` and `Panes.showsTabs`
-  hold the rule now: the welcome only when the hosts tab is in front, and the
-  strip the moment anything is open. Found by trying to do an ordinary thing
-  — open a local shell — on an empty store, which is also the only state it
-  was ever broken in.
+- **The welcome stands in for the hosts tab, not the window** —
+  `Panes.welcoming` and `Panes.showsTabs` — or a local shell opened on a fresh
+  install runs hidden behind it.
+  → [the welcome](docs/notes/window.md#the-welcome)
 - The **Window menu lists the sessions too**, with ⌘1 to ⌘9 for the first
   nine. That came in with the column and stays without it: a keyboard way to
   the fourth session is worth having whatever the switcher looks like, and
@@ -582,17 +515,10 @@ credentials, which is most of it.
   before the terminal can, acts only on keys meant for the host window, and
   lets it through when there is nowhere to go.
   → [the tab keys](docs/notes/window.md#the-tab-keys)
-- **⌘T opens another of the session in front**: the same host, or another
-  local shell for a local shell. Only with the hosts in front does it open
-  the host the list has selected. It used to open the selection whatever was
-  in front — connected to `db` through ⌘K with `web` picked, ⌘T opened
-  `web`, and with a group picked it was greyed out beside a live terminal —
-  because it was gated on `hasHost`, which is about the list. The rule is
-  `Panes.newTab`, and the item is gated on what it returns. **A session on a
-  host since deleted opens nothing**, not the selection: the argv comes from
-  the list, and opening some other machine instead is the surprise this
-  exists to end. The host is taken from the list as it is now, not from the
-  session's copy, so an edit made since is the one connected with.
+- **⌘T opens another of the session in front**, by `Panes.newTab`; only with
+  the hosts in front does it open the host selected. A session on a host since
+  deleted opens nothing rather than some other machine.
+  → [⌘T](docs/notes/window.md#new-tab)
 - **A tab has a menu of its own** — Reconnect, Duplicate, SFTP, Close Tab
   and Close Other Tabs — and each item is handed its session through
   `TabActions`, since right-clicking a tab does not bring it in front.
@@ -609,14 +535,9 @@ credentials, which is most of it.
   `SUFeedURL`**, and `HelpTests` reads the form to hold the link to it;
   `config.yml` keeps blank issues allowed for the link 0.1.0 shipped. Quote a
   placeholder that looks like a number. → [Help](docs/notes/window.md#help)
-- **Making each session its own `NSWindow`,
-  so that macOS draws them as a real tab bar with the host list as the first
-  tab, was built and thrown away** — it worked, tab overview and `⌘⇧[` and
-  dragging a session out included, and it was still not wanted. **Don't offer
-  it again.** What it cost, for the record: a window per session puts the host
-  list's store and sheets a scene away, so every menu item needing either has
-  to be posted back to it, and the split has to go, because macOS already does
-  side-by-side by dragging a tab out.
+- **Each session as its own `NSWindow`, drawn as a real macOS tab bar, was
+  built and thrown away. Don't offer it again.**
+  → [windows as tabs](docs/notes/window.md#windows-as-tabs)
 - **This Mac is always the left side** of the browser; the right is the host
   it was opened on. Opened from no host in particular — ⌘B, the toolbar
   button with nothing selected — the right side **asks which host** rather
@@ -648,25 +569,14 @@ credentials, which is most of it.
   like an empty home directory. `chosen` is set **before** the connecting
   starts, so a host that refuses leaves the pane showing what went wrong
   rather than falling back to the question.
-- There are **no secondary `Window` scenes left**, and only one window this
-  app makes itself: Settings, an `NSWindowController`. SFTP was a second one
-  and is a tab again. If a scene is ever added back, two things bit last time:
-  `openWindow` does nothing unless a live view asks for it (not a `Commands`
-  body, not an `AppActions` closure — no error, no window), and the **first
-  scene in `body` is the one macOS opens at launch**, so a secondary one needs
-  `.defaultLaunchBehavior(.suppressed)` or it comes up instead of the host
-  list.
-- The sidebar's `List` holds **one `ForEach` over one flat array of rows**,
-  tree and search results alike. Two shapes in one list left the rows of the
-  shape it had just dropped drawn over the new ones.
-  The array is built in `Views/SidebarRows.swift`, not in the view: the row
-  type, the walk down the tree and the search filter are all there, so the
-  ordering — groups before hosts at every level, a folded group keeping its
-  own row and losing what is under it, the search results **replacing** the
-  tree rather than joining it — is checked without a window. `SidebarView`
-  keeps `private typealias Row = SidebarRow` so the other six hundred lines
-  read as they did. Matching nothing is a list of nothing, and that is a
-  test: the tree coming back would be the old bug wearing a new shape.
+- **There are no secondary `Window` scenes.** If one comes back: `openWindow`
+  works only when a live view asks, and the first scene in `body` opens at
+  launch, so another needs `.defaultLaunchBehavior(.suppressed)`.
+  → [scenes](docs/notes/window.md#scenes)
+- **The sidebar's `List` holds one `ForEach` over one flat array of rows**,
+  tree and search alike, built and tested in `Views/SidebarRows.swift`; two
+  shapes in one list drew stale rows over new ones.
+  → [the sidebar's rows](docs/notes/window.md#the-sidebars-rows)
 - Anything automated waits for **its own copy** of the app. `pgrep Shellhand`
   matches every copy, including one the user has open.
 - **Driving Quick Connect against a real host list connects to a real
@@ -682,20 +592,14 @@ credentials, which is most of it.
 - `Group`, `Host` and `Color` are ambiguous: SwiftUI has a `Group` and a
   `Color`, SwiftTerm has a `Color`. Write `SwiftUI.Group` and `SwiftUI.Color`
   in files that hit them.
-- **The sidebar is one list, and a second tab was built and cut.** It had a
-  Hosts/Library switch above the search field, with Library a menu of three —
-  Keys, Credentials, Snippets — and the records drawn as cards in the pane.
-  All three records are gone now, so the switch went with them. Before that,
-  a sidebar of three **lists** was built and taken out too, because it made
-  the host list, which is what the window is for, one tab among three. If a
-  second tab is ever wanted again: one switch over a menu, not a third list.
-- **A write to the store while a list is drawing is a crash**, not a slow
-  frame: every save rereads the store and resolves every host's inheritance,
-  which mutates the array the list view is reading — AppKit calls it a
-  "reentrant operation in its NSTableView delegate". Nothing saves as it is
-  typed any more, the editor that did having gone with snippets; if one is
-  ever written again it has to debounce, replacing the write still waiting,
-  and flush on disappear so the last characters are not lost.
+- **The sidebar is one list.** A second tab and a sidebar of three lists were
+  both built and cut; if a second tab is ever wanted, make it one switch over a
+  menu.
+  → [one list](docs/notes/window.md#one-list)
+- **Never write to the store while a list is drawing**: a save resolves every
+  host and crashes the table view reading them. Anything that saves as it is
+  typed must debounce, and flush on disappear.
+  → [writes while drawing](docs/notes/window.md#writes-while-drawing)
 - **`.searchable` goes where it likes, not where you put it.** Inside a plain
   sheet it detaches, drawing a second search box floating at the top right
   while the list draws its own; and with `placement: .sidebar` it is hoisted
@@ -703,14 +607,10 @@ credentials, which is most of it.
   `TextField` is what works in both places; the host sidebar draws its own in
   a `safeAreaInset(edge: .top)` on the list, which also avoids re-indenting
   the whole modifier chain.
-- In a list beside its detail, the **detail side needs `maxWidth: .infinity`**.
-  With neither side greedy, `HSplitView` shares the spare width between them —
-  and a `maxWidth` on the list constrains **the list, not its pane**, so the
-  pane grows past the cap and the list sits centred inside it with a band of
-  nothing either side. It shows up on **deselecting**, because that is when
-  the detail collapses to a `ContentUnavailableView` and slack appears.
-  Collapsing the list's two `.frame`s into one does **not** fix it; that was
-  the first guess and it changed nothing.
+- **In a list beside its detail, give the detail `maxWidth: .infinity`**: a
+  `maxWidth` on the list caps the list, not its pane, and the slack shows on
+  deselecting.
+  → [a list beside its detail](docs/notes/window.md#a-list-beside-its-detail)
 - An `HSplitView` in a sheet **sizes itself to its content** unless told to
   fill: without `.frame(maxWidth: .infinity, maxHeight: .infinity)` it sits in
   a band across the middle with empty space above and below it.
@@ -878,14 +778,10 @@ credentials, which is most of it.
   of the buffer, and stopping at `.connected` would miss a jump chain's next
   hop. **Check what SwiftTerm's view exposes, not the class behind it.**
   → [the scrollback](docs/notes/terminal.md#the-scrollback)
-- **Settings is a window this app makes itself**, not a SwiftUI `Settings`
-  scene: the glass chrome macOS 26 draws comes from `.fullSizeContentView` in
-  the window's style mask, and a scene does not expose it — setting it
-  afterwards through an `NSViewRepresentable` does not hold, because SwiftUI
-  puts the window back the way it had it. So `SettingsWindowController` makes
-  the `NSWindow`. A window made in code is released when it closes, which
-  would leave the controller holding a freed one, so it sets
-  `isReleasedWhenClosed = false`.
+- **Settings is a window this app makes**, `SettingsWindowController`, because
+  the glass chrome needs `.fullSizeContentView` and a SwiftUI scene puts the
+  window back; it sets `isReleasedWhenClosed = false`.
+  → [the Settings window](docs/notes/window.md#the-settings-window)
 - What the `Settings` scene gave for free was Shellhand ▸ Settings on ⌘,.
   `CommandGroup(replacing: .appSettings)` buys it back, in the place every
   Mac app keeps it. Check it after touching the scenes: there is nothing to
@@ -908,14 +804,10 @@ credentials, which is most of it.
   width that the build number fell off the end of "Version 0.0.1 (1)".
 - Settings is a **window**, like Files, so the three dialog widths below do
   not apply to it. It opens at 700×500 and will not go below 620×420.
-- **Dialogs come in three widths**, in `Views/DialogSize.swift`: 460 for one
-  question, 560 for one record or a plain list, 820 for a list beside its
-  detail. This app grew nine — 420, 460, 480, 500, 520, 560, 580, 620, 820 —
-  each picked by hand, so opening two sheets in a row slid the window sideways
-  under the pointer. **Width only**: height stays with each dialog, measured,
-  because a width that jumps between sheets is jarring and a height that does
-  is not — and both times a height was handed down rather than measured here,
-  it clipped the last row.
+- **Dialogs come in three widths**, `Views/DialogSize.swift`: 460 for one
+  question, 560 for a record or a plain list, 820 for a list beside its detail.
+  Width only: each dialog measures its own height.
+  → [dialog widths](docs/notes/window.md#dialog-widths)
 - **Quick Connect is a palette, not a dialog**, and is deliberately outside
   that grid: ⌘K, type, return, the shape Spotlight has, where a footer would
   be noise. What a palette does owe you is a way out, and with no button bound
@@ -942,14 +834,10 @@ credentials, which is most of it.
 - Advanced carries a **mark when what is wrong is on it**, worked out by asking
   whether the problem survives clearing the ssh options. A greyed-out Save with
   nothing visible to explain it is what tabs cost if you don't do this.
-- **That mark has to be a character, not an SF Symbol.** A segment of a
-  `.pickerStyle(.segmented)` picker takes a label **string**, so an `Image`
-  interpolated into its `Text` has nowhere to live: it collapses to U+FFFC and
-  draws nothing. The trap is that accessibility reports the label as
-  `"Advanced ￼"`, so a probe reads back a mark that is not on the screen —
-  this was only caught by cropping the tab strip out of a screenshot and
-  looking. Written as an Image, the host editor's mark had never once
-  appeared.
+- **A mark in a segmented picker's label is a character, not an SF Symbol**: an
+  `Image` there collapses to U+FFFC and draws nothing, while accessibility
+  still reads it back.
+  → [marks in a segment](docs/notes/window.md#marks-in-a-segment)
 - The problem and the preview command are **both shown**. The problem used to
   replace the command, which took it away exactly when you wanted to see what
   was wrong with it.
@@ -962,15 +850,10 @@ credentials, which is most of it.
   Two bare fields side by side in a row said which was which until both were
   filled, and then nothing did. Every field gets a label beside it, in the
   same `LabeledContent` + `.roundedBorder` row the rest of the app uses.
-- **The group editor has the same two tabs**, but not the same line between
-  them: a group is never reached, so General is what the group *is* and who
-  the hosts under it log in as, and Advanced is what happens once you are on
-  one of them. Its Advanced says `•` when something over there is merely set,
-  which the host editor has no need of — the one thing groups are most used
-  for is a palette, and the `DisclosureGroup` this replaced decided whether to
-  open itself from the ssh options and the agent alone, never looking at the
-  palette. So a group that painted its hosts opened with the palette shut and
-  nothing to hint at it.
+- **The group editor's tabs divide what a group is from what happens on its
+  hosts**, and its Advanced tab shows `•` when anything there is set, the
+  palette included.
+  → [the group editor](docs/notes/window.md#the-group-editor)
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor is
@@ -993,13 +876,10 @@ credentials, which is most of it.
   true`, then as many `key code 125` as you need, and the selection walks the
   list — groups included. A synthetic `click at` genuinely does nothing here,
   which is the part that is true.
-- The group editor says **where an inherited value comes from beside the
-  field**, not inside the placeholder. Folding both into one grey string
-  ("deploy — from Production") meant the field had to be read to learn two
-  different things, and it left nothing to say when a value was inherited from
-  nowhere — which is how `—` ended up sitting there looking like a value. The
-  placeholder is now the inherited value or an example, and the source is a
-  caption of its own, which is what the host editor already did.
+- **Where an inherited value comes from is a caption beside the field**, not
+  part of the placeholder, which is the inherited value or an example — never
+  `—`.
+  → [where a value comes from](docs/notes/window.md#where-a-value-comes-from)
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their
   field is drawn with a border like every other, because a row that is a field
@@ -1095,13 +975,10 @@ credentials, which is most of it.
   gets the stale value — pressing CSV on the welcome opened the sheet on the
   ssh config every time. Carry what the sheet needs in the binding itself and
   use `.sheet(item:)`.
-- A button whose label is a stack has **no accessibility name**: these read as
-  "button 1, button 2, button 3". Name it with `.accessibilityLabel`, placed on
-  the button before the background and border wrap it in layers of their own.
-  Not `.accessibilityElement(children: .ignore)` — that names the row but
-  replaces the button's own element, and then pressing it does nothing at all.
-  The label lands in `AXAttributedDescription`, which AppleScript cannot read
-  back, so `description of button 1` still says "button".
+- **A button whose label is a stack needs `.accessibilityLabel`**, placed
+  before its background and border — never `.accessibilityElement(children:
+  .ignore)`, which leaves a button that does nothing when pressed.
+  → [naming a stack](docs/notes/window.md#naming-a-stack)
 - Terminal colours live in `Core/Theme.swift`; a palette of one's own goes in
   the config under `themes:` rather than in a form, because eighteen colours is
   a thing to paste. SwiftTerm's `installColors` wants components in 0–65535, so
