@@ -4,9 +4,9 @@ Decided 2026-10-18; revisited 2026-10-22 under GPL-3.0-or-later, and again on
 2026-10-25 when the repository was actually made public.
 
 **The name is Shellhand**, with the bundle ID `com.shellhand.Shellhand` and
-the cask `cuonggt/tap/shellhand`. The trademark search, the domains and the
-update feed's host are still to do, and so is the price — see
-[Before shipping](#before-shipping).
+the cask `cuonggt/tap/shellhand`. **It is free and open-source** — see
+[Pricing](#pricing). The trademark search, the domains and the update feed's
+host are still to do — see [Before shipping](#before-shipping).
 
 ## Why this name
 
@@ -83,25 +83,22 @@ Cheap now, expensive after a release:
   the defaults domain behind `@AppStorage`.
 - The Homebrew cask, the Sparkle feed URL and where `SUPublicEDKey` lives.
 
-## Pricing — still to decide
+## Pricing
 
-Not settled. The shape under consideration is a paid app with a trial: a
+**Free and open-source**, decided on 2026-10-30. The build is free to
+download and to use, and the source is GPL-3.0-or-later, as it has been since
+the repository went public. So nothing stands between a release and a launch
+on this account: no trial, no licence check, no merchant of record.
+
+Until then the shape under consideration was a paid app with a trial: a
 one-off price carrying a year of updates, then a smaller renewal to keep
 getting them, sold through a merchant of record. Nothing here costs money to
-run, so there is no subscription to fund — only the work.
+run, so there was never a subscription to fund — only the work.
 
-**What GPL-3.0 moves.** Selling builds is untouched: the licence asks that
-whoever receives a binary can get the source, which they can, and nothing in
-it asks for a price of zero. Two things do change.
-
-- The **Mac App Store is out** as a channel while the app is only GPL —
-  Apple's terms and the licence do not agree. Getting it back means
-  dual-licensing, which is possible only because the copyright is held by one
-  person.
-- Anyone can build the app from source. So **what is sold is the notarized,
-  signed, Sparkle-updated build** and the support behind it, not access to the
-  code. The price has to live in the polish and the convenience, which is an
-  argument for finishing release packaging before thinking about a number.
+**What GPL-3.0 still moves.** The **Mac App Store is out** as a channel while
+the app is only GPL — Apple's terms and the licence do not agree. Getting it
+back would mean dual-licensing, which is possible only because the copyright
+is held by one person.
 
 ## Before shipping
 

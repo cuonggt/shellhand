@@ -9,7 +9,7 @@ touching anything.
 
 This repository is public, under GPL-3.0-or-later: `LICENSE` holds the licence
 and `README.md` is what a visitor reads. `docs/name-and-pricing.md` has the
-name and what is still to decide about selling it.
+name, and the decision that it is free and open-source.
 
 ## How it fits together
 

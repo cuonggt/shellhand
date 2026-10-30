@@ -11,8 +11,8 @@ and moves files over SFTP.
 
 ## Install
 
-Requires macOS 26. The build is universal, signed and notarized, and updates
-itself from here.
+Requires macOS 26. Free and open-source; the build is universal, signed and
+notarized, and updates itself from here.
 
 Download the DMG from
 [the latest release](https://github.com/cuonggt/shellhand/releases/latest),
