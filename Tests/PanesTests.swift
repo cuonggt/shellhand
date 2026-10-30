@@ -339,4 +339,25 @@ nonisolated struct PanesTests {
         #expect(!Panes.welcoming(hosts: 3, loading: false, front: .hosts))
         #expect(Panes.showsTabs(hosts: 3, loading: false, sessions: 0))
     }
+
+    // MARK: reconnecting
+
+    /// Reconnecting closed the tab and opened another at the end of the
+    /// strip, put in front wherever the old one had been.
+    @Test("a reconnected session goes where the one it replaces was")
+    func replacing() {
+        let old = UUID()
+        let new = UUID()
+        let inFront = Panes.replacing(old, with: new, front: .session(old), beside: one)
+        #expect(inFront.front == .session(new))
+        #expect(inFront.beside == one)
+        let beside = Panes.replacing(old, with: new, front: one, beside: .session(old))
+        #expect(beside.front == one)
+        #expect(beside.beside == .session(new))
+        // Reconnected from its own menu with another tab in front, nothing
+        // moves.
+        let elsewhere = Panes.replacing(old, with: new, front: .hosts, beside: two)
+        #expect(elsewhere.front == .hosts)
+        #expect(elsewhere.beside == two)
+    }
 }

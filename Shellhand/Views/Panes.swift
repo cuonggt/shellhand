@@ -26,6 +26,15 @@ nonisolated enum Panes {
         (front: tab, beside: beside == tab ? front : beside)
     }
 
+    /// Reconnecting: the new session goes wherever the one it replaces was,
+    /// in front or beside, and nothing else moves.
+    static func replacing(
+        _ old: UUID, with new: UUID, front: PaneTab, beside: PaneTab?
+    ) -> (front: PaneTab, beside: PaneTab?) {
+        let swap = { (tab: PaneTab) in tab == .session(old) ? PaneTab.session(new) : tab }
+        return (front: swap(front), beside: beside.map(swap))
+    }
+
     /// ⌘D: open the split on the first open tab that is not already in front,
     /// or close it if it is open. The hosts are never offered as a side — the
     /// sidebar is already the list, so they are not one of the two things you

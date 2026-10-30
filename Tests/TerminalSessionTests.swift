@@ -89,6 +89,51 @@ struct TerminalSessionTests {
         #expect(session().state == .connecting)
     }
 
+    // MARK: stopping and reconnecting
+
+    @Test("Stop Connecting ends a connection being made as stopped, not as a failure")
+    func stopsConnecting() async {
+        let session = session()
+        session.stopConnecting()
+        #expect(session.stopped)
+        session.processTerminated(source: session.view, exitCode: 255)
+        await settle { session.status == .stopped }
+        #expect(session.status == .stopped)
+    }
+
+    @Test("Stop Connecting does nothing once a session is no longer connecting")
+    func stopsOnlyConnecting() async {
+        let session = session()
+        session.processTerminated(source: session.view, exitCode: 0)
+        await settle {
+            if case .ended = session.state { return true }
+            return false
+        }
+        session.stopConnecting()
+        #expect(!session.stopped)
+    }
+
+    /// Reconnecting closed the tab and opened another at the end of the
+    /// strip, so the tab you were on moved away from where you had put it.
+    /// `-V` is all the ssh here is given: it prints its version and exits,
+    /// reading no config and reaching nothing.
+    @Test("a reconnected session takes the old one's place, and its selection")
+    func reopensInPlace() {
+        let sessions = Sessions()
+        let host = Shellhand.Host(id: "h", name: "web", addr: "198.51.100.1")
+        let first = sessions.open(host: host, argv: ["-V"])
+        let middle = sessions.open(host: host, argv: ["-V"])
+        let last = sessions.open(host: host, argv: ["-V"])
+        #expect(middle.startedAt != nil)
+        sessions.selected = middle.id
+        let route = Route(stops: [Route.Stop(name: "web", dest: "198.51.100.1", addr: "198.51.100.1", port: 22)])
+        let new = sessions.reopen(middle, host: host, connection: Connection(argv: ["-V"], route: route))
+        #expect(sessions.all.map(\.id) == [first.id, new.id, last.id])
+        #expect(sessions.selected == new.id)
+        #expect(new.route == route)
+        for session in sessions.all { sessions.close(session) }
+    }
+
     // MARK: adopting a host that changed
 
     /// Repainting is the only thing adopting does. A session keeps the host

@@ -215,6 +215,20 @@ final class HostStore {
         (try? await Core.shared.preview(db: dbPath, host: host)) ?? HostPreview()
     }
 
+    /// What a session on `host` is opened with: the argv, and the route it
+    /// goes by. A machine typed into ⌘K is resolved as it stands, as below.
+    func connection(for host: Host) async -> Connection? {
+        let path = dbPath
+        let id = host.id
+        do {
+            if id.isEmpty { return try await Core.shared.connection(db: path, unsaved: host) }
+            return try await Core.shared.connection(db: path, hostID: id)
+        } catch {
+            lastError = error.localizedDescription
+            return nil
+        }
+    }
+
     func sshArgs(for host: Host) async -> [String]? {
         let path = dbPath
         let id = host.id

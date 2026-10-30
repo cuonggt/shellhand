@@ -247,6 +247,61 @@ nonisolated struct HostKeyTests {
         }
     }
 
+    // MARK: what it is about
+
+    @Test("the machine, the key type and the fingerprint are read out of the question")
+    func readsTheQuestion() {
+        #expect(HostKey.asked(in: Self.asking) == HostKey.Asked(
+            host: "web", keyType: "ED25519",
+            fingerprint: "SHA256:abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG"))
+    }
+
+    /// OpenSSH 10.3 writes `fingerprint is:` with no full stop after the
+    /// fingerprint, so with the whitespace out the line after it runs
+    /// straight on — which is why a SHA256 one is taken at its own length.
+    @Test("OpenSSH 10.3's own question is read, a machine on another port included")
+    func readsOpenSSH103() {
+        #expect(HostKey.asked(in: Self.askedForReal) == HostKey.Asked(
+            host: "[127.0.0.1]:58359", keyType: "ED25519",
+            fingerprint: "SHA256:C5SjKQsmTqrrkBXY2d/2NgFWAzj05pE4qijO5S09/00"))
+    }
+
+    @Test("wrapped however narrow, the question reads the same", arguments: [33, 16, 13, 8])
+    func readsWrapped(columns: Int) {
+        let screen = Self.wrapped("some earlier output\n" + Self.askedForReal, at: columns)
+        #expect(HostKey.asked(in: HostKey.question(in: screen)) == HostKey.asked(in: Self.askedForReal))
+    }
+
+    @Test("a machine named bare, with an MD5 fingerprint, is read too")
+    func readsBare() {
+        let bare = """
+            The authenticity of host 'web' can't be established.
+            RSA key fingerprint is MD5:0f:1e:2d:3c:4b:5a:69:78:87:96:a5:b4:c3:d2:e1:f0.
+            Are you sure you want to continue connecting (yes/no)?
+            """
+        #expect(HostKey.asked(in: bare) == HostKey.Asked(
+            host: "web", keyType: "RSA",
+            fingerprint: "MD5:0f:1e:2d:3c:4b:5a:69:78:87:96:a5:b4:c3:d2:e1:f0"))
+    }
+
+    /// Worded some other way, it is shown whole rather than half read.
+    @Test("a question that does not name both a machine and a key is not read")
+    func readsOnlyItsOwn() {
+        let differs = """
+            Warning: the ECDSA host key for 'web' differs from the key for the IP address '198.51.100.11'
+            Offending key for IP in /Users/me/.ssh/known_hosts:12
+            Matching host key in /Users/me/.ssh/known_hosts:3
+            Are you sure you want to continue connecting (yes/no)?
+            """
+        #expect(HostKey.asked(in: differs) == nil)
+        let noMachine = """
+            something
+            ED25519 key fingerprint is SHA256:zzzz.
+            Are you sure you want to continue connecting (yes/no)?
+            """
+        #expect(HostKey.asked(in: noMachine) == nil)
+    }
+
     /// At widths that narrow the warning and the fingerprint wrap too, so the
     /// question shown has to be put back together from rows rather than found
     /// in one — or the fingerprint is cut, at the one moment somebody has to

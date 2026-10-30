@@ -60,6 +60,8 @@ struct AppActions {
     var copyAsCommand: () -> Void = {}
     var connect: () -> Void = {}
     var reconnect: () -> Void = {}
+    /// Gives up on the connection being made in the tab in front.
+    var stopConnecting: () -> Void = {}
     var closeTab: () -> Void = {}
     var toggleSplit: () -> Void = {}
     var quickConnect: () -> Void = {}
@@ -95,6 +97,8 @@ struct AppActions {
     var hasHost = false
     var hasGroup = false
     var hasSession = false
+    /// Whether the session in front is still connecting.
+    var canStopConnecting = false
     /// Whether there are two things that could go side by side — terminals
     /// and SFTP tabs alike — and the one in front is one of them.
     var canSplit = false
@@ -263,6 +267,11 @@ struct ShellhandCommands: Commands {
             Button("Reconnect") { actions?.reconnect() }
                 .keyboardShortcut("r", modifiers: .command)
                 .disabled(!(actions?.hasSession ?? false))
+            // ⌘., the Mac's key for giving up on something under way, and
+            // only while a connection is: disabled, it passes the key on.
+            Button("Stop Connecting") { actions?.stopConnecting() }
+                .keyboardShortcut(".", modifiers: .command)
+                .disabled(!(actions?.canStopConnecting ?? false))
             Divider()
             Button("Show Beside") { actions?.toggleSplit() }
                 .keyboardShortcut("d", modifiers: .command)

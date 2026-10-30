@@ -75,6 +75,62 @@ nonisolated enum HostKey {
         return rows[start...end].joined(separator: "\n")
     }
 
+    /// What a question is about: the machine as ssh named it, and the key it
+    /// was shown.
+    nonisolated struct Asked: Equatable, Sendable {
+        /// As ssh wrote it: `bastion`, `192.0.2.10`, or `[192.0.2.21]:2222`
+        /// for a port other than 22, which `Route.split` takes apart.
+        var host: String
+        /// `ED25519`, `ECDSA`, `RSA`.
+        var keyType: String
+        /// `SHA256:` and its digits, or `MD5:` and its pairs.
+        var fingerprint: String
+    }
+
+    /// The machine and the key a question is about, or nil where it does not
+    /// say both — a question worded some other way is still shown whole.
+    ///
+    /// Read with the whitespace out, as `isBeingAsked` reads, because a
+    /// terminal narrow enough to wrap the question breaks the host and the
+    /// fingerprint across rows, and a wrap that falls on a space loses it.
+    /// That runs the fingerprint into the line after it, which OpenSSH 10.3
+    /// no longer ends with a full stop — so a SHA256 fingerprint is taken at
+    /// its own length, 43 characters.
+    static func asked(in question: String) -> Asked? {
+        let tight = tightened(question)
+        guard let opening = tight.range(of: tightOpening + "'"),
+              let quote = tight[opening.upperBound...].firstIndex(of: "'")
+        else { return nil }
+        // `web (198.51.100.11)` with its space gone, or `[127.0.0.1]:58359
+        // (<no hostip for proxy command>)` through a jump host: the machine
+        // is what comes before the bracket.
+        let host = String(tight[opening.upperBound..<quote].prefix { $0 != "(" })
+        guard !host.isEmpty,
+              let line = tight.range(of: tightFingerprintLine, range: quote..<tight.endIndex)
+        else { return nil }
+        let keyType = String(tight[..<line.lowerBound].reversed().prefix(while: isKeyTypeCharacter).reversed())
+        var rest = tight[line.upperBound...]
+        if rest.hasPrefix(":") { rest = rest.dropFirst() }
+        let fingerprint: String
+        if rest.hasPrefix("SHA256:") {
+            fingerprint = "SHA256:" + String(rest.dropFirst(7).prefix(43).prefix(while: isBase64Character))
+        } else if rest.hasPrefix("MD5:") {
+            fingerprint = "MD5:" + String(rest.dropFirst(4).prefix(47).prefix { $0.isHexDigit || $0 == ":" })
+        } else {
+            return nil
+        }
+        guard !keyType.isEmpty, !fingerprint.hasSuffix(":") else { return nil }
+        return Asked(host: host, keyType: keyType, fingerprint: fingerprint)
+    }
+
+    private static func isKeyTypeCharacter(_ character: Character) -> Bool {
+        ("A"..."Z").contains(character) || ("0"..."9").contains(character) || character == "-"
+    }
+
+    private static func isBase64Character(_ character: Character) -> Bool {
+        character.isASCII && (character.isLetter || character.isNumber || character == "+" || character == "/")
+    }
+
     /// Going back from `end`, the row on which `phrase` begins, with the rows
     /// put back together and their whitespace taken out.
     ///

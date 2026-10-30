@@ -20,23 +20,34 @@ struct SessionTabBar: View {
     let actions: TabActions
 
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 4) {
-                FixedTab(title: "Hosts", icon: "list.bullet",
-                         selected: pane == .hosts) { onPick(.hosts) }
-                ForEach(sessions.all) { session in
-                    TabButton(
-                        session: session,
-                        selected: pane == .session(session.id),
-                        hasOthers: sessions.all.count > 1,
-                        actions: actions,
-                        onShow: { onPick(.session(session.id)) })
+        ScrollViewReader { strip in
+            ScrollView(.horizontal) {
+                HStack(spacing: 4) {
+                    FixedTab(title: "Hosts", icon: "list.bullet",
+                             selected: pane == .hosts) { onPick(.hosts) }
+                    ForEach(sessions.all) { session in
+                        TabButton(
+                            session: session,
+                            selected: pane == .session(session.id),
+                            hasOthers: sessions.all.count > 1,
+                            actions: actions,
+                            onShow: { onPick(.session(session.id)) })
+                        .id(session.id)
+                    }
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .scrollIndicators(.never)
+            // The tab in front is scrolled into view: a session opened with
+            // the strip full landed past its end, out of sight. A turn of the
+            // loop later, since a new tab is not laid out in the update that
+            // adds it.
+            .onChange(of: pane) { _, now in
+                guard case let .session(id) = now else { return }
+                DispatchQueue.main.async { withAnimation { strip.scrollTo(id) } }
+            }
         }
-        .scrollIndicators(.never)
         .background(.bar)
     }
 }
@@ -106,9 +117,7 @@ private struct TabButton: View {
             onShow()
         } label: {
             HStack(spacing: 6) {
-                Circle()
-                    .fill(color(session.state))
-                    .frame(width: 6, height: 6)
+                StatusMark(status: session.status)
                 // The machine and the tail of the path, not the whole of
                 // what the shell sent — and capped, because the tail can be
                 // long too. Truncating in the middle keeps both the ends
@@ -118,6 +127,16 @@ private struct TabButton: View {
                     .truncationMode(.middle)
                     .frame(maxWidth: 180)
                     .fixedSize(horizontal: false, vertical: true)
+                // A question in a tab behind this one was a yellow dot, and
+                // the far end gives up on it after a couple of minutes.
+                if session.status == .needsAnswer {
+                    Text("Needs you")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 1)
+                        .background(SwiftUI.Color.orange.opacity(0.18), in: Capsule())
+                }
                 Button { actions.close(session) } label: {
                     Image(systemName: "xmark").font(.caption2)
                 }
@@ -135,7 +154,9 @@ private struct TabButton: View {
         // The whole of what the shell sent, for the times the label had to
         // cut it: a truncated name should always be readable somewhere.
         .help(session.title)
-        .accessibilityLabel(session.title)
+        // Its state in words as well as its name: a colour says nothing to
+        // VoiceOver, and the symbol only as much as its shape.
+        .accessibilityLabel("\(Sessions.shortTitle(of: session)), \(session.status.spoken)")
         // Reconnecting and closing go through the same questions ⌘R and ⌘W
         // put; Duplicate is ⌘T for this tab rather than the one in front.
         .contextMenu {
@@ -161,13 +182,38 @@ private struct TabButton: View {
             : SwiftUI.Color.secondary.opacity(0.1)
     }
 
+}
+
+/// A tab's state as a shape: a spinner while connecting, the green dot once
+/// through, and a symbol for everything else — `SessionStatus.symbol`.
+/// Never a colour alone, and in a box of one size, so the name beside it
+/// does not shift as the state moves on.
+private struct StatusMark: View {
+    let status: SessionStatus
+
+    var body: some View {
+        SwiftUI.Group {
+            switch status {
+            case .connecting:
+                ProgressView().controlSize(.mini)
+            case .connected:
+                Circle().fill(SwiftUI.Color.green).frame(width: 7, height: 7)
+            default:
+                Image(systemName: status.symbol)
+                    .font(.caption)
+                    .foregroundStyle(tint)
+            }
+        }
+        .frame(width: 12, height: 12)
+        .accessibilityHidden(true)
+    }
+
     // SwiftTerm has a Color of its own, for terminal colours.
-    private func color(_ state: TerminalSession.State) -> SwiftUI.Color {
-        switch state {
-        case .connecting: SwiftUI.Color.orange
-        case .connected: SwiftUI.Color.green
-        case .askingHostKey: SwiftUI.Color.yellow
-        case let .ended(code, _): (code == 0) ? SwiftUI.Color.secondary : SwiftUI.Color.red
+    private var tint: SwiftUI.Color {
+        switch status {
+        case .needsAnswer: .orange
+        case .couldNotConnect, .lost: .red
+        default: .secondary
         }
     }
 }
@@ -180,13 +226,15 @@ struct TerminalPane: View {
     static let inset: CGFloat = 8
 
     let session: TerminalSession
-    let sessions: Sessions
     /// Whether this is the pane in front. The one beside it is shown, not
     /// moved into.
     var isFront = true
-    /// Reconnecting rebuilds the argv rather than reusing it: the host may
-    /// have been edited, here or elsewhere, since this tab was opened.
-    let onReconnect: (Host) -> Void
+    /// Reconnect and Close Tab, through the window as the tab's own menu
+    /// goes: reconnecting puts the new session in this one's place and
+    /// builds its argv again, since the host may have been edited.
+    let actions: TabActions
+    /// Edit Host… after a failure, for a host in the list; nil leaves it out.
+    var onEdit: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -217,90 +265,252 @@ struct TerminalPane: View {
                 // in front, so without this nothing tells it to swap the view
                 // underneath, and every tab showed the first session.
                 .id(session.id)
-                .overlay(alignment: .top) { banner }
+                // In the middle while nothing has run, since there is nothing
+                // under it to read; once something has, in a band across the
+                // top, so the session's last output stays in sight.
+                .overlay(alignment: session.status.isBeforeAnything ? .center : .top) { said }
         }
         // A host key question is a decision, so dismissing the sheet any other
         // way answers no rather than letting the session hang on a prompt
-        // nobody can see.
-        .sheet(isPresented: Binding(
-            get: { isAsking },
-            set: { shown in if !shown, isAsking { session.answerHostKey(accept: false) } }
-        )) { hostKeySheet }
-    }
-
-    private var isAsking: Bool {
-        if case .askingHostKey = session.state { return true }
-        return false
-    }
-
-    @ViewBuilder
-    private var banner: some View {
-        if case let .ended(code, diagnostic) = session.state {
-            VStack(alignment: .leading, spacing: 6) {
-                Label {
-                    Text(ended(code))
-                } icon: {
-                    Image(systemName: code == 0 ? "checkmark.circle" : "exclamationmark.triangle")
-                }
-                .font(.callout.bold())
-
-                // What ssh wrote to its own log, which -E keeps out of the
-                // terminal: the refusal, the wrong key, the timeout.
-                if !diagnostic.isEmpty {
-                    Text(diagnostic)
-                        .font(.caption.monospaced())
-                        .textSelection(.enabled)
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    if let host = session.host {
-                        Button("Reconnect") {
-                            sessions.close(session)
-                            onReconnect(host)
-                        }
-                    }
-                    Button("Close") { sessions.close(session) }
-                }
-                .controlSize(.small)
-            }
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-            .padding(12)
+        // nobody can see. By item, so that the question answered stays on
+        // the sheet while it goes, rather than the sheet emptying first.
+        .sheet(item: Binding(
+            get: { question.map(Question.init) },
+            set: { shown in if shown == nil, question != nil { session.answerHostKey(accept: false) } }
+        )) { asked in
+            HostKeySheet(session: session, question: asked.text)
         }
     }
 
-    private var hostKeySheet: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label("This host is not in your known_hosts", systemImage: "key.radiowaves.forward")
+    private struct Question: Identifiable {
+        let text: String
+        var id: String { text }
+    }
+
+    private var question: String? {
+        if case let .askingHostKey(question) = session.state { return question }
+        return nil
+    }
+
+    @ViewBuilder
+    private var said: some View {
+        let status = session.status
+        switch status {
+        case .connecting:
+            ConnectingCard(session: session)
+        case .stopped, .couldNotConnect, .lost, .ended:
+            EndedCard(session: session, status: status, actions: actions,
+                      onEdit: status == .couldNotConnect ? onEdit : nil)
+        case .connected, .needsAnswer:
+            EmptyView()
+        }
+    }
+}
+
+/// Where a connection is going and how long it has been at it, over a
+/// terminal that has nothing on it yet: connecting used to be a blank screen
+/// that looked the same as one that had hung.
+private struct ConnectingCard: View {
+    let session: TerminalSession
+
+    var body: some View {
+        VStack(spacing: 10) {
+            ProgressView().controlSize(.small)
+            Text(SessionStatus.connecting.headline(for: session.host?.name))
                 .font(.headline)
-            if case let .askingHostKey(question) = session.state {
-                Text(question)
+            TimelineView(.periodic(from: session.startedAt ?? .now, by: 1)) { context in
+                Text(SessionStatus.connectingLine(
+                    destination: destination, through: session.route.through,
+                    seconds: Int(context.date.timeIntervalSince(session.startedAt ?? context.date))))
+                    .font(.callout.monospaced())
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            // ⌘. is the Terminal menu's, where the keys live.
+            Button("Stop Connecting") { session.stopConnecting() }
+                .controlSize(.small)
+        }
+        .padding(20)
+        .frame(maxWidth: 440)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .padding(20)
+    }
+
+    /// `Host.destinationLine`, unless the name already is it: a machine typed
+    /// into ⌘K is named as it was typed.
+    private var destination: String {
+        guard let host = session.host else { return "" }
+        return host.id.isEmpty ? "" : host.destinationLine
+    }
+}
+
+/// How a session ended, in words: ssh's own line, what it means where that
+/// is known, and what can be done next.
+///
+/// It said "The session ended with status 255." for every failure ssh has —
+/// the words typing `exit` got too, short of the number — so a refused
+/// connection and a clean logout read alike.
+private struct EndedCard: View {
+    let session: TerminalSession
+    let status: SessionStatus
+    let actions: TabActions
+    let onEdit: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(status.headline(for: session.host?.name), systemImage: status.symbol)
+                .font(.headline)
+                .foregroundStyle(status.isFailure ? SwiftUI.Color.red : SwiftUI.Color.primary)
+
+            // What ssh wrote to its own log, which -E keeps out of the
+            // terminal: the refusal, the wrong key, the timeout.
+            if !said.isEmpty {
+                Text(said)
                     .font(.caption.monospaced())
                     .textSelection(.enabled)
-                    .frame(maxWidth: 460, alignment: .leading)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
-            Text("Accepting adds it to your known_hosts, exactly as answering ssh would.")
+            if !meaning.isEmpty {
+                Text(meaning)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack {
+                if session.host != nil {
+                    if status.isFailure {
+                        Button("Reconnect") { actions.reconnect(session) }
+                            .buttonStyle(.borderedProminent)
+                    } else {
+                        Button("Reconnect") { actions.reconnect(session) }
+                    }
+                }
+                if let onEdit { Button("Edit Host…", action: onEdit) }
+                Button("Close Tab") { actions.close(session) }
+            }
+            .controlSize(.small)
+        }
+        .padding(14)
+        .frame(maxWidth: status.isBeforeAnything ? 480 : .infinity, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+        .padding(12)
+    }
+
+    private var said: String {
+        if case let .ended(_, diagnostic) = session.state { return diagnostic }
+        return ""
+    }
+
+    /// Nothing lost, what ssh's line means, and the far end's own status —
+    /// whichever of them there is.
+    private var meaning: String {
+        var parts: [String] = []
+        if let reassurance = status.reassurance { parts.append(reassurance) }
+        if status.isFailure, let reason = SessionEnding.reason(said) { parts.append(reason) }
+        if case let .ended(code, _) = session.state, status == .ended,
+           let note = SessionStatus.exitNote(code)
+        {
+            parts.append(note)
+        }
+        return parts.joined(separator: " ")
+    }
+}
+
+/// ssh asking whether to trust a machine it has not met: which machine, by
+/// the name you know it by and where it sits on the way, and the fingerprint
+/// to compare — with the whole of what ssh asked a click away.
+///
+/// It was "This host is not in your known_hosts" over ssh's question as it
+/// stood, which in a jump chain did not say which hop was asking, and
+/// neither Return nor Esc answered it.
+private struct HostKeySheet: View {
+    let session: TerminalSession
+    let question: String
+
+    var body: some View {
+        let asked = HostKey.asked(in: question)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "key.fill")
+                    .font(.title)
+                    .foregroundStyle(.orange)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(asked == nil ? "ssh is asking about a host key" : "First connection to \(who(asked))")
+                        .font(.headline)
+                    if let asked {
+                        Text(whereItIs(asked))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            if let asked {
+                Text("ssh hasn't met this machine before, so it can't yet tell whether it is "
+                    + "really \(who(asked)). Compare the fingerprint below with one you trust: "
+                    + "from the machine's console, or from whoever runs it.")
+                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(asked.keyType) key fingerprint")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(asked.fingerprint)
+                        .font(.callout.monospaced())
+                        .textSelection(.enabled)
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+                DisclosureGroup("What ssh asked") { asWritten }
+                    .font(.caption)
+            } else {
+                // Worded some other way than an unknown host's question, so
+                // all of it, as ssh wrote it.
+                asWritten
+            }
+            Text("Trusting it adds the key to your known_hosts, as answering yes to ssh would.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack {
                 Spacer()
-                Button("Reject") { session.answerHostKey(accept: false) }
-                Button("Accept") { session.answerHostKey(accept: true) }
-                    .buttonStyle(.borderedProminent)
+                Button("Don't Connect") { session.answerHostKey(accept: false) }
+                    .keyboardShortcut(.cancelAction)
+                Button("Trust and Connect") { session.answerHostKey(accept: true) }
+                    .keyboardShortcut(.defaultAction)
             }
         }
         .padding(20)
-        .frame(minWidth: 420)
+        .frame(width: DialogSize.small)
     }
 
-    private func ended(_ code: Int32?) -> String {
-        switch code {
-        case .some(0): "The session ended."
-        case let .some(value): "The session ended with status \(value)."
-        case nil: "The session ended."
-        }
+    private var asWritten: some View {
+        Text(question)
+            .font(.caption.monospaced())
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// The machine by the name the list gives it where the route knows it,
+    /// and as ssh named it otherwise.
+    private func who(_ asked: HostKey.Asked?) -> String {
+        guard let asked else { return "" }
+        if let index = session.route.index(asked: asked.host) { return session.route.stops[index].name }
+        return Route.split(asked.host).name
+    }
+
+    /// "192.0.2.10, port 22 · the first of 2 hops on the way to db-01".
+    private func whereItIs(_ asked: HostKey.Asked) -> String {
+        let (name, port) = Route.split(asked.host)
+        let place = "\(name), port \(port)"
+        guard let index = session.route.index(asked: asked.host),
+              let position = session.route.position(of: index)
+        else { return place }
+        return "\(place) · \(position)"
     }
 }
 

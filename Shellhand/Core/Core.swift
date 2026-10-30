@@ -120,6 +120,19 @@ actor Core {
         return resolver(snapshot).resolve(host)
     }
 
+    /// What a session on a listed host is opened with: the argv, and the
+    /// route the connecting screen and the host-key question name.
+    func connection(db: String, hostID: String) throws -> Connection {
+        let resolved = try resolved(db: db, hostID: hostID)
+        return Connection(argv: SSHArgs.build(resolved), route: resolved.route)
+    }
+
+    /// The same for a machine typed into ⌘K, resolved as it stands.
+    func connection(db: String, unsaved host: Host) throws -> Connection {
+        let resolved = resolver(try store(db).snapshot()).resolve(host)
+        return Connection(argv: SSHArgs.build(resolved), route: resolved.route)
+    }
+
     @discardableResult
     func save(db: String, host: Host) throws -> Host { try store(db).save(host) }
     @discardableResult

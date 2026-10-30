@@ -59,6 +59,20 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// test can settle a session without waiting two minutes for it.
     var connectedAt: Date?
     private(set) var host: Host?
+    /// The machines this session goes through, for the connecting screen and
+    /// for saying which of them a host-key question is about.
+    let route: Route
+    /// When ssh was started, for the connecting screen's count.
+    private(set) var startedAt: Date?
+    /// Whether Stop Connecting ended it, which is no failure to report.
+    private(set) var stopped = false
+
+    /// Whether the session ever came through — see `SessionStatus.of` for
+    /// why that is not taken as having logged in.
+    var gotThrough: Bool { connectedAt != nil }
+
+    /// What the tab, the pane and the window's subtitle say it is doing.
+    var status: SessionStatus { SessionStatus.of(state, stopped: stopped, gotThrough: gotThrough) }
 
     /// Readable so that a test can put an ssh log where the watchdog looks.
     let logPath: String
@@ -75,11 +89,12 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// `optionAsMeta` and `fontFamily` are parameters so that a test can hand
     /// a session either value without writing the user's own defaults to do
     /// it.
-    init(title: String, host: Host?,
+    init(title: String, host: Host?, route: Route = Route(),
          optionAsMeta: Bool = TerminalSession.prefersOptionAsMeta,
          fontFamily: String = TerminalFont.preferred) {
         self.title = title
         self.host = host
+        self.route = route
         self.optionSetting = optionAsMeta
         self.fontSetting = fontFamily
         self.logPath = NSTemporaryDirectory() + "shellhand-ssh-\(UUID().uuidString).log"
@@ -155,6 +170,7 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// adds for itself.
     func start(argv: [String]) {
         state = .connecting
+        startedAt = Date()
         diagnostics = ""
         try? FileManager.default.removeItem(atPath: logPath)
         // nil rather than an empty array: SwiftTerm reads nil as "inherit",
@@ -177,6 +193,9 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// terminal begins; Terminal.app opens at home and so does this.
     func startLocalShell() {
         state = .connected
+        // Through from the start, so that one killed by a signal reads as
+        // ended rather than as a connection that never opened.
+        connectedAt = Date()
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
         Forking.exclusively {
             view.startProcess(
@@ -344,6 +363,15 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
         view.terminate()
     }
 
+    /// Stop Connecting, ⌘.: gives up on a connection still being made, and
+    /// the session ends saying so rather than as a failure. Only while
+    /// connecting — a session that is through is closed instead, which asks.
+    func stopConnecting() {
+        guard case .connecting = state else { return }
+        stopped = true
+        view.terminate()
+    }
+
     /// Watches for the two things that need the app rather than the terminal:
     /// a host-key question, and ssh's own log filling up.
     ///
@@ -507,12 +535,39 @@ final class Sessions {
     }
 
     @discardableResult
-    func open(host: Host, argv: [String]) -> TerminalSession {
-        let session = TerminalSession(title: host.name, host: host)
+    func open(host: Host, argv: [String], route: Route = Route()) -> TerminalSession {
+        let session = TerminalSession(title: host.name, host: host, route: route)
         all.append(session)
         selected = session.id
         session.start(argv: argv)
         return session
+    }
+
+    @discardableResult
+    func open(host: Host, connection: Connection) -> TerminalSession {
+        open(host: host, argv: connection.argv, route: connection.route)
+    }
+
+    /// Reconnecting: a new session in the old one's place, started.
+    @discardableResult
+    func reopen(_ old: TerminalSession, host: Host, connection: Connection) -> TerminalSession {
+        let session = TerminalSession(title: host.name, host: host, route: connection.route)
+        replace(old, with: session)
+        session.start(argv: connection.argv)
+        return session
+    }
+
+    /// Puts `new` where `old` is in the strip, and ends `old`. Reconnecting
+    /// closed the tab and opened another at the end of the strip, so the tab
+    /// you were on moved away from where you had put it.
+    func replace(_ old: TerminalSession, with new: TerminalSession) {
+        if let index = all.firstIndex(where: { $0.id == old.id }) {
+            all[index] = new
+        } else {
+            all.append(new)
+        }
+        if selected == old.id { selected = new.id }
+        old.close()
     }
 
     /// Hands every open session its host as the list now has it, so a palette

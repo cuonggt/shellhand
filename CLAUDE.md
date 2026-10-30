@@ -49,7 +49,9 @@ what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 `Views/SidebarRows.swift` (the sidebar flattened into one list, and what the
 search field narrows it to),
 `Sessions.shortTitle`, `Terminal/HostKey.swift` (whether ssh is waiting to be
-told about a host key, and which part of the screen is the question),
+told about a host key, which part of the screen is the question, and what it
+is about), `Terminal/SessionStatus.swift` (what a session says it is doing,
+and what ssh's last words mean),
 `Terminal/SessionProgress.swift` (what a session's state becomes given what is
 on its screen) — driven both as a rule and against a terminal fed by hand, with
 the real watchdog running over it — `Model/Files.swift`'s own orchestration
@@ -535,6 +537,11 @@ credentials, which is most of it.
   and Close Other Tabs — and each item is handed its session through
   `TabActions`, since right-clicking a tab does not bring it in front.
   → [the tab menu](docs/notes/window.md#the-tab-menu)
+- **Reconnecting keeps the tab where it was** — `Sessions.replace` puts the
+  new session in the old one's place in the strip, and `Panes.replacing` in
+  front or beside — where it closed the tab and opened another at the end.
+  The tab in front scrolls into view, which a new one past a full strip did
+  not.
 - **File ▸ Export…** writes the list the way the import sheet's Export… does,
   where it used to live alone — behind a sheet called Import. No key: ⇧⌘E,
   the usual one, is Edit Group's. `YAMLDocument.defaultFilename` names the
@@ -757,11 +764,24 @@ credentials, which is most of it.
   that question, and only that one, until the session is through — so a jump
   chain's next hop is still asked.
   → [answered questions](docs/notes/terminal.md#answered-questions)
+- **The host-key question names the machine by the route**: `HostKey.asked`
+  reads the machine and the fingerprint out of ssh's question, with the
+  whitespace out and a SHA256 fingerprint taken at its 43 characters, and
+  `Route` — the resolver's own jump chain, in the order it is reached — says
+  which hop it is. Return trusts and Esc does not. A question in a tab behind
+  another says Needs you on the tab, since the far end gives up on it.
 - **The watchdog's decision is `SessionProgress`; `watch()` is only the
   looking**, left open with `logPath` so a test can run the real loop on a fed
   view. `ticks` tells a watchdog that ran from one that never did, and `looks`
   one that read the screen.
   → [the watchdog's shape](docs/notes/terminal.md#the-watchdogs-shape)
+- **A session says what it is doing in words and a symbol, never a colour
+  alone** (`SessionStatus`): connecting shows where, the way there and the
+  time so far, with Stop Connecting on ⌘.; an ending says whether it never
+  connected, was lost, was stopped or simply ended, with ssh's own line and
+  what it means (`SessionEnding`) — where "status 255" read the same as
+  `exit`. **Through is no proof of logging in**: an answered question or a
+  password prompt reads as through, so what ssh said decides first.
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a
   question is up and for `settling`, two minutes, after coming through. Every

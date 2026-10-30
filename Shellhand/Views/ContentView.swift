@@ -395,13 +395,10 @@ struct ContentView: View {
             return ""
         case let .session(id):
             guard let session = sessions.all.first(where: { $0.id == id }) else { return "" }
-            switch session.state {
-            case .connecting: return "connecting…"
-            case .connected: return session.host.map(\.destinationLine) ?? "local"
-            case .askingHostKey: return "waiting for an answer"
-            case let .ended(code, _):
-                return code == 0 ? "ended" : "ended with status \(code.map(String.init) ?? "a signal")"
-            }
+            // A machine typed into ⌘K is named as it was typed, which is the
+            // destination already.
+            let destination = session.host.map { $0.id.isEmpty ? $0.name : $0.destinationLine }
+            return session.status.subtitle(destination: destination ?? "local")
         }
     }
 
@@ -508,6 +505,7 @@ struct ContentView: View {
                     end(session, reconnecting: true)
                 }
             },
+            stopConnecting: { frontSession?.stopConnecting() },
             closeTab: { if let session = frontSession { end(session) } },
             toggleSplit: toggleSplit,
             quickConnect: { showingQuickConnect = true },
@@ -530,6 +528,7 @@ struct ContentView: View {
             hasHost: subjectHost != nil,
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
+            canStopConnecting: frontSession?.status == .connecting,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
             exportList: {
@@ -646,11 +645,13 @@ struct ContentView: View {
     }
 
     /// What `end` and `closeOthers` do once nothing is left to ask.
-    /// Reconnecting rebuilds the argv rather than reusing it, since the host
-    /// may have been edited.
+    /// Reconnecting is one session, which keeps its place — see `reconnect`.
     private func finish(_ ending: [TerminalSession], reconnecting: Bool, keeping: TerminalSession?) {
+        if reconnecting, let session = ending.first {
+            reconnect(session)
+            return
+        }
         for session in ending { sessions.close(session) }
-        if reconnecting, let host = ending.first?.host { connect(host) }
         if let keeping { pick(tab: .session(keeping.id)) }
     }
 
@@ -692,8 +693,27 @@ struct ContentView: View {
 
     private func connect(_ host: Host) {
         Task {
-            guard let argv = await store.sshArgs(for: host) else { return }
-            show(session: sessions.open(host: host, argv: argv).id)
+            guard let connection = await store.connection(for: host) else { return }
+            show(session: sessions.open(host: host, connection: connection).id)
+            await learnOS(of: host)
+        }
+    }
+
+    /// Reconnecting puts the new session in the old one's place, in the
+    /// strip and in front or beside, where it used to close the tab and open
+    /// another at the end. The argv is built again, since the host may have
+    /// been edited since the tab was opened.
+    private func reconnect(_ old: TerminalSession) {
+        guard let host = old.host else { return }
+        Task {
+            guard let connection = await store.connection(for: host) else { return }
+            // Closed while the argv was being built: a tab of its own, then.
+            guard sessions.all.contains(where: { $0.id == old.id }) else {
+                show(session: sessions.open(host: host, connection: connection).id)
+                return
+            }
+            let new = sessions.reopen(old, host: host, connection: connection)
+            (pane, beside) = Panes.replacing(old.id, with: new.id, front: pane, beside: beside)
             await learnOS(of: host)
         }
     }
@@ -866,12 +886,21 @@ struct DetailView: View {
             hostsSide
         case let .session(id):
             if let session = sessions.all.first(where: { $0.id == id }) {
-                TerminalPane(session: session, sessions: sessions, isFront: front,
-                             onReconnect: onConnect)
+                TerminalPane(session: session, isFront: front, actions: tabActions,
+                             onEdit: editing(session))
             } else {
                 hostsSide
             }
         }
+    }
+
+    /// Edit Host… for a session's host as the list has it now, or nil for a
+    /// local shell, a machine typed into ⌘K and a host since deleted.
+    private func editing(_ session: TerminalSession) -> (() -> Void)? {
+        guard let id = session.host?.id, !id.isEmpty,
+              let host = store.snapshot.hosts.first(where: { $0.id == id })
+        else { return nil }
+        return { onEdit(host) }
     }
 
     /// The host side of the app, which is **always the list**.
