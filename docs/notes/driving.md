@@ -200,3 +200,93 @@ from US. Four things to know before taking it again:
   1220×798 points — the old picture's — or it comes up at whatever frame
   this Mac last saved. The preference domain is borrowed for the run anyway,
   for `libraryLayout` and `hostInspector`.
+
+## Quick Connect
+
+**Driving Quick Connect against a real host list connects to a real
+machine.** Return activates the highlighted match, and synthetic keystrokes
+here are not reliable — they get dropped (three arrows moved the highlight
+one row at one-second spacing, all three at two seconds) and they arrive
+late, so a Return meant for one step can land in another. That is how a
+session to a live host opened during a check nobody asked to connect.
+Escape is **not** the culprit: it dismisses and never activates, measured
+six times. Give the scratch store a host pointing at `127.0.0.1:1` and
+drive that instead — it fails instantly with status 255 and reaches
+nothing.
+
+## Accessibility names
+
+**Don't try to check that through System Events.** It reports every SwiftUI
+button as `description=[button]` whether or not it has been named, with
+`AXDescription` empty and only `AXHelp` carrying the tooltip — and
+`Label(…, systemImage:).labelStyle(.iconOnly)` reads back exactly the same,
+so swapping to it proves nothing either. The name lands in
+`AXAttributedDescription`, which is in the button's attribute list — but
+reading it fails with "AppleEvent handler failed" **whether or not a label
+has been set**, because System Events cannot marshal an attributed string
+back at all. That was checked by stripping the label from a button and
+getting the identical error, so the probe distinguishes nothing. AppKit's own controls in the same
+window (a scroller's "increment arrow button") do report theirs, which is
+what makes the silence look like a bug rather than a blind spot.
+Accessibility Inspector or VoiceOver is the only way to see these.
+
+## Does it fit
+
+The test for "does it fit" is the form's scroll area — the `AXScrollArea`
+that is a **direct** child of the sheet's top group, not a recursive search,
+because the ssh options text editor is itself a scroll area and reports an
+overflow that is not there. No `AXScrollBar` among its direct children means
+it fits. If there is one, its `AXValueIndicator` gives the answer in one
+pass rather than by bisecting heights: content height is the form's height
+times track ÷ thumb, so a 284pt thumb in a 333pt track over a 331pt form
+means 388pt of content and 57pt missing.
+
+## Arrowing
+
+**Arrow keys do reach a group row — focus the outline once and then
+arrow.** Re-focusing it before each press puts the selection back where it
+started, so a loop that focuses, presses Down, and checks never gets past
+the first row; that is what made group rows look unreachable and `Edit
+Group…` look permanently disabled. One `set focused of <the AXOutline> to
+true`, then as many `key code 125` as you need, and the selection walks the
+list — groups included. A synthetic `click at` genuinely does nothing here,
+which is the part that is true.
+
+## Capturing
+
+Capturing a window **without** taking focus does not work here: the modern
+way is ScreenCaptureKit (`CGWindowListCreateImage` is now unavailable, not
+merely deprecated), a plain command-line tool needs `NSApplication.shared`
+before it or CoreGraphics trips `CGS_REQUIRE_INIT`, and then
+`SCScreenshotManager` still fails with -3811 because Screen Recording is
+granted per binary and a freshly built one has not been granted it. So
+screenshots need the app frontmost — which means **not while the user is
+typing in another app**. Check who is frontmost first and skip rather than
+fight for it.
+
+## screencapture
+
+A screenshot taken with `screencapture -R` captures **the screen at that
+rectangle, not that window** — if the app loses focus between reading its
+bounds and capturing, you get whatever is on top, which may be the user's own
+work. Check the app is frontmost immediately before and after, and throw the
+capture away if it was not. **`-l` does photograph one window alone** — the
+window and nothing over it, transparent corners and all — but only given a
+CoreGraphics window number: `kCGWindowNumber` out of
+`CGWindowListCopyWindowInfo`, filtered to the process's pid and layer 0.
+This file used to say `-l` falls back to the whole screen; that was
+measured with some other number, and a window id from System Events is
+not one. Proven taking the README's picture on 2026-10-29.
+
+## The restored title
+
+**A restored window title can read as a live connection.** On launch the
+window briefly carries the title of a session from a previous run — a real
+shell prompt, `root@ip-…: ~`, with the host as the subtitle — before
+SwiftUI's own `.navigationTitle` overwrites it with the truth. It is state
+AppKit restores, not a session: nothing has connected, and in the same
+moment there is no `ssh` child process and no established socket. This cost
+two separate alarms in one sitting, both of them a production hostname that
+was never contacted. **The title is not evidence.** `pgrep -P <pid>` is:
+this app connects by spawning `ssh` on a pty, so no child means no
+connection.
