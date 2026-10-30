@@ -498,7 +498,10 @@ final class Sessions {
     /// order to test where a string gets cut.
     nonisolated static func shortTitle(host: String?, title: String) -> String {
         let name = host ?? "Local"
-        guard let colon = title.lastIndex(of: ":") else { return name }
+        // A session starts out titled with its host's name, which is no
+        // place: a machine typed into ⌘K is named `root@127.0.0.1:1`, and its
+        // tab read "root@127.0.0.1:1 — 1" until the shell said otherwise.
+        guard title != name, let colon = title.lastIndex(of: ":") else { return name }
         let place = title[title.index(after: colon)...]
         return place.isEmpty ? name : "\(name) — \(place)"
     }

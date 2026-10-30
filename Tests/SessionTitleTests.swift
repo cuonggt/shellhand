@@ -33,6 +33,18 @@ nonisolated struct SessionTitleTests {
             == "six — ~/srv")
     }
 
+    /// A session's title is its host's name until the shell sends one, and a
+    /// machine typed into ⌘K is named the way it was typed.
+    @Test("a title that is still the host's own name is just the machine")
+    func stillTheName() {
+        #expect(Sessions.shortTitle(host: "root@127.0.0.1:1", title: "root@127.0.0.1:1")
+            == "root@127.0.0.1:1")
+        #expect(Sessions.shortTitle(host: "[2001:db8::5]:2222", title: "[2001:db8::5]:2222")
+            == "[2001:db8::5]:2222")
+        #expect(Sessions.shortTitle(host: "root@127.0.0.1:1", title: "root@box:~/srv")
+            == "root@127.0.0.1:1 — ~/srv")
+    }
+
     @Test("a session on no host is a local shell")
     func local() {
         #expect(Sessions.shortTitle(host: nil, title: "me@mac:~/Projects") == "Local — ~/Projects")

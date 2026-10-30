@@ -217,7 +217,13 @@ struct HostDetailView: View {
                     Text("Working it out…").foregroundStyle(.secondary)
                 } else {
                     ForEach(Array(preview.lines.enumerated()), id: \.offset) { index, line in
-                        Text(line).padding(.leading, index == 0 ? 0 : 14)
+                        // A space's width apart, the value in a column of its
+                        // own, so a long one wraps under itself.
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            if !line.option.isEmpty { Text(line.option) }
+                            Text(line.value)
+                        }
+                        .padding(.leading, index == 0 ? 0 : 14)
                     }
                 }
             }
@@ -329,24 +335,37 @@ struct ValueRow: View {
     }
 
     var body: some View {
-        GridRow {
+        // The label against the value's first line, not halfway down a value
+        // with its caption under it.
+        GridRow(alignment: .top) {
             Text(label)
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
-            HStack(spacing: 6) {
-                Text(value.isEmpty ? "—" : value)
-                    .textSelection(.enabled)
-                    .foregroundStyle(value.isEmpty ? .secondary : .primary)
-                // "from Production", the words the group editor uses. An
-                // arrow said the same to the eye, and VoiceOver read it out
-                // as "left arrow".
-                if !from.isEmpty {
-                    Text("from \(from)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .help("Inherited from \(from)")
-                }
+            // Beside the value while both fit, under it when they do not:
+            // squeezed onto one line, a key path and its caption both wrapped
+            // into a column of fragments.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) { shown; source }
+                VStack(alignment: .leading, spacing: 1) { shown; source }
             }
+        }
+    }
+
+    private var shown: some View {
+        Text(value.isEmpty ? "—" : value)
+            .textSelection(.enabled)
+            .foregroundStyle(value.isEmpty ? .secondary : .primary)
+    }
+
+    /// "from Production", the words the group editor uses. An arrow said the
+    /// same to the eye, and VoiceOver read it out as "left arrow".
+    @ViewBuilder
+    private var source: some View {
+        if !from.isEmpty {
+            Text("from \(from)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Inherited from \(from)")
         }
     }
 }

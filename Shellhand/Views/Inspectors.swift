@@ -31,9 +31,12 @@ struct GroupInspector: View {
                     }
                     Text(subtitle).font(.callout).foregroundStyle(.secondary)
                 }
-                HStack {
-                    Button("New Host Inside…") { onNewHostIn(group) }
-                    Button("New Group Inside…") { onNewGroupIn(group) }
+                // Side by side when the inspector is wide enough, one above
+                // the other when not: at its usual width the second was cut
+                // to "New Group Insid…".
+                ViewThatFits(in: .horizontal) {
+                    HStack { newHost; newGroup }
+                    VStack(alignment: .leading) { newHost; newGroup }
                 }
 
                 Text("Passed down to everything inside").font(.headline)
@@ -65,6 +68,9 @@ struct GroupInspector: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
+
+    private var newHost: some View { Button("New Host Inside…") { onNewHostIn(group) } }
+    private var newGroup: some View { Button("New Group Inside…") { onNewGroupIn(group) } }
 
     private var subtitle: String {
         let path = store.path(of: group)

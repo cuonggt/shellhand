@@ -79,13 +79,29 @@ struct HostHeaderTests {
             "-o", "ProxyCommand=ssh -p 2222 -i /keys/jump -W '[10.0.1.5]:2200' jump@10.0.0.9",
             "app@10.0.1.5",
         ])
-        #expect(preview.lines == [
+        #expect(preview.lines.map(\.text) == [
             "ssh",
             "-p 2200",
             "-o ProxyCommand=ssh -p 2222 -i /keys/jump -W '[10.0.1.5]:2200' jump@10.0.0.9",
             "app@10.0.1.5",
         ])
         #expect(HostPreview().lines.isEmpty)
-        #expect(HostPreview(argv: ["-T", "web"]).lines == ["ssh", "-T", "web"])
+        #expect(HostPreview(argv: ["-T", "web"]).lines.map(\.text) == ["ssh", "-T", "web"])
+    }
+
+    /// The view wraps a value under itself, so the jump host at the end of a
+    /// long `ProxyCommand` stays inside it rather than reading as a second
+    /// destination.
+    @Test("an option is kept apart from its value, an argument alone has none")
+    func optionApart() {
+        let jump = "ProxyCommand=ssh -i '~/.ssh/id_ed25519' -W '[192.0.2.21]:2222' deploy@192.0.2.10"
+        let lines = HostPreview(argv: ["-p", "2222", "-o", jump, "-A", "deploy@192.0.2.21"]).lines
+        #expect(lines == [
+            HostPreview.Line(value: "ssh"),
+            HostPreview.Line(option: "-p", value: "2222"),
+            HostPreview.Line(option: "-o", value: jump),
+            HostPreview.Line(value: "-A"),
+            HostPreview.Line(value: "deploy@192.0.2.21"),
+        ])
     }
 }

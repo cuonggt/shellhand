@@ -540,20 +540,31 @@ nonisolated struct HostPreview: Sendable, Equatable {
     /// shell quoting, which `command` keeps for pasting — with an option and
     /// its value on one line. For reading: the quoted line of a jump chain
     /// was a wall of `'"'"'`.
-    var lines: [String] {
+    var lines: [Line] {
         guard !argv.isEmpty else { return [] }
-        var out = ["ssh"]
+        var out = [Line(value: "ssh")]
         var at = 0
         while at < argv.count {
             if Self.takesValue.contains(argv[at]), at + 1 < argv.count {
-                out.append(argv[at] + " " + argv[at + 1])
+                out.append(Line(option: argv[at], value: argv[at + 1]))
                 at += 2
             } else {
-                out.append(argv[at])
+                out.append(Line(value: argv[at]))
                 at += 1
             }
         }
         return out
+    }
+
+    /// An option and its value, or an argument on its own with no option.
+    /// Kept apart so that a long value wraps under itself: wrapped back to
+    /// the option, the jump host inside a `ProxyCommand` read as a second
+    /// destination.
+    nonisolated struct Line: Equatable, Sendable {
+        var option = ""
+        var value: String
+
+        var text: String { option.isEmpty ? value : "\(option) \(value)" }
     }
 
     /// The options `ssh` reads a value after, from its manual.

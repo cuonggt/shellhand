@@ -239,8 +239,9 @@ credentials, which is most of it.
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says
   "from Production", in the inspector as in the editors, and What will run
-  is read one argument a line (`HostPreview.lines`) while Copy gives the
-  quoted line.
+  is read one argument a line (`HostPreview.lines`), a long value wrapping
+  under itself rather than under its option, while Copy gives the quoted
+  line: wrapped to the margin, a jump host read as a second destination.
 - **A host is drawn with its operating system's mark**, learned by reading
   `/etc/os-release` over a connection of its own (`Core.osOf`), once a day per
   host — `Host.shouldAskOS`, on `osSeen`, which records the asking and not the
