@@ -78,6 +78,15 @@ scratch, no agent, no control sockets — with `ProxyCommand=none` and
 `ClearAllForwardings` left out on purpose, since they would break jumps.
 → [the suite's harnesses](docs/notes/testing.md#the-suites-harnesses)
 
+**CI is `.github/workflows/tests.yml`**: the whole suite on GitHub's
+`macos-26` runner, for every push and pull request that touches more than
+docs, the site or Markdown. It signs ad hoc —
+`CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= ENABLE_HARDENED_RUNTIME=NO`, the
+README's line for anyone without the Developer ID — and fails a run in which
+the result bundle counts nothing passed. The runner's Xcode is older than the
+one releases are built with, so read a red run as possibly the toolchain's.
+→ [CI](docs/notes/testing.md#ci)
+
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
 judged by reading its SVG — the squircle, the gradient, the shadow and the
 specular are added by macOS when it is composited:

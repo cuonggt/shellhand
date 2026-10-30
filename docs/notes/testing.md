@@ -194,3 +194,23 @@ The other way out, where the import is genuinely needed — `TerminalSessionTest
 writes an ssh log to disk — is to spell the app's own type `Shellhand.Host`,
 exactly as `SwiftUI.Group` is spelled out elsewhere. Leave the comment on the
 import saying why, or the next person deletes it and the file stops building.
+
+## CI
+
+The workflow came in on 2026-10-30, when the suite had only ever run on the
+maintainer's Mac, signed with the Developer ID. Before it was pushed, the
+command it runs was tried here, into a derived data path of its own
+(`build-ci`): 643 of 643 passed in 116 seconds, with the app and the test
+bundle signed ad hoc and no team.
+
+The control was the same run with `ENABLE_HARDENED_RUNTIME=NO` left out,
+expected to fail with a hardened app refusing an ad-hoc test bundle. It passed
+too, 643 of 643, for a reason worth knowing: Xcode 27.1 signs an ad-hoc *app*
+without `-o runtime` whatever the setting says, while the test bundle does get
+the flag, and library validation is enforced only in a hardened process. The
+setting stays in the workflow because the runner's Xcode had not been tried,
+and on one that hardens an ad-hoc app the suite would be refused at load.
+
+GitHub's `macos-26` image carried Xcode 26.0.1 to 26.6 and no 27, while the
+releases are built with 27.1. A failure that shows only there may be the
+compiler or the SDK rather than the code.

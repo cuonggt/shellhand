@@ -1,0 +1,71 @@
+# Builds the app and runs the whole suite on a Mac GitHub hosts, signed the
+# way anyone without this project's Developer ID has to sign it: ad hoc, with
+# no team and the hardened runtime off. A hardened app loads only code signed
+# by its own team, and the suite is a bundle loaded into the app. Releases are
+# still built, signed and notarized by scripts/release.sh; this says whether
+# the code builds and the suite passes somewhere other than the maintainer's
+# Mac.
+#
+# The runner's Xcode can be older than the one releases are built with, so a
+# failure here can be the toolchain rather than the code: the first step says
+# which Xcode it was.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["site/**", "docs/**", "**.md"]
+  pull_request:
+    paths-ignore: ["site/**", "docs/**", "**.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Which Xcode
+        run: xcodebuild -version && sw_vers -productVersion
+
+      - uses: actions/cache@v6
+        with:
+          path: build/SourcePackages
+          key: spm-${{ hashFiles('Shellhand.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+
+      - name: Build and test
+        run: |
+          xcodebuild test \
+            -project Shellhand.xcodeproj -scheme Shellhand -configuration Debug \
+            -destination "platform=macOS" -derivedDataPath build \
+            -resultBundlePath build/Tests.xcresult -skipPackagePluginValidation \
+            CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= ENABLE_HARDENED_RUNTIME=NO
+
+      # xcodebuild's "Executed 0 tests" is XCTest's counter, and every test
+      # here is swift-testing, so that line says nothing either way. The
+      # result bundle counts them, and a run where nothing passed fails.
+      - name: Count what ran
+        if: always()
+        run: |
+          [ -d build/Tests.xcresult ] || { echo "No result bundle: the build failed before any test ran."; exit 1; }
+          xcrun xcresulttool get test-results summary --path build/Tests.xcresult > summary.json
+          python3 - <<'EOF'
+          import json
+          d = json.load(open("summary.json"))
+          print(f"{d['result']}: {d['passedTests']} passed, {d['failedTests']} failed, {d['skippedTests']} skipped")
+          raise SystemExit(0 if d["passedTests"] > 0 and d["failedTests"] == 0 else 1)
+          EOF
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-results
+          path: build/Tests.xcresult

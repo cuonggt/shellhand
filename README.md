@@ -122,12 +122,11 @@ xcodebuild build -project Shellhand.xcodeproj -scheme Shellhand \
 plugin Xcode otherwise asks a human to trust.
 
 `project.yml` signs with this project's Developer ID, so a build here sees what
-a shipped build will see. Building without that certificate means overriding
-`CODE_SIGN_IDENTITY` and `CODE_SIGN_STYLE` on the command line. Note that the
-test bundle is hosted by the app, and a plug-in loaded into a hardened-runtime
-app is refused at `dlopen` unless it shares the app's team — so running the
-suite under another identity also means turning the hardened runtime off for
-Debug.
+a shipped build will see. Without that certificate, sign ad hoc instead: add
+`CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= ENABLE_HARDENED_RUNTIME=NO` to either
+command. The last matters for the suite, which is a bundle loaded into the
+app, because a hardened app loads only code signed by its own team.
+[The Tests workflow](.github/workflows/tests.yml) builds and tests that way.
 
 ```bash
 xcodebuild test -project Shellhand.xcodeproj -scheme Shellhand \
