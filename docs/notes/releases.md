@@ -92,11 +92,11 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 and 0.1.1, are out**, each tagged at
-the commit its DMG was built from, with the appcast on `main` and the cask in
-`cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's own, under
-`/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before a cask is
-copied in.
+**0.0.1 through 0.0.12, and then 0.1.0, 0.1.1 and 0.1.2, are out**, each
+tagged at the commit its DMG was built from, with the appcast on `main` and
+the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
+own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
+a cask is copied in.
 The notarytool profile `Shellhand` is stored, the EdDSA key is backed up off
 this disk, and release notes live at `docs/release-notes/<version>.md` —
 write one per version or the update window comes up blank.
@@ -398,6 +398,62 @@ that attribute or by what it holds.
 **The copy in `/Applications` still has 0.0.11, and that is no puzzle any
 more**: it is not running, and Sparkle only looks while the app is open — its
 `SULastCheckTime` was still 23:26 on 28 October after 0.1.1 went out.
+
+**0.1.2 is what a walk through the whole interface found**, published at
+`d497184` and live on release, feed, cask and tap. It leads with an SFTP pane
+that could delete a file on this Mac while it named a host — up to 0.1.1 a
+Delete made while a pane was connecting, or after its host refused, went to
+the same path here — and with deletes on this Mac going to the Trash. Behind
+those, the other bugs the walk turned up: SFTP errors drawn nowhere,
+transfers stopped without a word by closing the window, a group's menu acting
+on another group, and the host editor losing its edits on a failed save. Then
+the host list telling the truth about what it holds, with a way back to All
+Hosts; menus acting on the session in front; one spelling of a destination;
+and an inspector for a group, a local shell and a ⌘K machine, which can now
+be saved as a host. The suite went 643 → 677, and CI passed it on GitHub's
+Mac, with Xcode 26.6, at `f858355` — the tagged commit's code with the feed
+and cask on top, since the run for `d497184` itself was cancelled by that
+push.
+Verified the way 0.1.1 was, and everything passed. **Before publishing:** the
+script's own checks — signed, timestamped, universal, 0.1.2 (15), both
+notarizations accepted, Gatekeeper accepting the app and the DMG — and on top
+of them Gatekeeper, `codesign --deep --strict` and `stapler validate` on the
+app **inside** the DMG; the DMG's staple; all three feed items' notes
+identical to their files, each served from its own release; the 0.1.2 item's
+length equal to the DMG's size; the signature reproduced by re-signing; and
+the cask's digest the DMG's. **After:** every appcast URL answering 200 at the
+length the feed claims; the DMG streamed back from GitHub hashing to the built
+one and to **both** casks; the feed's blob on `main` and the tap's cask blob
+on `master` matching the committed ones through the API; and the release
+page's notes identical to the file, compared as JSON, with the tagged commit
+as its target. The tap's clone was level with its remote, and the cask's diff
+there was the `version` and the `sha256`. The DMG's first notarization could
+not reach Apple and the retry took it thirty seconds later, and
+`generate_appcast` printed eleven "failed to move" warnings, the housekeeping
+described above.
+**Looking before building found what the suite could not.** A scratch copy,
+driven through eight states on the README picture's host list, showed three
+things wrong: What will run wrapping the end of a `ProxyCommand` back to an
+argument's indent, where its jump host read as a second destination; a label
+halfway down a value with its caption under it; and a tab opened from ⌘K
+reading "root@127.0.0.1:1 — 1", the port taken for a folder. The first two
+were new in this release and the third as old as ⌘K's typed machines; all
+three were fixed before the build, in `d07d413`.
+**The Mac was in use, and that decided how the fixes were seen.** An idle
+wait came true once, but behind a locked screen, and the drive's lock check
+refused; after that the Mac never sat untouched for ten seconds in ten
+minutes — the trackpad, by the `UserIsActive` assertion WindowServer held for
+it — and the drive lost the front twice. Rather than take it a third time, the layout was
+checked by rendering the same SwiftUI — `ValueRow` cut verbatim from the
+source, the What will run block as written — with `ImageRenderer` from a
+script, which needs no window and no focus. That checks the layout, not the
+running app; the group inspector's stacked buttons were photographed in the
+app itself.
+**The desktop app's `.claude/` made the tree dirty to `release.sh`**: it
+keeps its `launch.json` and its worktrees there, untracked, and the script
+counts anything `git status --porcelain` prints. The build ran with
+`--allow-dirty` once the porcelain said exactly `?? .claude/` and nothing
+else, so the DMG is still the commit the tag names.
 
 ## The icon bundle
 

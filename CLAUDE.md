@@ -880,8 +880,11 @@ credentials, which is most of it.
   → [key paths](docs/notes/cuts-and-sweeps.md#key-paths)
 - **A screenshot needs the app frontmost**: ScreenCaptureKit refuses a freshly
   built tool. Check who is frontmost first, and skip rather than take focus
-  while somebody is typing.
-  → [capturing](docs/notes/driving.md#capturing)
+  while somebody is typing. While the Mac is in use, check a layout by
+  rendering the view's own code with `ImageRenderer` from a script, which
+  needs no window and no focus.
+  → [capturing](docs/notes/driving.md#capturing),
+  [0.1.2](docs/notes/releases.md#every-release)
 - **A locked screen looks exactly like an app that failed to launch**:
   System Events sees no windows and every menu item disabled, and the app in
   front still reports as frontmost. Check `CGSSessionScreenIsLocked` in
@@ -995,6 +998,11 @@ credentials, which is most of it.
   service holds its database after a build ends: leave a moment between runs,
   or give one its own `-derivedDataPath`.
   → [a locked build database](docs/notes/releases.md#a-locked-build-database)
+- **`release.sh` reads the desktop app's untracked `.claude/` as a dirty
+  tree**, since it counts anything `git status --porcelain` prints. Pass
+  `--allow-dirty` only once that says exactly `?? .claude/`, so the DMG is
+  still the commit its tag names.
+  → [every release](docs/notes/releases.md#every-release)
 - **Never name a shell variable `status` in zsh**, where it is read-only: a
   wrapper died that way while its release ran on. A stale log beside a running
   process means two runs — check `ps -o pid,ppid,etime,command`.
@@ -1094,7 +1102,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.1.1 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.1.2 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`, whose
 clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`:
 fast-forward it before copying a cask in. The notarytool profile `Shellhand`
