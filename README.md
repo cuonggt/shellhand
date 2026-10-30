@@ -28,7 +28,7 @@ The `brew trust` line is Homebrew's own doing, not this cask's: since Homebrew
 7 a cask from a tap outside Homebrew's own has to be trusted once before it
 will load, because a cask can carry install scripts. Read
 [the cask](https://github.com/cuonggt/homebrew-tap/blob/master/Casks/shellhand.rb)
-first if you would rather see what you are trusting — it is thirty-six lines
+first if you would rather see what you are trusting — it is thirty-eight lines
 and carries no scripts at all.
 
 Or build it yourself: `xcodegen generate` and then open the project, which is
@@ -36,9 +36,9 @@ what the licence is for.
 
 ## Status
 
-Pre-release. No version is named here on purpose — the release page is the one
-that cannot go stale. It updates itself through Sparkle, which has been
-exercised from one release to the next rather than merely wired up.
+Early, and moving fast. No version is named here on purpose — the release page
+is the one that cannot go stale. It updates itself through Sparkle, which has
+been exercised from one release to the next rather than merely wired up.
 
 This is cut back to an MVP: the host list and the editor, tabs, files over
 SFTP, and import and export. Four things that were built have been taken out
@@ -49,9 +49,9 @@ cut removed and what it cost.
 The one thing to know before you try it: **Shellhand no longer answers a
 password prompt.** A host that takes only a password still opens in a session,
 because `ssh` asks on the pty where you can type it, exactly as in
-Terminal.app — but Files cannot reach such a host, because an sftp child is
-given `BatchMode=yes` and nothing is left to answer with. Key or agent
-authentication works everywhere.
+Terminal.app — but the SFTP window cannot reach such a host, because an sftp
+child is given `BatchMode=yes` and nothing is left to answer with. Key or
+agent authentication works everywhere.
 
 ## What it does
 
@@ -64,6 +64,12 @@ authentication works everywhere.
   Shellhand builds the argv — including a nested `ProxyCommand` that spells a
   jump chain out rather than handing ssh `-J` and losing each hop's port and
   key.
+- **A terminal you can live in.** Tabs take the keys every Mac app gives them
+  — ⇧⌘] and ⇧⌘[, ⌃⇥ — and a menu of their own; ⌘K connects to any
+  `user@host:port`, in your list or not; the font is any monospaced one you
+  have installed, a Nerd Font included; each tab keeps 10,000 lines of history
+  to search; and Option types the characters your keyboard puts on it, or acts
+  as Meta if you ask.
 - **Files over SFTP**, in a window of its own that can sit beside a terminal,
   this Mac on the left and the host on the right, with transfers that queue a
   couple at a time rather than all starting at once and competing for the one
@@ -85,6 +91,13 @@ authentication works everywhere.
   on a welcome that counts the machines in your ssh config and offers them.
 - **Export** the same YAML, which is plain text meant for a dotfiles
   repository: it names things rather than carrying ids, and holds no secrets.
+
+## Problems and questions
+
+Help ▸ Report a Problem… opens the issue form here, or
+[start one yourself](https://github.com/cuonggt/shellhand/issues/new/choose).
+Issues are public, so leave out host names, addresses and keys. Questions and
+ideas go to [Discussions](https://github.com/cuonggt/shellhand/discussions).
 
 ## Requirements
 
