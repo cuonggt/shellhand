@@ -189,8 +189,8 @@ back to prove the selection reached the app rather than only the outline. It
 asks the app for nothing it does not already publish. Everything else above
 `Core/` is judged by building it and using it, or by driving a scratch copy
 through System Events — a store of its own, the preferences borrowed and
-given back — which is why so much of `CLAUDE.md` is about what that costs and
-how to do it without being fooled.
+given back — which is why so much of `CLAUDE.md` and `docs/notes/` is about
+what that costs and how to do it without being fooled.
 
 A release is `scripts/release.sh`, which takes it from `xcodebuild` through
 signing, notarization and a stapled DMG to a signed appcast and an updated
@@ -245,7 +245,8 @@ own, closed by the thread, ended it — none in 100,000 conversations, against
 11 in 80,000 without. The engine was never at fault, and `SFTPChurnTests`
 keeps it that way.
 
-`CLAUDE.md` has the rest, and there are a lot of them.
+`CLAUDE.md` has the rest, and there are a lot of them — as rules, each linked
+to its story in `docs/notes/`.
 
 ## Two names to know
 

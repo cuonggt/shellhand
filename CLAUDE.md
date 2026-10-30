@@ -1293,8 +1293,8 @@ shown waiting their turn, and carrying a file onto one already there asks
 first.
 
 A host that takes only a password still connects — ssh asks on the pty, where
-it can be typed — but Files cannot reach one, because an sftp child is given
-`BatchMode=yes` and there is nothing left to answer a prompt with.
+it can be typed — but the SFTP window cannot reach one, because an sftp child
+is given `BatchMode=yes` and there is nothing left to answer a prompt with.
 
 It has an icon: a shell prompt, chevron and block cursor, as an Icon Composer
 bundle that macOS composites into the Tahoe squircle. `docs/app-icon.md` has

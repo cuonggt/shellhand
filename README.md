@@ -158,7 +158,9 @@ shape and the traps worth knowing, and [app-icon.md](docs/app-icon.md) for
 the icon.
 
 `CLAUDE.md` is the working notes — every convention, and every trap found the
-hard way. It is written for whoever touches the code next, which includes you.
+hard way, as a rule — and `docs/notes/` holds the story behind each: how it
+was found, what was measured, and what went wrong first. They are written for
+whoever touches the code next, which includes you.
 
 ## Licence
 
