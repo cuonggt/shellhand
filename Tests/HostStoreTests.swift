@@ -205,6 +205,21 @@ struct HostStoreTests {
         #expect(store.snapshot.groups.map(\.name) == ["Production"])
     }
 
+    /// The warning counts what the resolver hands each host, so this is the
+    /// test that a real snapshot carries it: a host that names no jump host,
+    /// in a group that does.
+    @Test("deleting a jump host counts the hosts a group sends through it")
+    func deletingAJumpHost() async {
+        let store = scratch()
+        await store.refresh()
+        let eu = await store.save(Group(name: "EU", proxyJump: "bastion"))!
+        await store.save(AppHost(name: "bastion", addr: "192.0.2.10"))
+        await store.save(AppHost(name: "api", addr: "198.51.100.21", groupId: eu.id))
+        let bastion = store.snapshot.hosts.first { $0.name == "bastion" }!
+        #expect(store.deletionWarning(for: bastion)
+            .hasPrefix("bastion is the jump host for 1 host and the group EU."))
+    }
+
     // MARK: import and export
 
     @Test("a list exported from one store imports into another")

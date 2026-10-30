@@ -91,6 +91,20 @@ struct SSHConfigReachTests {
         #expect(SSHConfigFile.pathInUse == TestRun.sshConfig)
     }
 
+    /// The import sheet and the welcome read the same file the resolver
+    /// does. They read the real one, so a drive that put the import sheet up
+    /// on a scratch copy listed its user's own hosts.
+    @Test("the import and the welcome start on the run's own config")
+    func importStartsHere() async {
+        #expect(Core.shared.defaultSSHConfigPath() == SSHConfigFile.pathInUse)
+        await withConfig("Host probe-counted\n  HostName 10.0.0.40\n") {
+            #expect(Core.shared.sshConfigHosts() == 1)
+            let result = try? await Core.shared.importSSHConfig(
+                db: TestScratch.database(), dryRun: true)
+            #expect(result?.added == 1)
+        }
+    }
+
     /// The control, and the one that keeps the wiring from inventing things:
     /// a host the config has never heard of is reached exactly as before.
     @Test("a host the config does not name is untouched")

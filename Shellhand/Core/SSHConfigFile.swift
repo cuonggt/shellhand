@@ -24,6 +24,10 @@ nonisolated enum SSHConfigFile {
     /// host the suite resolves, so a `Host web` of theirs would quietly change
     /// what a test about a host called `web` sees. Nothing writes the scratch
     /// one, and a missing config reads as no names at all.
+    ///
+    /// The import sheet and the welcome start on it too. They started on the
+    /// real file, so a window put up under test read somebody's own hosts
+    /// into its preview.
     static var pathInUse: String {
         TestRun.active ? TestRun.sshConfig : defaultPath
     }

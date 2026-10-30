@@ -139,6 +139,32 @@ nonisolated struct DeletionWarningTests {
             == "This cannot be undone.")
     }
 
+    /// A group's jump host is every host's beneath it that names none of its
+    /// own, which `effective` says: "the jump host for 2 groups" said
+    /// nothing of the six hosts in them.
+    @Test("hosts that have it from a group are counted, and the groups named")
+    func jumpedThroughFromAbove() {
+        let bastion = Host(id: "b", name: "bastion", addr: "192.0.2.10")
+        var inherits = Host(id: "1", name: "api-eu-1", addr: "198.51.100.21", groupId: "e")
+        inherits.effective.proxyJump = "bastion"
+        var ownWay = Host(id: "2", name: "db-01", addr: "192.0.2.21", proxyJump: "edge", groupId: "u")
+        ownWay.effective.proxyJump = "edge"
+        let groups = [
+            Group(id: "u", name: "US", proxyJump: "bastion"),
+            Group(id: "e", name: "EU", proxyJump: "bastion"),
+        ]
+        #expect(Validation.deletionWarning(for: bastion, hosts: [bastion, inherits, ownWay], groups: groups)
+            .hasPrefix("bastion is the jump host for 1 host and the groups EU and US."))
+        let more = groups + [
+            Group(id: "a", name: "Asia", proxyJump: "bastion"),
+            Group(id: "o", name: "Oceania", proxyJump: "Bastion"),
+        ]
+        #expect(Validation.deletionWarning(for: bastion, groups: Array(more.prefix(3)))
+            .hasPrefix("bastion is the jump host for the groups Asia, EU and US."))
+        #expect(Validation.deletionWarning(for: bastion, groups: more)
+            .hasPrefix("bastion is the jump host for 4 groups."))
+    }
+
     // Production › EU, with two hosts in EU and one in Production.
     private var groups: [Group] {
         [Group(id: "p", name: "Production"), Group(id: "e", name: "EU", parentId: "p")]

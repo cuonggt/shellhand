@@ -181,7 +181,7 @@ actor Core {
         db: String, path: String = "", group: String = "", dryRun: Bool
     ) throws -> MergeResult {
         let document = SSHConfigFile.read(
-            path: path.isEmpty ? SSHConfigFile.defaultPath : path)
+            path: path.isEmpty ? SSHConfigFile.pathInUse : path)
         return try apply(document.grouped(under: group), db: db, dryRun: dryRun)
     }
 
@@ -208,13 +208,13 @@ actor Core {
         return plan.result
     }
 
-    nonisolated func defaultSSHConfigPath() -> String { SSHConfigFile.defaultPath }
+    nonisolated func defaultSSHConfigPath() -> String { SSHConfigFile.pathInUse }
 
     /// How many machines the ssh config names, for the window to offer on a
     /// fresh install. Nil when there is no such file, which is its own answer:
     /// there is nothing to offer.
     nonisolated func sshConfigHosts(path: String = "") -> Int? {
-        let path = path.isEmpty ? SSHConfigFile.defaultPath : path
+        let path = path.isEmpty ? SSHConfigFile.pathInUse : path
         guard FileManager.default.fileExists(atPath: path) else { return nil }
         let named = SSHConfigFile.read(path: path).hosts.count
         return named == 0 ? nil : named

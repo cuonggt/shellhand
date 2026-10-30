@@ -719,7 +719,9 @@ credentials, which is most of it.
   config, and `TestRun` sends ssh's config there too, and the SFTP window's
   This Mac to a folder of its own. Keep it so, and check
   the real store's timestamp after touching that code; `--db` and `--config`
-  still win when they are named.
+  still win when they are named. **Everything that reads ssh's config reads
+  `SSHConfigFile.pathInUse`**: the import sheet and the welcome read the real
+  one, and a drive's import sheet listed its user's own hosts.
   → [the hosted test bundle](docs/notes/testing.md#the-hosted-test-bundle)
 - A palette is inherited like every other group setting: the host's own, then
   each group going up, then the one in Settings. Empty means "ask above";
@@ -750,8 +752,10 @@ credentials, which is most of it.
   word. The chips **wrap** (`TagFlow`) rather than scrolling sideways, which
   clipped mid-word with nothing to say there were more.
 - **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
-  matched as the resolver matches a jump: their jump field names it, and
-  without it ssh is left to find a machine by that name on its own.
+  matched as the resolver matches a jump: a host counts if its jump field
+  names it or a group above it does (`effective`), and the groups that name
+  it are named — "the jump host for 2 groups" said nothing of the six hosts
+  in them. Without it ssh is left to find a machine by that name on its own.
   **Renaming one still breaks them silently** — nothing rewrites their jump
   fields yet.
 - A hosting controller sizes its window to **the view's minimum**, throwing

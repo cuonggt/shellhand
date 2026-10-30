@@ -50,6 +50,11 @@ nonisolated enum Validation {
     /// it, and once it is gone ssh is handed that name to make sense of on
     /// its own — which the warning, "This cannot be undone.", never said.
     /// Matched as the resolver matches a jump, without regard to case.
+    ///
+    /// A host is counted by what reaches it, `effective`, as well as by its
+    /// own field: "the jump host for 2 groups" said nothing of the six hosts
+    /// in them. The groups are named, since that is where it would be
+    /// changed.
     static func deletionWarning(
         for host: Host, hosts: [Host] = [], groups: [Group] = []
     ) -> String {
@@ -58,13 +63,18 @@ nonisolated enum Validation {
             !name.isEmpty
                 && jump.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame
         }
-        let jumping = hosts.filter { $0.id != host.id && through($0.proxyJump) }.count
-        let groupsJumping = groups.filter { through($0.proxyJump) }
+        let jumping = hosts.filter {
+            $0.id != host.id && (through($0.proxyJump) || through($0.effective.proxyJump))
+        }.count
+        let groupsJumping = groups.filter { through($0.proxyJump) }.map(\.name)
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
         var who: [String] = []
         if jumping > 0 { who.append(jumping == 1 ? "1 host" : "\(jumping) hosts") }
         switch groupsJumping.count {
         case 0: break
-        case 1: who.append("the group \(groupsJumping[0].name)")
+        case 1: who.append("the group \(groupsJumping[0])")
+        case 2...3:
+            who.append("the groups \(groupsJumping.dropLast().joined(separator: ", ")) and \(groupsJumping.last!)")
         default: who.append("\(groupsJumping.count) groups")
         }
         guard !who.isEmpty else { return "This cannot be undone." }

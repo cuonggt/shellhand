@@ -140,6 +140,17 @@ and its config test compares the path *actually read*, because the empty
 path that means "the default" would have let the obvious comparison pass
 with the redirect taken out. It did, the first time.
 
+**ssh's own config goes to scratch too, and the import sheet and the welcome
+start there.** `SSHConfigFile.pathInUse` sent the resolver to it from the
+start, but `Core.defaultSSHConfigPath`, which the import sheet opens on, and
+the welcome's count both read `~/.ssh/config` itself. Nothing in the suite
+put either up, so nothing noticed, until the look before 0.1.3 opened File ▸
+Import… on a scratch copy and its preview listed two of its user's own hosts.
+Nothing was imported and the picture was deleted; both now read
+`pathInUse`, and `SSHConfigReachTests` checks that the count and a dry-run
+import read the run's own file. A path that means "the default" has to be
+followed to every place that reads it, not only the one it was written for.
+
 ## A copy in the way
 
 `xcodebuild test` launches the app, so **a second copy of the same bundle
