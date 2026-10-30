@@ -246,3 +246,32 @@ and all, and AXPress on its one button took it down — SwiftUI's buttons
 publish no name to System Events, so it was pressed for being the only
 one. The file is still read only at launch, which the alert and the
 Settings caption both say.
+
+## Stderr
+
+**Reading ssh's stderr waits for the child to die, so let the client go
+first.** `connect`'s catch read `errors.fileHandleForReading.readToEnd()`
+*before* closing, and that read ends only at an end of file, which comes only
+once ssh has gone. It worked for the failure it was written for — a child
+that had already exited saying "Permission denied" — and was a **hang** for
+the two that leave ssh alive: a far end answering with a version this cannot
+speak, and now a handshake given up on. The close comes first. The proven
+path is untouched for a reason worth keeping rather than tidying: `close()`
+returns early once `ended` is set, and that is precisely the case where the
+child is gone and its own sentence is the one worth reporting.
+
+## Nonisolated
+
+**A rule type lifted into `Views/` is MainActor unless you say otherwise,
+and so is the enum it works on.** This catches **test helpers too**:
+`Tests/` is compiled into the app target, so a class there picks the default
+up exactly as one in `Views/` does, and `ScriptedSFTP` needed `nonisolated`
+for the same reason `PaneTab` did. Three separate times in one day, with it
+already written down — so if you are writing a type a test will touch,
+start it `nonisolated`. The app target defaults to MainActor, so
+`Panes`, `QuickConnect` **and `PaneTab` itself** all picked it up, which
+made even `PaneTab`'s `Equatable` conformance actor-isolated and unusable
+from a `nonisolated` test. Nothing in the app ever notices, because every
+caller is already on the main actor; the first test that looks from outside
+fails to compile. Mark them `nonisolated`, the enum included — it took
+three compiles to walk that chain down.
