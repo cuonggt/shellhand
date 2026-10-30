@@ -167,13 +167,12 @@ struct GroupEditorSheet: View {
         let above = FromAbove(of: group, among: store.snapshot.groups)
         return Form {
             Section("Once connected") {
+                // Chosen by looking at it, as everywhere a palette is.
                 LabeledContent("Colours") {
-                    Picker("", selection: $group.theme) {
-                        Text(inheritedTheme(above)).tag("")
-                        Divider()
-                        ForEach(Themes.names, id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
+                    PaletteChoice(
+                        chosen: group.theme, inherited: inheritedTheme(above),
+                        inheritedPalette: TerminalSession.palette(named: above.theme),
+                        onChoose: { group.theme = $0 })
                 }
                 LabeledContent("Agent forwarding") {
                     Picker("", selection: $group.forwardAgent) {

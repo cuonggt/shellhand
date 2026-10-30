@@ -18,6 +18,9 @@ struct SidebarView: View {
     let store: HostStore
     @Binding var selection: Selection?
     @Binding var search: String
+    /// The search field's focus, the window's to set: ⌘F with the hosts in
+    /// front puts the keyboard here.
+    var searchFocus: FocusState<Bool>.Binding
     /// The tags chosen in the bar. More than one narrows rather than widens:
     /// `web` and `eu` asks for the European web servers. The window holds
     /// them, so the host pane narrows to the same hosts as this list does.
@@ -48,6 +51,8 @@ struct SidebarView: View {
     /// The tag being renamed, and what to.
     @State private var renaming: String?
     @State private var renamedTo = ""
+    /// The tag whose Delete is being asked about.
+    @State private var deletingTag: String?
     /// What a row is being dragged over, so it can say so before the drop.
     @State private var dropTarget: String?
 
@@ -166,6 +171,7 @@ struct SidebarView: View {
                 .foregroundStyle(.secondary)
             TextField("Name, address or tag", text: $search)
                 .textFieldStyle(.plain)
+                .focused(searchFocus)
             if !search.isEmpty {
                 Button {
                     search = ""
@@ -387,17 +393,18 @@ struct SidebarView: View {
     private var tagBar: some View {
         let tags = store.allTags
         if !tags.isEmpty {
-            HStack(spacing: 6) {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 6) {
-                        ForEach(tags, id: \.self) { name in
-                            chip(name)
-                        }
+            HStack(alignment: .top, spacing: 6) {
+                // Wrapped onto as many rows as they need. A row that scrolled
+                // sideways clipped mid-word — "we" — with nothing to say
+                // there were more.
+                TagFlow(spacing: 6) {
+                    ForEach(tags, id: \.self) { name in
+                        chip(name)
                     }
-                    .padding(.vertical, 6)
-                    .padding(.leading, 10)
                 }
-                .scrollIndicators(.never)
+                .padding(.vertical, 6)
+                .padding(.leading, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 if !chosenTags.isEmpty {
                     Button {
@@ -410,6 +417,7 @@ struct SidebarView: View {
                     .accessibilityLabel("Show every host again")
                     .help("Show every host again")
                     .padding(.trailing, 10)
+                    .padding(.top, 7)
                 }
             }
             .background(.bar)
@@ -439,6 +447,29 @@ struct SidebarView: View {
                         + "already exists merges the two."
                 } ?? "")
             }
+            // Asked, with how many hosts it comes off, where it went from
+            // every host at once without a word.
+            .confirmationDialog(
+                deletingTag.map { "Delete the tag \($0)?" } ?? "",
+                isPresented: Binding(
+                    get: { deletingTag != nil },
+                    set: { shown in if !shown { deletingTag = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("Delete", role: .destructive) {
+                    guard let name = deletingTag else { return }
+                    deletingTag = nil
+                    Task {
+                        await store.delete(tag: name)
+                        chosenTags.remove(name)
+                    }
+                }
+                Button("Cancel", role: .cancel) { deletingTag = nil }
+            } message: {
+                Text(deletingTag.map {
+                    Tags.deletionWarning($0, carriedBy: Tags.removing($0, from: store.snapshot.hosts).count)
+                } ?? "")
+            }
         }
     }
 
@@ -463,12 +494,7 @@ struct SidebarView: View {
                 renamedTo = name
                 renaming = name
             }
-            Button("Delete \(name)", role: .destructive) {
-                Task {
-                    await store.delete(tag: name)
-                    chosenTags.remove(name)
-                }
-            }
+            Button("Delete \(name)…", role: .destructive) { deletingTag = name }
         }
     }
 }
@@ -691,5 +717,61 @@ extension View {
     /// the empty space below them.
     func onClickedRow(_ clicked: @escaping (Int) -> Void) -> some View {
         modifier(ClickedRow(clicked: clicked))
+    }
+}
+
+/// Chips in rows, as many to a row as fit and the rest wrapping below: the
+/// tag bar scrolled sideways and clipped mid-word, with nothing to say that
+/// there were more.
+struct TagFlow: Layout {
+    var spacing: CGFloat = 6
+
+    /// Which items go on which row, given each one's width and the room
+    /// there is — the whole of the wrapping, apart from the layout so a test
+    /// can hold it still. An item wider than the room has a row to itself.
+    nonisolated static func rows(_ widths: [CGFloat], spacing: CGFloat, room: CGFloat) -> [[Int]] {
+        var rows: [[Int]] = []
+        var row: [Int] = []
+        var used: CGFloat = 0
+        for (index, width) in widths.enumerated() {
+            let wanted = row.isEmpty ? width : used + spacing + width
+            if !row.isEmpty, wanted > room {
+                rows.append(row)
+                row = [index]
+                used = width
+            } else {
+                row.append(index)
+                used = wanted
+            }
+        }
+        if !row.isEmpty { rows.append(row) }
+        return rows
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let rows = Self.rows(sizes.map(\.width), spacing: spacing, room: proposal.width ?? .infinity)
+        let heights = rows.map { row in row.map { sizes[$0].height }.max() ?? 0 }
+        let widths = rows.map { row in
+            row.reduce(0) { $0 + sizes[$1].width } + spacing * CGFloat(max(0, row.count - 1))
+        }
+        return CGSize(
+            width: proposal.width ?? (widths.max() ?? 0),
+            height: heights.reduce(0, +) + spacing * CGFloat(max(0, rows.count - 1)))
+    }
+
+    func placeSubviews(
+        in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+    ) {
+        let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        var y = bounds.minY
+        for row in Self.rows(sizes.map(\.width), spacing: spacing, room: bounds.width) {
+            var x = bounds.minX
+            for index in row {
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(sizes[index]))
+                x += sizes[index].width + spacing
+            }
+            y += (row.map { sizes[$0].height }.max() ?? 0) + spacing
+        }
     }
 }

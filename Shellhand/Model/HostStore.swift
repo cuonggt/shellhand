@@ -178,7 +178,7 @@ final class HostStore {
     /// What else goes when a record does. Asked from the editors and from
     /// the sidebar both, and worded in the engine so it can be tested.
     func deletionWarning(for host: Host) -> String {
-        Validation.deletionWarning(for: host)
+        Validation.deletionWarning(for: host, hosts: snapshot.hosts, groups: snapshot.groups)
     }
 
     func deletionWarning(for group: Group) -> String {

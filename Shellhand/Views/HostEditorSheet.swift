@@ -79,7 +79,9 @@ struct HostEditorSheet: View {
         // the right way round, a scroll bar being the thing worth avoiding.
         .frame(width: DialogSize.medium, height: tab == .general ? 650 : 570)
         .task(id: previewKey) {
-            var asTyped = host
+            // Its own palette left out, so what the preview inherits is what
+            // inheriting would give — `HostDetailView.inheriting`.
+            var asTyped = HostDetailView.inheriting(host)
             asTyped.sshOptions = SSHOptionsField.parse(optionsText)
             preview = await store.preview(of: asTyped)
         }
@@ -187,13 +189,12 @@ struct HostEditorSheet: View {
     private var advanced: some View {
         Form {
             Section("Once connected") {
+                // Chosen by looking at it, as everywhere a palette is.
                 LabeledContent("Colours") {
-                    Picker("", selection: $host.theme) {
-                        Text(inheritedTheme).tag("")
-                        Divider()
-                        ForEach(Themes.names, id: \.self) { Text($0).tag($0) }
-                    }
-                    .labelsHidden()
+                    PaletteChoice(
+                        chosen: host.theme, inherited: inheritedTheme,
+                        inheritedPalette: TerminalSession.palette(named: preview.effective.theme),
+                        onChoose: { host.theme = $0 })
                 }
                 LabeledContent("Agent") {
                     Picker("", selection: $host.forwardAgent) {

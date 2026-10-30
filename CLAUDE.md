@@ -289,10 +289,15 @@ credentials, which is most of it.
   absolute and under `TestScratch`, and a test that only reads passes `-R`.
   OpenSSH sends at most 100 names per `readdir`.
   → [the real server](docs/notes/sftp.md#the-real-server)
-- **A palette is chosen by looking at it**, from the inspector as well as
-  the editor: `PalettePicker` draws each as a `TerminalMiniature` in its own
-  colours, applies a choice at once and stays open, so two can be compared on
-  the terminal behind. Test what a view draws by rendering it with
+- **A palette is chosen by looking at it**, everywhere one is chosen — the
+  inspector, both editors and Settings — through `PaletteChoice`, a swatch
+  that opens `PalettePicker`; three of the four were a menu of names.
+  `PalettePicker` draws each as a `TerminalMiniature` in its own colours,
+  applies a choice at once and stays open, so two can be compared on the
+  terminal behind. What inheriting gives is read with the host's own palette
+  left out (`HostDetailView.inheriting`) and drawn through
+  `TerminalSession.palette(named:)`, or a host's inherit row was named after
+  its own palette. Test what a view draws by rendering it with
   `ImageRenderer` against colours rendered the same way; a `List` or a
   `ScrollView` will not render at all.
   → [the palette picker](docs/notes/terminal.md#the-palette-picker)
@@ -445,8 +450,12 @@ credentials, which is most of it.
 - **The toolbar is placed by what each item acts on**, like the menus:
   Quick Connect, New Host and SFTP over the sidebar, and the inspector toggle
   alone at the trailing edge. Keep `paneToolbar` even with one item, since
-  each column needs its own `.toolbar`.
+  each column needs its own `.toolbar`. Quick Connect wears a bolt, not the
+  magnifying glass the search field under it already wears.
   → [the toolbar](docs/notes/window.md#the-toolbar)
+- **⌘F finds hosts with the hosts in front** — it puts the keyboard in the
+  sidebar's search field, bringing a hidden sidebar back — and a session's
+  scrollback with one in front. With the hosts in front it did nothing.
 - **It is called SFTP, everywhere**, at the user's word — **don't re-argue
   it**. Anything still called Files is a spot the rename missed, except
   `setFrameAutosaveName("FilesWindow")`, which must not change or every saved
@@ -497,8 +506,9 @@ credentials, which is most of it.
   at 180pt and cut in the middle; if the strip fills, shorten it further —
   **don't move sessions back to the sidebar**.
   → [the strip](docs/notes/window.md#the-strip)
-- The strip is **not there at all when nothing is open**, so a fresh install
-  sees the window it has always seen.
+- The strip is **not there at all when nothing is open**, list or no list
+  (`Panes.showsTabs`): with nothing open it held one tab, the one you were
+  on.
 - **`Sessions` does not say what is on screen, and must not be asked**: what is
   in front is `ContentView.pane`, read through `frontSession`. `current` was
   removed after it went wrong in four places at once.
@@ -516,12 +526,11 @@ credentials, which is most of it.
   ask what happens when the value is set to what it already holds. A `Bool`
   mode set that way silently broke the strip, and the sidebar with it.
   → [onChange](docs/notes/window.md#onchange)
-- The strip is **drawn whenever there is a list at all**, so the hosts tab is
-  always there to come back to. The **welcome is the exception**: a fresh
-  install has no list to browse, so it meets the window it has always met
-  rather than one tab leading nowhere. With SFTP gone back to a window the
-  strip can hold a single tab you are already on, which is worth revisiting
-  if it reads as clutter.
+- The strip **comes with the first session**, so the hosts tab is there to
+  come back to whenever there is somewhere else to be. It used to be drawn
+  whenever there was a list, and a strip of the hosts tab alone was the
+  clutter this line said to revisit; the UI/UX review settled it. A fresh
+  install meets the **welcome** in place of the list.
 - **The welcome stands in for the hosts tab, not the window** —
   `Panes.welcoming` and `Panes.showsTabs` — or a local shell opened on a fresh
   install runs hidden behind it.
@@ -736,6 +745,15 @@ credentials, which is most of it.
   onto a tag that already exists merges the two, which is how a typo that has
   been spreading gets cleaned up; renaming to exactly the same string does
   nothing, while changing only the case settles the spelling everywhere.
+  Deleting one **asks**, with the hosts it comes off (`Tags.deletionWarning`
+  over `Tags.removing`'s count): it went from every host at once without a
+  word. The chips **wrap** (`TagFlow`) rather than scrolling sideways, which
+  clipped mid-word with nothing to say there were more.
+- **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
+  matched as the resolver matches a jump: their jump field names it, and
+  without it ssh is left to find a machine by that name on its own.
+  **Renaming one still breaks them silently** — nothing rewrites their jump
+  fields yet.
 - A hosting controller sizes its window to **the view's minimum**, throwing
   away the rect `NSWindow` was given — so `setContentSize` has to come after
   `contentViewController`, and `setFrameAutosaveName` after that, because
@@ -949,6 +967,13 @@ credentials, which is most of it.
   app's own YAML — and all three become a `Portable.Document`, so the merge,
   the dry run and the apply are one path rather than three. The preview is the
   plan the import applies, not a second implementation that predicts it.
+- **Import runs on exactly what was previewed** (`ImportPlan`): the source,
+  the path, the text and the group it was made of. A path edited and
+  Returned imported a file nobody had looked at, a group typed after the
+  preview imported into one it had not shown, and a second press reported
+  the first's count. A preview that comes back after the window has moved on
+  is let go; the plan says what it would do (`MergeResult.plan`); a missing
+  file is said as one.
 - **Read YAML through `Core/YAMLDocuments.swift`**, never
   `try load_all(…).compactMap { $0 }`: Yams's sequence keeps a scan error in
   its `error` and simply ends, so that expression reads a broken file as no
@@ -961,6 +986,11 @@ credentials, which is most of it.
   read was a `try?` in every release up to 0.1.0 — a `try?` whose fallback is
   a plausible value reads as handling a failure rather than dropping it.
   → [the settings file](docs/notes/engine.md#the-settings-file)
+- **The settings file has one name, and Settings makes it**: Create Settings
+  File writes `Config.template` — every setting explained and commented out,
+  its example held by a test to parsing — and never over a file already
+  there. It was sent to as "ssh options", "Settings" and "your settings
+  file", and nothing made it.
 - **Swift reads CRLF as ONE `Character`.** `"\r\n"` is a single grapheme
   cluster, so a parser that matches `"\r"` and looks ahead for the `"\n"`
   matches neither: the lookahead eats the next value and the row never ends.

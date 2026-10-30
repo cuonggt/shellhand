@@ -17,6 +17,10 @@ struct GeneralSettingsPane: View {
     @State private var updates = Updates.shared
     let storePath: String
     let configPath: String
+    /// Bumped once the settings file has been made, so the button below it
+    /// is drawn again as Open.
+    @State private var made = 0
+    @State private var trouble: String?
 
     var body: some View {
         Form {
@@ -74,18 +78,61 @@ struct GeneralSettingsPane: View {
                 .toggleStyle(.switch)
             }
 
+            // One name for it — this row said "ssh options", the host
+            // editor "Settings" and the palette's caption "your settings
+            // file" — and a way to make it, which nothing gave.
             Section("Where things are") {
                 PathRow(label: "Host list", path: storePath)
-                PathRow(label: "ssh options", path: configPath)
-                Text("The list is this app's own. The options file is yours to "
-                    + "edit, and is read each time Shellhand opens.")
+                PathRow(label: "Settings file", path: configPath)
+                    .id(made)
+                Button(settingsFileThere ? "Open Settings File" : "Create Settings File") {
+                    openSettingsFile()
+                }
+                Text("The list is this app's own. The settings file is yours to edit: ssh "
+                    + "options for every connection, and palettes of your own. It is read "
+                    + "each time Shellhand opens.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if let trouble {
+                    Text(trouble)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .textSelection(.enabled)
+                }
             }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .contentMargins(.top, 8, for: .scrollContent)
+    }
+
+    /// Read on each drawing — after `made` moves, too — so the button says
+    /// what it will do.
+    private var settingsFileThere: Bool {
+        _ = made
+        return FileManager.default.fileExists(atPath: configPath)
+    }
+
+    /// Makes the file from `Config.template` if there is none — never over
+    /// one — and opens it: in whatever opens YAML here, or TextEdit where
+    /// nothing does.
+    private func openSettingsFile() {
+        do {
+            try Config.create(at: configPath)
+            made += 1
+            trouble = nil
+        } catch {
+            trouble = "Couldn't make the settings file: \(error.localizedDescription)"
+            return
+        }
+        let url = URL(fileURLWithPath: configPath)
+        if NSWorkspace.shared.urlForApplication(toOpen: url) != nil {
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(
+                [url], withApplicationAt: URL(fileURLWithPath: "/System/Applications/TextEdit.app"),
+                configuration: NSWorkspace.OpenConfiguration())
+        }
     }
 }
 
@@ -142,12 +189,14 @@ struct TerminalSettingsPane: View {
             }
 
             Section("Colours") {
-                Picker("Palette", selection: $theme) {
-                    ForEach(Themes.names, id: \.self) { name in
-                        Text(name).tag(name)
-                    }
+                // Chosen by looking at it, as everywhere a palette is; with
+                // no row for inheriting, since this is what everything else
+                // inherits.
+                LabeledContent("Palette") {
+                    PaletteChoice(
+                        chosen: theme, inherited: nil, inheritedPalette: nil,
+                        onChoose: { theme = $0 })
                 }
-                .pickerStyle(.menu)
                 .onChange(of: theme) { _, _ in
                     NotificationCenter.default.post(name: .shellhandThemeChanged, object: nil)
                 }

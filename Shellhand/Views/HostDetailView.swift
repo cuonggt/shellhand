@@ -39,24 +39,20 @@ struct HostDetailView: View {
             Text("Colours")
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
-            Button { choosing = true } label: {
-                HStack(spacing: 7) {
-                    TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
-                    Text(host.theme.isEmpty ? preview.effective.inheritedPalette : host.theme)
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Colours")
+            PaletteChoice(
+                chosen: host.theme, inherited: preview.effective.inheritedPalette,
+                inheritedPalette: TerminalSession.palette(named: preview.effective.theme),
+                onChoose: { choose(palette: $0) })
         }
     }
 
-    /// The palette this host comes up in, whether it chose one or not.
-    private var shown: Palette? {
-        Themes.named(host.theme.isEmpty ? preview.effective.theme : host.theme)
+    /// The host as previewed: its own palette left out, so the preview's
+    /// says what inheriting would give. With it in, a host with a palette of
+    /// its own had its "inherit" row named after that same palette.
+    nonisolated static func inheriting(_ host: Host) -> Host {
+        var asked = host
+        asked.theme = ""
+        return asked
     }
 
     /// Saves the choice and nothing else.
@@ -81,7 +77,6 @@ struct HostDetailView: View {
     /// this host runs.
     @State private var preview = HostPreview()
     @State private var message = ""
-    @State private var choosing = false
 
     var body: some View {
         ScrollView {
@@ -137,18 +132,11 @@ struct HostDetailView: View {
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .sheet(isPresented: $choosing) {
-            PalettePicker(
-                chosen: host.theme,
-                inherited: preview.effective.inheritedPalette,
-                inheritedPalette: Themes.named(preview.effective.theme),
-                onChoose: { choose(palette: $0) })
-        }
         // `Host` is Hashable, so this re-runs for any change to it — a port
         // edited here, or a group above it changing what it passes down.
         .task(id: host) {
             message = ""
-            preview = await store.preview(of: host)
+            preview = await store.preview(of: Self.inheriting(host))
         }
     }
 

@@ -89,6 +89,19 @@ struct TerminalSessionTests {
         #expect(session().state == .connecting)
     }
 
+    /// A swatch of what inheriting gives is drawn through this, so it shows
+    /// what a terminal would: inheriting from Settings drew SwiftTerm's own
+    /// colours where the terminal used the palette Settings chose.
+    @Test("a palette's name paints as a terminal would: Settings' for none, SwiftTerm's own for System")
+    func paletteNamed() throws {
+        #expect(TerminalSession.palette(named: "")?.name == TerminalSession.preferredTheme?.name)
+        #expect(TerminalSession.palette(named: Themes.systemName) == nil)
+        #expect(TerminalSession.palette(named: "a palette nobody has")?.name
+            == TerminalSession.preferredTheme?.name)
+        let one = try #require(Themes.names.first { $0 != Themes.systemName })
+        #expect(TerminalSession.palette(named: one)?.name == one)
+    }
+
     // MARK: stopping and reconnecting
 
     @Test("Stop Connecting ends a connection being made as stopped, not as a failure")

@@ -1,6 +1,28 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// When Import may run: on exactly what the preview on screen was made of.
+///
+/// The preview and the import were two readings of the window, and they
+/// could disagree. A path edited since the preview, or typed and Returned,
+/// imported a file nobody had looked at; a group typed after it imported into
+/// a group the preview had not shown; and pressing Import again once it was
+/// done reported the first import's count a second time.
+nonisolated enum ImportPlan {
+    /// What a preview was made of, or would be: the source, its file or its
+    /// text, and the group new hosts go in.
+    struct Asked: Equatable, Sendable {
+        var source: String
+        var path = ""
+        var text = ""
+        var group = ""
+    }
+
+    static func mayImport(previewed: Asked?, asking: Asked, changes: Int, busy: Bool) -> Bool {
+        !busy && changes > 0 && previewed == asking
+    }
+}
+
 /// Moving a host list in and out, through the same code the CLI uses: records
 /// match by name, so importing the same list twice changes nothing the second
 /// time.
@@ -47,6 +69,8 @@ struct ImportSheet: View {
         }
     }
 
+    /// What the preview on screen was made of; Import runs on exactly this.
+    @State private var previewed: ImportPlan.Asked?
     @State private var source: Source = .sshConfig
     @State private var configPath = ""
     @State private var configCount: Int?
@@ -74,7 +98,14 @@ struct ImportSheet: View {
                 }
                 Section {
                     TextField("Put new hosts in", text: $group, prompt: Text("optional group"))
-                        .onChange(of: group) { _, _ in if preview != nil { Task { await look() } } }
+                        // Looked at again once typing stops, rather than a
+                        // preview for every key.
+                        .task(id: group) {
+                            guard preview != nil else { return }
+                            try? await Task.sleep(for: .milliseconds(400))
+                            guard !Task.isCancelled else { return }
+                            await look()
+                        }
                 } footer: {
                     Text("A host the file already files somewhere stays there.")
                         .font(.caption)
@@ -82,7 +113,18 @@ struct ImportSheet: View {
                 }
                 if source == .csv { sample }
                 if let problem { trouble(problem) }
-                if let preview { plan(preview) }
+                if let preview {
+                    if previewed != asking {
+                        Section {
+                            Label("Changed since this was looked at. Look again to see what "
+                                    + "it would bring in.",
+                                  systemImage: "arrow.clockwise")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    plan(preview)
+                }
                 if let note {
                     Section {
                         Label(note, systemImage: "checkmark.circle.fill")
@@ -138,6 +180,10 @@ struct ImportSheet: View {
                     TextField("", text: $configPath, prompt: Text("~/.ssh/config"))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
+                        // Return looks at the file typed. Import would not
+                        // run here anyway: it is off until what is on screen
+                        // has been previewed.
+                        .onSubmit { Task { await look() } }
                     Button("Choose…") { choosing = true }
                 }
             }
@@ -252,7 +298,7 @@ struct ImportSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
-        Section(result.summary) {
+        Section(result.plan) {
             if result.changes.isEmpty {
                 Text("Nothing to do — everything in that file is already here.")
                     .foregroundStyle(.secondary)
@@ -292,9 +338,23 @@ struct ImportSheet: View {
             Button(importTitle) { Task { await bring() } }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
-                .disabled(busy || preview == nil || preview?.changes.isEmpty == true)
+                .disabled(!mayImport)
         }
         .padding(12)
+    }
+
+    /// What the window asks for now — what Import would run on.
+    private var asking: ImportPlan.Asked {
+        ImportPlan.Asked(
+            source: source.rawValue,
+            path: source == .sshConfig ? configPath : "",
+            text: source == .sshConfig ? "" : text,
+            group: group)
+    }
+
+    private var mayImport: Bool {
+        ImportPlan.mayImport(
+            previewed: previewed, asking: asking, changes: preview?.changes.count ?? 0, busy: busy)
     }
 
     private var importTitle: String {
@@ -306,6 +366,7 @@ struct ImportSheet: View {
 
     private func reset() {
         preview = nil
+        previewed = nil
         columns = nil
         note = nil
         problem = nil
@@ -341,36 +402,65 @@ struct ImportSheet: View {
         defer { busy = false }
         note = nil
         problem = nil
-        await run(dryRun: true)
+        await look(at: asking)
     }
 
+    /// Previews `asked`, and remembers it as what the preview was made of —
+    /// unless the window moved on while it looked, when the answer is about
+    /// something no longer on screen and is let go.
+    private func look(at asked: ImportPlan.Asked) async {
+        if source == .sshConfig {
+            configCount = store.sshConfigHosts(path: asked.path)
+            // A missing file read "Nothing to do — everything in that file
+            // is already here".
+            guard configCount != nil else {
+                preview = nil
+                previewed = nil
+                problem = "There is no file at \(asked.path)."
+                return
+            }
+        } else if asked.text.isEmpty {
+            return
+        }
+        let (result, reading) = await outcome(of: asked, dryRun: true)
+        guard asked == asking else { return }
+        columns = reading
+        settle(result)
+        previewed = result == nil ? nil : asked
+    }
+
+    /// Brings in what the preview showed and nothing else: the file, the text
+    /// and the group it was made of, which Import is on for only while they
+    /// are what is on screen.
     private func bring() async {
+        guard mayImport, let asked = previewed else { return }
         busy = true
         defer { busy = false }
         problem = nil
-        let before = preview
-        await run(dryRun: false)
-        if problem == nil, let before {
-            note = "Imported \(before.added + before.updated) record"
-                + (before.added + before.updated == 1 ? "." : "s.")
-            if source == .sshConfig { configCount = store.sshConfigHosts(path: configPath) }
+        let (result, _) = await outcome(of: asked, dryRun: false)
+        guard let result else {
+            problem = store.lastError ?? "That could not be imported."
+            return
         }
+        let count = result.added + result.updated
+        note = "Imported \(count) record" + (count == 1 ? "." : "s.")
+        // Looked at again, so the plan is the list as it now stands — nothing
+        // left to do — and a second press has nothing to bring.
+        await look(at: asked)
     }
 
-    private func run(dryRun: Bool) async {
+    private func outcome(
+        of asked: ImportPlan.Asked, dryRun: Bool
+    ) async -> (MergeResult?, CSVImport?) {
         switch source {
         case .sshConfig:
-            let result = await store.importSSHConfig(
-                path: configPath, group: group, dryRun: dryRun)
-            settle(result)
+            return (await store.importSSHConfig(path: asked.path, group: asked.group, dryRun: dryRun),
+                    nil)
         case .csv:
-            guard !text.isEmpty else { return }
-            let reading = await store.importCSV(text, group: group, dryRun: dryRun)
-            columns = reading
-            settle(reading?.result)
+            let reading = await store.importCSV(asked.text, group: asked.group, dryRun: dryRun)
+            return (reading?.result, reading)
         case .yaml:
-            guard !text.isEmpty else { return }
-            settle(await store.importYAML(text, group: group, dryRun: dryRun))
+            return (await store.importYAML(asked.text, group: asked.group, dryRun: dryRun), nil)
         }
     }
 

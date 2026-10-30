@@ -40,6 +40,59 @@ nonisolated struct Config: Sendable, Equatable {
         return try parse(raw, path: path)
     }
 
+    /// What Create Settings File writes: what the file is for, and every
+    /// setting it takes, commented out — so it changes nothing until a line
+    /// in it is taken back in. Nothing made the file before, and nothing in
+    /// the app or the README said what went in it.
+    static var template: String {
+        let commentary = """
+            # Shellhand's settings file, read each time Shellhand opens.
+            #
+            # ssh_options are handed to every connection, as ssh's -o takes them.
+            # A host's own options and its groups' come first, and ssh keeps the
+            # first value it is given, so these apply where nothing nearer says
+            # otherwise.
+            #
+            # themes are palettes of your own, beside the ones that ship: a name,
+            # the sixteen ANSI colours, and the background, foreground, cursor and
+            # selection. Choose one in Settings, or on a host or a group.
+            #
+            # Take the # off the lines below to use them.
+            #
+
+            """
+        let lines = example.split(separator: "\n", omittingEmptySubsequences: false)
+            .map { $0.isEmpty ? "#" : "# " + $0 }
+        return commentary + lines.joined(separator: "\n") + "\n"
+    }
+
+    /// The settings the template shows, as they are written — kept apart so
+    /// a test can read them as a settings file and hold the template to
+    /// something this app accepts.
+    static let example = """
+        ssh_options:
+          - ServerAliveInterval=30
+          - IdentitiesOnly=yes
+        themes:
+          - name: Paper
+            ansi: ["#000000", "#c4302b", "#3a7d1f", "#a8790f", "#2f5fae", "#8a3fa0", "#1f7f86", "#d6d6d6",
+                   "#5a5a5a", "#e2463f", "#4fa22a", "#c99a1b", "#4a7fd6", "#a957c4", "#2aa3ab", "#ffffff"]
+            background: "#fbfaf6"
+            foreground: "#202020"
+            cursor: "#202020"
+            selection: "#cfe0f5"
+        """
+
+    /// Writes the template where the settings file goes. **Never over a
+    /// file already there**: that is somebody's settings.
+    static func create(at path: String) throws {
+        let manager = FileManager.default
+        guard !manager.fileExists(atPath: path) else { return }
+        try manager.createDirectory(
+            atPath: (path as NSString).deletingLastPathComponent, withIntermediateDirectories: true)
+        try Data(template.utf8).write(to: URL(fileURLWithPath: path), options: .withoutOverwriting)
+    }
+
     /// Split out so it can be tested without a file on disk.
     static func parse(_ raw: String, path: String = "config") throws -> Config {
         let documents: [Any]

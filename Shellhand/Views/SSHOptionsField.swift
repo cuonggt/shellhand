@@ -31,7 +31,7 @@ struct SSHOptionsField: View {
                     RoundedRectangle(cornerRadius: 5)
                         .strokeBorder(.separator)
                 }
-            Text("One per line. These beat the ones in Settings, which apply to everything.")
+            Text("One per line. These beat the settings file's, which apply to everything.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }

@@ -337,9 +337,10 @@ struct ShellhandCommands: Commands {
         // Find belongs beside the system's own text commands.
         CommandGroup(after: .textEditing) {
             Divider()
-            Button("Find…") { actions?.find() }
+            // A session's scrollback, or with the hosts in front the hosts.
+            Button(actions?.hasSession == true ? "Find…" : "Find Hosts…") { actions?.find() }
                 .keyboardShortcut("f", modifiers: .command)
-                .disabled(!(actions?.hasSession ?? false))
+                .disabled(actions == nil)
             Button("Find Next") { actions?.findNext() }
                 .keyboardShortcut("g", modifiers: .command)
                 .disabled(!(actions?.hasSession ?? false))

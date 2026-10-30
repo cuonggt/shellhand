@@ -315,7 +315,7 @@ nonisolated struct PanesTests {
     func sessionBeatsTheWelcome() {
         let id = UUID()
         #expect(!Panes.welcoming(hosts: 0, loading: false, front: .session(id)))
-        #expect(Panes.showsTabs(hosts: 0, loading: false, sessions: 1))
+        #expect(Panes.showsTabs(sessions: 1))
     }
 
     /// And the reason the welcome exists is untouched: with nothing open and
@@ -323,7 +323,7 @@ nonisolated struct PanesTests {
     @Test("a fresh install still meets the welcome")
     func freshInstallIsWelcomed() {
         #expect(Panes.welcoming(hosts: 0, loading: false, front: .hosts))
-        #expect(!Panes.showsTabs(hosts: 0, loading: false, sessions: 0))
+        #expect(!Panes.showsTabs(sessions: 0))
     }
 
     /// A list that has not been read yet is not an empty list — otherwise
@@ -331,13 +331,16 @@ nonisolated struct PanesTests {
     @Test("a list still loading is not an empty one")
     func loadingIsNotEmpty() {
         #expect(!Panes.welcoming(hosts: 0, loading: true, front: .hosts))
-        #expect(Panes.showsTabs(hosts: 0, loading: true, sessions: 0))
     }
 
-    @Test("with hosts, the strip is always there to come back to")
+    /// The strip used to be drawn whenever there was a list, so with nothing
+    /// open it held one tab, the one you were on — clutter, as CLAUDE.md had
+    /// said it might read. It comes with the first session now.
+    @Test("with hosts and nothing open, there is no strip of one tab")
     func withHosts() {
         #expect(!Panes.welcoming(hosts: 3, loading: false, front: .hosts))
-        #expect(Panes.showsTabs(hosts: 3, loading: false, sessions: 0))
+        #expect(!Panes.showsTabs(sessions: 0))
+        #expect(Panes.showsTabs(sessions: 2))
     }
 
     // MARK: reconnecting

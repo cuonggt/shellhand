@@ -188,14 +188,16 @@ nonisolated enum Panes {
         return hosts == 0 && !loading
     }
 
-    /// Whether the strip of tabs is drawn.
+    /// Whether the strip of tabs is drawn: once something is open, and not
+    /// before.
     ///
-    /// With a list, always, so the hosts tab is there to come back to. With
-    /// no list, only once something is open — a fresh install meets the
-    /// window it has always met rather than one tab leading nowhere, but a
-    /// session has to be reachable the moment it exists.
-    static func showsTabs(hosts: Int, loading: Bool, sessions: Int) -> Bool {
-        sessions > 0 || hosts > 0 || loading
+    /// It was drawn whenever there was a list, so the hosts tab was there to
+    /// come back to — which with nothing open meant a strip of one tab you
+    /// were already on, the clutter this rule had been waiting to be judged
+    /// by. A session still has the strip the moment it exists, list or no
+    /// list.
+    static func showsTabs(sessions: Int) -> Bool {
+        sessions > 0
     }
 
     /// Where the front pane lands when the current terminal moves under it,

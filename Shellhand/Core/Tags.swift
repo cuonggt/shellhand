@@ -104,6 +104,17 @@ nonisolated enum Tags {
         }
     }
 
+    /// What deleting a tag does, said before it is done: it comes off every
+    /// host that carries it, `carriedBy` of them by `removing`'s count. It was
+    /// done without a word, where deleting a host or a group asks.
+    static func deletionWarning(_ tag: String, carriedBy hosts: Int) -> String {
+        switch hosts {
+        case 0: "No host carries it."
+        case 1: "It comes off the one host that carries it. Nothing else changes."
+        default: "It comes off the \(hosts) hosts that carry it. Nothing else changes."
+        }
+    }
+
     /// What stops a tag being named that, in words a field can show.
     ///
     /// A name another tag already has is deliberately not a problem: renaming

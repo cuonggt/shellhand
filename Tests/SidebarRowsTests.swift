@@ -177,3 +177,21 @@ nonisolated struct SidebarRowsTests {
         #expect(found("web", tags: ["eu"]).isEmpty)
     }
 }
+
+/// The tag bar's wrapping: as many chips to a row as fit, the rest below.
+@Suite("The tag bar")
+nonisolated struct TagFlowTests {
+    @Test("chips fill a row and wrap onto the next, rather than running off the edge")
+    func wraps() {
+        #expect(TagFlow.rows([40, 50, 30, 60], spacing: 6, room: 100) == [[0, 1], [2, 3]])
+        // Exactly full is not over.
+        #expect(TagFlow.rows([47, 47], spacing: 6, room: 100) == [[0, 1]])
+        #expect(TagFlow.rows([48, 47], spacing: 6, room: 100) == [[0], [1]])
+    }
+
+    @Test("a chip wider than the bar has a row to itself, and nothing makes no rows")
+    func edges() {
+        #expect(TagFlow.rows([30, 140, 30], spacing: 6, room: 100) == [[0], [1], [2]])
+        #expect(TagFlow.rows([], spacing: 6, room: 100).isEmpty)
+    }
+}

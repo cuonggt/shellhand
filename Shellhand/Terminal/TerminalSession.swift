@@ -303,7 +303,14 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     /// blanking the terminal, which is what a theme renamed in the config file
     /// would otherwise do to every host that named it.
     static func theme(for host: Host?) -> Palette? {
-        let wanted = host?.effective.theme ?? ""
+        palette(named: host?.effective.theme ?? "")
+    }
+
+    /// The palette a theme name paints with — the rule above, for a name
+    /// rather than a host, so a swatch of what inheriting gives shows what a
+    /// terminal would. Empty is Settings' palette, where the swatches showed
+    /// SwiftTerm's own.
+    static func palette(named wanted: String) -> Palette? {
         guard !wanted.isEmpty else { return preferredTheme }
         // Asked for plainly: SwiftTerm's own colours, which is a different
         // answer from "whatever Settings says".

@@ -33,6 +33,11 @@ struct ContentView: View {
     @State private var sessions = Sessions()
     @State private var selection: Selection?
     @State private var search = ""
+    /// The sidebar's search field, which ⌘F puts the keyboard in with no
+    /// session in front.
+    @FocusState private var searchFocused: Bool
+    /// Whether the sidebar is out, so that ⌘F can bring it back to search.
+    @State private var columns = NavigationSplitViewVisibility.automatic
     /// The sidebar's chosen tags, held here with the search so that the host
     /// pane narrows to what the sidebar does.
     @State private var chosenTags: Set<String> = []
@@ -105,9 +110,10 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columns) {
             SidebarView(
                 store: store, selection: $selection, search: $search,
+                searchFocus: $searchFocused,
                 chosenTags: $chosenTags,
                 actions: actions, onConnect: connect,
                 onBrowse: { now in
@@ -332,7 +338,9 @@ struct ContentView: View {
             Button {
                 showingQuickConnect = true
             } label: {
-                Label("Quick Connect", systemImage: "magnifyingglass")
+                // A bolt, not the magnifying glass the search field just
+                // below already wears: two of them read as one thing twice.
+                Label("Quick Connect", systemImage: "bolt")
             }
             .help("Connect to a host by name (⌘K)")
 
@@ -521,7 +529,18 @@ struct ContentView: View {
             toggleSplit: toggleSplit,
             quickConnect: { showingQuickConnect = true },
             openImport: { open(import: .sshConfig) },
-            find: { frontSession?.findOpen.toggle() },
+            // In a terminal, its scrollback; with the hosts in front, the
+            // hosts — where ⌘F did nothing.
+            find: {
+                if let session = frontSession {
+                    session.findOpen.toggle()
+                } else {
+                    if columns == .detailOnly { columns = .all }
+                    // A turn later, so a sidebar just brought back is there
+                    // to take the keyboard.
+                    DispatchQueue.main.async { searchFocused = true }
+                }
+            },
             findNext: { _ = frontSession?.findNext() },
             findPrevious: { _ = frontSession?.findPrevious() },
             clearScrollback: { frontSession?.clearScrollback() },
@@ -852,12 +871,10 @@ struct DetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Drawn whenever there is a list at all, so the hosts tab is
-            // always there to come back to. The welcome is the exception: a
-            // fresh install has no list to browse, so it meets the window it
-            // has always met rather than one tab leading nowhere.
-            if Panes.showsTabs(hosts: store.snapshot.hosts.count,
-                               loading: store.loading, sessions: sessions.all.count) {
+            // Drawn once something is open — see `Panes.showsTabs` — so the
+            // hosts tab is there to come back to whenever there is somewhere
+            // else to be.
+            if Panes.showsTabs(sessions: sessions.all.count) {
                 SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab,
                               actions: tabActions)
                 Divider()

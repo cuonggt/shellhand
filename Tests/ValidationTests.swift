@@ -118,6 +118,27 @@ nonisolated struct DeletionWarningTests {
         #expect(Validation.deletionWarning(for: host) == "This cannot be undone.")
     }
 
+    /// Their jump field names it, and once it is gone ssh is left to find a
+    /// machine by that name on its own — which deleting never said.
+    @Test("a host others jump through says how many, and that ssh is left the name")
+    func jumpedThrough() {
+        let bastion = Host(id: "b", name: "bastion", addr: "192.0.2.10")
+        let hosts = [
+            bastion,
+            Host(id: "1", name: "db-01", addr: "10.0.0.1", proxyJump: "bastion"),
+            Host(id: "2", name: "db-02", addr: "10.0.0.2", proxyJump: "BASTION"),
+            Host(id: "3", name: "web", addr: "10.0.0.3", proxyJump: "edge"),
+        ]
+        let groups = [Group(id: "p", name: "Production", proxyJump: "bastion"), Group(id: "s", name: "Staging")]
+        let said = Validation.deletionWarning(for: bastion, hosts: hosts, groups: groups)
+        #expect(said.hasPrefix("bastion is the jump host for 2 hosts and the group Production."))
+        #expect(said.contains("find a machine called bastion by itself"))
+        #expect(said.hasSuffix("This cannot be undone."))
+        // One that nothing goes through is as before.
+        #expect(Validation.deletionWarning(for: hosts[3], hosts: hosts, groups: groups)
+            == "This cannot be undone.")
+    }
+
     // Production › EU, with two hosts in EU and one in Production.
     private var groups: [Group] {
         [Group(id: "p", name: "Production"), Group(id: "e", name: "EU", parentId: "p")]

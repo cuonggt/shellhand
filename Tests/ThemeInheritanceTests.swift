@@ -21,6 +21,19 @@ nonisolated struct ThemeInheritanceTests {
         Group(id: "plain", name: "Plain"),
     ]
 
+    /// The inherit row of a host with a palette of its own was named after
+    /// that same palette — "From above — Dracula" — since what inheriting
+    /// gives was read off a host that set one. It is read with its own left
+    /// out.
+    @Test("what inheriting gives is said without the host's own palette")
+    func inheritedWithoutItsOwn() {
+        let host = Host(id: "1", name: "web", groupId: "prod", theme: "Dracula")
+        let asked = HostDetailView.inheriting(host)
+        let out = resolver(hosts: [host], groups: groups).resolve(asked).effective
+        #expect(out.inheritedPalette == "From Production — Gruvbox Dark")
+        #expect(host.theme == "Dracula", "the host itself was changed")
+    }
+
     @Test("a host that names none takes its group's")
     func fromItsGroup() {
         let host = Host(id: "1", name: "web", groupId: "prod")

@@ -171,6 +171,28 @@ nonisolated struct TagEditTests {
     }
 }
 
+@Suite("What deleting a tag says")
+nonisolated struct TagDeletionTests {
+    /// Deleting a tag took it off every host at once, without a word, where
+    /// deleting a host or a group asks first. The count is `removing`'s, so
+    /// it is the hosts the delete would change, matched without regard to
+    /// case as the delete matches them.
+    @Test("it says how many hosts the tag comes off, counted as the delete counts")
+    func counted() {
+        let hosts = [
+            Shellhand.Host(id: "1", name: "a", tags: ["web"]),
+            Shellhand.Host(id: "2", name: "b", tags: ["WEB", "eu"]),
+            Shellhand.Host(id: "3", name: "c", tags: ["eu"]),
+        ]
+        let count = Tags.removing("web", from: hosts).count
+        #expect(count == 2)
+        #expect(Tags.deletionWarning("web", carriedBy: count)
+            == "It comes off the 2 hosts that carry it. Nothing else changes.")
+        #expect(Tags.deletionWarning("eu", carriedBy: 1)
+            == "It comes off the one host that carries it. Nothing else changes.")
+    }
+}
+
 @Suite("What a tag may be called")
 nonisolated struct TagNameTests {
     @Test("a tag needs a name")

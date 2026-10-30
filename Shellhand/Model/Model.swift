@@ -206,8 +206,14 @@ nonisolated struct MergeResult: Codable, Sendable {
     /// will change would leave Import enabled with nothing to do.
     var passedOver: [String] = []
 
-    var summary: String {
-        "\(added) added, \(updated) updated, \(unchanged) already matched"
+    /// What a dry run would do, which is all the import sheet ever shows:
+    /// it said "5 added" before anything had been.
+    var plan: String {
+        var doing: [String] = []
+        if added > 0 { doing.append("add \(added)") }
+        if updated > 0 { doing.append("update \(updated)") }
+        let said = doing.isEmpty ? "Nothing to add or update" : "Would " + doing.joined(separator: " and ")
+        return unchanged > 0 ? "\(said) · \(unchanged) already here" : said
     }
 }
 

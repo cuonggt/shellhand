@@ -45,8 +45,31 @@ nonisolated enum Validation {
         return nil
     }
 
-    static func deletionWarning(for host: Host) -> String {
-        "This cannot be undone."
+    /// What deleting a host takes with it besides itself: the hosts and
+    /// groups that reach their machines through it. Their jump field names
+    /// it, and once it is gone ssh is handed that name to make sense of on
+    /// its own — which the warning, "This cannot be undone.", never said.
+    /// Matched as the resolver matches a jump, without regard to case.
+    static func deletionWarning(
+        for host: Host, hosts: [Host] = [], groups: [Group] = []
+    ) -> String {
+        let name = host.name.trimmingCharacters(in: .whitespaces)
+        func through(_ jump: String) -> Bool {
+            !name.isEmpty
+                && jump.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame
+        }
+        let jumping = hosts.filter { $0.id != host.id && through($0.proxyJump) }.count
+        let groupsJumping = groups.filter { through($0.proxyJump) }
+        var who: [String] = []
+        if jumping > 0 { who.append(jumping == 1 ? "1 host" : "\(jumping) hosts") }
+        switch groupsJumping.count {
+        case 0: break
+        case 1: who.append("the group \(groupsJumping[0].name)")
+        default: who.append("\(groupsJumping.count) groups")
+        }
+        guard !who.isEmpty else { return "This cannot be undone." }
+        return "\(name) is the jump host for \(who.joined(separator: " and ")). Without it, ssh "
+            + "is left to find a machine called \(name) by itself. This cannot be undone."
     }
 
     /// Deleting a group keeps what was under it, which is the part worth

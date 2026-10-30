@@ -98,14 +98,16 @@ struct TerminalMiniature: View {
 /// **Choosing applies at once and the sheet stays open.** The point of
 /// seeing the colours is seeing them on a terminal, and a sheet that had to
 /// be dismissed before anything changed would make comparing two palettes a
-/// matter of memory. So the footer button says Done rather than Save, and
-/// Escape — which is that button — leaves nothing undone.
+/// matter of memory. So the footer button says Done rather than Save, on
+/// Return, and Escape closes it the same way: either leaves nothing undone.
+/// This comment said Escape was Done before anything made it so.
 struct PalettePicker: View {
     /// The host's own choice: a palette's name, or empty for inherited.
     let chosen: String
     /// What inheriting would give, in words — `Effective.inheritedPalette`,
-    /// so this and the host editor say the same thing.
-    let inherited: String
+    /// so this and the host editor say the same thing. Nil where there is
+    /// nothing to inherit from, which is Settings: the bottom of the chain.
+    let inherited: String?
     /// The palette inheriting resolves to, for the row's own swatch.
     let inheritedPalette: Palette?
     let onChoose: (String) -> Void
@@ -124,6 +126,7 @@ struct PalettePicker: View {
             .padding(14)
         }
         .frame(width: DialogSize.medium, height: 460)
+        .onExitCommand { dismiss() }
     }
 
     /// The palettes themselves, apart from the sheet around them.
@@ -142,7 +145,7 @@ struct PalettePicker: View {
     /// swatch being judged.
     @ViewBuilder var rows: some View {
         LazyVStack(spacing: 2) {
-            row(name: "", title: inherited, palette: inheritedPalette)
+            if let inherited { row(name: "", title: inherited, palette: inheritedPalette) }
             ForEach(Themes.names, id: \.self) { name in
                 row(name: name, title: name, palette: Themes.named(name))
             }
@@ -174,4 +177,44 @@ struct PalettePicker: View {
         .accessibilityLabel(title)
         .accessibilityAddTraits(name == chosen ? [.isSelected] : [])
     }
+}
+
+/// A palette shown as itself, opening the picker: how every place that
+/// chooses one does it. The inspector had this, and the host editor, the
+/// group editor and Settings offered a menu of names — in the one choice
+/// that is about what something looks like.
+struct PaletteChoice: View {
+    /// A palette's name, or empty for whatever is inherited.
+    let chosen: String
+    /// What inheriting gives, in words; nil where there is nothing to inherit.
+    let inherited: String?
+    /// The palette inheriting gives, for its swatch.
+    let inheritedPalette: Palette?
+    let onChoose: (String) -> Void
+
+    @State private var choosing = false
+
+    var body: some View {
+        Button { choosing = true } label: {
+            HStack(spacing: 7) {
+                TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
+                Text(title)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Colours: \(title)")
+        .sheet(isPresented: $choosing) {
+            PalettePicker(
+                chosen: chosen, inherited: inherited, inheritedPalette: inheritedPalette,
+                onChoose: onChoose)
+        }
+    }
+
+    private var shown: Palette? { chosen.isEmpty ? inheritedPalette : Themes.named(chosen) }
+
+    private var title: String { chosen.isEmpty ? (inherited ?? "") : chosen }
 }
