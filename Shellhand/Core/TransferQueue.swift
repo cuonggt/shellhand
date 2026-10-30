@@ -53,7 +53,9 @@ nonisolated enum TransferQueue {
         guard !transfers.isEmpty else { return "" }
         let moving = transfers.count { $0.state == running }
         let waiting = transfers.count { $0.state == queued }
-        let failed = transfers.count { $0.state == failed }
+        // `Self.`, or Swift 6.2 compares against the `failed` this line
+        // declares, which is a count and not a state.
+        let failed = transfers.count { $0.state == Self.failed }
 
         var parts: [String] = []
         if moving > 0 { parts.append("\(moving) moving") }

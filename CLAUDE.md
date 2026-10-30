@@ -182,7 +182,10 @@ credentials, which is most of it.
   → [ssh's own config](docs/notes/ssh-config.md#sshs-own-config)
 - Swift 6 language mode, the app target MainActor by default. The engine is
   `nonisolated` throughout — mark extensions of its types `nonisolated` too, or
-  their members pick the default back up.
+  their members pick the default back up. **Mark the extension, not each
+  member**: Swift 6.2 (Xcode 26, which CI builds with) puts a conformance in an
+  extension that is not on the main actor however its members are marked, and
+  Xcode 27 lets it through. → [CI](docs/notes/testing.md#ci)
 - **An `async` wrapper over a `nonisolated` engine function does not move
   the work anywhere**: it runs on the caller's actor, and the `await` only
   looks like yielding. Read the compiler's *"no 'async' operations occur

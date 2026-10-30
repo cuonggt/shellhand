@@ -60,6 +60,8 @@ jobs:
           python3 - <<'EOF'
           import json
           d = json.load(open("summary.json"))
+          if not d.get("totalTestCount"):
+              raise SystemExit("No test ran: the build failed, or the suite never loaded.")
           print(f"{d['result']}: {d['passedTests']} passed, {d['failedTests']} failed, {d['skippedTests']} skipped")
           raise SystemExit(0 if d["passedTests"] > 0 and d["failedTests"] == 0 else 1)
           EOF

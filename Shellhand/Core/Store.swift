@@ -276,12 +276,15 @@ nonisolated final class Store: Sendable {
 // MARK: - the records
 //
 // Mapped by hand rather than by Codable: `Host.effective` is worked out by the
-// resolver and belongs to no column, and `tags` is JSON in one.
+// resolver and belongs to no column, and `tags` is JSON in one. Each extension
+// is `nonisolated` as a whole, not member by member: Swift 6.2 puts a
+// conformance declared in an extension that is not on the main actor, and a
+// database read, which runs off it, then cannot use the record at all.
 
-extension Group: FetchableRecord, PersistableRecord {
-    nonisolated static var databaseTableName: String { "host_groups" }
+nonisolated extension Group: FetchableRecord, PersistableRecord {
+    static var databaseTableName: String { "host_groups" }
 
-    nonisolated init(row: Row) {
+    init(row: Row) {
         self.init()
         id = row["id"]
         name = row["name"]
@@ -294,7 +297,7 @@ extension Group: FetchableRecord, PersistableRecord {
         theme = row["theme"]
     }
 
-    nonisolated func encode(to container: inout PersistenceContainer) {
+    func encode(to container: inout PersistenceContainer) {
         container["id"] = id
         container["name"] = name
         container["parentId"] = parentId
@@ -307,10 +310,10 @@ extension Group: FetchableRecord, PersistableRecord {
     }
 }
 
-extension Host: FetchableRecord, PersistableRecord {
-    nonisolated static var databaseTableName: String { "hosts" }
+nonisolated extension Host: FetchableRecord, PersistableRecord {
+    static var databaseTableName: String { "hosts" }
 
-    nonisolated init(row: Row) {
+    init(row: Row) {
         self.init()
         id = row["id"]
         name = row["name"]
@@ -329,7 +332,7 @@ extension Host: FetchableRecord, PersistableRecord {
         osName = row["osName"]
     }
 
-    nonisolated func encode(to container: inout PersistenceContainer) {
+    func encode(to container: inout PersistenceContainer) {
         container["id"] = id
         container["name"] = name
         container["addr"] = addr
@@ -351,14 +354,14 @@ extension Host: FetchableRecord, PersistableRecord {
 
     /// A tag list that cannot be read is no tags, not a host that fails to
     /// load: the rest of the row is still worth having.
-    nonisolated static func decodeTags(_ raw: String?) -> [String] {
+    static func decodeTags(_ raw: String?) -> [String] {
         guard let raw, let data = raw.data(using: .utf8),
               let tags = try? JSONDecoder().decode([String].self, from: data)
         else { return [] }
         return tags
     }
 
-    nonisolated static func encodeTags(_ tags: [String]) -> String {
+    static func encodeTags(_ tags: [String]) -> String {
         guard let data = try? JSONEncoder().encode(tags),
               let text = String(data: data, encoding: .utf8)
         else { return "[]" }

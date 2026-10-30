@@ -214,3 +214,13 @@ and on one that hardens an ad-hoc app the suite would be refused at load.
 GitHub's `macos-26` image carried Xcode 26.0.1 to 26.6 and no 27, while the
 releases are built with 27.1. A failure that shows only there may be the
 compiler or the SDK rather than the code.
+
+The first run, on Xcode 26.6, did not compile, and the code was at fault
+rather than the runner: four errors that 27.1 lets through. The two GRDB
+record extensions in `Core/Store.swift` marked every member `nonisolated` but
+not the extension, and Swift 6.2 puts a conformance declared in an extension
+that is not on the main actor, where a database read cannot use it. And
+`TransferQueue.summary` declared `let failed` by comparing against the
+constant `failed`, which 6.2 reads as the count being declared. The fix is the
+way the engine already writes things: the extensions `nonisolated` as a whole,
+the constant as `Self.failed`.
