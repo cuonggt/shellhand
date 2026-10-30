@@ -42,7 +42,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 `Tests/` is the whole suite. It covers `Core/`, and the rules lifted out of
 the layers above it: `Model/Tree.swift` (what is under what, what is above it,
 and the fold the sidebar opens on), `Model/Places.swift` (what a file pane
-calls itself, what it shows and how it names a child),
+calls itself, what it shows, how it names a child and what it says about a
+host it cannot reach),
 `Views/Panes.swift` (which tab is in front,
 what is beside it, what ⌘D and closing a tab do), `Views/QuickConnect.swift`
 (what ⌘K offers for what was typed, and where an arrow moves the highlight),
@@ -425,6 +426,12 @@ credentials, which is most of it.
 - Menus live in `Shellhand/App/Commands.swift` and reach the front window
   through `AppActions`, a focused scene value. Keyboard shortcuts belong there
   rather than on a button.
+- **A disabled menu item still takes its key**: NSMenu stops at the first
+  item whose key matches, enabled or not, so a second item on the same key in
+  a later menu never fires — measured, two menus and ⌘R. A window's own
+  controls see a key before the menus, so the SFTP window's ⌘R and ⇧⌘N are
+  its active pane's buttons (`FilesModel.active`), and ⌘W with no host window
+  in front is Close Window, where it did nothing.
 - **A menu is named for what its items act on, and that gates it**:
   **Host** needs a listed host — the session in front's, or else the one
   selected (`Panes.subject`, ⌘T's rule) — **Terminal** a session in front,
@@ -584,6 +591,16 @@ credentials, which is most of it.
   connecting, or after its host refused, removed the same path here while the
   dialog named the host. A refused host stays named, rather than the pane
   calling itself This Mac over nothing.
+- **A host SFTP cannot open says what it means and what to do**
+  (`Places.trouble`): one never connected to, or one taking only a password,
+  offers Open in Terminal — a tab can answer what SFTP's `BatchMode=yes`
+  cannot — and every failure offers Try Again. Open in Terminal reaches the
+  host window as a `TerminalRequest`, which one window takes.
+- **A transfer says which way it goes and where it lands**
+  (`TransferQueue.route`): labels the engine's reports do not carry, which
+  `Transfer.labelled` keeps across them. A failed one is retried in its own
+  row while the sessions it went through are still the panes' own
+  (`FilesModel.canRetry`), a relay between hosts as a whole.
 - **Deleting on this Mac goes to the Trash**, and nothing in the suite calls
   it: a test would leave files in the user's Trash, which an app without Full
   Disk Access cannot take back out. A failure with a listing up is a banner
@@ -690,7 +707,8 @@ credentials, which is most of it.
   → [preferences](docs/notes/driving.md#preferences)
 - **The test bundle is hosted by the app, so a test run launches it**:
   `LaunchOptions` sends a run under XCTest to a scratch store and a scratch
-  config, and `TestRun` sends ssh's config there too. Keep it so, and check
+  config, and `TestRun` sends ssh's config there too, and the SFTP window's
+  This Mac to a folder of its own. Keep it so, and check
   the real store's timestamp after touching that code; `--db` and `--config`
   still win when they are named.
   → [the hosted test bundle](docs/notes/testing.md#the-hosted-test-bundle)

@@ -176,4 +176,28 @@ nonisolated struct TransferStateTests {
         // A total that arrives late, after some of it has already moved.
         #expect(Transfer(id: "1", done: 120, total: 100).fraction == 1)
     }
+
+    // MARK: which way it goes
+
+    @Test("a transfer says which way it goes and where it lands, as scp writes a place")
+    func route() {
+        let up = Transfer(id: "1", name: "site.tar.gz", from: "This Mac", to: "web-us-1",
+                          into: "/var/www/site")
+        #expect(TransferQueue.route(up) == "This Mac → web-us-1:/var/www/site")
+        let down = Transfer(id: "2", name: "access.log", from: "web-us-1", to: "This Mac", into: "")
+        #expect(TransferQueue.route(down) == "web-us-1 → This Mac")
+        #expect(TransferQueue.route(Transfer(id: "3", name: "x")) == "")
+    }
+
+    /// The engine's reports know nothing of panes, and the strip replaces its
+    /// row with each one: without this the route went at the first report.
+    @Test("the engine's report keeps the labels the window gave the row")
+    func labelled() {
+        let row = Transfer(id: "1", name: "a", from: "This Mac", to: "web", into: "/srv")
+        let report = Transfer(id: "1", name: "a", done: 5, total: 10, state: TransferQueue.running)
+        let merged = report.labelled(like: row)
+        #expect(merged.done == 5)
+        #expect(merged.state == TransferQueue.running)
+        #expect(TransferQueue.route(merged) == "This Mac → web:/srv")
+    }
 }

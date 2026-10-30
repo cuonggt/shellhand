@@ -161,4 +161,69 @@ nonisolated struct PlacesTests {
         let two = Places.deleteQuestion(["a", "b"], local: false, on: "web")
         #expect(two.message == "They are deleted on web. This cannot be undone.")
     }
+
+    // MARK: a host it cannot reach
+
+    /// SFTP's ssh runs with `BatchMode=yes`, so a host whose key it has never
+    /// seen fails with this and nothing else — and a terminal tab is the one
+    /// place the question can be answered.
+    @Test("a host never connected to says so, and offers a terminal tab")
+    func neverConnected() {
+        let trouble = Places.trouble("Host key verification failed.", on: "staging-web")
+        #expect(trouble.title == "staging-web hasn't been connected to yet")
+        #expect(trouble.advice.contains("Open staging-web once in a terminal tab"))
+        #expect(trouble.offersTerminal)
+    }
+
+    /// The same last line, for the opposite reason: a terminal tab would be
+    /// turned away too, so it is not offered.
+    @Test("a key that changed is not taken for a host never met")
+    func changedKey() {
+        let said = """
+            @    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+            Host key verification failed.
+            """
+        let trouble = Places.trouble(said, on: "web")
+        #expect(trouble.title == "web's key has changed")
+        #expect(!trouble.offersTerminal)
+    }
+
+    @Test("a host that takes only a password says SFTP needs a key")
+    func passwordOnly() {
+        let trouble = Places.trouble("deploy@192.0.2.21: Permission denied (password).", on: "db-01")
+        #expect(trouble.title == "SFTP needs a key for db-01")
+        #expect(trouble.offersTerminal)
+        let interactive = Places.trouble(
+            "deploy@192.0.2.21: Permission denied (keyboard-interactive).", on: "db-01")
+        #expect(interactive.title == "SFTP needs a key for db-01")
+    }
+
+    /// Takes keys, and turned down every one: a terminal tab helps only where
+    /// the host would take a password instead.
+    @Test("a host that turned down the key offers a terminal only if it takes a password")
+    func keyTurnedDown() {
+        let both = Places.trouble("deploy@web: Permission denied (publickey,password).", on: "web")
+        #expect(both.title == "web turned down the key")
+        #expect(both.offersTerminal)
+        let keysOnly = Places.trouble("deploy@web: Permission denied (publickey).", on: "web")
+        #expect(keysOnly.title == "web turned down the key")
+        #expect(!keysOnly.offersTerminal)
+    }
+
+    @Test("anything else is a connection that failed, said plainly where ssh's line is known")
+    func otherwise() {
+        let refused = Places.trouble("ssh: connect to host 127.0.0.1 port 1: Connection refused", on: "web")
+        #expect(refused.title == "Couldn't connect to web")
+        #expect(refused.advice == "The machine answered, but nothing is listening on port 1.")
+        #expect(!refused.offersTerminal)
+        #expect(Places.trouble("something new", on: "web").advice.isEmpty)
+    }
+
+    @Test("a folder on this Mac is written from ~, and nothing else is")
+    func abbreviated() {
+        #expect(Places.abbreviated("/Users/me/Projects/site", home: "/Users/me") == "~/Projects/site")
+        #expect(Places.abbreviated("/Users/me", home: "/Users/me") == "~")
+        #expect(Places.abbreviated("/Users/meadow/x", home: "/Users/me") == "/Users/meadow/x")
+        #expect(Places.abbreviated("/var/www", home: "/Users/me") == "/var/www")
+    }
 }

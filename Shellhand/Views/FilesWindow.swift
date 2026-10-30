@@ -90,6 +90,13 @@ private struct PlacePane: View {
     @State private var renaming: RemoteEntry?
     @State private var newFolder = false
     @State private var name = ""
+    @FocusState private var listFocused: Bool
+
+    /// Whether the window's keys act on this side. The keys go on the
+    /// buttons of the side in front, rather than in the menus: a menu item
+    /// takes its key even while it is disabled, and ⌘R is Terminal ▸
+    /// Reconnect's there, disabled whenever SFTP is in front.
+    private var isActive: Bool { files.active === place }
 
     private var entries: [RemoteEntry] {
         let sorted = place.entries.sorted(using: sortOrder)
@@ -172,7 +179,11 @@ private struct PlacePane: View {
                 Menu {
                     Button("This Mac") { Task { await place.use(nil) } }
                     Divider()
-                    ForEach(store.snapshot.hosts) { host in
+                    // In order, as the sidebar is: in the order they were
+                    // added, finding one in forty meant reading all forty.
+                    ForEach(store.snapshot.hosts.sorted {
+                        $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                    }) { host in
                         Button(host.name) { Task { await place.use(host) } }
                     }
                 } label: {
@@ -187,11 +198,6 @@ private struct PlacePane: View {
                 Menu {
                     Toggle("Show Hidden Files", isOn: Binding(
                         get: { place.showHidden }, set: { place.showHidden = $0 }))
-                    Button("New Folder…") {
-                        name = ""
-                        newFolder = true
-                    }
-                    Button("Refresh") { Task { await place.refresh() } }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -217,6 +223,27 @@ private struct PlacePane: View {
                     .onSubmit { Task { await place.go(to: typedPath) } }
                     .onChange(of: place.listing.path) { _, now in typedPath = now }
                     .onAppear { typedPath = place.listing.path }
+
+                Button {
+                    name = ""
+                    newFolder = true
+                } label: {
+                    Image(systemName: "folder.badge.plus")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("New Folder")
+                .help("New Folder")
+                .keyboardShortcut(isActive ? KeyboardShortcut("n", modifiers: [.command, .shift]) : nil)
+                .disabled(place.listing.path.isEmpty)
+
+                Button { Task { await place.refresh() } } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Refresh")
+                .help("Refresh")
+                .keyboardShortcut(isActive ? KeyboardShortcut("r", modifiers: .command) : nil)
+                .disabled(place.listing.path.isEmpty)
             }
         }
         .padding(8)
@@ -249,6 +276,18 @@ private struct PlacePane: View {
         } primaryAction: { names in
             open(names)
         }
+        // The side last worked in is the one ⌘R and ⇧⌘N act on.
+        .focused($listFocused)
+        .onChange(of: listFocused) { _, now in if now { files.active = place } }
+        // ⌫ asks first, through the same question as the menu's Delete.
+        .onDeleteCommand { if !selection.isEmpty { confirmingDelete = true } }
+        // Space, as in Finder: a look at the file picked, on this Mac. A file
+        // on a host would have to be fetched first.
+        .onKeyPress(.space) {
+            guard place.isLocal, chosen.count == 1, let entry = chosen.first else { return .ignored }
+            QuickLook.shared.show(place.localURL(named: entry.name))
+            return .handled
+        }
         .overlay { if place.listing.path.isEmpty { waiting } }
         // From the other pane, and from Finder.
         .dropDestination(for: FileRef.self) { refs, _ in
@@ -268,6 +307,10 @@ private struct PlacePane: View {
     private var waiting: some View {
         if place.connecting {
             ProgressView("Connecting to \(place.title)…")
+        } else if let failure = place.failure, let host = place.host {
+            Unreached(host: host, said: failure, trouble: Places.trouble(failure, on: host.name)) {
+                Task { await place.tryAgain() }
+            }
         } else if let failure = place.failure {
             ContentUnavailableView {
                 Label("Cannot show this", systemImage: "exclamationmark.triangle")
@@ -312,11 +355,12 @@ private struct PlacePane: View {
             if picked.count == 1, let entry = picked.first {
                 if entry.isDir {
                     Button("Open") { Task { await place.go(to: place.path(entry.name)) } }
-                } else {
-                    Button("Rename…") {
-                        name = entry.name
-                        renaming = entry
-                    }
+                }
+                // Folders too: SFTP renames a folder as it renames a file, and
+                // only a file was offered it.
+                Button("Rename…") {
+                    name = entry.name
+                    renaming = entry
                 }
                 if place.isLocal, !entry.isDir {
                     Button("Quick Look") {
@@ -355,6 +399,65 @@ private struct PlacePane: View {
     }
 }
 
+/// A host SFTP could not open, said as what it means and what to do about it:
+/// a terminal tab, where a new key's question and a password can be
+/// answered, and another go. It said "Cannot show this" over ssh's sentence.
+private struct Unreached: View {
+    let host: Host
+    let said: String
+    let trouble: Places.Trouble
+    let onTryAgain: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Text(trouble.title)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+            if !trouble.advice.isEmpty {
+                Text(trouble.advice)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(said)
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .textSelection(.enabled)
+            HStack {
+                if trouble.offersTerminal {
+                    Button("Open in Terminal") { TerminalRequest.post(for: host) }
+                        .buttonStyle(.borderedProminent)
+                }
+                Button("Try Again", action: onTryAgain)
+            }
+            .padding(.top, 4)
+        }
+        .padding(24)
+        .frame(maxWidth: 460)
+    }
+}
+
+/// SFTP asking the host window for a terminal tab on a host. An object rather
+/// than a bare id, so that one host window takes it and any other leaves it.
+@MainActor
+final class TerminalRequest {
+    let hostID: String
+    var taken = false
+
+    init(hostID: String) { self.hostID = hostID }
+
+    static func post(for host: Host) {
+        NotificationCenter.default.post(
+            name: .shellhandOpenTerminal, object: TerminalRequest(hostID: host.id))
+    }
+}
+
+extension Notification.Name {
+    /// SFTP's Open in Terminal, which the host window answers.
+    static let shellhandOpenTerminal = Notification.Name("shellhand.openTerminal")
+}
+
 private struct TransfersStrip: View {
     let files: FilesModel
 
@@ -377,9 +480,22 @@ private struct TransfersStrip: View {
 
             List(files.transfers) { transfer in
                 HStack(spacing: 8) {
-                    Text(transfer.name)
-                        .lineLimit(1)
-                        .foregroundStyle(transfer.waiting ? .secondary : .primary)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(transfer.name)
+                            .lineLimit(1)
+                            .foregroundStyle(transfer.waiting ? .secondary : .primary)
+                        // Which way and where to: with a host open on each
+                        // side, a name and a bar did not say.
+                        let route = TransferQueue.route(transfer)
+                        if !route.isEmpty {
+                            Text(route)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                    }
+                    .frame(minWidth: 140, maxWidth: 320, alignment: .leading)
                     // A queued transfer has no progress to show, and a bar
                     // sitting at nought reads as one that is stuck.
                     if transfer.waiting {
@@ -396,6 +512,12 @@ private struct TransfersStrip: View {
                         .foregroundStyle(
                             transfer.state == TransferQueue.failed ? .red : .secondary)
                     Spacer()
+                    // Another go, where the sessions it went through are
+                    // still the panes' own.
+                    if files.canRetry(transfer) {
+                        Button("Retry") { Task { await files.retry(transfer) } }
+                            .controlSize(.small)
+                    }
                     if !transfer.finished {
                         Button(transfer.waiting ? "Remove" : "Stop") { files.cancel(transfer) }
                             .controlSize(.small)
@@ -403,7 +525,7 @@ private struct TransfersStrip: View {
                 }
             }
             .listStyle(.inset)
-            .frame(height: 110)
+            .frame(height: 130)
         }
     }
 
@@ -415,7 +537,7 @@ private struct TransfersStrip: View {
                 + transfer.total.formatted(.byteCount(style: .file))
         case TransferQueue.done: "done"
         case TransferQueue.cancelled: "stopped"
-        default: transfer.error.isEmpty ? transfer.state : transfer.error
+        default: transfer.error.isEmpty ? transfer.state : "failed: " + transfer.error
         }
     }
 }

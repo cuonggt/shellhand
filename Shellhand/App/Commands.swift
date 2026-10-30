@@ -220,10 +220,17 @@ struct ShellhandCommands: Commands {
                 .disabled(!(actions?.canExport ?? false))
         }
 
+        // With the host window in front, ⌘W closes the tab in front and
+        // nothing else. With another window in front — SFTP, Settings — it
+        // closes that window, as everywhere on a Mac: before, this item took
+        // ⌘W there while disabled, and no window of this app but the host
+        // window could be closed from the keyboard.
         CommandGroup(after: .newItem) {
-            Button("Close Tab") { actions?.closeTab() }
-                .keyboardShortcut("w", modifiers: .command)
-                .disabled(!(actions?.hasSession ?? false))
+            Button(actions == nil ? "Close Window" : "Close Tab") {
+                if let actions { actions.closeTab() } else { NSApp.keyWindow?.performClose(nil) }
+            }
+            .keyboardShortcut("w", modifiers: .command)
+            .disabled(!(actions?.hasSession ?? true))
         }
 
         // Three menus where there was one. "Host" had grown to nineteen items
@@ -268,7 +275,8 @@ struct ShellhandCommands: Commands {
                 .keyboardShortcut("r", modifiers: .command)
                 .disabled(!(actions?.hasSession ?? false))
             // ⌘., the Mac's key for giving up on something under way, and
-            // only while a connection is: disabled, it passes the key on.
+            // only while a connection is. Disabled, it still takes the key —
+            // a menu item does — which nothing else here wants.
             Button("Stop Connecting") { actions?.stopConnecting() }
                 .keyboardShortcut(".", modifiers: .command)
                 .disabled(!(actions?.canStopConnecting ?? false))

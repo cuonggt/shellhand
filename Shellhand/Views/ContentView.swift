@@ -257,6 +257,17 @@ struct ContentView: View {
         .onChange(of: sessions.selected) { _, now in
             pane = Panes.following(selected: now, front: pane)
         }
+        // SFTP's Open in Terminal: a terminal tab is where a new key's
+        // question and a password can be answered, which SFTP cannot do.
+        // Taken by one host window only.
+        .onReceive(NotificationCenter.default.publisher(for: .shellhandOpenTerminal)) { note in
+            guard let request = note.object as? TerminalRequest, !request.taken,
+                  let host = store.snapshot.hosts.first(where: { $0.id == request.hostID })
+            else { return }
+            request.taken = true
+            HostsWindow.front()
+            connect(host)
+        }
         // Closed on the way into SFTP and put back on the way out.
         //
         // Done here rather than by deriving `isPresented` from the tab: a

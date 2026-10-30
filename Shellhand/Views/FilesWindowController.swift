@@ -75,7 +75,9 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
             styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered,
             defer: false)
-        files = FilesModel(db: store.dbPath)
+        files = FilesModel(
+            db: store.dbPath,
+            home: TestRun.active ? TestRun.home : FileManager.default.homeDirectoryForCurrentUser.path)
         super.init(window: window)
 
         // Just "SFTP": there is one of these and either side can be

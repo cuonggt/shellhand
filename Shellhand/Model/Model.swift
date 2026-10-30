@@ -260,8 +260,24 @@ nonisolated struct Transfer: Codable, Sendable, Identifiable, Hashable {
     /// `TransferQueue` names them and decides what moves next.
     var state = TransferQueue.queued
     var error = ""
+    /// Which way it goes, for the strip: the two panes' names and the folder
+    /// it lands in. The window fills these in, since the engine knows
+    /// sessions and paths and not what a pane is called.
+    var from = ""
+    var to = ""
+    var into = ""
 
     var fraction: Double { total > 0 ? min(1, Double(done) / Double(total)) : 0 }
+
+    /// The engine's latest word on this transfer, with the labels the window
+    /// gave it kept: a report from the engine carries none.
+    func labelled(like other: Transfer) -> Transfer {
+        var out = self
+        out.from = other.from
+        out.to = other.to
+        out.into = other.into
+        return out
+    }
     /// Nothing more will happen to it. Not simply "not running": a transfer
     /// waiting its turn has not finished, and reading it as finished was what
     /// made a queue impossible to add.

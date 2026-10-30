@@ -4,8 +4,8 @@ import Foundation
 ///
 /// The test bundle is **hosted by the app**, so running the suite launches it
 /// — and with nothing redirected that meant opening and migrating the real
-/// host list. Three files now have to be sent somewhere else for a run, each
-/// for a reason of its own size:
+/// host list. Three files and a folder now have to be sent somewhere else for
+/// a run, each for a reason of its own size:
 ///
 /// - the **store**, or a run edits the user's own list;
 /// - this app's own **config**, whose ssh options become every connection's,
@@ -13,7 +13,9 @@ import Foundation
 ///   makes to its own `sshd`;
 /// - **ssh's config**, whose names now reach the resolver, so a `Host web`
 ///   somebody happens to have written would quietly change what a test about
-///   a host called `web` sees.
+///   a host called `web` sees;
+/// - the SFTP window's **This Mac**, or a window a drive opens lists the real
+///   home folder and puts up the privacy prompt.
 ///
 /// It lives here rather than beside `LaunchOptions` because `Core` reads two
 /// of these and cannot reach up into `App/` — and because one copy of the
@@ -39,4 +41,16 @@ nonisolated enum TestRun {
     static var store: String { directory + "shellhand.sqlite" }
     static var config: String { directory + "config.yaml" }
     static var sshConfig: String { directory + "ssh_config" }
+
+    /// Where the SFTP window's This Mac opens: a folder of the run's own.
+    /// The real home holds Desktop, Documents and Downloads, and listing it
+    /// puts up macOS's privacy prompt whenever the build's signature is not
+    /// the one macOS remembers — on the screen of whoever is at the Mac, for
+    /// a window a drive opened.
+    static var home: String {
+        let path = directory + "home"
+        // Made on first asking; a folder already there is no failure.
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+        return path
+    }
 }

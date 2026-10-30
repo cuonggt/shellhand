@@ -114,6 +114,77 @@ nonisolated enum Places {
         directory.hasSuffix("/") ? directory + name : directory + "/" + name
     }
 
+    /// A folder on this Mac written from `~` when it is in the home folder,
+    /// for a line with no room for `/Users/someone` before every path.
+    static func abbreviated(_ path: String, home: String) -> String {
+        guard !home.isEmpty else { return path }
+        if path == home { return "~" }
+        let inside = home.hasSuffix("/") ? home : home + "/"
+        return path.hasPrefix(inside) ? "~/" + path.dropFirst(inside.count) : path
+    }
+
+    // MARK: a host it cannot reach
+
+    /// What a pane says about a host SFTP could not open, and whether a
+    /// terminal tab is the way past it.
+    struct Trouble: Equatable {
+        var title: String
+        /// What it means and what to do, where that is known.
+        var advice: String
+        /// Whether a terminal tab on the host gets past this. It can answer
+        /// ssh's question about a new key, and type a password, where SFTP
+        /// can do neither: its ssh runs with `BatchMode=yes`, since there is
+        /// nobody to ask.
+        var offersTerminal: Bool
+    }
+
+    /// `said` is ssh's own sentence, which is what a pane's failure holds.
+    ///
+    /// "Host key verification failed." was all a host never connected to
+    /// got, with no way on from there — and a host that takes only a password
+    /// got "Permission denied", which reads as a wrong password nobody typed.
+    static func trouble(_ said: String, on host: String) -> Trouble {
+        let text = said.lowercased()
+        if text.contains("remote host identification has changed") {
+            return Trouble(
+                title: "\(host)'s key has changed",
+                advice: SessionEnding.reason(said) ?? "", offersTerminal: false)
+        }
+        if text.contains("host key verification failed") {
+            return Trouble(
+                title: "\(host) hasn't been connected to yet",
+                advice: "SFTP can't answer ssh's question about a new machine's key. Open \(host) "
+                    + "once in a terminal tab and say yes there, then try again here.",
+                offersTerminal: true)
+        }
+        if text.contains("permission denied") {
+            // "Permission denied (publickey,password)": the ways the host
+            // takes, of which SFTP can use a key and nothing else.
+            var ways = ""
+            if let open = text.range(of: "permission denied ("),
+               let close = text[open.upperBound...].firstIndex(of: ")") {
+                ways = String(text[open.upperBound..<close])
+            }
+            let takesPassword = ways.contains("password") || ways.contains("keyboard-interactive")
+            if takesPassword, !ways.contains("publickey") {
+                return Trouble(
+                    title: "SFTP needs a key for \(host)",
+                    advice: "\(host) takes only a password, and SFTP has no way to type one. "
+                        + "A terminal tab can: ssh asks for it there.",
+                    offersTerminal: true)
+            }
+            return Trouble(
+                title: "\(host) turned down the key",
+                advice: "SFTP logs in with a key alone, and the host accepted none that ssh offered. "
+                    + "Check the host's user and key."
+                    + (takesPassword ? " A terminal tab can log in with its password." : ""),
+                offersTerminal: takesPassword)
+        }
+        return Trouble(
+            title: "Couldn't connect to \(host)",
+            advice: SessionEnding.reason(said) ?? "", offersTerminal: false)
+    }
+
     // MARK: what the replace question's buttons say
 
     /// Singular where there is one, because "Skip them" over a single file

@@ -232,6 +232,43 @@ struct FilesTests {
         #expect(read(into + "/dropped.txt") == nil, "it landed after all")
     }
 
+    // MARK: trying a transfer again
+
+    /// A copy the disk refused, retried: again while nothing has changed,
+    /// which fails in the same row rather than adding one, and then once the
+    /// folder can be written, which lands.
+    @Test("a failed copy says which way it went, and lands when retried")
+    func retriesAFailedCopy() async throws {
+        let source = folder(["notes.txt": "bytes"])
+        let into = folder()
+        let model = await twoPanes(from: source, into: into)
+        let manager = FileManager.default
+        try manager.setAttributes([.posixPermissions: 0o555], ofItemAtPath: into)
+        defer { try? manager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: into) }
+
+        await model.copy(model.left.entries, from: model.left, to: model.right)
+        guard let failed = model.transfers.first, failed.state == TransferQueue.failed else {
+            Issue.record("the refused copy left \(model.transfers.map(\.state))")
+            return
+        }
+        #expect(TransferQueue.route(failed) == "This Mac → This Mac:\(into)")
+        #expect(model.canRetry(failed))
+
+        await model.retry(failed)
+        #expect(model.transfers.count == 1, "a retry that failed again added a row")
+        guard let again = model.transfers.first, again.state == TransferQueue.failed else {
+            Issue.record("retried into a folder still read-only, it did not fail")
+            return
+        }
+        #expect(read(into + "/notes.txt") == nil)
+
+        try manager.setAttributes([.posixPermissions: 0o755], ofItemAtPath: into)
+        await model.retry(again)
+        #expect(read(into + "/notes.txt") == "bytes")
+        #expect(model.transfers.map(\.state) == [TransferQueue.done])
+        #expect(!model.canRetry(model.transfers[0]))
+    }
+
     /// The control: an ordinary drop still lands, and quietly — a transfer row
     /// for an instant local copy would be noise.
     @Test("a drop from Finder that can be copied lands without a fuss")

@@ -119,6 +119,13 @@ final class FilePlace {
     /// Takes what went wrong off the pane, once it has been read.
     func clearFailure() { failure = nil }
 
+    /// Try Again, on a host that would not open: the host's name stays on
+    /// the pane, so another go is what the pane can offer.
+    func tryAgain() async {
+        guard let host else { return }
+        await use(host)
+    }
+
     func refresh() async { await go(to: listing.path) }
 
     func parent() async {
@@ -192,17 +199,60 @@ final class FilePlace {
 final class FilesModel {
     let left: FilePlace
     let right: FilePlace
+    /// The side the window's keys act on: the one whose list was last used.
+    /// ⌘R and ⇧⌘N are its own buttons', so there is no asking which side.
+    var active: FilePlace
     private(set) var transfers: [Transfer] = []
     /// What is being asked about before anything is carried, if anything.
     /// The view draws it; `answer` settles it.
     private(set) var asking: ReplaceQuestion?
 
     private let db: String
+    /// For writing a folder on this Mac from `~` in the strip.
+    private let home: String
+    /// How each transfer in the strip was started, so that a failed one can
+    /// be started again: the engine keeps no paths once a job has ended, and
+    /// a relay between two hosts is two jobs with a file in the middle.
+    private var recipes: [String: Recipe] = [:]
 
     init(db: String, home: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         self.db = db
-        left = FilePlace(db: db, home: home)
+        self.home = home
+        let left = FilePlace(db: db, home: home)
+        self.left = left
         right = FilePlace(db: db, home: home)
+        active = left
+    }
+
+    /// One file or folder handed to the engine.
+    private struct Carry {
+        var session: String
+        var direction: String
+        var remote: String
+        var local: String
+        var name: String
+        var size: Int64
+    }
+
+    private enum Recipe {
+        case carry(Carry)
+        /// Down from one host and up to the other, through a file of ours
+        /// made afresh each time.
+        case relay(name: String, size: Int64, from: String, source: String, into: String, target: String)
+        case local(from: String, to: String, name: String)
+    }
+
+    /// Which way a transfer goes, as the strip says it.
+    private struct Way {
+        var from: String
+        var to: String
+        var into: String
+    }
+
+    private func heading(from source: FilePlace, to target: FilePlace) -> Way {
+        let folder = target.listing.path
+        return Way(from: source.title, to: target.title,
+                   into: target.isLocal ? Places.abbreviated(folder, home: home) : folder)
     }
 
     /// The left side is always this Mac. The right is the host this was
@@ -242,26 +292,29 @@ final class FilesModel {
         // away, has no session, and to the engine no session is this Mac.
         guard let from = source.via, let into = target.via else { return }
         guard let entries = await settle(entries, into: target) else { return }
+        let way = heading(from: source, to: target)
         var jobs: [String] = []
         for entry in entries {
             switch (source.isLocal, target.isLocal) {
             case (true, true):
-                copyLocally(entry, from: source, to: target)
+                copyLocally(entry, from: source, to: target, way: way)
             case (false, true):
-                jobs.append(contentsOf: await enqueue(
+                jobs.append(contentsOf: await enqueue(Carry(
                     session: from, direction: "download",
                     remote: source.path(entry.name), local: target.path(entry.name),
-                    name: entry.name, size: entry.size))
+                    name: entry.name, size: entry.size), way: way))
             case (true, false):
-                jobs.append(contentsOf: await enqueue(
+                jobs.append(contentsOf: await enqueue(Carry(
                     session: into, direction: "upload",
                     remote: target.path(entry.name), local: source.path(entry.name),
-                    name: entry.name, size: entry.size))
+                    name: entry.name, size: entry.size), way: way))
             case (false, false):
                 // Two hops with a file of ours in the middle, so this one
                 // cannot be handed over and left: the upload has nothing to
                 // send until the download has finished.
-                await relay(entry, from: source, through: from, to: target, through: into)
+                await relay(name: entry.name, size: entry.size,
+                            from: from, source: source.path(entry.name),
+                            into: into, target: target.path(entry.name), way: way)
             }
         }
         await watch(jobs)
@@ -278,11 +331,14 @@ final class FilesModel {
         if !clashes.isEmpty, await ask(clashes, into: target) != .replace { return }
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64)
             ?? 0
+        let way = Way(from: Places.title(chosen: true, host: nil), to: target.title,
+                      into: heading(from: target, to: target).into)
         if target.isLocal {
-            copyOnThisDisk(from: url.path, to: target.path(name), name: name)
+            copyOnThisDisk(from: url.path, to: target.path(name), name: name, way: way)
         } else {
-            await run(session: into, direction: "upload",
-                      remote: target.path(name), local: url.path, name: name, size: size)
+            await watch(await enqueue(Carry(
+                session: into, direction: "upload",
+                remote: target.path(name), local: url.path, name: name, size: size), way: way))
         }
         await target.refresh()
     }
@@ -322,10 +378,12 @@ final class FilesModel {
         asking.reply.resume(returning: answer)
     }
 
-    private func copyLocally(_ entry: RemoteEntry, from source: FilePlace, to target: FilePlace) {
+    private func copyLocally(
+        _ entry: RemoteEntry, from source: FilePlace, to target: FilePlace, way: Way
+    ) {
         let at = source.path(entry.name), into = target.path(entry.name)
         guard at != into else { return }
-        copyOnThisDisk(from: at, to: into, name: entry.name)
+        copyOnThisDisk(from: at, to: into, name: entry.name, way: way)
     }
 
     /// A copy on this disk, with a refusal reported rather than swallowed.
@@ -345,15 +403,22 @@ final class FilesModel {
     /// time anything reaches here, and a remove that fails because there was
     /// nothing to remove is not a failure. A remove that fails for a real
     /// reason surfaces as the copy failing a line later.
-    private func copyOnThisDisk(from: String, to: String, name: String) {
+    @discardableResult
+    private func copyOnThisDisk(
+        from: String, to: String, name: String, way: Way, at index: Int? = nil
+    ) -> Bool {
         try? FileManager.default.removeItem(atPath: to)
         do {
             try FileManager.default.copyItem(atPath: from, toPath: to)
+            return true
         } catch {
-            transfers.append(Transfer(
+            let row = Transfer(
                 id: UUID().uuidString, name: name, kind: "file",
-                state: TransferQueue.failed,
-                error: error.localizedDescription))
+                state: TransferQueue.failed, error: error.localizedDescription,
+                from: way.from, to: way.to, into: way.into)
+            put(row, at: index)
+            recipes[row.id] = .local(from: from, to: to, name: name)
+            return false
         }
     }
 
@@ -361,52 +426,66 @@ final class FilesModel {
     /// behind: the middle of a host-to-host copy is not somebody's Downloads
     /// folder.
     private func relay(
-        _ entry: RemoteEntry, from source: FilePlace, through from: String,
-        to target: FilePlace, through into: String
+        name: String, size: Int64, from: String, source: String,
+        into: String, target: String, way: Way, at index: Int? = nil
     ) async {
+        let recipe = Recipe.relay(
+            name: name, size: size, from: from, source: source, into: into, target: target)
         let staging = NSTemporaryDirectory() + "shellhand-relay-\(UUID().uuidString)"
         try? FileManager.default.createDirectory(
             atPath: staging, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(atPath: staging) }
-        let waypoint = staging + "/" + entry.name
+        let waypoint = staging + "/" + name
 
-        await run(session: from, direction: "download",
-                  remote: source.path(entry.name), local: waypoint,
-                  name: entry.name, size: entry.size)
-        guard transfers.last?.state == TransferQueue.done else { return }
-        transfers.removeLast()
-        await run(session: into, direction: "upload",
-                  remote: target.path(entry.name), local: waypoint,
-                  name: entry.name, size: entry.size)
-    }
-
-    private func run(
-        session: String, direction: String, remote: String, local: String,
-        name: String, size: Int64
-    ) async {
-        await watch(await enqueue(
-            session: session, direction: direction, remote: remote, local: local,
-            name: name, size: size))
+        let down = await enqueue(Carry(
+            session: from, direction: "download", remote: source, local: waypoint,
+            name: name, size: size), way: way, at: index, recipe: recipe)
+        await watch(down)
+        // Found by its own id: with other copies under way, the last row in
+        // the strip need not be this one.
+        guard let job = down.first, let row = transfers.firstIndex(where: { $0.id == job }),
+              transfers[row].state == TransferQueue.done else { return }
+        transfers.remove(at: row)
+        recipes[job] = nil
+        Task { await Core.shared.forgetTransfer(id: job) }
+        await watch(await enqueue(Carry(
+            session: into, direction: "upload", remote: target, local: waypoint,
+            name: name, size: size), way: way, at: row, recipe: recipe))
     }
 
     /// Hands a transfer to the queue and comes straight back. The job's id,
     /// or nothing when it could not even be queued — which is a failure worth
     /// showing in the strip rather than swallowing.
     private func enqueue(
-        session: String, direction: String, remote: String, local: String,
-        name: String, size: Int64
+        _ carry: Carry, way: Way, at index: Int? = nil, recipe: Recipe? = nil
     ) async -> [String] {
-        guard !session.isEmpty else { return [] }
+        guard !carry.session.isEmpty else { return [] }
+        let row: Transfer
+        var jobs: [String] = []
         do {
             let job = try await Core.shared.startTransfer(
-                session: session, direction: direction, remotePath: remote, localPath: local)
-            transfers.append(Transfer(id: job, name: name, total: size))
-            return [job]
+                session: carry.session, direction: carry.direction,
+                remotePath: carry.remote, localPath: carry.local)
+            row = Transfer(id: job, name: carry.name, total: carry.size,
+                           from: way.from, to: way.to, into: way.into)
+            jobs = [job]
         } catch {
-            transfers.append(Transfer(
-                id: UUID().uuidString, name: name, state: TransferQueue.failed,
-                error: error.localizedDescription))
-            return []
+            row = Transfer(
+                id: UUID().uuidString, name: carry.name, state: TransferQueue.failed,
+                error: error.localizedDescription,
+                from: way.from, to: way.to, into: way.into)
+        }
+        put(row, at: index)
+        recipes[row.id] = recipe ?? .carry(carry)
+        return jobs
+    }
+
+    /// A row in the strip: at the end, or where the row it retries stood.
+    private func put(_ row: Transfer, at index: Int?) {
+        if let index, index <= transfers.count {
+            transfers.insert(row, at: index)
+        } else {
+            transfers.append(row)
         }
     }
 
@@ -421,7 +500,9 @@ final class FilesModel {
                     left.remove(job)
                     continue
                 }
-                if let at = transfers.firstIndex(where: { $0.id == job }) { transfers[at] = status }
+                if let at = transfers.firstIndex(where: { $0.id == job }) {
+                    transfers[at] = status.labelled(like: transfers[at])
+                }
                 if status.finished { left.remove(job) }
             }
         }
@@ -432,9 +513,54 @@ final class FilesModel {
         Task { await Core.shared.cancelTransfer(id: id) }
     }
 
+    /// Whether a failed transfer can be started again: the sessions it went
+    /// through are still the panes' own. A pane pointed somewhere else since
+    /// has closed the one it used, and a retry into that would only fail.
+    func canRetry(_ transfer: Transfer) -> Bool {
+        guard transfer.state == TransferQueue.failed, let recipe = recipes[transfer.id] else {
+            return false
+        }
+        let open = Set([left.via, right.via].compactMap { $0 })
+        switch recipe {
+        case let .carry(carry): return open.contains(carry.session)
+        case let .relay(_, _, from, _, into, _): return open.contains(from) && open.contains(into)
+        case .local: return true
+        }
+    }
+
+    /// Starts a failed transfer again, in its own row's place in the strip.
+    func retry(_ transfer: Transfer) async {
+        guard canRetry(transfer), let recipe = recipes[transfer.id],
+              let index = transfers.firstIndex(where: { $0.id == transfer.id })
+        else { return }
+        transfers.remove(at: index)
+        recipes[transfer.id] = nil
+        let id = transfer.id
+        Task { await Core.shared.forgetTransfer(id: id) }
+        let way = Way(from: transfer.from, to: transfer.to, into: transfer.into)
+        switch recipe {
+        case let .carry(carry):
+            await watch(await enqueue(carry, way: way, at: index))
+        case let .relay(name, size, from, source, into, target):
+            await relay(name: name, size: size, from: from, source: source,
+                        into: into, target: target, way: way, at: index)
+        case let .local(from, to, name):
+            // A first copy on this disk that works leaves no row behind; one
+            // that works when retried leaves its own, so the retry is seen.
+            if copyOnThisDisk(from: from, to: to, name: name, way: way, at: index) {
+                put(Transfer(id: UUID().uuidString, name: name, kind: "file",
+                             state: TransferQueue.done,
+                             from: way.from, to: way.to, into: way.into), at: index)
+            }
+        }
+        await left.refresh()
+        await right.refresh()
+    }
+
     func clearFinished() {
         for transfer in transfers where transfer.finished {
             let id = transfer.id
+            recipes[id] = nil
             Task { await Core.shared.forgetTransfer(id: id) }
         }
         transfers.removeAll(where: \.finished)

@@ -70,6 +70,15 @@ nonisolated enum TransferQueue {
         return carried == 1 ? "1 done" : "\(carried) done"
     }
 
+    /// Which way a transfer goes and where it lands, the way scp writes a
+    /// place: "This Mac → web-us-1:/var/www/site". The strip said a name and
+    /// a bar, which was no help with two hosts open and a folder each.
+    static func route(_ transfer: Transfer) -> String {
+        guard !transfer.from.isEmpty, !transfer.to.isEmpty else { return "" }
+        let way = "\(transfer.from) → \(transfer.to)"
+        return transfer.into.isEmpty ? way : "\(way):\(transfer.into)"
+    }
+
     /// Whether anything is still to happen, which is what decides if the
     /// strip is worth the room it takes.
     static func busy(_ transfers: [Transfer]) -> Bool {
