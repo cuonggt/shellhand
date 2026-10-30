@@ -11,6 +11,8 @@ body:
     attributes:
       value: |
         This page is public, so leave out host names, addresses, user names and keys: `web-1` or `203.0.113.5` explains a problem as well as the real thing does.
+
+        A security problem does not belong here: [report it privately](https://github.com/cuonggt/shellhand/security/advisories/new) instead.
   - type: textarea
     id: what-happened
     attributes:

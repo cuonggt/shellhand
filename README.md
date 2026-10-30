@@ -99,6 +99,9 @@ Help ▸ Report a Problem… opens the issue form here, or
 [start one yourself](https://github.com/cuonggt/shellhand/issues/new/choose).
 Issues are public, so leave out host names, addresses and keys. Questions and
 ideas go to [Discussions](https://github.com/cuonggt/shellhand/discussions).
+A security problem goes to
+[a private report](https://github.com/cuonggt/shellhand/security/advisories/new)
+instead; [the security policy](.github/SECURITY.md) says what to put in it.
 
 ## Requirements
 
