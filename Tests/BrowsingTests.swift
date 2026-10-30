@@ -106,4 +106,38 @@ nonisolated struct BrowsingTests {
         #expect(Browsing.settled("", within: [production, eu]) == "")
         #expect(Browsing.settled("", within: []) == "")
     }
+
+    // MARK: what the pane says it holds
+
+    /// The README picture's "Production — 1 host", for a group holding seven:
+    /// one filed directly in it, six in its two groups.
+    @Test("a group counts everything beneath it")
+    func countsBeneath() {
+        #expect(Browsing.summary(inAll: 7, here: 1, groups: 2) == "7 hosts: 1 here, 6 in 2 groups")
+        #expect(Browsing.summary(inAll: 6, here: 0, groups: 2) == "6 hosts in 2 groups")
+        #expect(Browsing.summary(inAll: 3, here: 3, groups: 0) == "3 hosts")
+        #expect(Browsing.summary(inAll: 1, here: 0, groups: 1) == "1 host in 1 group")
+        #expect(Browsing.counted(1) == "1 host")
+        #expect(Browsing.counted(0) == "0 hosts")
+    }
+
+    /// The search field and the tag bar narrowed the sidebar alone, so the
+    /// pane listed all twelve beside the sidebar's three.
+    @Test("a narrowed list says what narrowed it")
+    func narrowed() {
+        #expect(Browsing.narrowed(shown: 3, of: 12, search: "", tags: ["db"])
+            == "3 of 12 · tagged db")
+        #expect(Browsing.narrowed(shown: 2, of: 12, search: " eu ", tags: [])
+            == "2 of 12 · matching “eu”")
+        #expect(Browsing.narrowed(shown: 1, of: 12, search: "api", tags: ["web", "eu"])
+            == "1 of 12 · matching “api”, tagged eu and web")
+    }
+
+    @Test("blank search with no tags narrows nothing")
+    func notNarrowing() {
+        #expect(!Browsing.narrowing(search: "", tags: []))
+        #expect(!Browsing.narrowing(search: "   ", tags: []))
+        #expect(Browsing.narrowing(search: "db", tags: []))
+        #expect(Browsing.narrowing(search: "", tags: ["db"]))
+    }
 }

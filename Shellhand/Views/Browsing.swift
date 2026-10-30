@@ -58,4 +58,34 @@ nonisolated enum Browsing {
     static func settled(_ scope: String, within groups: [Group]) -> String {
         groups.contains { $0.id == scope } ? scope : ""
     }
+
+    /// A count of hosts, in words.
+    static func counted(_ n: Int) -> String { n == 1 ? "1 host" : "\(n) hosts" }
+
+    /// What a group holds, counted as **everything beneath it**. Production
+    /// read "1 host" with seven in it, counting only the one filed directly
+    /// there. `here` is the hosts filed directly in it, `groups` the groups
+    /// directly inside.
+    static func summary(inAll: Int, here: Int, groups: Int) -> String {
+        guard groups > 0 else { return counted(inAll) }
+        let inside = groups == 1 ? "1 group" : "\(groups) groups"
+        guard here > 0 else { return "\(counted(inAll)) in \(inside)" }
+        return "\(counted(inAll)): \(here) here, \(inAll - here) in \(inside)"
+    }
+
+    /// What a list narrowed by the search field or the tag bar says it shows.
+    /// They narrowed the sidebar alone, so the pane beside it went on listing
+    /// all twelve hosts next to the sidebar's three.
+    static func narrowed(shown: Int, of total: Int, search: String, tags: Set<String>) -> String {
+        var why: [String] = []
+        let typed = search.trimmingCharacters(in: .whitespaces)
+        if !typed.isEmpty { why.append("matching “\(typed)”") }
+        if !tags.isEmpty { why.append("tagged " + tags.sorted().joined(separator: " and ")) }
+        return "\(shown) of \(total)" + (why.isEmpty ? "" : " · " + why.joined(separator: ", "))
+    }
+
+    /// Whether the search field or the tag bar is narrowing anything.
+    static func narrowing(search: String, tags: Set<String>) -> Bool {
+        !search.trimmingCharacters(in: .whitespaces).isEmpty || !tags.isEmpty
+    }
 }

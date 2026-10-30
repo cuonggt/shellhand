@@ -18,6 +18,10 @@ struct SidebarView: View {
     let store: HostStore
     @Binding var selection: Selection?
     @Binding var search: String
+    /// The tags chosen in the bar. More than one narrows rather than widens:
+    /// `web` and `eu` asks for the European web servers. The window holds
+    /// them, so the host pane narrows to the same hosts as this list does.
+    @Binding var chosenTags: Set<String>
     /// The same actions the menu bar uses, so right-clicking a row and
     /// reaching for the menu do the same thing — and do it once. A row is
     /// selected by the right-click before the menu is built, so these act on
@@ -27,10 +31,9 @@ struct SidebarView: View {
     /// A click on a group row, which asks for the list even when that group
     /// was already selected — the one way back once a tab has taken the pane.
     let onBrowse: (Selection) -> Void
-
-    /// The tags chosen in the bar. More than one narrows rather than widens:
-    /// `web` and `eu` asks for the European web servers.
-    @State private var chosenTags: Set<String> = []
+    /// Whether the pane is showing the whole list, so its row can say so.
+    let browsingAll: Bool
+    let onBrowseAll: () -> Void
     /// The groups folded away. Absent means open, so a group that arrives
     /// while the window is up shows what is in it — and so that the fold
     /// state of a group nobody has touched is one fact, not two.
@@ -56,7 +59,12 @@ struct SidebarView: View {
             }
         }
         .onClickedRow(clicked(row:))
-        .safeAreaInset(edge: .top) { searchField }
+        .safeAreaInset(edge: .top) {
+            VStack(spacing: 0) {
+                searchField
+                allHosts
+            }
+        }
         .safeAreaInset(edge: .bottom) { tagBar }
         // Folded away as the list arrives, once. `.task` would be too early
         // — the store is still loading and there are no groups to fold.
@@ -121,6 +129,36 @@ struct SidebarView: View {
     /// of the column, outside the list it belongs to. `.searchable` goes where
     /// it likes rather than where you put it, which is why a plain field is
     /// what works here.
+    /// The way back to the whole list, which there was none of: once a group
+    /// was open, nothing led to every host again short of picking one filed
+    /// nowhere. A button rather than a row of the list, so that it is not one
+    /// more thing the selection could be.
+    private var allHosts: some View {
+        Button(action: onBrowseAll) {
+            HStack(spacing: 6) {
+                Image(systemName: "square.stack.3d.up")
+                    .foregroundStyle(.tint)
+                    .accessibilityHidden(true)
+                Text("All Hosts")
+                Spacer()
+                Text("\(store.snapshot.hosts.count)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .background(
+                browsingAll ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear),
+                in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 10)
+        .padding(.bottom, 4)
+        .accessibilityLabel("All Hosts, \(Browsing.counted(store.snapshot.hosts.count))")
+        .accessibilityAddTraits(browsingAll ? .isSelected : [])
+    }
+
     private var searchField: some View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
@@ -524,13 +562,7 @@ struct HostRow: View {
     }
 
     private var subtitle: String {
-        var parts: [String] = []
-        if !host.effective.user.isEmpty {
-            parts.append("\(host.effective.user)@\(host.addr)")
-        } else {
-            parts.append(host.addr)
-        }
-        if host.port != 0 && host.port != 22 { parts.append(":\(host.port)") }
+        var parts = [host.destinationLine]
         if showGroup, let group = store.group(host.groupId) { parts.append("· \(store.path(of: group))") }
         return parts.joined(separator: " ")
     }

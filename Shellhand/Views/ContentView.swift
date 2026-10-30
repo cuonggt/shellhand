@@ -33,6 +33,9 @@ struct ContentView: View {
     @State private var sessions = Sessions()
     @State private var selection: Selection?
     @State private var search = ""
+    /// The sidebar's chosen tags, held here with the search so that the host
+    /// pane narrows to what the sidebar does.
+    @State private var chosenTags: Set<String> = []
     @State private var editing: Host?
     @State private var editingGroup: Group?
     @State private var deletingHost: Host?
@@ -105,11 +108,14 @@ struct ContentView: View {
         NavigationSplitView {
             SidebarView(
                 store: store, selection: $selection, search: $search,
+                chosenTags: $chosenTags,
                 actions: actions, onConnect: connect,
                 onBrowse: { now in
                     selection = now
                     pane = .hosts
-                })
+                },
+                browsingAll: browsedGroup == nil && pane == .hosts,
+                onBrowseAll: { browse(to: "") })
                 .navigationSplitViewColumnWidth(min: 220, ideal: 280)
                 .toolbar { listToolbar }
         } detail: {
@@ -123,7 +129,12 @@ struct ContentView: View {
                 onEdit: { editing = $0 },
                 onEditGroup: { editingGroup = $0 },
                 onPick: { selection = $0 },
-                onImport: { open(import: $0) }, onNewHost: { editing = Host() })
+                onImport: { open(import: $0) }, onNewHost: { editing = Host() },
+                search: search, tags: chosenTags, onBrowse: browse(to:),
+                onClearFilter: {
+                    search = ""
+                    chosenTags = []
+                })
                 .toolbar { paneToolbar }
         }
         // Tags the window so Shellhand ▸ Hosts can find it again from an
@@ -325,7 +336,7 @@ struct ContentView: View {
             // place they have had: a button that moves under the pointer is
             // the thing this toolbar has already been rearranged to avoid.
             Button {
-                openFiles(on: selectedHost)
+                openFiles(on: subjectHost)
             } label: {
                 Label("SFTP", systemImage: "arrow.left.arrow.right")
             }
@@ -386,7 +397,7 @@ struct ContentView: View {
             guard let session = sessions.all.first(where: { $0.id == id }) else { return "" }
             switch session.state {
             case .connecting: return "connecting…"
-            case .connected: return session.host.map { "\($0.effective.user)@\($0.addr)" } ?? "local"
+            case .connected: return session.host.map(\.destinationLine) ?? "local"
             case .askingHostKey: return "waiting for an answer"
             case let .ended(code, _):
                 return code == 0 ? "ended" : "ended with status \(code.map(String.init) ?? "a signal")"
@@ -470,21 +481,21 @@ struct ContentView: View {
                 newGroupIn: { editingGroup = Group(parentId: $0.id) },
                 edit: { editingGroup = $0 },
                 delete: { deletingGroup = $0 }),
-            editHost: { if let host = selectedHost { editing = host } },
+            editHost: { if let host = subjectHost { editing = host } },
             // On whatever host is selected, so that pressing this with one
             // picked opens straight onto it. With nothing picked the far
             // side asks which host, rather than showing this Mac twice.
-            openFiles: { openFiles(on: selectedHost) },
+            openFiles: { openFiles(on: subjectHost) },
             showHosts: { pick(tab: .hosts) },
             openFilesOn: { host in openFiles(on: host) },
             // A new group goes inside whichever one is selected, which is
             // what picking one and asking for a group means.
             newGroup: { editingGroup = Group(parentId: selectedGroup?.id ?? "") },
             editGroup: { if let group = selectedGroup { editingGroup = group } },
-            deleteHost: { deletingHost = selectedHost },
+            deleteHost: { deletingHost = subjectHost },
             deleteGroup: { deletingGroup = selectedGroup },
             copyAsCommand: copyAsCommand,
-            connect: { if let host = selectedHost { connect(host) } },
+            connect: { if let host = subjectHost { connect(host) } },
             reconnect: {
                 if let session = frontSession, session.host != nil {
                     end(session, reconnecting: true)
@@ -509,7 +520,7 @@ struct ContentView: View {
             nextTab: { step(by: 1) },
             previousTab: { step(by: -1) },
             groupInside: selectedGroup?.name ?? "",
-            hasHost: selectedHost != nil,
+            hasHost: subjectHost != nil,
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
@@ -522,6 +533,15 @@ struct ContentView: View {
             },
             canExport: !store.snapshot.hosts.isEmpty || !store.snapshot.groups.isEmpty,
             canNewTab: newTabOpening != nil)
+    }
+
+    /// The listed host the Host menu, ⌘B and the toolbar's SFTP act on — see
+    /// `Panes.subject`. The session in front wins over the selection.
+    private var subjectHost: Host? {
+        Panes.subject(
+            inFront: frontSession.map { Panes.Opening.of($0.host) },
+            selected: selectedHost?.id, isListed: isListed
+        ).flatMap { id in store.snapshot.hosts.first { $0.id == id } }
     }
 
     /// What ⌘T would open now — see `Panes.newTab`.
@@ -631,7 +651,7 @@ struct ContentView: View {
     /// argv the app would run, so it can be pasted into a terminal or a
     /// runbook and behave the same.
     private func copyAsCommand() {
-        guard let host = selectedHost else { return }
+        guard let host = subjectHost else { return }
         copyAsCommand(for: host)
     }
 
@@ -702,6 +722,20 @@ struct ContentView: View {
 
     /// Shows a tab. The strip, the sidebar and everything that opens a
     /// session go through this, so the pane and `Sessions` cannot drift.
+    /// Goes to a place in the list: the whole of it for "", a group otherwise.
+    /// The whole list clears a group selection, or the sidebar would go on
+    /// highlighting the group the pane has just left; a host stays selected,
+    /// being a thing rather than a place.
+    private func browse(to scope: String) {
+        if scope.isEmpty {
+            if case .group = selection { selection = nil }
+            browsing = ""
+        } else {
+            selection = .group(scope)
+        }
+        pane = .hosts
+    }
+
     private func pick(tab: PaneTab) {
         (pane, beside) = Panes.picking(tab, front: pane, beside: beside)
         if case let .session(id) = tab { sessions.selected = id }
@@ -772,6 +806,11 @@ struct DetailView: View {
     let onPick: (Selection) -> Void
     let onImport: (ImportSheet.Source) -> Void
     let onNewHost: () -> Void
+    /// What the sidebar is narrowed to, for the host pane to narrow to too.
+    let search: String
+    let tags: Set<String>
+    let onBrowse: (String) -> Void
+    let onClearFilter: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -839,6 +878,7 @@ struct DetailView: View {
         HostsPane(
             store: store, group: group, selection: selection,
             onPick: onPick, onConnect: onConnect, onEditGroup: onEditGroup,
-            actions: actions)
+            actions: actions, search: search, tags: tags,
+            onBrowse: onBrowse, onClearFilter: onClearFilter)
     }
 }

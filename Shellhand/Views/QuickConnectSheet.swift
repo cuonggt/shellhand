@@ -73,7 +73,7 @@ struct QuickConnectSheet: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(host.name)
-                    Text(host.effective.user.isEmpty ? host.addr : "\(host.effective.user)@\(host.addr)")
+                    Text(host.destinationLine)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

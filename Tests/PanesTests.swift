@@ -184,6 +184,34 @@ nonisolated struct PanesTests {
         #expect(Panes.newTab(inFront: nil, selected: "gone", isListed: listed) == nil)
     }
 
+    // MARK: what the Host menu acts on
+
+    /// With a session in front, ⌘B, ⌘E, ⇧⌘C and ⌘↩ acted on the sidebar's
+    /// selection while the title and the inspector named the session's host:
+    /// ⌘B on a terminal on `db` opened SFTP on `web`.
+    @Test("with a session in front, the Host menu acts on its host, not the selection")
+    func subjectFollowsTheSession() {
+        #expect(Panes.subject(inFront: .host("db"), selected: "web", isListed: listed) == "db")
+        #expect(Panes.subject(inFront: .host("db"), selected: nil, isListed: listed) == "db")
+    }
+
+    @Test("with the hosts in front, the Host menu acts on the host selected")
+    func subjectFromTheList() {
+        #expect(Panes.subject(inFront: nil, selected: "web", isListed: listed) == "web")
+        #expect(Panes.subject(inFront: nil, selected: nil, isListed: listed) == nil)
+        #expect(Panes.subject(inFront: nil, selected: "gone", isListed: listed) == nil)
+    }
+
+    /// Nothing listed to act on, and reaching for the selection instead would
+    /// act on a machine that is not the one on screen.
+    @Test("a local shell, a ⌘K machine or a deleted host leaves the Host menu nothing")
+    func subjectWithNothingListed() {
+        let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
+        #expect(Panes.subject(inFront: .localShell, selected: "web", isListed: listed) == nil)
+        #expect(Panes.subject(inFront: .unsaved(typed), selected: "web", isListed: listed) == nil)
+        #expect(Panes.subject(inFront: .host("gone"), selected: "web", isListed: listed) == nil)
+    }
+
     /// Typed into ⌘K, it is in no list to be looked up in, so it is carried
     /// whole — and is never "deleted since", having never been saved.
     @Test("a session to a machine typed into ⌘K opens another of itself")

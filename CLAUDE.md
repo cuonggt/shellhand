@@ -222,6 +222,19 @@ credentials, which is most of it.
   `Views/RowMenu.swift`, handed its subject rather than reading the
   selection; and the inspector opens a turn of the loop after a selection.
   → [the host pane](docs/notes/window.md#the-host-pane)
+- **The pane tells the truth about the list.** A group counts everything
+  beneath it (`Browsing.summary`): "Production · 1 host" held seven. The
+  sidebar's All Hosts row and the pane's breadcrumb (`Tree.lineage`) lead
+  back to the whole list, which nothing did once a group was open. The search
+  text and the chosen tags belong to the window, and the pane narrows to the
+  sidebar's own matches (`SidebarRows.matches`) and says so: they narrowed
+  the sidebar alone, beside a pane still listing everything.
+- **A destination has one spelling, `Host.destinationLine`**, which is
+  `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
+  ⌘K and the window's subtitle wrote it five ways. An inherited value says
+  "from Production", in the inspector as in the editors, and What will run
+  is read one argument a line (`HostPreview.lines`) while Copy gives the
+  quoted line.
 - **A host is drawn with its operating system's mark**, learned by reading
   `/etc/os-release` over a connection of its own (`Core.osOf`), once a day per
   host — `Host.shouldAskOS`, on `osSeen`, which records the asking and not the
@@ -404,8 +417,10 @@ credentials, which is most of it.
   through `AppActions`, a focused scene value. Keyboard shortcuts belong there
   rather than on a button.
 - **A menu is named for what its items act on, and that gates it**:
-  **Host** needs one selected, **Terminal** a session in front, and the app
-  menu's Hosts and SFTP nothing. There is no Library menu and nothing is
+  **Host** needs a listed host — the session in front's, or else the one
+  selected (`Panes.subject`, ⌘T's rule) — **Terminal** a session in front,
+  and the app menu's Hosts and SFTP nothing. With a session in front, ⌘B
+  once opened SFTP on the sidebar's host rather than the one on screen. There is no Library menu and nothing is
   called Library, except `@AppStorage("libraryLayout")`, which keeps its name
   because renaming a stored key resets everybody's choice.
   → [menus](docs/notes/window.md#menus)
@@ -422,7 +437,8 @@ credentials, which is most of it.
   frame is lost.
   → [the name SFTP](docs/notes/window.md#the-name-sftp)
 - **Connect is not in the toolbar**: it is in the inspector, on ⌘↩ in the
-  Host menu, and on ⏎ in the list. A double-click connects through
+  Host menu — **and only there**, since a second ⌘↩ on the inspector's button
+  could pick another host — and on ⏎ in the list. A double-click connects through
   `contextMenu(forSelectionType:)`'s `primaryAction` on rows and
   `NSApp.currentEvent?.clickCount` on cards — **never a `TapGesture(count: 2)`,
   which made every single click wait**. Look for the native hook before

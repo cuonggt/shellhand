@@ -25,6 +25,16 @@ struct HostsPane: View {
     let onEditGroup: (Group) -> Void
     /// For the row menu, which is the sidebar's — see `Views/RowMenu.swift`.
     let actions: AppActions
+    /// What the sidebar's search field and tag bar hold. They narrow this
+    /// list as well as the sidebar's: they used to narrow the sidebar alone,
+    /// and the pane beside it went on listing every host.
+    let search: String
+    let tags: Set<String>
+    /// Goes to a place: the whole list for "", a group otherwise.
+    let onBrowse: (String) -> Void
+    let onClearFilter: () -> Void
+
+    private var narrowing: Bool { Browsing.narrowing(search: search, tags: tags) }
 
     /// How you like to read the list, so `@AppStorage` rather than
     /// `@SceneStorage`: it is about you, not about this window.
@@ -232,15 +242,27 @@ struct HostsPane: View {
         return .handled
     }
 
+    @ViewBuilder
     private var empty: some View {
-        ContentUnavailableView {
-            Label("Nothing filed here yet", systemImage: "tray")
-        } description: {
-            Text(group == nil
-                ? "Press ⌘N to add a host."
-                : "Drag a host onto \(group?.name ?? "") to file it here.")
+        if narrowing {
+            ContentUnavailableView {
+                Label("No hosts match", systemImage: "magnifyingglass")
+            } description: {
+                Text(summary)
+            } actions: {
+                Button("Show All", action: onClearFilter)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ContentUnavailableView {
+                Label("Nothing filed here yet", systemImage: "tray")
+            } description: {
+                Text(group == nil
+                    ? "Press ⌘N to add a host."
+                    : "Drag a host onto \(group?.name ?? "") to file it here.")
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// Whether this is the one selected, for the cards to draw.
@@ -254,11 +276,19 @@ struct HostsPane: View {
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(group?.name ?? "All hosts").font(.title2).bold()
-                Text(summary).font(.callout).foregroundStyle(.secondary)
+                if let group, !narrowing { breadcrumb(to: group) }
+                Text(narrowing ? "Matching" : group?.name ?? "All Hosts").font(.title2).bold()
+                HStack(spacing: 8) {
+                    Text(summary).font(.callout).foregroundStyle(.secondary)
+                    if narrowing {
+                        Button("Show All", action: onClearFilter)
+                            .buttonStyle(.link)
+                            .font(.callout)
+                    }
+                }
             }
             Spacer()
-            if let group {
+            if let group, !narrowing {
                 Button("Edit") { onEditGroup(group) }
             }
             // Images as the segments' own content, not interpolated into a
@@ -285,17 +315,45 @@ struct HostsPane: View {
         [GridItem(.adaptive(minimum: 230, maximum: 340), spacing: 10, alignment: .topLeading)]
     }
 
-    /// What is here, counted. The group line says where it sits as well,
-    /// because a name like "prod" means little without the path above it.
+    /// The way back, which there was none of: once a group was open, nothing
+    /// led to the whole list again short of picking a host filed nowhere.
+    /// Every group above this one is a place to go back to as well, and the
+    /// line says where a name like "prod" sits, which the summary used to.
+    private func breadcrumb(to group: Group) -> some View {
+        HStack(spacing: 4) {
+            Button("All Hosts") { onBrowse("") }
+            ForEach(store.tree.lineage(of: group.id).dropLast()) { above in
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+                Button(above.name) { onBrowse(above.id) }
+            }
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+            Text(group.name).foregroundStyle(.secondary)
+        }
+        .buttonStyle(.link)
+        .font(.caption)
+    }
+
+    /// What is here, counted. A group counts everything beneath it, its own
+    /// groups' hosts included; a narrowed list says what narrowed it.
     private var summary: String {
-        var said = hosts.count == 1 ? "1 host" : "\(hosts.count) hosts"
-        if !groups.isEmpty {
-            said += groups.count == 1 ? ", 1 group" : ", \(groups.count) groups"
+        if narrowing {
+            return Browsing.narrowed(
+                shown: hosts.count, of: store.snapshot.hosts.count, search: search, tags: tags)
         }
-        if let group, case let path = store.path(of: group), path != group.name {
-            said += " — \(path)"
+        guard let group else {
+            var said = Browsing.counted(hosts.count)
+            if !groups.isEmpty {
+                said += groups.count == 1 ? ", 1 group" : ", \(groups.count) groups"
+            }
+            return said
         }
-        return said
+        return Browsing.summary(
+            inAll: store.tree.hostsBeneath(group.id).count, here: hosts.count,
+            groups: groups.count)
     }
 
     // MARK: rows
@@ -444,30 +502,30 @@ struct HostsPane: View {
     /// Top-level groups with nothing picked, the children of the one picked
     /// otherwise.
     private var groups: [Group] {
-        store.snapshot.groups
+        guard !narrowing else { return [] }
+        return store.snapshot.groups
             .filter { $0.parentId == (group?.id ?? "") }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     /// Every host with nothing picked — the point of this pane is the whole
-    /// list at a width that fits it — and a group's own hosts otherwise.
+    /// list at a width that fits it — and a group's own hosts otherwise. With
+    /// the sidebar narrowed, what it narrowed to, from the whole list, as the
+    /// sidebar's own matches are.
     private var hosts: [Host] {
-        store.snapshot.hosts
-            .filter { group == nil || $0.groupId == group?.id }
-            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        let shown = narrowing
+            ? SidebarRows.matches(in: store.snapshot.hosts, search: search, tags: tags)
+            : store.snapshot.hosts.filter { group == nil || $0.groupId == group?.id }
+        return shown.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
+    /// Everything beneath the group, however deep: Production read "1 host"
+    /// with seven in it.
     private func counted(_ folder: Group) -> String {
-        let n = store.snapshot.hosts.count { $0.groupId == folder.id }
-        return n == 1 ? "1 host" : "\(n) hosts"
+        Browsing.counted(store.tree.hostsBeneath(folder.id).count)
     }
 
-    private func destination(of host: Host) -> String {
-        let user = host.effective.user
-        let port = host.effective.port
-        return (user.isEmpty ? host.addr : "\(user)@\(host.addr)")
-            + (port == 22 ? "" : ":\(port)")
-    }
+    private func destination(of host: Host) -> String { host.destinationLine }
 }
 
 /// Whether the list reads as rows or as a grid of cards.

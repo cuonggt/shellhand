@@ -101,7 +101,7 @@ struct HostDetailView: View {
                 }
 
                 Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
-                    ValueRow("Address", "\(host.addr):\(host.effective.port)")
+                    ValueRow("Address", host.addressLine)
                     // Shown even when nothing is known, because a dash here
                     // is what explains the generic icon beside the host's
                     // name — the one row in this grid that answers a question
@@ -173,9 +173,11 @@ struct HostDetailView: View {
                     .help(host.name)
                 Spacer()
                 Button("Edit") { onEdit(host) }
+                // No ⌘↩ of its own: Host ▸ Connect has it, and acts on the
+                // same host. Bound here as well, the two could pick different
+                // machines, and which one answered was SwiftUI's choice.
                 Button("Connect") { onConnect(host) }
                     .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.return, modifiers: .command)
             }
             DestinationLine(text: host.destinationLine)
         }
@@ -207,13 +209,25 @@ struct HostDetailView: View {
                 .controlSize(.small)
                 .disabled(preview.argv.isEmpty)
             }
-            Text(preview.argv.isEmpty ? "Working it out…" : preview.command)
-                .font(.caption.monospaced())
-                .textSelection(.enabled)
-                .foregroundStyle(preview.argv.isEmpty ? .secondary : .primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+            // One argument a line, as ssh receives it; Copy gives the line
+            // quoted for a shell. Drawn as that quoted line, a jump chain was
+            // a wall of `'"'"'` cut in the middle of a path.
+            VStack(alignment: .leading, spacing: 2) {
+                if preview.argv.isEmpty {
+                    Text("Working it out…").foregroundStyle(.secondary)
+                } else {
+                    ForEach(Array(preview.lines.enumerated()), id: \.offset) { index, line in
+                        Text(line).padding(.leading, index == 0 ? 0 : 14)
+                    }
+                }
+            }
+            .font(.caption.monospaced())
+            .textSelection(.enabled)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(8)
+            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(preview.argv.isEmpty ? "Working it out" : preview.command)
         }
     }
 
@@ -261,10 +275,23 @@ nonisolated extension Host {
     /// Where this host goes, as the inspector's header says it: the user it
     /// logs in as, the address, and the port when it is not 22 — each as
     /// inheritance left it.
+    ///
+    /// **The one spelling of a destination**, shared by the sidebar, the
+    /// list, the inspector, ⌘K and the window's subtitle, which wrote it five
+    /// ways between them — a stray space before the port in one, "port 2222"
+    /// in another, no port at all in a third. It is the way ssh is typed,
+    /// brackets round an IPv6 address where a port follows it.
     var destinationLine: String {
-        let user = effective.user
         let port = effective.port
-        return (user.isEmpty ? addr : "\(user)@\(addr)") + (port == 22 ? "" : " port \(port)")
+        return QuickConnect.Destination(
+            user: effective.user, host: addr, port: port == 22 ? 0 : port
+        ).spelled
+    }
+
+    /// The address alone, with the port when it is not 22, spelled the same.
+    var addressLine: String {
+        let port = effective.port
+        return QuickConnect.Destination(host: addr, port: port == 22 ? 0 : port).spelled
     }
 }
 
@@ -310,8 +337,11 @@ struct ValueRow: View {
                 Text(value.isEmpty ? "—" : value)
                     .textSelection(.enabled)
                     .foregroundStyle(value.isEmpty ? .secondary : .primary)
+                // "from Production", the words the group editor uses. An
+                // arrow said the same to the eye, and VoiceOver read it out
+                // as "left arrow".
                 if !from.isEmpty {
-                    Text("← \(from)")
+                    Text("from \(from)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .help("Inherited from \(from)")

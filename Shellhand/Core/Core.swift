@@ -535,6 +535,32 @@ nonisolated struct HostPreview: Sendable, Equatable {
     var command: String {
         (["ssh"] + argv).map(SSHArgs.shellQuote).joined(separator: " ")
     }
+
+    /// The command one argument a line, each as ssh will receive it — no
+    /// shell quoting, which `command` keeps for pasting — with an option and
+    /// its value on one line. For reading: the quoted line of a jump chain
+    /// was a wall of `'"'"'`.
+    var lines: [String] {
+        guard !argv.isEmpty else { return [] }
+        var out = ["ssh"]
+        var at = 0
+        while at < argv.count {
+            if Self.takesValue.contains(argv[at]), at + 1 < argv.count {
+                out.append(argv[at] + " " + argv[at + 1])
+                at += 2
+            } else {
+                out.append(argv[at])
+                at += 1
+            }
+        }
+        return out
+    }
+
+    /// The options `ssh` reads a value after, from its manual.
+    private static let takesValue: Set<String> = [
+        "-B", "-b", "-c", "-D", "-E", "-e", "-F", "-I", "-i", "-J", "-L", "-l",
+        "-m", "-O", "-o", "-p", "-Q", "-R", "-S", "-W", "-w",
+    ]
 }
 
 nonisolated struct CoreError: LocalizedError, Sendable {

@@ -85,6 +85,25 @@ nonisolated struct TreeTests {
 
     // MARK: walking up
 
+    /// What a breadcrumb names: every group from the top down to this one,
+    /// each a place to go back to.
+    @Test("a group's lineage runs from the top down to itself")
+    func lineage() {
+        #expect(tree.lineage(of: "dub").map(\.name) == ["Production", "EU", "Dublin"])
+        #expect(tree.lineage(of: "prod").map(\.name) == ["Production"])
+        #expect(tree.lineage(of: "gone").isEmpty)
+        #expect(tree.lineage(of: "").isEmpty)
+    }
+
+    @Test("a loop above a group stops the lineage rather than the app")
+    func lineageLoop() {
+        let looped = Tree(Snapshot(groups: [
+            Group(id: "a", name: "A", parentId: "b"),
+            Group(id: "b", name: "B", parentId: "a"),
+        ]))
+        #expect(looped.lineage(of: "a").map(\.name) == ["B", "A"])
+    }
+
     @Test("the path reads from the top down")
     func path() {
         #expect(tree.path(of: Group(id: "dub", name: "Dublin", parentId: "eu"))

@@ -43,15 +43,49 @@ struct HostHeaderTests {
                 "a long destination wrapped")
     }
 
-    @Test("it says the user, the address, and a port other than 22")
+    /// The one spelling, the way ssh is typed. It was written five ways
+    /// across the window: "port 2222" here, a stray space before the colon in
+    /// the sidebar, no port at all in ⌘K.
+    @Test("it says the user, the address, and a port other than 22, as ssh is typed")
     func wording() {
         var host = Shellhand.Host(name: "db-01", addr: "192.0.2.21")
         host.effective.user = "deploy"
         host.effective.port = 2222
-        #expect(host.destinationLine == "deploy@192.0.2.21 port 2222")
+        #expect(host.destinationLine == "deploy@192.0.2.21:2222")
+        #expect(host.addressLine == "192.0.2.21:2222")
         host.effective.port = 22
         #expect(host.destinationLine == "deploy@192.0.2.21")
+        #expect(host.addressLine == "192.0.2.21")
         host.effective.user = ""
         #expect(host.destinationLine == "192.0.2.21")
+    }
+
+    @Test("an IPv6 address is bracketed where a port follows it")
+    func ipv6() {
+        var host = Shellhand.Host(name: "v6", addr: "2001:db8::5")
+        host.effective.user = "root"
+        host.effective.port = 2222
+        #expect(host.destinationLine == "root@[2001:db8::5]:2222")
+        host.effective.port = 22
+        #expect(host.destinationLine == "root@2001:db8::5")
+    }
+
+    /// One argument a line, as ssh receives it: the quoted line of a jump
+    /// chain was a wall of `'"'"'` cut in the middle of a path.
+    @Test("what will run reads one argument a line, an option beside its value")
+    func commandLines() {
+        let preview = HostPreview(argv: [
+            "-p", "2200",
+            "-o", "ProxyCommand=ssh -p 2222 -i /keys/jump -W '[10.0.1.5]:2200' jump@10.0.0.9",
+            "app@10.0.1.5",
+        ])
+        #expect(preview.lines == [
+            "ssh",
+            "-p 2200",
+            "-o ProxyCommand=ssh -p 2222 -i /keys/jump -W '[10.0.1.5]:2200' jump@10.0.0.9",
+            "app@10.0.1.5",
+        ])
+        #expect(HostPreview().lines.isEmpty)
+        #expect(HostPreview(argv: ["-T", "web"]).lines == ["ssh", "-T", "web"])
     }
 }

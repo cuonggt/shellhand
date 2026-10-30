@@ -71,6 +71,20 @@ nonisolated struct Tree {
         return parts.joined(separator: " / ")
     }
 
+    /// The groups from the top of the tree down to this one, itself last:
+    /// what a breadcrumb names, each a place to go back to. Empty for a group
+    /// that is not there.
+    func lineage(of groupID: String) -> [Group] {
+        var out: [Group] = []
+        var seen: Set<String> = []
+        var id = groupID
+        while !id.isEmpty, seen.insert(id).inserted, let next = group(id) {
+            out.insert(next, at: 0)
+            id = next.parentId
+        }
+        return out
+    }
+
     /// The groups that have to be open for a host's row to be reachable: the
     /// one it is filed in, and everything above that.
     func ancestry(ofHost hostID: String) -> Set<String> {

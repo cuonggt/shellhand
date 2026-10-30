@@ -116,6 +116,23 @@ nonisolated enum Panes {
         }
     }
 
+    /// Which listed host the Host menu, ⌘B and the toolbar's SFTP act on:
+    /// **the one the tab in front is about**, by `newTab`'s rule. With a
+    /// session in front they acted on the sidebar's selection, while the
+    /// title and the inspector named the session's host — so ⌘B could open
+    /// SFTP on a different machine from the one on screen. A local shell, a
+    /// machine typed into ⌘K, or a host since deleted has no entry in the
+    /// list, and the menu greys out rather than reaching for the selection.
+    static func subject(
+        inFront: Opening?, selected: String?, isListed: (String) -> Bool
+    ) -> String? {
+        switch inFront {
+        case let .host(id)?: isListed(id) ? id : nil
+        case .unsaved?, .localShell?: nil
+        case nil: selected.flatMap { isListed($0) ? $0 : nil }
+        }
+    }
+
     /// Whether the window meets somebody with the welcome instead of a
     /// host list.
     ///
