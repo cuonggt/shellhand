@@ -882,15 +882,10 @@ credentials, which is most of it.
   palette missing a colour is refused whole; and "System" means SwiftTerm's own
   colours, left alone.
   → [palettes](docs/notes/terminal.md#palettes)
-- The app icon is an **Icon Composer bundle**, not an appiconset:
-  `Shellhand/Resources/Shellhand.icon`, written by `tools/icon.py`. It is a
-  directory of text — `icon.json` beside an SVG — and XcodeGen knows the
-  extension, so it lands in the resources phase as one `wrapper.icon` with no
-  help from `project.yml`. What does have to be set is
-  `ASSETCATALOG_COMPILER_APPICON_NAME`. Without it the build still succeeds
-  and the bundle yields **nothing at all** — no `Assets.car`, no `.icns`, no
-  `CFBundleIconName` — with no warning anywhere, which is exactly how an app
-  ends up shipping the generic icon.
+- **The app icon is an Icon Composer bundle**, `Shellhand.icon`, written by
+  `tools/icon.py`; `ASSETCATALOG_COMPILER_APPICON_NAME` must be set, or the
+  build ships the generic icon without a warning.
+  → [the icon bundle](docs/notes/releases.md#the-icon-bundle)
 - An icon is judged at **16pt**, not at 512: that is where it fails, and a
   mark that works at 512 says nothing about it. `tools/icon-preview.sh` writes
   a loupe — 16 and 32 blown up with the pixels kept square — because smoothing
@@ -915,17 +910,10 @@ credentials, which is most of it.
   the last:
   `--path "$(ls -1d build/Logs/Test/*.xcresult | sort | tail -1)"` — the
   timestamps are in the names, so sorting by name is sorting by time.
-- **Sparkle's helpers have to be signed again after the build, from the
-  release script rather than a build phase.** Xcode signs
-  `Sparkle.framework` as it embeds it but leaves `Autoupdate` and
-  `Updater.app` inside exactly as Sparkle shipped them, and notarization
-  refuses those: they need this project's Developer ID, the hardened runtime
-  and a secure timestamp. It cannot be a build phase, because Xcode embeds a
-  **package's** frameworks outside the build phases, so no phase can be
-  ordered after that embedding — one tried, and raced it. The app is then
-  signed again over the changed framework, with
-  `--preserve-metadata=identifier,entitlements,requirements,flags` so that
-  re-signing does not quietly drop what the build decided.
+- **Sparkle's helpers are signed again by the release script**, not a build
+  phase, which cannot be ordered after a package's frameworks are embedded; the
+  app is then re-signed with `--preserve-metadata`.
+  → [Sparkle's helpers](docs/notes/releases.md#sparkles-helpers)
 - **The app is not sandboxed, so Sparkle's XPC services go and
   `SUEnableInstallerLauncherService` is not set.** Sparkle ships both for
   sandboxed apps; shipping them unsandboxed means notarizing code nothing
@@ -937,45 +925,27 @@ credentials, which is most of it.
   flag, a Developer ID authority and the absence of `get-task-allow` on every
   piece of code it is about to ship, because each of those is a rejection that
   otherwise arrives from Apple ten minutes later with no line number.
-- **A dry run and a real run share `build/release/DerivedData`, and the build
-  service outlives the build.** `SWBBuildService` keeps `build.db` open after
-  its `xcodebuild` has exited, so starting the second run too soon after the
-  first fails with *"unable to attach DB … database is locked. Possibly there
-  are two concurrent builds running in the same filesystem location."* and
-  `** BUILD FAILED **`. The failure is real and that run dies; a later run,
-  once the lock is free, builds fine. Either leave a moment between runs or
-  give one its own `-derivedDataPath`.
-- **A wrapper around the release script can hide which run you are looking
-  at.** In zsh `status` is read-only — it is an alias for `$?` — so
-  `status=$?` kills the wrapper while the script it launched carries on, and
-  whatever was watching the wrapper reports the release as failed when it is
-  running perfectly well. Name the variable anything else. What that cost
-  here was worse than the lost wrapper: a dead run's 337-byte log sat beside a
-  live `release.sh` from a *later* invocation, and the live process was read as
-  the dead one recovering — `BUILD FAILED` explained away as an internal
-  retry, which `xcodebuild` does not do. A log is written per invocation, so a
-  stale log next to a running process means **two runs, not one that is
-  retrying**. Check `ps -o pid,ppid,etime,command` and compare the elapsed
-  time against when you started it before concluding anything either way.
-- **`SUFeedURL` is permanent for the life of a build.** An app in the wild
-  asks the address it was born with, for ever, and there is no correcting it in
-  the field. So the feed is `appcast.xml` on this repository's `main` branch
-  and the DMGs come from GitHub releases: nothing a shipped build depends on
-  needs a domain, a host or a renewal. If a domain ever arrives, new builds can
-  be born with a new address while the old ones go on asking GitHub. The
-  release script refuses to build if the plist's feed is not that URL.
+- **A dry run and a real run share `build/release/DerivedData`**, and the build
+  service holds its database after a build ends: leave a moment between runs,
+  or give one its own `-derivedDataPath`.
+  → [a locked build database](docs/notes/releases.md#a-locked-build-database)
+- **Never name a shell variable `status` in zsh**, where it is read-only: a
+  wrapper died that way while its release ran on. A stale log beside a running
+  process means two runs — check `ps -o pid,ppid,etime,command`.
+  → [a wrapper's status](docs/notes/releases.md#a-wrappers-status)
+- **`SUFeedURL` is permanent for a build's life**, so the feed is `appcast.xml`
+  on `main` and the DMGs come from GitHub releases; the release script refuses
+  to build with any other address.
+  → [the feed's address](docs/notes/releases.md#the-feeds-address)
 - **The feed and the tap's cask sit behind a CDN that caches a path for
   five minutes**, but only a path something fetched lately, so an instant
   answer after a push may only mean nobody had looked. Ask what `main` holds
   through the API — the blob's sha against `git rev-parse HEAD:appcast.xml` —
   rather than pushing again. → [the CDN](docs/notes/releases.md#the-cdn)
-- **Back up the EdDSA private key or every shipped app is stranded.** It lives
-  in the login keychain under the account `shellhand`, and
-  `generate_keys --account shellhand -x <file>` is the only copy there will
-  ever be. Without it, nothing can sign an update those apps will accept —
-  there is no re-keying a build that is already out, and no recovery. The
-  public half is in `project.yml`; the release script refuses to build an
-  appcast if the keychain's key is not the one the app checks against.
+- **Back up the EdDSA private key**, under the account `shellhand` in the login
+  keychain, or every shipped app is stranded: nothing else can sign an update
+  they will take.
+  → [the EdDSA key](docs/notes/releases.md#the-eddsa-key)
 - **Nothing about updates runs in a Debug build.** Sparkle would offer a
   Debug build the newest release DMG and install it over itself. `start()`
   and `check()` return early and `canCheck` is false, so Check for Updates…
@@ -991,41 +961,28 @@ credentials, which is most of it.
   hop to the main actor to be legal under Swift 6 — all to grey the menu item
   out for the second a check is already running, which is harmless to ask
   twice. The menu reads it when it is built, which is often enough.
-- **The updater starts a turn of the run loop late, from before there was an
-  app delegate.** Sparkle wants its controller made before any window, which
-  is `ShellhandApp.init()` — but that runs *during* launching, too early to
-  start checking. `start()` hops through `DispatchQueue.main.async`, the same
-  deferral the inspector needs, rather than adding an `AppDelegate` to reach a
-  single notification. There is one now, `ShellhandAppDelegate`, for ⌘Q; the
-  hop works, so it was left where it is.
+- **The updater starts a turn of the run loop late**, through
+  `DispatchQueue.main.async` from `ShellhandApp.init()`, which runs too early
+  in launching to check.
+  → [the updater's start](docs/notes/releases.md#the-updaters-start)
 - **notarytool's retry matches a failed transport by a wide pattern**,
   case-insensitively, and echoes what notarytool said: it words a timed-out
   upload more than one way, and matching one wording cost 0.0.5 a whole
   signed build.
   → [notarytool's retries](docs/notes/releases.md#notarytools-retries)
-- **No binary deltas, and the reason is in `scripts/release.sh`.** Sparkle
-  makes them as soon as the updates folder holds two versions, and a delta is
-  named for the **build** numbers it spans — `Shellhand2-1.delta` — so nothing
-  in the filename says which release should serve it and the per-version URL
-  rewrite cannot place it. `--maximum-deltas 0` stops new ones. It does **not**
-  evict one already in the appcast: `generate_appcast` updates an appcast in
-  place and keeps what it finds, so delete `build/updates/appcast.xml` and let
-  it rebuild from the DMGs. The guard that catches an unplaced URL fired twice
-  on 0.0.2 before this was understood, and it is the reason nothing broken
-  reached the feed — **keep it**.
+- **No binary deltas**: they are named for build numbers the per-version URL
+  rewrite cannot place. `--maximum-deltas 0` stops new ones; delete
+  `build/updates/appcast.xml` to evict one, and keep the guard that catches an
+  unplaced URL.
+  → [deltas](docs/notes/releases.md#deltas)
 - **A restored window title is not evidence of a connection**: AppKit brings an
   old session's title back for a moment. `pgrep -P <pid>` is — no `ssh` child,
   no connection.
   → [the restored title](docs/notes/driving.md#the-restored-title)
-- **Sparkle's preferences share the bundle-id domain with everything else**,
-  which is the `@AppStorage` trap again with teeth. This machine carries
-  `SUAutomaticallyUpdate = 1`, so an update installs here with nobody
-  clicking Install Update — while neither that key nor
-  `SUEnableAutomaticChecks` is in the shipped `Info.plist` or set anywhere in
-  the source, so a new user gets Sparkle's own default and is asked first.
-  Don't read this machine's update behaviour as the product's. The same
-  domain still holds window frames for `SpikeView` and `snippets`, both gone
-  for weeks, which is how old it is.
+- **Sparkle's preferences share the bundle-id domain**, and this Mac sets
+  `SUAutomaticallyUpdate`, so updates install here unasked; don't read this
+  machine's update behaviour as the product's.
+  → [Sparkle's preferences](docs/notes/releases.md#sparkles-preferences)
 - **`auto_updates true` in the cask is doing a job.** The app updates itself
   past whatever version brew installed, so `brew list` goes on reporting its
   own record — 0.0.1 after the app has reached 0.0.2 — and brew correctly

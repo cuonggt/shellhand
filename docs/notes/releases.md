@@ -398,3 +398,110 @@ that attribute or by what it holds.
 **The copy in `/Applications` still has 0.0.11, and that is no puzzle any
 more**: it is not running, and Sparkle only looks while the app is open — its
 `SULastCheckTime` was still 23:26 on 28 October after 0.1.1 went out.
+
+## The icon bundle
+
+The app icon is an **Icon Composer bundle**, not an appiconset:
+`Shellhand/Resources/Shellhand.icon`, written by `tools/icon.py`. It is a
+directory of text — `icon.json` beside an SVG — and XcodeGen knows the
+extension, so it lands in the resources phase as one `wrapper.icon` with no
+help from `project.yml`. What does have to be set is
+`ASSETCATALOG_COMPILER_APPICON_NAME`. Without it the build still succeeds
+and the bundle yields **nothing at all** — no `Assets.car`, no `.icns`, no
+`CFBundleIconName` — with no warning anywhere, which is exactly how an app
+ends up shipping the generic icon.
+
+## Sparkle's helpers
+
+**Sparkle's helpers have to be signed again after the build, from the
+release script rather than a build phase.** Xcode signs
+`Sparkle.framework` as it embeds it but leaves `Autoupdate` and
+`Updater.app` inside exactly as Sparkle shipped them, and notarization
+refuses those: they need this project's Developer ID, the hardened runtime
+and a secure timestamp. It cannot be a build phase, because Xcode embeds a
+**package's** frameworks outside the build phases, so no phase can be
+ordered after that embedding — one tried, and raced it. The app is then
+signed again over the changed framework, with
+`--preserve-metadata=identifier,entitlements,requirements,flags` so that
+re-signing does not quietly drop what the build decided.
+
+## A locked build database
+
+**A dry run and a real run share `build/release/DerivedData`, and the build
+service outlives the build.** `SWBBuildService` keeps `build.db` open after
+its `xcodebuild` has exited, so starting the second run too soon after the
+first fails with *"unable to attach DB … database is locked. Possibly there
+are two concurrent builds running in the same filesystem location."* and
+`** BUILD FAILED **`. The failure is real and that run dies; a later run,
+once the lock is free, builds fine. Either leave a moment between runs or
+give one its own `-derivedDataPath`.
+
+## A wrapper's status
+
+**A wrapper around the release script can hide which run you are looking
+at.** In zsh `status` is read-only — it is an alias for `$?` — so
+`status=$?` kills the wrapper while the script it launched carries on, and
+whatever was watching the wrapper reports the release as failed when it is
+running perfectly well. Name the variable anything else. What that cost
+here was worse than the lost wrapper: a dead run's 337-byte log sat beside a
+live `release.sh` from a *later* invocation, and the live process was read as
+the dead one recovering — `BUILD FAILED` explained away as an internal
+retry, which `xcodebuild` does not do. A log is written per invocation, so a
+stale log next to a running process means **two runs, not one that is
+retrying**. Check `ps -o pid,ppid,etime,command` and compare the elapsed
+time against when you started it before concluding anything either way.
+
+## The feed's address
+
+**`SUFeedURL` is permanent for the life of a build.** An app in the wild
+asks the address it was born with, for ever, and there is no correcting it in
+the field. So the feed is `appcast.xml` on this repository's `main` branch
+and the DMGs come from GitHub releases: nothing a shipped build depends on
+needs a domain, a host or a renewal. If a domain ever arrives, new builds can
+be born with a new address while the old ones go on asking GitHub. The
+release script refuses to build if the plist's feed is not that URL.
+
+## The EdDSA key
+
+**Back up the EdDSA private key or every shipped app is stranded.** It lives
+in the login keychain under the account `shellhand`, and
+`generate_keys --account shellhand -x <file>` is the only copy there will
+ever be. Without it, nothing can sign an update those apps will accept —
+there is no re-keying a build that is already out, and no recovery. The
+public half is in `project.yml`; the release script refuses to build an
+appcast if the keychain's key is not the one the app checks against.
+
+## The updater's start
+
+**The updater starts a turn of the run loop late, from before there was an
+app delegate.** Sparkle wants its controller made before any window, which
+is `ShellhandApp.init()` — but that runs *during* launching, too early to
+start checking. `start()` hops through `DispatchQueue.main.async`, the same
+deferral the inspector needs, rather than adding an `AppDelegate` to reach a
+single notification. There is one now, `ShellhandAppDelegate`, for ⌘Q; the
+hop works, so it was left where it is.
+
+## Deltas
+
+**No binary deltas, and the reason is in `scripts/release.sh`.** Sparkle
+makes them as soon as the updates folder holds two versions, and a delta is
+named for the **build** numbers it spans — `Shellhand2-1.delta` — so nothing
+in the filename says which release should serve it and the per-version URL
+rewrite cannot place it. `--maximum-deltas 0` stops new ones. It does **not**
+evict one already in the appcast: `generate_appcast` updates an appcast in
+place and keeps what it finds, so delete `build/updates/appcast.xml` and let
+it rebuild from the DMGs. The guard that catches an unplaced URL fired twice
+on 0.0.2 before this was understood, and it is the reason nothing broken
+reached the feed — **keep it**.
+
+## Sparkle's preferences
+
+**Sparkle's preferences share the bundle-id domain with everything else**,
+which is the `@AppStorage` trap again with teeth. This machine carries
+`SUAutomaticallyUpdate = 1`, so an update installs here with nobody
+clicking Install Update — while neither that key nor
+`SUEnableAutomaticChecks` is in the shipped `Info.plist` or set anywhere in
+the source, so a new user gets Sparkle's own default and is asked first.
+Don't read this machine's update behaviour as the product's. The same
+domain still holds window frames for `SpikeView` and `snippets`, both gone
+for weeks, which is how old it is.
