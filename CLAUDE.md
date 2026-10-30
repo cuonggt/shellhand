@@ -229,6 +229,12 @@ credentials, which is most of it.
   text and the chosen tags belong to the window, and the pane narrows to the
   sidebar's own matches (`SidebarRows.matches`) and says so: they narrowed
   the sidebar alone, beside a pane still listing everything.
+- **The inspector describes whatever the tab in front is about**
+  (`Panes.inspected`): a listed host; a group, with what it passes down
+  (`FromAbove`) and what is inside; a local shell; or a machine typed into
+  ⌘K, with Save as Host…. It said "Nothing selected" for the last three, so a
+  ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
+  them.
 - **A destination has one spelling, `Host.destinationLine`**, which is
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says

@@ -419,48 +419,55 @@ struct ContentView: View {
         return sessions.all.first { $0.id == id }
     }
 
-    /// The host whose details the inspector shows: **whatever the tab in
-    /// front is about.** The hosts tab means the one picked in the sidebar;
-    /// a session's tab means the machine that session is on.
-    ///
-    /// Not `sessions.current`, which is the current *terminal* and says
-    /// nothing about which tab is up — on the hosts tab it still named the
-    /// last session's host, so the inspector described something that was
-    /// not on screen.
-    ///
-    /// Looked up live rather than taken off the session, so a host edited
-    /// while its terminal is open shows as edited. A session with no host —
-    /// a local shell — has nothing to describe, and says so rather than
-    /// falling back to the sidebar and naming an unrelated machine.
-    private var inspectedHost: Host? {
-        switch pane {
-        case .hosts:
-            return selectedHost
-        case let .session(id):
-            guard let onHost = sessions.all.first(where: { $0.id == id })?.host?.id
-            else { return nil }
-            return store.snapshot.hosts.first { $0.id == onHost }
-        }
+    /// What the inspector describes — see `Panes.inspected`.
+    private var inspected: Panes.Inspected {
+        Panes.inspected(
+            inFront: frontSession.map { Panes.Opening.of($0.host) },
+            selectedHost: selectedHost?.id, selectedGroup: selectedGroup?.id,
+            isListed: isListed)
     }
 
     @ViewBuilder
     private var inspector: some View {
-        if let host = inspectedHost {
-            // The whole of it. There used to be two shapes — a compact one
-            // here and the full one in the pane — and `compact` existed so
-            // the two would not be the same view twice. The pane shows the
-            // list now, so this is the only place a host is described and
-            // there is nothing left to repeat.
-            HostDetailView(
-                store: store, host: host, sessions: sessions,
-                onConnect: connect,
-                onShowSession: { pick(tab: .session($0)) },
-                onEdit: { editing = $0 })
-        } else {
-            ContentUnavailableView(
-                "Nothing selected", systemImage: "sidebar.right",
-                description: Text("Pick a host to see what it connects with."))
+        switch inspected {
+        case let .host(id):
+            if let host = store.snapshot.hosts.first(where: { $0.id == id }) {
+                // The whole of it. There used to be two shapes — a compact one
+                // here and the full one in the pane — and `compact` existed so
+                // the two would not be the same view twice. The pane shows the
+                // list now, so this is the only place a host is described and
+                // there is nothing left to repeat.
+                HostDetailView(
+                    store: store, host: host, sessions: sessions,
+                    onConnect: connect,
+                    onShowSession: { pick(tab: .session($0)) },
+                    onEdit: { editing = $0 })
+            } else {
+                nothingSelected
+            }
+        case let .group(id):
+            if let group = store.group(id) {
+                GroupInspector(
+                    store: store, group: group,
+                    onEdit: { editingGroup = $0 },
+                    onNewHostIn: { editing = Host(groupId: $0.id) },
+                    onNewGroupIn: { editingGroup = Group(parentId: $0.id) })
+            } else {
+                nothingSelected
+            }
+        case let .unsaved(host):
+            UnsavedHostInspector(host: host, onSave: { editing = $0 })
+        case .localShell:
+            LocalShellInspector()
+        case .nothing:
+            nothingSelected
         }
+    }
+
+    private var nothingSelected: some View {
+        ContentUnavailableView(
+            "Nothing selected", systemImage: "sidebar.right",
+            description: Text("Pick a host or a group to see what it connects with."))
     }
 
     /// Opens the import sheet on one of its three ways in.

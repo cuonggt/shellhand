@@ -133,6 +133,37 @@ nonisolated enum Panes {
         }
     }
 
+    /// What the inspector describes.
+    nonisolated enum Inspected: Equatable {
+        /// A listed host, by id, looked up live so an edit shows at once.
+        case host(String)
+        case group(String)
+        /// A machine typed into ⌘K, carried whole: it is in no list.
+        case unsaved(Host)
+        case localShell
+        case nothing
+    }
+
+    /// What the inspector describes, given the tab in front and the
+    /// selection: what the tab is about, or with the hosts in front whatever
+    /// is picked. It said "Nothing selected" beside a group picked in the list
+    /// — with Edit Group live in the menu — beside a terminal on this Mac,
+    /// and beside a machine typed into ⌘K that there was then no way to save.
+    static func inspected(
+        inFront: Opening?, selectedHost: String?, selectedGroup: String?,
+        isListed: (String) -> Bool
+    ) -> Inspected {
+        switch inFront {
+        case let .host(id)?: return isListed(id) ? .host(id) : .nothing
+        case let .unsaved(host)?: return .unsaved(host)
+        case .localShell?: return .localShell
+        case nil:
+            if let id = selectedHost, isListed(id) { return .host(id) }
+            if let id = selectedGroup { return .group(id) }
+            return .nothing
+        }
+    }
+
     /// Whether the window meets somebody with the welcome instead of a
     /// host list.
     ///

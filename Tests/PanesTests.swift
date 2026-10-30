@@ -204,6 +204,48 @@ nonisolated struct PanesTests {
 
     /// Nothing listed to act on, and reaching for the selection instead would
     /// act on a machine that is not the one on screen.
+    // MARK: what the inspector describes
+
+    /// "Nothing selected" stood beside a picked group, a terminal on this Mac
+    /// and a machine typed into ⌘K, each of which has plenty to say.
+    @Test("the inspector describes what the tab in front is about")
+    func inspectsTheTabInFront() {
+        let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
+        #expect(Panes.inspected(inFront: .host("db"), selectedHost: "web", selectedGroup: nil,
+                                isListed: listed) == .host("db"))
+        #expect(Panes.inspected(inFront: .unsaved(typed), selectedHost: "web", selectedGroup: nil,
+                                isListed: listed) == .unsaved(typed))
+        #expect(Panes.inspected(inFront: .localShell, selectedHost: "web", selectedGroup: nil,
+                                isListed: listed) == .localShell)
+        #expect(Panes.inspected(inFront: .host("gone"), selectedHost: "web", selectedGroup: nil,
+                                isListed: listed) == .nothing)
+    }
+
+    @Test("with the hosts in front, the inspector describes the host or group picked")
+    func inspectsThePick() {
+        #expect(Panes.inspected(inFront: nil, selectedHost: "web", selectedGroup: nil,
+                                isListed: listed) == .host("web"))
+        #expect(Panes.inspected(inFront: nil, selectedHost: nil, selectedGroup: "prod",
+                                isListed: listed) == .group("prod"))
+        #expect(Panes.inspected(inFront: nil, selectedHost: nil, selectedGroup: nil,
+                                isListed: listed) == .nothing)
+        #expect(Panes.inspected(inFront: nil, selectedHost: "gone", selectedGroup: nil,
+                                isListed: listed) == .nothing)
+    }
+
+    /// Save as Host… opens New Host on the machine as typed, named by its
+    /// address rather than by the whole of `user@host:port`.
+    @Test("a machine from ⌘K is saved as typed, named by its address")
+    func savingATypedMachine() {
+        let typed = Shellhand.Host(name: "root@10.0.1.5:2222", addr: "10.0.1.5", port: 2222, user: "root")
+        let saved = UnsavedHostInspector.savable(typed)
+        #expect(saved.id.isEmpty)
+        #expect(saved.name == "10.0.1.5")
+        #expect(saved.addr == "10.0.1.5")
+        #expect(saved.user == "root")
+        #expect(saved.port == 2222)
+    }
+
     @Test("a local shell, a ⌘K machine or a deleted host leaves the Host menu nothing")
     func subjectWithNothingListed() {
         let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
