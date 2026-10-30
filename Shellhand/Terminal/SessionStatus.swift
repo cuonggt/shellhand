@@ -123,9 +123,12 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     }
 
     /// Under the window's title: where the session goes, and how it is doing
-    /// when that is anything but through.
+    /// when that is anything but through. An empty destination is one the
+    /// title already says — a machine typed into ⌘K is named as it was typed
+    /// — so the state is said alone rather than under its own name twice.
     func subtitle(destination: String) -> String {
-        self == .connected ? destination : "\(destination) · \(words)"
+        if destination.isEmpty { return self == .connected ? "" : words }
+        return self == .connected ? destination : "\(destination) · \(words)"
     }
 
     /// Under "Connecting to": where it is going, the way there, and how long

@@ -85,6 +85,15 @@ nonisolated struct SessionStatusTests {
         #expect(SessionStatus.needsAnswer.spoken == "needs you to answer a host-key question")
     }
 
+    /// A machine typed into ⌘K is titled with its destination, which the
+    /// subtitle said again: "root@127.0.0.1:1" over "root@127.0.0.1:1 ·
+    /// couldn't connect".
+    @Test("a destination the title already says leaves the state alone under it")
+    func subtitleUnderItsOwnName() {
+        #expect(SessionStatus.couldNotConnect.subtitle(destination: "") == "couldn't connect")
+        #expect(SessionStatus.connected.subtitle(destination: "") == "")
+    }
+
     @Test("each state that is not through has a symbol other than the dot")
     func symbols() {
         let others: [SessionStatus] = [.needsAnswer, .stopped, .couldNotConnect, .lost, .ended]

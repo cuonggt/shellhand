@@ -396,9 +396,9 @@ struct ContentView: View {
         case let .session(id):
             guard let session = sessions.all.first(where: { $0.id == id }) else { return "" }
             // A machine typed into ⌘K is named as it was typed, which is the
-            // destination already.
-            let destination = session.host.map { $0.id.isEmpty ? $0.name : $0.destinationLine }
-            return session.status.subtitle(destination: destination ?? "local")
+            // destination already — and the title, until its shell sends one.
+            let destination = session.host.map { $0.id.isEmpty ? $0.name : $0.destinationLine } ?? "local"
+            return session.status.subtitle(destination: destination == session.title ? "" : destination)
         }
     }
 
