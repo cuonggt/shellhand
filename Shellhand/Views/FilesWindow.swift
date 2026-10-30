@@ -288,6 +288,10 @@ private struct PlacePane: View {
             QuickLook.shared.show(place.localURL(named: entry.name))
             return .handled
         }
+        // A folder opened takes its selection with it: kept, the folder you
+        // went into stayed selected inside itself — "1 of 0 selected", and a
+        // Copy button live with nothing to copy.
+        .onChange(of: place.listing.path) { _, _ in selection = [] }
         .overlay { if place.listing.path.isEmpty { waiting } }
         // From the other pane, and from Finder.
         .dropDestination(for: FileRef.self) { refs, _ in
@@ -336,7 +340,7 @@ private struct PlacePane: View {
                 Task { await files.copy(going, from: place, to: other) }
             }
             .controlSize(.small)
-            .disabled(selection.isEmpty || other.listing.path.isEmpty)
+            .disabled(chosen.isEmpty || other.listing.path.isEmpty)
 
             Spacer()
             Text(count).font(.caption2).foregroundStyle(.secondary)
@@ -391,9 +395,9 @@ private struct PlacePane: View {
     }
 
     private var count: String {
-        var said = selection.isEmpty
-            ? "\(entries.count) items"
-            : "\(selection.count) of \(entries.count) selected"
+        var said = chosen.isEmpty
+            ? (entries.count == 1 ? "1 item" : "\(entries.count) items")
+            : "\(chosen.count) of \(entries.count) selected"
         if !place.showHidden, place.hiddenCount > 0 { said += " · \(place.hiddenCount) hidden" }
         return said
     }
@@ -503,9 +507,15 @@ private struct TransfersStrip: View {
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                             .frame(maxWidth: 220, alignment: .leading)
-                    } else {
-                        ProgressView(value: transfer.fraction)
+                    } else if transfer.moving || transfer.state == TransferQueue.done {
+                        // Full once done: a copy on this disk has no byte
+                        // count, and its finished row sat at nought.
+                        ProgressView(value: transfer.moving ? transfer.fraction : 1)
                             .frame(maxWidth: 220)
+                    } else {
+                        // Failed or stopped: the words say it, and a bar at
+                        // nought reads as stuck.
+                        SwiftUI.Color.clear.frame(maxWidth: 220, maxHeight: 4)
                     }
                     Text(describe(transfer))
                         .font(.caption2)
