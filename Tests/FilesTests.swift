@@ -24,6 +24,15 @@ struct FilesTests {
         TestScratch.database()
     }
 
+    /// Where a pane's "this Mac" opens: a directory of the suite's own. The
+    /// real home directory holds Desktop, Documents and Downloads, and reading
+    /// even their attributes puts up a privacy prompt whenever the test host's
+    /// signature is not the one macOS remembers. Every test that listed it
+    /// then waited out its time limit on a question nobody was there to see.
+    private func scratchHome() -> String {
+        TestScratch.directory("home")
+    }
+
     /// A directory of our own, holding the named files.
     private func folder(_ files: [String: String] = [:]) -> String {
         let path = TestScratch.directory("files")
@@ -50,7 +59,7 @@ struct FilesTests {
 
     /// Both sides local, each in a directory of its own.
     private func twoPanes(from: String, into: String) async -> FilesModel {
-        let model = FilesModel(db: scratchDB())
+        let model = FilesModel(db: scratchDB(), home: scratchHome())
         await model.left.use(nil)
         await model.left.go(to: from)
         await model.right.use(nil)
@@ -62,7 +71,7 @@ struct FilesTests {
 
     @Test("a pane starts as a question and becomes this Mac")
     func pointedAtThisMac() async {
-        let place = FilePlace(db: scratchDB())
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
         #expect(!place.chosen)
         #expect(!place.isLocal)
 
@@ -80,7 +89,7 @@ struct FilesTests {
     @Test("pointing a pane where it already is leaves it where it is")
     func pointingTwiceDoesNothing() async {
         let dir = folder(["a.txt": "one"])
-        let place = FilePlace(db: scratchDB())
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
         await place.use(nil)
         await place.go(to: dir)
         #expect(place.listing.path == dir)
@@ -93,7 +102,7 @@ struct FilesTests {
     @Test("a pane lists what is in the directory it is pointed at")
     func listsTheDirectory() async {
         let dir = folder(["a.txt": "one", "b.txt": "two"])
-        let place = FilePlace(db: scratchDB())
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
         await place.use(nil)
         await place.go(to: dir)
         #expect(place.entries.map(\.name).sorted() == ["a.txt", "b.txt"])
@@ -110,7 +119,7 @@ struct FilesTests {
         try? FileManager.default.createDirectory(
             atPath: child, withIntermediateDirectories: true)
 
-        let place = FilePlace(db: scratchDB())
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
         await place.use(nil)
         await place.go(to: child)
         #expect(place.path("a.txt") == child + "/a.txt")
@@ -118,6 +127,31 @@ struct FilesTests {
         await place.parent()
         #expect(place.listing.path == parent)
         #expect(place.entries.map(\.name) == ["inner"])
+    }
+
+    // MARK: what goes wrong with a listing up
+
+    /// A refused rename with the listing still on screen. The failure was set
+    /// and drawn nowhere — the pane only said what went wrong while it had
+    /// nothing listed — so this holds both halves: the message names what was
+    /// refused, and it is one the pane draws over a listing.
+    @Test("a refused rename says so over the listing")
+    func refusedRenameSaysSo() async throws {
+        let dir = folder(["a.txt": "one", "b.txt": "two"])
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
+        await place.use(nil)
+        await place.go(to: dir)
+        let entry = try #require(place.entries.first { $0.name == "a.txt" })
+
+        await place.rename(entry, to: "b.txt")
+        let failure = try #require(place.failure, "the refused rename said nothing")
+        #expect(failure.contains("a.txt"))
+        #expect(place.listing.path == dir, "the listing went with it")
+        #expect(Places.notice(listed: !place.listing.path.isEmpty, failure: place.failure) == .banner)
+        #expect(read(dir + "/b.txt") == "two", "the rename went through after all")
+
+        place.clearFailure()
+        #expect(place.failure == nil)
     }
 
     // MARK: the question a clash puts up, and the copy waiting on it
@@ -312,7 +346,7 @@ struct FilesTests {
     @Test("a pane asked to open twice at once opens once")
     func opensOnceWhenAskedTwice() async throws {
         let (db, host) = try await refusingHost()
-        let place = FilePlace(db: db)
+        let place = FilePlace(db: db, home: scratchHome())
 
         let first = Task { await place.use(host) }
         let second = Task { await place.use(host) }
@@ -323,13 +357,13 @@ struct FilesTests {
     }
 
     /// The other side of that guard, and worth its own test: it must not turn
-    /// away a **retry**. A host that refused leaves `host` nil, so pointing
+    /// away a **retry**. A host that refused leaves nothing listed, so pointing
     /// the pane at it again is a fresh attempt rather than a re-entry — which
     /// is how someone fixes a typo in a port and tries once more.
     @Test("a pane that failed to open will try again")
     func retriesAfterAFailure() async throws {
         let (db, host) = try await refusingHost()
-        let place = FilePlace(db: db)
+        let place = FilePlace(db: db, home: scratchHome())
 
         await place.use(host)
         #expect(place.opens == 1)
@@ -346,13 +380,40 @@ struct FilesTests {
     @Test("a host that refuses leaves the pane showing why, not asking again")
     func refusedShowsWhy() async throws {
         let (db, host) = try await refusingHost()
-        let place = FilePlace(db: db)
+        let place = FilePlace(db: db, home: scratchHome())
 
         await place.use(host)
         #expect(place.chosen)
         #expect(place.failure != nil)
-        #expect(place.host == nil)
+        // Still named, so the pane says which host refused rather than
+        // calling itself this Mac over nothing.
+        #expect(place.host?.id == host.id)
+        #expect(place.title == "nowhere")
+        #expect(!place.isLocal)
+        #expect(place.via == nil)
         #expect(!place.connecting)
         #expect(place.opens == 1)
+    }
+
+    /// The worst thing this window could do: delete a file **here** while the
+    /// pane says it is showing a host. Re-pointing a pane drops its session
+    /// before the new one opens, and an empty session is this Mac to `Core`,
+    /// so a pane still showing the old listing — asked to delete from it while
+    /// connecting, or after the host refused — removed the same path on this
+    /// disk while the dialog named the host.
+    @Test("a pane re-pointed at a host never acts on this Mac")
+    func repointedActsOnNothingHere() async throws {
+        let (db, host) = try await refusingHost()
+        let dir = folder(["victim.txt": "keep me"])
+        let place = FilePlace(db: db, home: scratchHome())
+        await place.use(nil)
+        await place.go(to: dir)
+        let entry = try #require(place.entries.first { $0.name == "victim.txt" })
+
+        await place.use(host)
+        #expect(place.entries.isEmpty, "the listing from this Mac is still up")
+        #expect(!place.isLocal, "a pane pointed at a host calls itself this Mac")
+        await place.remove([entry])
+        #expect(read(dir + "/victim.txt") == "keep me", "the file on this Mac was deleted")
     }
 }

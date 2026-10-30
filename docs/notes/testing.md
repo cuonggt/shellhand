@@ -224,3 +224,27 @@ that is not on the main actor, where a database read cannot use it. And
 constant `failed`, which 6.2 reads as the count being declared. The fix is the
 way the engine already writes things: the extensions `nonisolated` as a whole,
 the constant as `Self.failed`.
+
+## The privacy prompt
+
+On 2026-10-30 every file-pane test that pointed a pane at this Mac timed out
+at its one-minute limit, thirteen of them, in a suite that had passed twice
+that morning; xcodebuild restarted the test host after each and it timed out
+again. The first theory was XCTest's: `-only-testing` runs swift-testing
+inside an `XCTWaiter`, and these are main-actor tests. It was wrong. The whole
+suite hung the same way.
+
+The TCC log had it: `AUTHREQ_PROMPTING` for `com.shellhand.Shellhand` against
+Desktop, Documents and Downloads, after "Failed to match existing code
+requirement". `FilePlace.use(nil)` went to the home directory, and listing it
+reads every entry's attributes, Desktop's included, which macOS holds behind a
+prompt when the process's signature is not the one its grant was recorded
+for. The CI-style runs that morning, signed ad hoc under the app's own bundle
+id, had been asked and answered, so the grants now named the ad-hoc signature;
+the Developer ID test host no longer matched, and its read waited on a prompt
+on the screen of whoever was at the Mac.
+
+A test has no business in the user's home directory anyway. `FilePlace` and
+`FilesModel` take `home:`, defaulting to the real one, and the suite passes a
+scratch directory. With that the file-pane tests took seconds again, and the
+whole suite 49.

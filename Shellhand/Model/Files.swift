@@ -33,8 +33,21 @@ final class FilePlace {
     /// `ticks` on a terminal session is here for the same reason.
     private(set) var opens = 0
     private let db: String
+    /// Where this Mac opens. The home directory, except under test: a pane
+    /// opened on the real one reads the attributes of Desktop, Documents and
+    /// Downloads, which puts up a privacy prompt whenever the build's
+    /// signature is not the one macOS remembers — and the read waits until
+    /// somebody answers it.
+    private let home: String
 
-    init(db: String) { self.db = db }
+    init(db: String, home: String = FileManager.default.homeDirectoryForCurrentUser.path) {
+        self.db = db
+        self.home = home
+    }
+
+    /// The session this side's operations go through, or nil while it has
+    /// none to offer. `Places.session` says why that is not just `session`.
+    var via: String? { Places.session(chosen: chosen, onAHost: host != nil, open: session) }
 
     // The rules themselves are in `Places`, where they can be asked without
     // opening a session to find out the answer.
@@ -55,10 +68,15 @@ final class FilePlace {
         // pane saying what went wrong rather than going back to a question.
         chosen = true
         closeSession()
+        // What the last place held goes now, not when the next one answers.
+        // Left up, it could be acted on with no session behind it — and no
+        // session is this Mac, so a Delete removed the same path here while
+        // the dialog named the host.
+        listing = Listing()
         self.host = host
         failure = nil
         guard let host else {
-            await go(to: FileManager.default.homeDirectoryForCurrentUser.path)
+            await go(to: home)
             return
         }
         guard !opening else { return }
@@ -71,22 +89,35 @@ final class FilePlace {
         }
         do {
             let opened = try await Core.shared.openSFTP(db: db, hostID: host.id)
+            // Pointed somewhere else while this was connecting: what it opened
+            // is not what the pane names, so it goes rather than being listed
+            // under the other host's name.
+            guard self.host?.id == host.id else {
+                if let id = opened["id"] { Task { await Core.shared.closeSFTP(id: id) } }
+                return
+            }
             session = opened["id"] ?? ""
             await go(to: opened["home"] ?? ".")
         } catch {
+            // The host stays named: the pane is still pointed at it, and says
+            // why it shows nothing, rather than calling itself this Mac.
+            guard self.host?.id == host.id else { return }
             failure = error.localizedDescription
-            self.host = nil
         }
     }
 
     func go(to path: String) async {
+        guard let via else { return }
         do {
-            listing = try await Core.shared.list(session: session, path: path)
+            listing = try await Core.shared.list(session: via, path: path)
             failure = nil
         } catch {
-            failure = error.localizedDescription
+            failure = "Couldn't open \(path): \(error.localizedDescription)"
         }
     }
+
+    /// Takes what went wrong off the pane, once it has been read.
+    func clearFailure() { failure = nil }
 
     func refresh() async { await go(to: listing.path) }
 
@@ -104,37 +135,47 @@ final class FilePlace {
 
     func makeDirectory(named name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, let via else { return }
         do {
-            try await Core.shared.makeDirectory(session: session, path: path(trimmed))
+            try await Core.shared.makeDirectory(session: via, path: path(trimmed))
             await refresh()
         } catch {
-            failure = error.localizedDescription
+            failure = "Couldn't make the folder “\(trimmed)”: \(error.localizedDescription)"
         }
     }
 
     func rename(_ entry: RemoteEntry, to name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, trimmed != entry.name, !trimmed.contains("/") else { return }
+        guard !trimmed.isEmpty, trimmed != entry.name, !trimmed.contains("/"),
+              let via else { return }
         do {
             try await Core.shared.rename(
-                session: session, from: path(entry.name), to: path(trimmed))
+                session: via, from: path(entry.name), to: path(trimmed))
             await refresh()
         } catch {
-            failure = error.localizedDescription
+            failure = "Couldn't rename “\(entry.name)”: \(error.localizedDescription)"
         }
     }
 
     func remove(_ entries: [RemoteEntry]) async {
+        guard let via else { return }
+        var refused: String?
         for entry in entries {
             do {
-                try await Core.shared.remove(session: session, path: path(entry.name))
-                failure = nil
+                try await Core.shared.remove(session: via, path: path(entry.name))
             } catch {
-                failure = error.localizedDescription
+                // SFTP removes a folder only once it is empty, and a server
+                // says no to that in the same words as to anything else.
+                let why = entry.isDir && !isLocal
+                    ? " SFTP deletes a folder only once it is empty." : ""
+                refused = "Couldn't delete “\(entry.name)”: "
+                    + Places.sentence(error.localizedDescription) + why
             }
         }
         await refresh()
+        // After the refresh, which clears a failure when the listing comes
+        // back, so that what went wrong is still there to read.
+        if let refused { failure = refused }
     }
 
     func closeSession() {
@@ -158,10 +199,10 @@ final class FilesModel {
 
     private let db: String
 
-    init(db: String) {
+    init(db: String, home: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         self.db = db
-        left = FilePlace(db: db)
-        right = FilePlace(db: db)
+        left = FilePlace(db: db, home: home)
+        right = FilePlace(db: db, home: home)
     }
 
     /// The left side is always this Mac. The right is the host this was
@@ -197,6 +238,9 @@ final class FilesModel {
     /// "1 moving, 39 waiting" is the difference between a window that is
     /// working and one that has hung.
     func copy(_ entries: [RemoteEntry], from source: FilePlace, to target: FilePlace) async {
+        // Both ends have to be somewhere. A pane still connecting, or turned
+        // away, has no session, and to the engine no session is this Mac.
+        guard let from = source.via, let into = target.via else { return }
         guard let entries = await settle(entries, into: target) else { return }
         var jobs: [String] = []
         for entry in entries {
@@ -205,19 +249,19 @@ final class FilesModel {
                 copyLocally(entry, from: source, to: target)
             case (false, true):
                 jobs.append(contentsOf: await enqueue(
-                    session: source.session, direction: "download",
+                    session: from, direction: "download",
                     remote: source.path(entry.name), local: target.path(entry.name),
                     name: entry.name, size: entry.size))
             case (true, false):
                 jobs.append(contentsOf: await enqueue(
-                    session: target.session, direction: "upload",
+                    session: into, direction: "upload",
                     remote: target.path(entry.name), local: source.path(entry.name),
                     name: entry.name, size: entry.size))
             case (false, false):
                 // Two hops with a file of ours in the middle, so this one
                 // cannot be handed over and left: the upload has nothing to
                 // send until the download has finished.
-                await relay(entry, from: source, to: target)
+                await relay(entry, from: source, through: from, to: target, through: into)
             }
         }
         await watch(jobs)
@@ -226,6 +270,7 @@ final class FilesModel {
 
     /// A local file dropped onto a pane from Finder.
     func bring(_ url: URL, to target: FilePlace) async {
+        guard let into = target.via else { return }
         let name = url.lastPathComponent
         let clashes = Replacing.clashes(
             carrying: [name], arriving: target.listing.entries.map(\.name),
@@ -236,7 +281,7 @@ final class FilesModel {
         if target.isLocal {
             copyOnThisDisk(from: url.path, to: target.path(name), name: name)
         } else {
-            await run(session: target.session, direction: "upload",
+            await run(session: into, direction: "upload",
                       remote: target.path(name), local: url.path, name: name, size: size)
         }
         await target.refresh()
@@ -315,19 +360,22 @@ final class FilesModel {
     /// Down to a file of ours, then up to the other host. Nothing is left
     /// behind: the middle of a host-to-host copy is not somebody's Downloads
     /// folder.
-    private func relay(_ entry: RemoteEntry, from source: FilePlace, to target: FilePlace) async {
+    private func relay(
+        _ entry: RemoteEntry, from source: FilePlace, through from: String,
+        to target: FilePlace, through into: String
+    ) async {
         let staging = NSTemporaryDirectory() + "shellhand-relay-\(UUID().uuidString)"
         try? FileManager.default.createDirectory(
             atPath: staging, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(atPath: staging) }
         let waypoint = staging + "/" + entry.name
 
-        await run(session: source.session, direction: "download",
+        await run(session: from, direction: "download",
                   remote: source.path(entry.name), local: waypoint,
                   name: entry.name, size: entry.size)
         guard transfers.last?.state == TransferQueue.done else { return }
         transfers.removeLast()
-        await run(session: target.session, direction: "upload",
+        await run(session: into, direction: "upload",
                   remote: target.path(entry.name), local: waypoint,
                   name: entry.name, size: entry.size)
     }

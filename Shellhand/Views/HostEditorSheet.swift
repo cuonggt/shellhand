@@ -18,8 +18,13 @@ struct HostEditorSheet: View {
     let store: HostStore
     @State private var host: Host
     @State private var tagText: String
+    /// What is in the tag field and not yet a tag. Held here rather than in
+    /// the field so that Save can count it: it was dropped.
+    @State private var tagTyping = ""
     @State private var preview = HostPreview()
     @State private var saving = false
+    /// Why the store refused the last Save, said in the editor it refused.
+    @State private var saveFailure: String?
     @State private var confirmingDelete = false
     /// The name for a group being made here. Until now groups could only
     /// arrive by import, so a host could not be filed anywhere new.
@@ -171,7 +176,7 @@ struct HostEditorSheet: View {
                     }
                 }
                 LabeledContent("Tags") {
-                    TagField(text: $tagText, known: store.allTags)
+                    TagField(text: $tagText, typing: $tagTyping, known: store.allTags)
                 }
             }
         }
@@ -329,6 +334,12 @@ struct HostEditorSheet: View {
 
     private var footer: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if let saveFailure {
+                Label(saveFailure, systemImage: "xmark.octagon")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             // Both, not one or the other. The command used to be replaced by
             // the problem, which took the thing away exactly when you wanted
             // to look at what was wrong with it.
@@ -433,19 +444,32 @@ struct HostEditorSheet: View {
 
     private func save() {
         saving = true
+        saveFailure = nil
         host.name = host.name.trimmingCharacters(in: .whitespaces)
         host.addr = host.addr.trimmingCharacters(in: .whitespaces)
         host.sshOptions = SSHOptionsField.parse(optionsText)
-        host.tags = Tags.clean(tagText)
+        host.tags = Tags.saved(tagText, typing: tagTyping)
         Task {
             // The group first, so the host has somewhere to be filed.
             if makingGroup {
-                let group = await store.save(Group(name: newGroupName))
-                host.groupId = group?.id ?? ""
+                guard let group = await store.save(Group(name: newGroupName)) else {
+                    return refused()
+                }
+                host.groupId = group.id
             }
-            await store.save(host)
+            guard await store.save(host) != nil else { return refused() }
             saving = false
             dismiss()
         }
+    }
+
+    /// A save the store refused keeps the editor open with what was typed,
+    /// and says why here. It used to close regardless, and the edits went with
+    /// it. The window's own alert is cleared, or it would say the same thing
+    /// again once the editor closes.
+    private func refused() {
+        saveFailure = store.lastError ?? "This host could not be saved."
+        store.clearError()
+        saving = false
     }
 }

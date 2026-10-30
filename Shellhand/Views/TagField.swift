@@ -8,10 +8,11 @@ import SwiftUI
 /// removed without editing a string around it.
 struct TagField: View {
     @Binding var text: String
+    /// What has been typed and not yet made a tag. The editor holds it, so
+    /// that Save counts it as `Tags.saved` says.
+    @Binding var typing: String
     /// Tags already in use anywhere, to pick from rather than retype.
     let known: [String]
-
-    @State private var typing = ""
 
     private var tags: [String] { Tags.clean(text) }
 

@@ -48,9 +48,10 @@ struct GeneralSettingsPane: View {
             Section("Closing") {
                 Toggle(isOn: $confirmClose) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Ask before closing a live session")
-                        Text("Closing a tab or the window, reconnecting, or quitting asks "
-                            + "first while a session is still running.")
+                        Text("Ask before ending sessions and transfers")
+                        Text("Closing a tab or a window, reconnecting, or quitting asks "
+                            + "first while a session is still running or a file is still "
+                            + "moving.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

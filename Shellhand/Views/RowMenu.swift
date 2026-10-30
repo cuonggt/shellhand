@@ -22,34 +22,84 @@ struct RowMenu: View {
     let actions: AppActions
     let onConnect: (Host) -> Void
 
-    var body: some View {
+    /// One line of the menu, carrying what it acts on. Out of the view so
+    /// that **what each item acts on** can be checked without opening a
+    /// menu: a group's Edit, Delete and New Group Inside once carried
+    /// nothing and read the selection, which on a grid card was some other
+    /// group.
+    enum Line: Equatable {
+        case connect(Host), sftp(Host), copyCommand(Host), editHost(Host), deleteHost(Host)
+        case newHostIn(Group), newGroupIn(Group), editGroup(Group), deleteGroup(Group)
+        /// The empty space's offers, which make something rather than act on
+        /// a row, and so are the only ones left to read the selection.
+        case newHost, newGroup
+        case divider
+
+        var title: String {
+            switch self {
+            case .connect: "Connect"
+            case .sftp: "SFTP…"
+            case .copyCommand: "Copy as ssh Command"
+            case .editHost: "Edit Host…"
+            case .deleteHost: "Delete Host…"
+            // Inside the group this menu was opened on. New Host once called
+            // the same plain `newHost` the File menu does, so the one item in
+            // a group's menu that made something put it at the top of the
+            // list instead. Both say "Inside", and the row names the group.
+            case .newHostIn: "New Host Inside…"
+            case .newGroupIn: "New Group Inside…"
+            case .editGroup: "Edit Group…"
+            case .deleteGroup: "Delete Group…"
+            case .newHost: "New Host…"
+            case .newGroup: "New Group…"
+            case .divider: ""
+            }
+        }
+    }
+
+    /// The menu for what it was opened on. A row whose record has gone since
+    /// offers nothing rather than acting on some other one.
+    static func lines(for item: Selection?, hosts: [Host], groups: [Group]) -> [Line] {
         switch item {
         case let .host(id):
-            if let host = store.snapshot.hosts.first(where: { $0.id == id }) {
-                Button("Connect") { onConnect(host) }
-                Button("SFTP…") { actions.openFilesOn(host) }
-                Button("Copy as ssh Command") { actions.onHost.copyCommand(host) }
-                Divider()
-                Button("Edit Host…") { actions.onHost.edit(host) }
-                Button("Delete Host…") { actions.onHost.delete(host) }
-            }
+            guard let host = hosts.first(where: { $0.id == id }) else { return [] }
+            return [.connect(host), .sftp(host), .copyCommand(host), .divider,
+                    .editHost(host), .deleteHost(host)]
         case let .group(id):
-            // Inside the group this menu was opened on. It used to call the
-            // same plain `newHost` the File menu does, so the one item in a
-            // group's menu that made something put it at the top of the list
-            // instead — while "New Group Inside…" directly below it nested.
-            // Both say "Inside" now, and the row it was opened on is what
-            // names the group, which is why neither label has to.
-            if let group = store.group(id) {
-                Button("New Host Inside…") { actions.newHostIn(group) }
-            }
-            Button("New Group Inside…") { actions.newGroup() }
-            Divider()
-            Button("Edit Group…") { actions.editGroup() }
-            Button("Delete Group…") { actions.deleteGroup() }
+            guard let group = groups.first(where: { $0.id == id }) else { return [] }
+            return [.newHostIn(group), .newGroupIn(group), .divider,
+                    .editGroup(group), .deleteGroup(group)]
         case nil:
-            Button("New Host…") { actions.newHost() }
-            Button("New Group…") { actions.newGroup() }
+            return [.newHost, .newGroup]
+        }
+    }
+
+    var body: some View {
+        let lines = Self.lines(
+            for: item, hosts: store.snapshot.hosts, groups: store.snapshot.groups)
+        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+            if line == .divider {
+                Divider()
+            } else {
+                Button(line.title) { perform(line) }
+            }
+        }
+    }
+
+    private func perform(_ line: Line) {
+        switch line {
+        case let .connect(host): onConnect(host)
+        case let .sftp(host): actions.openFilesOn(host)
+        case let .copyCommand(host): actions.onHost.copyCommand(host)
+        case let .editHost(host): actions.onHost.edit(host)
+        case let .deleteHost(host): actions.onHost.delete(host)
+        case let .newHostIn(group): actions.newHostIn(group)
+        case let .newGroupIn(group): actions.onGroup.newGroupIn(group)
+        case let .editGroup(group): actions.onGroup.edit(group)
+        case let .deleteGroup(group): actions.onGroup.delete(group)
+        case .newHost: actions.newHost()
+        case .newGroup: actions.newGroup()
+        case .divider: break
         }
     }
 }

@@ -23,11 +23,22 @@ struct AppActions {
     /// card does not select it, so a menu that read the selection would edit
     /// or delete whatever happened to be picked before.
     var onHost = HostActions()
+    /// The same for a group's own menu. Its Edit, Delete and New Group Inside
+    /// read the selection until these existed, so on a card in the grid they
+    /// acted on whichever group was picked before: "Delete Group…" opened on
+    /// EU asked to delete Production.
+    var onGroup = GroupActions()
 
     struct HostActions {
         var edit: (Host) -> Void = { _ in }
         var delete: (Host) -> Void = { _ in }
         var copyCommand: (Host) -> Void = { _ in }
+    }
+
+    struct GroupActions {
+        var newGroupIn: (Group) -> Void = { _ in }
+        var edit: (Group) -> Void = { _ in }
+        var delete: (Group) -> Void = { _ in }
     }
     var editHost: () -> Void = {}
     /// Asks the window to open the file window. It cannot be done from here:

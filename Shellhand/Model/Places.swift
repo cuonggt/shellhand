@@ -32,6 +32,67 @@ nonisolated enum Places {
         chosen && !onAHost
     }
 
+    /// The session a pane's operations go through: `""`, which the engine
+    /// reads as this Mac, for a pane that is this Mac; the one open for a
+    /// host; and **nothing at all** for a host still connecting or turned
+    /// away. Handing over the empty session there acted on this Mac — a
+    /// Delete removed the same path here while the dialog named the host.
+    static func session(chosen: Bool, onAHost: Bool, open: String) -> String? {
+        guard chosen else { return nil }
+        guard onAHost else { return "" }
+        return open.isEmpty ? nil : open
+    }
+
+    /// Where a pane says what went wrong.
+    enum Notice: Equatable {
+        case none
+        /// Over an empty pane, in place of the listing.
+        case instead
+        /// Above a listing still on screen. Before this, a failure with a
+        /// listing up was drawn nowhere: a refused rename, delete or new
+        /// folder happened without a word.
+        case banner
+    }
+
+    static func notice(listed: Bool, failure: String?) -> Notice {
+        guard failure != nil else { return .none }
+        return listed ? .banner : .instead
+    }
+
+    /// A message from somewhere else, ending as a sentence.
+    static func sentence(_ text: String) -> String {
+        text.hasSuffix(".") ? text : text + "."
+    }
+
+    /// What deleting asks first.
+    struct DeleteQuestion: Equatable {
+        var title: String
+        var message: String
+        /// What the button that goes ahead says.
+        var confirm: String
+    }
+
+    /// On this Mac a deletion goes to the Trash, where it can be taken back;
+    /// on a host there is no such place, and the question says so. It used
+    /// to say "They are deleted" of a single file, and "This cannot be
+    /// undone" of this Mac, where nothing should be that final.
+    static func deleteQuestion(_ names: [String], local: Bool, on place: String) -> DeleteQuestion {
+        let one = names.count == 1
+        let what = one ? "“\(names[0])”" : "\(names.count) items"
+        if local {
+            return DeleteQuestion(
+                title: "Move \(what) to the Trash?",
+                message: one ? "You can put it back from the Trash."
+                    : "You can put them back from the Trash.",
+                confirm: "Move to Trash")
+        }
+        return DeleteQuestion(
+            title: "Delete \(what)?",
+            message: (one ? "It is deleted" : "They are deleted")
+                + " on \(place). This cannot be undone.",
+            confirm: "Delete")
+    }
+
     /// Which of a listing's entries a pane shows. Dotfiles are hidden by
     /// default, as a file manager shows a home directory without forty of
     /// them in front of what you came for.

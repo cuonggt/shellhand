@@ -295,9 +295,12 @@ actor Core {
         try await session(id).mkdir(path)
     }
 
+    /// On this Mac a deletion goes to the Trash, where it can be taken back,
+    /// as it does in every other Mac app; it used to be removed outright. A
+    /// host has no such place, so there it is gone.
     func remove(session id: String, path: String) async throws {
         guard !id.isEmpty else {
-            try FileManager.default.removeItem(atPath: path)
+            try FileManager.default.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
             return
         }
         try await session(id).remove(path)

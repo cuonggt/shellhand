@@ -26,6 +26,7 @@
 		19742EBB67C7287FAB5F4DE0 /* os-elementary.svg in Resources */ = {isa = PBXBuildFile; fileRef = 56A651468BE23AC14ADD8CB4 /* os-elementary.svg */; };
 		1B7D1615E7DF81318AE0060A /* QuickLook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931C1FC210800200F259DC3B /* QuickLook.swift */; };
 		1DCA1792D756DEAC870EAD1B /* TestRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */; };
+		1E910C3EDC506FE54AD3826D /* RowMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5036D3284B9FA79B3C49516B /* RowMenuTests.swift */; };
 		1EAA23A935364BC88D3CEB2D /* os-oracle.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81B2554D49E69FEE8E9AE22B /* os-oracle.svg */; };
 		229E749106327A3C3459DD50 /* os-ol.svg in Resources */ = {isa = PBXBuildFile; fileRef = 6A356F12BA2352D959D27B31 /* os-ol.svg */; };
 		2335CC12D9EDDCDF8151D53B /* TerminalMiniatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14F8276C242B769D3A601DE1 /* TerminalMiniatureTests.swift */; };
@@ -215,6 +216,7 @@
 		49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */ = {isa = PBXFileReference; path = "os-linuxmint.svg"; sourceTree = "<group>"; };
 		4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOptionsTests.swift; sourceTree = "<group>"; };
 		4D05B62E7B658B3DDBB3926F /* Descriptors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Descriptors.swift; sourceTree = "<group>"; };
+		5036D3284B9FA79B3C49516B /* RowMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowMenuTests.swift; sourceTree = "<group>"; };
 		512570C863871D171BD66EB6 /* IncludeCycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncludeCycleTests.swift; sourceTree = "<group>"; };
 		5272D1A98C5EF7FEC3959C5E /* os-zorin.svg */ = {isa = PBXFileReference; path = "os-zorin.svg"; sourceTree = "<group>"; };
 		529E2D11C3179D88458A3779 /* GridMove.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridMove.swift; sourceTree = "<group>"; };
@@ -380,6 +382,7 @@
 				352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */,
 				1C08E98A36C2D91FE3480626 /* ResolveCostTests.swift */,
 				467E73B5CE44F6B57382DC67 /* ResolverTests.swift */,
+				5036D3284B9FA79B3C49516B /* RowMenuTests.swift */,
 				DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */,
 				D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */,
 				3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */,
@@ -740,6 +743,7 @@
 				C1483227B1300FF71FBC66FF /* ReplacingTests.swift in Sources */,
 				278F0C5D8AC300F7AD6A8E4D /* ResolveCostTests.swift in Sources */,
 				2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */,
+				1E910C3EDC506FE54AD3826D /* RowMenuTests.swift in Sources */,
 				5AE572372B0F0AB8210043FA /* SFTPChurnTests.swift in Sources */,
 				534C17A4FC05D21C7A467DD1 /* SFTPDeadlineTests.swift in Sources */,
 				4764C6073CA5EBF101494184 /* SFTPFarEndTests.swift in Sources */,

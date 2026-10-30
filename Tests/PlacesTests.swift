@@ -108,4 +108,57 @@ nonisolated struct PlacesTests {
         #expect(Places.skipping(2) == "Skip them")
         #expect(Places.replacing(40) == "Replace them")
     }
+
+    // MARK: where its operations go
+
+    /// The empty session is this Mac to the engine, so the one pane that must
+    /// never hand it over is one pointed at a host with no session yet — the
+    /// state a pane is in while it connects and after a host refuses.
+    @Test("a pane on a host with no session open reaches nothing")
+    func noSessionReachesNothing() {
+        #expect(Places.session(chosen: true, onAHost: true, open: "") == nil)
+        #expect(Places.session(chosen: true, onAHost: true, open: "s1") == "s1")
+        #expect(Places.session(chosen: true, onAHost: false, open: "") == "",
+                "this Mac is reached through the empty session")
+        #expect(Places.session(chosen: false, onAHost: false, open: "") == nil,
+                "a pane pointed nowhere is not this Mac")
+    }
+
+    // MARK: where it says what went wrong
+
+    @Test("a failure shows over a listing, and in place of none")
+    func failureIsShown() {
+        #expect(Places.notice(listed: true, failure: "refused") == .banner)
+        #expect(Places.notice(listed: false, failure: "refused") == .instead)
+        #expect(Places.notice(listed: true, failure: nil) == Places.Notice.none)
+    }
+
+    @Test("a message from elsewhere ends as one sentence")
+    func sentences() {
+        #expect(Places.sentence("Failure") == "Failure.")
+        #expect(Places.sentence("It is gone.") == "It is gone.")
+    }
+
+    // MARK: what deleting asks
+
+    @Test("deleting on this Mac offers the Trash")
+    func deletingHere() {
+        let one = Places.deleteQuestion(["a.txt"], local: true, on: "This Mac")
+        #expect(one.title == "Move “a.txt” to the Trash?")
+        #expect(one.message == "You can put it back from the Trash.")
+        #expect(one.confirm == "Move to Trash")
+        let two = Places.deleteQuestion(["a.txt", "b.txt"], local: true, on: "This Mac")
+        #expect(two.title == "Move 2 items to the Trash?")
+        #expect(two.message == "You can put them back from the Trash.")
+    }
+
+    @Test("deleting on a host says it is final, in the right number")
+    func deletingThere() {
+        let one = Places.deleteQuestion(["logs"], local: false, on: "web")
+        #expect(one.title == "Delete “logs”?")
+        #expect(one.message == "It is deleted on web. This cannot be undone.")
+        #expect(one.confirm == "Delete")
+        let two = Places.deleteQuestion(["a", "b"], local: false, on: "web")
+        #expect(two.message == "They are deleted on web. This cannot be undone.")
+    }
 }

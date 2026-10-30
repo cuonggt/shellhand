@@ -27,6 +27,14 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
 
     /// The browser inside it, so a second asking can move it.
     private let files: FilesModel
+    /// Whether closing has been asked about and agreed, so the close the
+    /// answer starts goes through rather than asking again.
+    private var answered = false
+
+    /// What closing the window would stop, for quitting to count as well.
+    static var transfersStillToGo: Int {
+        shared.map { TransferQueue.stillToGo($0.files.transfers) } ?? 0
+    }
 
     /// Opens the browser, or brings the one open forward. On a host, the
     /// right side goes there; from nowhere in particular it asks which host
@@ -116,5 +124,23 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         files.close()
         Self.shared = nil
+    }
+
+    /// Asks before closing stops transfers, by `Closing`'s rule and the way
+    /// the host window asks before it ends sessions. Closing used to stop
+    /// them without a word, while Settings said it would ask.
+    func windowShouldClose(_ window: NSWindow) -> Bool {
+        if !answered, let question = Closing.question(
+            .closingFiles, dropping: [], stopping: TransferQueue.stillToGo(files.transfers),
+            confirming: Closing.confirmsNow) {
+            NSAlert(asking: question).beginSheetModal(for: window) { [weak self, weak window] in
+                guard $0 == .alertFirstButtonReturn, let self, let window else { return }
+                self.answered = true
+                window.performClose(nil)
+            }
+            return false
+        }
+        answered = false
+        return true
     }
 }

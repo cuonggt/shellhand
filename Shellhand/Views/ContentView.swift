@@ -466,6 +466,10 @@ struct ContentView: View {
                 edit: { editing = $0 },
                 delete: { deletingHost = $0 },
                 copyCommand: { copyAsCommand(for: $0) }),
+            onGroup: AppActions.GroupActions(
+                newGroupIn: { editingGroup = Group(parentId: $0.id) },
+                edit: { editingGroup = $0 },
+                delete: { deletingGroup = $0 }),
             editHost: { if let host = selectedHost { editing = host } },
             // On whatever host is selected, so that pressing this with one
             // picked opens straight onto it. With nothing picked the far

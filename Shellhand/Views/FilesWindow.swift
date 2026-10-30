@@ -102,24 +102,26 @@ private struct PlacePane: View {
         VStack(spacing: 0) {
             header
             Divider()
+            if Places.notice(listed: !place.listing.path.isEmpty, failure: place.failure) == .banner,
+               let failure = place.failure {
+                banner(failure)
+                Divider()
+            }
             table
             Divider()
             footer
         }
         .frame(minWidth: 400)
         .confirmationDialog(
-            chosen.count == 1 ? "Delete \(chosen[0].name)?" : "Delete \(chosen.count) items?",
-            isPresented: $confirmingDelete, titleVisibility: .visible
+            deleting.title, isPresented: $confirmingDelete, titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
+            Button(deleting.confirm, role: .destructive) {
                 let going = chosen
                 selection = []
                 Task { await place.remove(going) }
             }
         } message: {
-            Text(place.isLocal
-                ? "They are deleted on this Mac. This cannot be undone."
-                : "They are deleted on \(place.title). This cannot be undone.")
+            Text(deleting.message)
         }
         .alert("Rename", isPresented: Binding(
             get: { renaming != nil }, set: { if !$0 { renaming = nil } })
@@ -139,6 +141,30 @@ private struct PlacePane: View {
     }
 
     // MARK: the parts
+
+    private var deleting: Places.DeleteQuestion {
+        Places.deleteQuestion(chosen.map(\.name), local: place.isLocal, on: place.title)
+    }
+
+    /// What went wrong while a listing is up, said above it and left there
+    /// until it is read. Before this, nothing drew it: a refused rename,
+    /// delete or new folder happened without a word.
+    private func banner(_ failure: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .accessibilityHidden(true)
+            Text(failure)
+                .font(.callout)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Dismiss") { place.clearFailure() }
+                .controlSize(.small)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.orange.opacity(0.12))
+    }
 
     private var header: some View {
         VStack(spacing: 6) {
@@ -303,7 +329,7 @@ private struct PlacePane: View {
                 }
             }
             Divider()
-            Button("Delete…") {
+            Button(place.isLocal ? "Move to Trash…" : "Delete…") {
                 selection = names
                 confirmingDelete = true
             }

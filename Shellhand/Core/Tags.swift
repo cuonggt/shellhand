@@ -34,6 +34,14 @@ nonisolated enum Tags {
     /// Written back the way the field shows them.
     static func text(_ tags: [String]) -> String { tags.joined(separator: ", ") }
 
+    /// What a host is saved with: the tags made, **and what is still being
+    /// typed**, which is a tag the moment Save is pressed, as it would be on
+    /// Return. The editor saved the first alone, so the last tag typed before
+    /// clicking Save was dropped without a word.
+    static func saved(_ text: String, typing: String) -> [String] {
+        clean(text + "," + typing)
+    }
+
     /// Every tag in use, in the order a list should show them.
     ///
     /// Deduped without regard to case but keeping the spelling first written,

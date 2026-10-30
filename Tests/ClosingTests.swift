@@ -163,4 +163,38 @@ struct ClosingTests {
         #expect(guarding.inFrontOf === window?.windowController)
         #expect(guarding.responds(to: #selector(NSWindowDelegate.windowWillClose(_:))))
     }
+
+    // MARK: transfers
+
+    /// Closing the SFTP window stops every transfer still to go, and used to
+    /// without a word while Settings said closing would ask.
+    @Test("closing SFTP asks while files are still moving")
+    func closingFilesAsks() {
+        let two = Closing.question(.closingFiles, dropping: [], stopping: 2, confirming: true)
+        #expect(two?.title == "Close SFTP and stop 2 transfers?")
+        #expect(two?.message == "They have not finished.")
+        #expect(two?.confirm == "Close")
+        let one = Closing.question(.closingFiles, dropping: [], stopping: 1, confirming: true)
+        #expect(one?.title == "Close SFTP and stop a transfer?")
+        #expect(one?.message == "It has not finished.")
+    }
+
+    @Test("closing SFTP goes straight ahead with nothing moving, or the switch off")
+    func closingFilesQuietly() {
+        #expect(Closing.question(.closingFiles, dropping: [], stopping: 0, confirming: true) == nil)
+        #expect(Closing.question(.closingFiles, dropping: [], stopping: 3, confirming: false) == nil)
+        // Sessions are the host window's business, not this window's.
+        #expect(Closing.question(.closingFiles, dropping: [web], stopping: 0, confirming: true) == nil)
+    }
+
+    @Test("quitting counts transfers as well as sessions")
+    func quittingCountsTransfers() {
+        let onlyFiles = Closing.question(.quitting, dropping: [], stopping: 1, confirming: true)
+        #expect(onlyFiles?.title == "Quit and stop a transfer?")
+        let both = Closing.question(.quitting, dropping: [web], stopping: 2, confirming: true)
+        #expect(both?.title == "Quit, ending the session on web and stopping 2 transfers?")
+        let onlySessions = Closing.question(.quitting, dropping: [web], stopping: 0, confirming: true)
+        #expect(onlySessions?.title == "Quit and end the session on web?")
+        #expect(Closing.question(.quitting, dropping: [ended], stopping: 0, confirming: true) == nil)
+    }
 }

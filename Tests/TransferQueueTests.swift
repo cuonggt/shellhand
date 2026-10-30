@@ -129,6 +129,18 @@ nonisolated struct TransferSummaryTests {
         #expect(!TransferQueue.busy([transfer(TransferQueue.failed)]))
         #expect(!TransferQueue.busy([]))
     }
+
+    /// What closing the SFTP window, or quitting, would stop: a transfer on
+    /// the wire or waiting its turn, and nothing that has already ended.
+    @Test("still to go counts what is moving or waiting, and nothing finished")
+    func stillToGo() {
+        #expect(TransferQueue.stillToGo([
+            transfer(TransferQueue.running), transfer(TransferQueue.queued),
+            transfer(TransferQueue.queued), transfer(TransferQueue.done),
+            transfer(TransferQueue.failed), transfer(TransferQueue.cancelled),
+        ]) == 3)
+        #expect(TransferQueue.stillToGo([]) == 0)
+    }
 }
 
 @Suite("A transfer's own idea of where it is")

@@ -87,6 +87,9 @@ docs, the site or Markdown. It signs ad hoc —
 README's line for anyone without the Developer ID — and fails a run in which
 the result bundle counts nothing passed. The runner's Xcode is older than the
 one releases are built with, so read a red run as possibly the toolchain's.
+**Don't run that ad-hoc build on this Mac under the app's own bundle id**:
+macOS re-records the Desktop, Documents and Downloads grants against the
+ad-hoc signature, and the signed app — the installed one too — is asked again.
 → [CI](docs/notes/testing.md#ci)
 
 The app icon has tooling of its own, because an Icon Composer bundle cannot be
@@ -304,8 +307,9 @@ credentials, which is most of it.
   `ClosingGuard`, which stands **in front of** SwiftUI's own window delegate
   and is held by the window; ⌘Q through `ShellhandAppDelegate`, over every
   window's `Sessions`. ⌘W never reaches the window, so with the Hosts tab in
-  front it does nothing. Sweep preference keys as well as functions: this
-  switch did nothing for eleven releases.
+  front it does nothing. The SFTP window asks the same way before it stops
+  transfers still to go, and ⌘Q counts those too. Sweep preference keys as
+  well as functions: this switch did nothing for eleven releases.
   → [closing](docs/notes/window.md#closing)
 - **SwiftTerm leaks every descriptor not marked close-on-exec into every
   terminal's child**: its `fork(andExec:)` goes straight to `execve`, so a
@@ -384,6 +388,12 @@ credentials, which is most of it.
   go by `-type d`, since `shellhand-ssh-` also names the log a live session is
   writing, and leave `shellhand-under-test` alone: it is the store a test run
   opens. → [scratch paths](docs/notes/testing.md#scratch-paths)
+- **A file pane under test opens on a scratch `home:`**, never the real home
+  directory: listing that reads Desktop, Documents and Downloads, and macOS
+  holds the read on a privacy prompt whenever the test host's signature is not
+  the one it remembers. Every test that did so timed out, on a question that
+  came up on the screen of whoever was at the Mac.
+  → [the privacy prompt](docs/notes/testing.md#the-privacy-prompt)
 - **Every walk over the group tree lives in `Model/Tree.swift`**, built
   once per snapshot, because each walk carries a guard against a group that
   became its own ancestor, and the suite turns a loop through all of them — a
@@ -442,7 +452,9 @@ credentials, which is most of it.
   → [New Group](docs/notes/window.md#new-group)
 - **A menu on a row acts on that row**, handed it rather than reading the
   selection: a group's New Host… is `newHostIn` that group, while ⌘N in File
-  still makes an unfiled host.
+  still makes an unfiled host. `RowMenu.lines` carries each item's subject and
+  `RowMenuTests` holds it: a group's Edit and Delete read the selection until
+  0.1.1, so on a grid card they acted on some other group.
   → [a row's menu](docs/notes/window.md#a-rows-menu)
 - **A file session is opened once per pane**, behind a flag set before the
   first await; two opens together once sent a download to the wrong folder
@@ -536,6 +548,16 @@ credentials, which is most of it.
   like an empty home directory. `chosen` is set **before** the connecting
   starts, so a host that refuses leaves the pane showing what went wrong
   rather than falling back to the question.
+- **A pane pointed at a host acts through its session or not at all**
+  (`Places.session`), and drops its listing the moment it is re-pointed.
+  An empty session is this Mac to `Core`, so a Delete made while a pane was
+  connecting, or after its host refused, removed the same path here while the
+  dialog named the host. A refused host stays named, rather than the pane
+  calling itself This Mac over nothing.
+- **Deleting on this Mac goes to the Trash**, and nothing in the suite calls
+  it: a test would leave files in the user's Trash, which an app without Full
+  Disk Access cannot take back out. A failure with a listing up is a banner
+  (`Places.notice`); before that it was drawn nowhere.
 - **There are no secondary `Window` scenes.** If one comes back: `openWindow`
   works only when a live view asks, and the first scene in `body` opens at
   launch, so another needs `.defaultLaunchBehavior(.suppressed)`.

@@ -85,7 +85,7 @@ final class ShellhandAppDelegate: NSObject, NSApplicationDelegate {
     static func question(confirming: Bool = Closing.confirmsNow) -> Closing.Question? {
         Closing.question(
             .quitting, dropping: Sessions.inEveryWindow.map(Closing.Open.init),
-            confirming: confirming)
+            stopping: FilesWindowController.transfersStillToGo, confirming: confirming)
     }
 }
 

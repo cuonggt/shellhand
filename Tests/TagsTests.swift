@@ -218,3 +218,21 @@ nonisolated struct TagSeparatorTests {
         }
     }
 }
+
+@Suite("What a host is saved with")
+nonisolated struct TagSaveTests {
+    /// The last tag typed before clicking Save, without pressing Return
+    /// first, was dropped: the editor saved only the tags already made.
+    @Test("a tag still being typed is kept on save")
+    func typingIsKept() {
+        #expect(Tags.saved("web, eu", typing: "db") == ["web", "eu", "db"])
+        #expect(Tags.saved("", typing: "db") == ["db"])
+    }
+
+    @Test("an empty field adds nothing, and a repeat stays once")
+    func nothingExtra() {
+        #expect(Tags.saved("web, eu", typing: "") == ["web", "eu"])
+        #expect(Tags.saved("web", typing: "  ") == ["web"])
+        #expect(Tags.saved("web", typing: "WEB") == ["web"])
+    }
+}

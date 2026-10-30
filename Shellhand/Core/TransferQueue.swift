@@ -75,4 +75,10 @@ nonisolated enum TransferQueue {
     static func busy(_ transfers: [Transfer]) -> Bool {
         transfers.contains { $0.state == running || $0.state == queued }
     }
+
+    /// How many are still moving or waiting their turn: what closing the
+    /// window, or quitting, would stop.
+    static func stillToGo(_ transfers: [Transfer]) -> Int {
+        transfers.count { $0.state == running || $0.state == queued }
+    }
 }

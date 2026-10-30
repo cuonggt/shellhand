@@ -24,6 +24,9 @@ nonisolated enum Closing {
         /// A tab's Close Other Tabs: every session but the one clicked.
         case closingOthers
         case closingWindow
+        /// Closing the SFTP window, which stops every transfer still
+        /// moving or waiting its turn. It used to, without a word.
+        case closingFiles
         case quitting
     }
 
@@ -61,9 +64,24 @@ nonisolated enum Closing {
     static func isLive(_ state: TerminalSession.State) -> Bool { state == .connected }
 
     /// The question to put before going ahead, or nil to go straight ahead.
-    static func question(_ act: Act, dropping sessions: [Open], confirming: Bool) -> Question? {
+    ///
+    /// `stopping` is how many transfers are still moving or waiting their
+    /// turn: closing the SFTP window stops them, and so does quitting.
+    static func question(
+        _ act: Act, dropping sessions: [Open], stopping transfers: Int = 0, confirming: Bool
+    ) -> Question? {
         guard confirming else { return nil }
         let live = sessions.filter { isLive($0.state) }
+        let moving = transfers == 1 ? "a transfer" : "\(transfers) transfers"
+        let unfinished = transfers == 1 ? "It has not finished." : "They have not finished."
+        if act == .closingFiles || (act == .quitting && live.isEmpty) {
+            guard transfers > 0 else { return nil }
+            return act == .closingFiles
+                ? Question(title: "Close SFTP and stop \(moving)?", message: unfinished,
+                           confirm: "Close")
+                : Question(title: "Quit and stop \(moving)?", message: unfinished,
+                           confirm: "Quit")
+        }
         guard let first = live.first else { return nil }
         let them = live.count == 1 ? name(of: first) : "\(live.count) sessions"
         let still = live.count == 1 ? "It is still running." : "They are all still running."
@@ -88,8 +106,15 @@ nonisolated enum Closing {
         case .closingWindow:
             return Question(
                 title: "Close the window and end \(them)?", message: still, confirm: "Close")
+        case .closingFiles:
+            return nil
         case .quitting:
-            return Question(title: "Quit and end \(them)?", message: still, confirm: "Quit")
+            guard transfers > 0 else {
+                return Question(title: "Quit and end \(them)?", message: still, confirm: "Quit")
+            }
+            return Question(
+                title: "Quit, ending \(them) and stopping \(moving)?",
+                message: "None of them has finished.", confirm: "Quit")
         }
     }
 
