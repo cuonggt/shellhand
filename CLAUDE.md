@@ -122,32 +122,21 @@ credentials, which is most of it.
   case-insensitive.
 - `-skipPackagePluginValidation` is needed because SwiftTerm 1.99 carries a
   build plugin Xcode otherwise asks a human to trust.
-- **Port forwarding is gone, and tmux with it.** It was built, and in weeks of
-  real use the host list held **zero** rules — while it was the only reason
-  this app needed tmux installed at all. Cutting it removed an install
-  prerequisite, a "needs tmux, which is not installed" warning, a socket-path
-  length problem, and `SHELLHAND_TMUX_SOCKET` from every harness. The store's
-  `forwards` table is dropped by migration **v6** rather than by editing v1:
-  migrations are append-only, and every store in existence has already run v1,
-  so rewriting history would leave those stores with a table the migrator
-  thinks it never made. **Don't bring it back without a reason from someone
-  other than us.**
+- **Port forwarding is gone, and tmux with it**: in weeks of real use the list
+  held no rules. Its table is dropped by migration v6, since migrations are
+  append-only. **Don't bring it back without a reason from someone other than
+  us.**
+  → [port forwarding](docs/notes/cuts-and-sweeps.md#port-forwarding)
 - **No Docker and no external hosts.** This held when there were harnesses —
   anything needing a server ran `gliderlabs/ssh` in-process on loopback — and
   it still binds anything added later. A check that reaches someone else's
   machine is not a check.
-- **Keys, credentials and snippets are gone, cut back to an MVP.** With them
-  went the three managers and the Library tab, the Credential record and
-  `credentialId`, `startup` on a host and a group, generating a key, putting
-  one on a host (`CopyID`, `Runner`), and the askpass helper and keychain —
-  so **this app no longer answers a password prompt**. A host that takes only
-  a password still connects in a **session**, because ssh asks on the pty
-  where it can be typed, exactly as in Terminal.app; but `SSHArgs.unattended`
-  fixes `BatchMode=yes`, so **Files cannot reach such a host** at all. That is
-  the one capability the cut costs. What stayed is `identity` on a host and a
-  group: that is a plain `-i`, inherited like `user` and the jump host, not
-  the Keys manager. If any of it comes back, the pre-reset bundle has it;
-  don't bring it back without a reason from someone other than us.
+- **Keys, credentials and snippets are gone**, and the askpass helper with
+  them, so **this app no longer answers a password prompt** and the SFTP window
+  cannot reach a host that takes only a password. `identity` stayed, a plain
+  `-i`. **Don't bring any of it back without a reason from someone other than
+  us.**
+  → [the MVP cut](docs/notes/cuts-and-sweeps.md#the-mvp-cut)
 - **The cut's leftover engines are gone**: `Core/Command.swift` and
   `Model/Shell.swift` ran programs for features since removed, and are in this
   repository's root commit. Three things in `Command` outlast it, for whenever
@@ -833,13 +822,10 @@ credentials, which is most of it.
   and a row's context menu cannot be opened from a script. Drive connecting
   against `127.0.0.1` port 1, and pin every preference an assertion leans on.
   → [System Events](docs/notes/driving.md#system-events)
-- A key path is **spelled however it was typed** — `~/.ssh/id_ed25519`,
-  `/Users/you/.ssh/id_ed25519`, the same with `.pub` on the end — so anything
-  comparing two of them has to settle both first (tilde expanded, `.pub`
-  dropped). `Core/SSHKeys.swift` did that for the Keys manager and went with
-  it; a host's `identity` is now only ever handed to ssh, which does its own
-  expanding, so nothing compares paths any more. Write it again rather than
-  comparing the strings if anything ever needs to.
+- **A key path is spelled however it was typed**, so anything comparing two
+  must settle both first — tilde expanded, `.pub` dropped. Nothing compares
+  them now; write that again rather than comparing strings.
+  → [key paths](docs/notes/cuts-and-sweeps.md#key-paths)
 - **A screenshot needs the app frontmost**: ScreenCaptureKit refuses a freshly
   built tool. Check who is frontmost first, and skip rather than take focus
   while somebody is typing.
@@ -886,14 +872,10 @@ credentials, which is most of it.
   cluster, so a parser that matches `"\r"` and looks ahead for the `"\n"`
   matches neither: the lookahead eats the next value and the row never ends.
   Match `"\r\n"` as itself, beside `"\n"` and `"\r"`.
-- **Removing a field from the model is not enough: the importer has to keep
-  accepting it.** A YAML file is refused whole when it holds a key the parser
-  does not know, so taking `forwards` out of the allowed list made **every
-  export written before the cut** unimportable, over a feature that no longer
-  exists. The key is accepted, its rules dropped, and the host noted as having
-  had them. `credentials`, `snippets`, `credential` and `startup` are accepted
-  the same way for the same reason. Do this for anything else ever removed
-  from the format — a file somebody exported last month is still theirs.
+- **A field removed from the model stays accepted by the importer**, its value
+  dropped and the host noted, or every export written before is refused whole —
+  as `forwards`, `credentials`, `snippets`, `credential` and `startup` are.
+  → [removed fields](docs/notes/cuts-and-sweeps.md#removed-fields)
 - A column a CSV names that nothing can be made of is **passed over and
   reported**, not refused — the opposite of the settings file's rule, and for
   the opposite reason. That file is written by hand, where a typo doing

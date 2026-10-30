@@ -99,3 +99,52 @@ fetched from it by hand.
 It cost nothing to do, because the repository was still private with no
 forks and no other clones — and **it would not be free a second time**.
 Don't re-root a history anyone has pulled.
+
+## Port forwarding
+
+**Port forwarding is gone, and tmux with it.** It was built, and in weeks of
+real use the host list held **zero** rules — while it was the only reason
+this app needed tmux installed at all. Cutting it removed an install
+prerequisite, a "needs tmux, which is not installed" warning, a socket-path
+length problem, and `SHELLHAND_TMUX_SOCKET` from every harness. The store's
+`forwards` table is dropped by migration **v6** rather than by editing v1:
+migrations are append-only, and every store in existence has already run v1,
+so rewriting history would leave those stores with a table the migrator
+thinks it never made. **Don't bring it back without a reason from someone
+other than us.**
+
+## The MVP cut
+
+**Keys, credentials and snippets are gone, cut back to an MVP.** With them
+went the three managers and the Library tab, the Credential record and
+`credentialId`, `startup` on a host and a group, generating a key, putting
+one on a host (`CopyID`, `Runner`), and the askpass helper and keychain —
+so **this app no longer answers a password prompt**. A host that takes only
+a password still connects in a **session**, because ssh asks on the pty
+where it can be typed, exactly as in Terminal.app; but `SSHArgs.unattended`
+fixes `BatchMode=yes`, so **Files cannot reach such a host** at all. That is
+the one capability the cut costs. What stayed is `identity` on a host and a
+group: that is a plain `-i`, inherited like `user` and the jump host, not
+the Keys manager. If any of it comes back, the pre-reset bundle has it;
+don't bring it back without a reason from someone other than us.
+
+## Key paths
+
+A key path is **spelled however it was typed** — `~/.ssh/id_ed25519`,
+`/Users/you/.ssh/id_ed25519`, the same with `.pub` on the end — so anything
+comparing two of them has to settle both first (tilde expanded, `.pub`
+dropped). `Core/SSHKeys.swift` did that for the Keys manager and went with
+it; a host's `identity` is now only ever handed to ssh, which does its own
+expanding, so nothing compares paths any more. Write it again rather than
+comparing the strings if anything ever needs to.
+
+## Removed fields
+
+**Removing a field from the model is not enough: the importer has to keep
+accepting it.** A YAML file is refused whole when it holds a key the parser
+does not know, so taking `forwards` out of the allowed list made **every
+export written before the cut** unimportable, over a feature that no longer
+exists. The key is accepted, its rules dropped, and the host noted as having
+had them. `credentials`, `snippets`, `credential` and `startup` are accepted
+the same way for the same reason. Do this for anything else ever removed
+from the format — a file somebody exported last month is still theirs.
