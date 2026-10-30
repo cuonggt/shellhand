@@ -163,7 +163,8 @@ the icon.
 `CLAUDE.md` is the working notes — every convention, and every trap found the
 hard way, as a rule — and `docs/notes/` holds the story behind each: how it
 was found, what was measured, and what went wrong first. They are written for
-whoever touches the code next, which includes you.
+whoever touches the code next, which includes you, and
+[CONTRIBUTING.md](.github/CONTRIBUTING.md) says how to send a change.
 
 ## Licence
 

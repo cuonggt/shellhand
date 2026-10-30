@@ -11,7 +11,9 @@ This repository is public, under GPL-3.0-or-later: `LICENSE` holds the licence
 and `README.md` is what a visitor reads. `docs/name-and-pricing.md` has the
 name, and the decision that it is free and open-source. A vulnerability goes to
 a private report, never an issue: `.github/SECURITY.md` says so, and the
-README, the issue form and the site point there.
+README, the issue form and the site point there. `.github/CONTRIBUTING.md` is
+what a contributor reads: the ad-hoc build, a feature discussed before it is
+written, and GPL with no CLA.
 
 ## How it fits together
 

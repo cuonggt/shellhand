@@ -98,7 +98,10 @@ run, so there was never a subscription to fund — only the work.
 **What GPL-3.0 still moves.** The **Mac App Store is out** as a channel while
 the app is only GPL — Apple's terms and the licence do not agree. Getting it
 back would mean dual-licensing, which is possible only because the copyright
-is held by one person.
+is held by one person. Contributions come in under GPL-3.0-or-later with no
+CLA, decided on 2026-10-30, so that stays true only of the maintainer's own
+code: anything contributed would need its author's consent, or rewriting,
+before it could be licensed any other way.
 
 ## Before shipping
 
