@@ -157,3 +157,40 @@ what stops a run is not any live Shellhand: it is one launched from the same
 build products the test host wants, which is the copy you have been looking
 at in `-derivedDataPath`. Quit that one; the installed copy can stay, open
 or shut.
+
+## A copy beside the run
+
+**A copy running from the build products did *not* stop a suite run**, which
+is narrower than this file has been claiming. The note above says what stops
+`xcodebuild test` is "one launched from the same build products the test
+host wants — the copy you have been looking at in `-derivedDataPath`".
+Today a copy from exactly that path was running, with a live `ssh` under it,
+and the run came back **539 passed**. So that is not the condition, or not
+the whole of it. What *is* still true is that **`window-check.sh` cannot
+run beside another copy** — System Events addresses a process by name and
+two make every lookup ambiguous — and that refusal is the thing to work
+around, by addressing the copy by its **`unix id`** rather than by name.
+
+## HostStore
+
+**`HostStore` is testable because every call carries its own `db:`.**
+`Core.shared` is a singleton actor, but nothing about it is pinned to one
+database — `snapshot(db:)`, `save(db:…)` and the rest take the path per
+call, so a `HostStore(dbPath: <temporary file>)` reaches nothing of the
+user's and needs no fake. `Tests/HostStoreTests.swift` uses that, and the
+rule it most wants covered is `move(group:toParent:)` refusing a group into
+its own descendant: that is the write that would create the very loop the
+guards in `Tree` exist to survive.
+Check the real store's timestamp after touching any of this. It is one
+`stat` and it is the only thing that proves a run stayed in the temporary
+directory — the suite opened and migrated the real host list once already.
+
+## Host and Foundation
+
+`import Foundation` in a test file makes **`Host` ambiguous** with
+`Foundation.Host`, so `Tests/ValidationTests.swift` deliberately does not
+import it. If something there needs `UUID`, give it a literal id instead.
+The other way out, where the import is genuinely needed — `TerminalSessionTests`
+writes an ssh log to disk — is to spell the app's own type `Shellhand.Host`,
+exactly as `SwiftUI.Group` is spelled out elsewhere. Leave the comment on the
+import saying why, or the next person deletes it and the file stops building.

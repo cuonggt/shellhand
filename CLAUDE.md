@@ -249,16 +249,11 @@ credentials, which is most of it.
   `ImageRenderer` against colours rendered the same way; a `List` or a
   `ScrollView` will not render at all.
   → [the palette picker](docs/notes/terminal.md#the-palette-picker)
-- **A copy running from the build products did *not* stop a suite run**, which
-  is narrower than this file has been claiming. The note above says what stops
-  `xcodebuild test` is "one launched from the same build products the test
-  host wants — the copy you have been looking at in `-derivedDataPath`".
-  Today a copy from exactly that path was running, with a live `ssh` under it,
-  and the run came back **539 passed**. So that is not the condition, or not
-  the whole of it. What *is* still true is that **`window-check.sh` cannot
-  run beside another copy** — System Events addresses a process by name and
-  two make every lookup ambiguous — and that refusal is the thing to work
-  around, by addressing the copy by its **`unix id`** rather than by name.
+- **A copy running from the build products has also been seen not to stop a
+  run**, 539 passing beside one, so that rule is narrower than it reads. What
+  holds is that `window-check.sh` cannot run beside another copy; address a
+  copy by its `unix id`, never its name.
+  → [a copy beside the run](docs/notes/testing.md#a-copy-beside-the-run)
 - **The terminal's text is inset 8pt and its background still runs edge to
   edge**: `padding`, a `frame` filling the pane at `.topLeading`, and a
   `background` in `TerminalSession.background`, taken from the palette —
@@ -344,17 +339,11 @@ credentials, which is most of it.
   title, with the `TerminalSession` one calling it. A session builds a 900×560
   terminal view and registers a notification observer, which is a lot of
   machinery to stand up in order to check where a string gets cut.
-- **`HostStore` is testable because every call carries its own `db:`.**
-  `Core.shared` is a singleton actor, but nothing about it is pinned to one
-  database — `snapshot(db:)`, `save(db:…)` and the rest take the path per
-  call, so a `HostStore(dbPath: <temporary file>)` reaches nothing of the
-  user's and needs no fake. `Tests/HostStoreTests.swift` uses that, and the
-  rule it most wants covered is `move(group:toParent:)` refusing a group into
-  its own descendant: that is the write that would create the very loop the
-  guards in `Tree` exist to survive.
-  Check the real store's timestamp after touching any of this. It is one
-  `stat` and it is the only thing that proves a run stayed in the temporary
-  directory — the suite opened and migrated the real host list once already.
+- **`HostStore` is tested against a scratch database**, since every call
+  carries its own `db:` and it needs no fake. Check the real store's
+  modification time after touching any of it — the suite once opened and
+  migrated the real list.
+  → [HostStore](docs/notes/testing.md#hoststore)
 - **A file pane's derived values live in `Model/Places.swift`**, testable
   without a session. `isLocal` decides whether names clash case-insensitively,
   and a pane pointed nowhere is not local: three states are pinned, not two.
@@ -680,13 +669,10 @@ credentials, which is most of it.
   counting them would report a draft as used by the whole list. That trap bit
   twice, in what-uses-a-credential and in what-uses-a-key, and both are gone;
   it is written down because it is a property of "match by id", not of either.
-- `import Foundation` in a test file makes **`Host` ambiguous** with
-  `Foundation.Host`, so `Tests/ValidationTests.swift` deliberately does not
-  import it. If something there needs `UUID`, give it a literal id instead.
-  The other way out, where the import is genuinely needed — `TerminalSessionTests`
-  writes an ssh log to disk — is to spell the app's own type `Shellhand.Host`,
-  exactly as `SwiftUI.Group` is spelled out elsewhere. Leave the comment on the
-  import saying why, or the next person deletes it and the file stops building.
+- **`import Foundation` in a test file makes `Host` ambiguous**: leave it out,
+  or spell the type `Shellhand.Host`, and leave the comment on the import
+  saying why.
+  → [Host and Foundation](docs/notes/testing.md#host-and-foundation)
 - **A terminal that has heard nothing is blank, not empty**:
   `getBufferAsData` hands back its own blank rows, so the test for output is
   blank once whitespace is trimmed, or every session reads as connected on its
