@@ -6,13 +6,13 @@
 # which is why they are formatted exactly as they are: one per line, two
 # spaces in, the value in double quotes.
 cask "shellhand" do
-  version "0.1.2"
+  version "0.1.3"
   # Rewritten by scripts/release.sh with the new DMG's digest; between releases
   # it holds the previous one's, which is real. That is what keeps a slip safe:
   # were the version ever moved on without the digest — by hand, or by a run
   # that half finished — Homebrew would fetch the new DMG, find it does not
   # match, and refuse loudly instead of installing something unverified.
-  sha256 "7aa4703f2f382bc414f10c68fcc288cbf4fa398fcb9976648d0add23110e185a"
+  sha256 "b5a45c6532d439356451d6bfe4cb3177d2b9b84b1031e250f239724e03a7b900"
 
   url "https://github.com/cuonggt/shellhand/releases/download/v#{version}/Shellhand-#{version}.dmg"
   name "Shellhand"
