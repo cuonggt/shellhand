@@ -366,15 +366,10 @@ credentials, which is most of it.
   Check the real store's timestamp after touching any of this. It is one
   `stat` and it is the only thing that proves a run stayed in the temporary
   directory — the suite opened and migrated the real host list once already.
-- **A file pane's derived values live in `Model/Places.swift`**, because a
-  `FilePlace` only reaches its states by connecting to something: asking "what
-  does a pane pointed nowhere call itself" would otherwise mean opening an
-  SFTP session to find out. `FilePlace` and `ReplaceQuestion` delegate.
-  `isLocal` is the one worth knowing about. It reads like a label and is not:
-  `FilesModel` hands it to `Replacing.clashes` as `caseInsensitive`, because
-  this disk is and a server's usually is not. And an **unpointed** pane is not
-  local — the same `chosen` flag that stops it calling itself "This Mac" —
-  so the three states are pinned rather than the two that are obvious.
+- **A file pane's derived values live in `Model/Places.swift`**, testable
+  without a session. `isLocal` decides whether names clash case-insensitively,
+  and a pane pointed nowhere is not local: three states are pinned, not two.
+  → [a pane's places](docs/notes/sftp.md#a-panes-places)
 - **`Model/Files.swift`'s orchestration is tested with local panes**,
   which need no session: the open guard, and the replace question with a copy
   really parked on its continuation. Do not walk `parent()` up out of a
@@ -450,13 +445,10 @@ credentials, which is most of it.
   selection: a group's New Host… is `newHostIn` that group, while ⌘N in File
   still makes an unfiled host.
   → [a row's menu](docs/notes/window.md#a-rows-menu)
-- A file session is opened **once** per pane, guarded by a flag set before the
-  first await. Checking only whether the session exists let two opens through
-  together: the second one's walk to the home directory landed after the first
-  had navigated away, so a download went to the wrong folder with the job
-  reporting success. The `.task` that used to re-run on every tab switch is a
-  window's now and runs once, but the guard stays — it is cheap, and what it
-  protects against is a race rather than a particular way of re-entering.
+- **A file session is opened once per pane**, behind a flag set before the
+  first await; two opens together once sent a download to the wrong folder
+  while the job reported success.
+  → [opened once](docs/notes/sftp.md#opened-once)
 - **Sessions are a strip of tabs across the terminal**, at the user's word, and
   the sidebar is the host list alone. A tab shows `Sessions.shortTitle`, capped
   at 180pt and cut in the middle; if the strip fills, shorten it further —
@@ -530,20 +522,10 @@ credentials, which is most of it.
   than showing this Mac a second time, which told you nothing and made you
   choose anyway. Either side can be re-pointed from its own menu, so
   host-to-host copying is intact; it is just not what opening SFTP means.
-- **SFTP is a window, and one at a time.** A window because it can sit beside
-  a terminal and a tab cannot, so a transfer can be watched while something
-  else is typed. One because asking again brings the window you have forward
-  and **re-points** it — `FilesModel.show(host)` moves the far side, where
-  `start(on:)` only fills a side never chosen — rather than stacking another
-  over it. Two hosts' files at once is the two panes inside, not two windows.
-  It is let go on closing, so the next opening is a fresh browser rather than
-  one still holding the last one's connections.
-  **This has flipped four times: tab, window, tab, window**, each turn asked
-  for directly. The case for a tab is that the split can then hold one, which
-  was built and worked; the case for a window is that it can sit anywhere,
-  including beside a terminal, without the split existing at all. Don't flip
-  it a fifth time on reasoning alone — only on a reason from someone who has
-  used it.
+- **SFTP is a window, and one at a time**: asking again brings it forward and
+  re-points it through `FilesModel.show(host)`. It has flipped between tab and
+  window four times — **don't flip it a fifth on reasoning alone**.
+  → [a window, one at a time](docs/notes/sftp.md#a-window-one-at-a-time)
 - **Closing the SFTP window ends both panes' sessions**, through
   `FilesModel.close()`, answering a replace question still up first — for
   weeks it left an `ssh` child per pane running until quit, while a comment

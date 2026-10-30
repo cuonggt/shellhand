@@ -555,3 +555,42 @@ between a `refresh` that worked and a `preview` that did not — which the
 watcher closes at the next external change. Reporting here would be a second
 alarm for a fire already ringing. **Left on purpose; the spinner is the
 symptom, the alert is the message.**
+
+## A pane's places
+
+**A file pane's derived values live in `Model/Places.swift`**, because a
+`FilePlace` only reaches its states by connecting to something: asking "what
+does a pane pointed nowhere call itself" would otherwise mean opening an
+SFTP session to find out. `FilePlace` and `ReplaceQuestion` delegate.
+`isLocal` is the one worth knowing about. It reads like a label and is not:
+`FilesModel` hands it to `Replacing.clashes` as `caseInsensitive`, because
+this disk is and a server's usually is not. And an **unpointed** pane is not
+local — the same `chosen` flag that stops it calling itself "This Mac" —
+so the three states are pinned rather than the two that are obvious.
+
+## Opened once
+
+A file session is opened **once** per pane, guarded by a flag set before the
+first await. Checking only whether the session exists let two opens through
+together: the second one's walk to the home directory landed after the first
+had navigated away, so a download went to the wrong folder with the job
+reporting success. The `.task` that used to re-run on every tab switch is a
+window's now and runs once, but the guard stays — it is cheap, and what it
+protects against is a race rather than a particular way of re-entering.
+
+## A window, one at a time
+
+**SFTP is a window, and one at a time.** A window because it can sit beside
+a terminal and a tab cannot, so a transfer can be watched while something
+else is typed. One because asking again brings the window you have forward
+and **re-points** it — `FilesModel.show(host)` moves the far side, where
+`start(on:)` only fills a side never chosen — rather than stacking another
+over it. Two hosts' files at once is the two panes inside, not two windows.
+It is let go on closing, so the next opening is a fresh browser rather than
+one still holding the last one's connections.
+**This has flipped four times: tab, window, tab, window**, each turn asked
+for directly. The case for a tab is that the split can then hold one, which
+was built and worked; the case for a window is that it can sit anywhere,
+including beside a terminal, without the split existing at all. Don't flip
+it a fifth time on reasoning alone — only on a reason from someone who has
+used it.
