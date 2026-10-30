@@ -1,10 +1,11 @@
 # How the app is put together
 
-Shellhand is one window: a host list on the left, and on the right either the
-list again as cards, a host's details, or a terminal. SFTP is a window of its
-own. Everything below the views goes through `Core`, an actor that holds the
-store connection and the work — sessions, transfers — that outlives the call
-that started it.
+Shellhand is one window: the host list as a tree in the sidebar; beside it a
+strip of tabs, the first holding the list again — as rows or as cards — and
+one more for each session; and on the right an inspector describing the host
+selected. SFTP and Settings are windows of their own. Everything below the
+views goes through `Core`, an actor that holds the store connection and the
+work — sessions, transfers — that outlives the call that started it.
 
 ## The layers
 
@@ -17,7 +18,9 @@ that started it.
   what is moving between them.
 - `Shellhand/Terminal/` — a session: `ssh` on a pty through SwiftTerm.
 - `Shellhand/Views/` — SwiftUI, plus the handful of AppKit pieces SwiftUI
-  cannot do: the Settings and SFTP windows, and the sidebar's click monitor.
+  cannot do: the Settings and SFTP windows, the sidebar's click monitor, the
+  key monitor that steps the tabs on ⌃⇥, and a guard standing in front of
+  SwiftUI's own window delegate so that closing the window asks first.
 
 The host list is SQLite through GRDB, at
 `~/Library/Application Support/Shellhand/`. A snapshot of a couple of hundred
@@ -26,7 +29,7 @@ rather than a file opened per call.
 
 Every host arrives with what is written on it **plus an `effective` block**:
 what inheritance made of each value, and the name of whatever supplied it.
-That is why the detail pane can say not just `deploy` but where `deploy` came
+That is why the inspector can say not just `deploy` but where `deploy` came
 from, and why the editor's empty fields can show what they would inherit.
 
 ## Connecting
@@ -51,6 +54,14 @@ that had already been answered. That rule is `Terminal/HostKey.swift`, out on
 its own so it can be asked without a pty, an unknown host or a window; the
 tests include the stuck case, and the boundary of how far back it looks.
 
+**The screen is watched only around connecting**: while connecting, while a
+question is up, and for two minutes after the session comes through, which
+covers every hop of a jump chain. Reading the screen means reading the whole
+history — SwiftTerm gives the app no part of it — and five reads a second of
+10,000 lines would cost every open session the main thread. A question asked
+later, by something run inside the session, is answered in the terminal, as
+anywhere else.
+
 **A password is typed into the terminal**, as it would be anywhere else. An
 askpass helper answering from the keychain was built and taken out with
 credentials, so the app no longer answers a prompt at all — and an sftp child,
@@ -64,24 +75,35 @@ not a thing to fill in on a form. Options are ordered by how specific they
 are, because ssh keeps the **first** value it is given: the host's own, then
 each group going up, then the config's.
 
+It is read once, when the app opens. A file that cannot be used — not YAML, a
+key that is not a setting, an option ssh would refuse — applies nothing, and
+the window names what is wrong in an alert rather than running without it in
+silence.
+
 ## What the window shows
 
 - Hosts in their groups, folded on open under a "Hosts" heading, with the tags
   they carry along the bottom and a search that takes a name, an address, a
   user or a tag.
+- The list again beside it, as rows or cards, the arrows walking it and
+  Return or a double-click connecting; and the sessions as tabs after it,
+  stepped through with ⇧⌘] and ⇧⌘[ or ⌃⇥, each with a menu of its own.
 - ⌘K to connect to a host by part of its name, nearest match first, with the
-  arrows moving the highlight.
-- A host's detail: where it goes, what it logs in as, the `ssh` line it will
-  actually be given, the sessions already open on it, and beside each value
-  the group it came from. An ssh config entry that takes this host's name
-  somewhere else is called out, since the settings written there are not this
-  host's.
+  arrows moving the highlight — or to any `user@host:port` typed there, which
+  connects without being saved.
+- The inspector, for the host selected: where it goes, what it logs in as,
+  the system it runs, the `ssh` line it will actually be given, the sessions
+  already open on it, its palette, and beside each value the group it came
+  from. A jump host or `ProxyCommand` your ssh config gives it is shown as
+  such, and a config entry that takes this host's name somewhere else is
+  called out, since the settings written there are not this host's.
 - An editor whose empty fields say what they would inherit, so leaving one
   empty reads as a decision rather than an omission.
 - Importing from `~/.ssh/config`, a CSV, or this app's own YAML, with a
   preview of exactly what the import will do.
-- ⌘F searches the scrollback, ⌘G and ⇧⌘G walk the matches, and ⌘+, ⌘- and ⌘0
-  size the text. Links in the output are already clickable: SwiftTerm opens
+- ⌘F searches the scrollback — 10,000 lines of it — ⌘G and ⇧⌘G walk the
+  matches, ⌥⌘K clears it, and ⌘+, ⌘- and ⌘0 size the text, in any monospaced
+  font installed. Links in the output are already clickable: SwiftTerm opens
   them itself.
 - SFTP: a window of its own, one at a time, this Mac on the left and a host on
   the right, with transfers along the bottom. The session is kept open, so
@@ -93,7 +115,8 @@ each group going up, then the config's.
   toolbar button is a shortcut nobody finds. **A menu is named for what its
   items act on**, and that is what gates it: **Host** needs one selected,
   **Terminal** needs a session in front, and the app menu's own two — Hosts
-  and SFTP — need nothing.
+  and SFTP — need nothing. Help opens the README and this repository's
+  problem form.
 
 macOS restores the window; the app restores what was selected in it. Nothing
 reconnects on its own — opening a window should not reach out to other
@@ -125,7 +148,9 @@ between. An unsupported `Match` block is skipped rather than refusing the
 file: a `Match exec` cannot be answered from here, and importing the rest of a
 config beats importing none of it. Keys the app no longer keeps are accepted,
 dropped, and listed in the preview — refusing a whole file over a field that
-is no longer read would be worse than saying what was passed over.
+is no longer read would be worse than saying what was passed over. A file
+that is not YAML at all is refused with Yams's own line and column, where it
+used to come in as an empty list.
 
 ## Building and checking it
 
@@ -151,7 +176,8 @@ child; which tab is in front, what is beside it, and what ⌘D and closing a tab
 do; what ⌘K offers for what was typed; the sidebar flattened into one list and
 what search narrows it to; whether ssh is waiting to be told about a host key,
 and which part of the screen is the question; what a session's state becomes
-given what is on its screen. None of those needs a window, because none of
+given what is on its screen, and when the screen is read at all; whether
+closing or quitting asks first. None of those needs a window, because none of
 them keeps state — the views still own that and simply obey.
 
 **What it still does not do is drive the views themselves.** One thing checks
@@ -161,12 +187,15 @@ System Events the way somebody on the keyboard does — folded as it comes up,
 then opened with the arrow keys, then a row picked and the **Host** menu read
 back to prove the selection reached the app rather than only the outline. It
 asks the app for nothing it does not already publish. Everything else above
-`Core/` is judged by building it and using it — which is why so much of
-`CLAUDE.md` is about what that costs and how to do it without being fooled.
+`Core/` is judged by building it and using it, or by driving a scratch copy
+through System Events — a store of its own, the preferences borrowed and
+given back — which is why so much of `CLAUDE.md` is about what that costs and
+how to do it without being fooled.
 
 A release is `scripts/release.sh`, which takes it from `xcodebuild` through
 signing, notarization and a stapled DMG to a signed appcast and an updated
-cask — and **publishes nothing**, printing the two commands that would.
+cask — and **publishes nothing**, printing the three commands that would, in
+the one order that works.
 
 ## Traps worth knowing
 
@@ -205,6 +234,17 @@ and the whole Terminal menu, where it left ⌘W closing a session off screen.
 What is in front is `ContentView.pane`; `current` is gone so it cannot be
 asked again.
 
+**A descriptor borrowed by number.** A run of the suite once sat sixteen
+minutes on one SFTP conversation, and for weeks the stall was bounded — a
+request deadline named the request — rather than understood. It was the
+suite's own scripted server: its reader thread held the pipe's descriptor by
+number, the `FileHandle` owning it went away under heavy churn, and the number
+was handed to the next pipe, so an orphaned thread read another
+conversation's bytes and lost them in both directions at once. A `dup` of its
+own, closed by the thread, ended it — none in 100,000 conversations, against
+11 in 80,000 without. The engine was never at fault, and `SFTPChurnTests`
+keeps it that way.
+
 `CLAUDE.md` has the rest, and there are a lot of them.
 
 ## Two names to know
@@ -215,23 +255,16 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 
 ## Not here yet
 
-**Files cannot reach a host that takes only a password.** An `sftp` child is
-given `BatchMode=yes`, so there is nothing left to answer a prompt with. It is
-the one capability the cut back to an MVP costs; a session to such a host still
-works, because ssh asks on the pty where it can be typed.
+**The SFTP window cannot reach a host that takes only a password.** An `sftp`
+child is given `BatchMode=yes`, so there is nothing left to answer a prompt
+with. It is the one capability the cut back to an MVP costs; a session to such
+a host still works, because ssh asks on the pty where it can be typed.
 
 **A host-key question is found by putting rows back together, not by reading
 logical lines.** It is found and shown whole down to about three columns, which
 is narrower than anyone types in, but the right fix is still at the source —
 have `screen` rejoin wrapped rows, so every reader sees logical lines — and it
-is not available: SwiftTerm keeps `Buffer.lines` and `Terminal.cols` internal,
-so the app cannot ask how wide the terminal is or which rows continued.
-
-**And one bug is bounded rather than understood.** A run of the suite once sat
-sixteen minutes on a single SFTP conversation, with both pipe reader threads
-idle and a continuation nothing was ever going to resume. It is episodic, it
-has turned up in three different tests — including the minimal conversation, so
-every theory about batching and framing is dead — and a clean batch proves
-nothing about it, however long. A request carries a deadline now, so the next
-sighting is a named failure saying which request went unanswered. That is not
-an explanation; it is a way of buying one cheaply.
+is not available: SwiftTerm 1.99's view keeps its `Terminal` internal, so the
+app can ask neither how wide the terminal is nor which rows continued — nor
+read part of the buffer, which is why the screen is watched only around
+connecting.
