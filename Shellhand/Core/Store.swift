@@ -212,12 +212,25 @@ nonisolated final class Store: Sendable {
     /// Saves a host, giving it an id if it arrived without one, and hands back
     /// what was written rather than what was asked for — the caller wants the
     /// id, and a trimmed name is the store's business.
+    ///
+    /// A rename takes the jump fields that named the host along
+    /// (`Validation.renaming`), in the same transaction, so what follows is
+    /// decided from the state it is written into.
     @discardableResult
     func save(_ host: Host) throws -> Host {
         var out = host
         out.id = out.id.isEmpty ? Store.newID() : out.id
         out.name = out.name.trimmingCharacters(in: .whitespaces)
-        try db.write { db in try out.upsert(db) }
+        try db.write { db in
+            let was = try String.fetchOne(
+                db, sql: "SELECT name FROM hosts WHERE id = ?", arguments: [out.id])
+            try out.upsert(db)
+            guard let was, was != out.name else { return }
+            let following = Validation.renaming(
+                out, from: was, hosts: try Host.fetchAll(db), groups: try Group.fetchAll(db))
+            for moved in following.hosts { try moved.upsert(db) }
+            for moved in following.groups { try moved.upsert(db) }
+        }
         return out
     }
 

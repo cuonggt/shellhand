@@ -756,8 +756,11 @@ credentials, which is most of it.
   names it or a group above it does (`effective`), and the groups that name
   it are named — "the jump host for 2 groups" said nothing of the six hosts
   in them. Without it ssh is left to find a machine by that name on its own.
-  **Renaming one still breaks them silently** — nothing rewrites their jump
-  fields yet.
+  **Renaming one takes them along** (`Validation.renaming`): every host's and
+  group's jump field that named it is rewritten in the rename's own
+  transaction, as renaming a tag retags its hosts, and the editor says so
+  before Save. Nothing follows while another host still answers to the old
+  name, which only a list from before names had to differ can hold.
 - A hosting controller sizes its window to **the view's minimum**, throwing
   away the rect `NSWindow` was given — so `setContentSize` has to come after
   `contentViewController`, and `setFrameAutosaveName` after that, because

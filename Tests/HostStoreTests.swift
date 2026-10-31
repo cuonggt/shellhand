@@ -220,6 +220,30 @@ struct HostStoreTests {
             .hasPrefix("bastion is the jump host for 1 host and the group EU."))
     }
 
+    /// Through the store, as the editor saves: the rename and what follows it
+    /// in one write, and the host inside the group reached by the new name.
+    /// Up to 0.1.3 the fields went on naming a host that was gone.
+    @Test("renaming a jump host takes the jump fields that named it along")
+    func renamingAJumpHost() async {
+        let store = scratch()
+        await store.refresh()
+        let eu = await store.save(Group(name: "EU", proxyJump: "bastion"))!
+        let bastion = await store.save(AppHost(name: "bastion", addr: "192.0.2.10"))!
+        await store.save(AppHost(name: "api", addr: "198.51.100.21", groupId: eu.id))
+        await store.save(AppHost(name: "db", addr: "192.0.2.21", proxyJump: "Bastion"))
+        var renamed = bastion
+        renamed.name = "gateway"
+        #expect(store.renameNote(for: renamed)
+            == "2 hosts and the group EU go through bastion, and will follow the new name.")
+        await store.save(renamed)
+        let hosts = store.snapshot.hosts
+        #expect(store.snapshot.groups.first { $0.id == eu.id }?.proxyJump == "gateway")
+        #expect(hosts.first { $0.name == "db" }?.proxyJump == "gateway")
+        #expect(hosts.first { $0.name == "api" }?.effective.proxyJump == "gateway")
+        #expect(store.deletionWarning(for: hosts.first { $0.name == "gateway" }!)
+            .hasPrefix("gateway is the jump host for 2 hosts and the group EU."))
+    }
+
     // MARK: import and export
 
     @Test("a list exported from one store imports into another")

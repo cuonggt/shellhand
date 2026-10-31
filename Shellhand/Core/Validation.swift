@@ -49,24 +49,89 @@ nonisolated enum Validation {
     /// groups that reach their machines through it. Their jump field names
     /// it, and once it is gone ssh is handed that name to make sense of on
     /// its own — which the warning, "This cannot be undone.", never said.
-    /// Matched as the resolver matches a jump, without regard to case.
+    static func deletionWarning(
+        for host: Host, hosts: [Host] = [], groups: [Group] = []
+    ) -> String {
+        let name = host.name.trimmingCharacters(in: .whitespaces)
+        guard let through = goingThrough(host, named: name, hosts: hosts, groups: groups)
+        else { return "This cannot be undone." }
+        return "\(name) is the jump host for \(through.who). Without it, ssh "
+            + "is left to find a machine called \(name) by itself. This cannot be undone."
+    }
+
+    /// What renaming a host takes with it: every other host's and group's
+    /// jump field that names it, rewritten to the new name, so what went
+    /// through it still does. Up to 0.1.3 nothing did, and a rename broke
+    /// them without a word. Only the records that change come back, as
+    /// `Tags.renaming` hands back only the hosts a tag is on.
+    ///
+    /// Nothing follows while another host still answers to the old name: a
+    /// field naming it still reaches a machine, and rewriting it could send
+    /// it through this one instead. Saving refuses a name another host has,
+    /// so only a list from before that rule can be in that state.
+    static func renaming(
+        _ host: Host, from old: String, hosts: [Host], groups: [Group]
+    ) -> (hosts: [Host], groups: [Group]) {
+        let new = host.name.trimmingCharacters(in: .whitespaces)
+        let was = old.trimmingCharacters(in: .whitespaces)
+        guard !new.isEmpty, !was.isEmpty, new != was,
+            !hosts.contains(where: { $0.id != host.id && names($0.name, was) })
+        else { return ([], []) }
+        let movedHosts = hosts.compactMap { other -> Host? in
+            guard other.id != host.id, names(other.proxyJump, was), other.proxyJump != new
+            else { return nil }
+            var moved = other
+            moved.proxyJump = new
+            return moved
+        }
+        let movedGroups = groups.compactMap { group -> Group? in
+            guard names(group.proxyJump, was), group.proxyJump != new else { return nil }
+            var moved = group
+            moved.proxyJump = new
+            return moved
+        }
+        return (movedHosts, movedGroups)
+    }
+
+    /// What the host editor says while a name is changed and something goes
+    /// through the host by it: before Save, rather than leaving the jump
+    /// fields to be found changed. Nil when nothing would follow.
+    static func renameNote(
+        for host: Host, from old: String, hosts: [Host], groups: [Group]
+    ) -> String? {
+        let was = old.trimmingCharacters(in: .whitespaces)
+        let following = renaming(host, from: was, hosts: hosts, groups: groups)
+        guard !following.hosts.isEmpty || !following.groups.isEmpty,
+            let through = goingThrough(host, named: was, hosts: hosts, groups: groups)
+        else { return nil }
+        let who = through.who.prefix(1).uppercased() + through.who.dropFirst()
+        return through.count == 1
+            ? "\(who) goes through \(was), and will follow the new name."
+            : "\(who) go through \(was), and will follow the new name."
+    }
+
+    /// Whether a jump field names a host, as the resolver reads one: trimmed,
+    /// and without regard to case.
+    private static func names(_ field: String, _ name: String) -> Bool {
+        !name.isEmpty
+            && field.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame
+    }
+
+    /// The hosts and groups that go through a host by this name, said the way
+    /// a person counts them — "6 hosts and the groups EU and US" — and how
+    /// many that is. Nil when nothing does.
     ///
     /// A host is counted by what reaches it, `effective`, as well as by its
     /// own field: "the jump host for 2 groups" said nothing of the six hosts
     /// in them. The groups are named, since that is where it would be
     /// changed.
-    static func deletionWarning(
-        for host: Host, hosts: [Host] = [], groups: [Group] = []
-    ) -> String {
-        let name = host.name.trimmingCharacters(in: .whitespaces)
-        func through(_ jump: String) -> Bool {
-            !name.isEmpty
-                && jump.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(name) == .orderedSame
-        }
+    private static func goingThrough(
+        _ host: Host, named name: String, hosts: [Host], groups: [Group]
+    ) -> (who: String, count: Int)? {
         let jumping = hosts.filter {
-            $0.id != host.id && (through($0.proxyJump) || through($0.effective.proxyJump))
+            $0.id != host.id && (names($0.proxyJump, name) || names($0.effective.proxyJump, name))
         }.count
-        let groupsJumping = groups.filter { through($0.proxyJump) }.map(\.name)
+        let groupsJumping = groups.filter { names($0.proxyJump, name) }.map(\.name)
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
         var who: [String] = []
         if jumping > 0 { who.append(jumping == 1 ? "1 host" : "\(jumping) hosts") }
@@ -77,9 +142,8 @@ nonisolated enum Validation {
             who.append("the groups \(groupsJumping.dropLast().joined(separator: ", ")) and \(groupsJumping.last!)")
         default: who.append("\(groupsJumping.count) groups")
         }
-        guard !who.isEmpty else { return "This cannot be undone." }
-        return "\(name) is the jump host for \(who.joined(separator: " and ")). Without it, ssh "
-            + "is left to find a machine called \(name) by itself. This cannot be undone."
+        guard !who.isEmpty else { return nil }
+        return (who.joined(separator: " and "), jumping + groupsJumping.count)
     }
 
     /// Deleting a group keeps what was under it, which is the part worth

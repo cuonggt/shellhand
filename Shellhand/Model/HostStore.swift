@@ -186,6 +186,16 @@ final class HostStore {
             for: group, groups: snapshot.groups, hosts: snapshot.hosts)
     }
 
+    /// What saving a host under a new name would take along, for the editor
+    /// to say before Save. Nil for a host not yet saved, and for one nothing
+    /// goes through.
+    func renameNote(for host: Host) -> String? {
+        guard !host.id.isEmpty, let saved = snapshot.hosts.first(where: { $0.id == host.id })
+        else { return nil }
+        return Validation.renameNote(
+            for: host, from: saved.name, hosts: snapshot.hosts, groups: snapshot.groups)
+    }
+
     /// The name a group shows in a path, "Production / EU".
     func path(of group: Group) -> String { tree.path(of: group) }
 

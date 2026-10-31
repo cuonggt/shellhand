@@ -350,6 +350,14 @@ struct HostEditorSheet: View {
                     .foregroundStyle(.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+            // A rename takes the jump fields that name the host along, which
+            // is worth knowing before Save rather than finding them changed.
+            if let renameNote = store.renameNote(for: host) {
+                Label(renameNote, systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             // What the form adds up to, once there is an address to put in it:
             // `ssh ''` for an empty form says nothing anyone needs.
             if !preview.argv.isEmpty,

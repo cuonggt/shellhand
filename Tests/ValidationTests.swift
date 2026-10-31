@@ -230,3 +230,71 @@ nonisolated struct OptionValidationTests {
         #expect(Validation.problem(with: group, among: []) == nil)
     }
 }
+
+/// The fields a rename takes along, and what the editor says beforehand.
+@Suite("What renaming a host takes with it")
+nonisolated struct RenamingTests {
+    // bastion, renamed gateway: db-01 names it itself, cased and padded
+    // differently, api-eu-1 has it from EU, and web goes through edge.
+    private let renamed = Host(id: "b", name: "gateway", addr: "192.0.2.10")
+    private var hosts: [Host] {
+        var inherits = Host(id: "1", name: "api-eu-1", addr: "198.51.100.21", groupId: "e")
+        inherits.effective.proxyJump = "bastion"
+        var own = Host(id: "2", name: "db-01", addr: "192.0.2.21", proxyJump: " BASTION ")
+        own.effective.proxyJump = " BASTION "
+        return [
+            Host(id: "b", name: "bastion", addr: "192.0.2.10"),
+            inherits, own,
+            Host(id: "3", name: "web", addr: "10.0.0.3", proxyJump: "edge"),
+        ]
+    }
+    private let groups = [
+        Group(id: "e", name: "EU", proxyJump: "bastion"),
+        Group(id: "u", name: "US", proxyJump: "edge"),
+    ]
+
+    /// Every field that named it, a host's own or a group's, names the new
+    /// name, and nothing else is touched: api-eu-1 follows through EU.
+    @Test("a rename takes the jump fields that named the host along")
+    func follows() {
+        let following = Validation.renaming(renamed, from: "bastion", hosts: hosts, groups: groups)
+        #expect(following.hosts.map(\.id) == ["2"])
+        #expect(following.hosts.map(\.proxyJump) == ["gateway"])
+        #expect(following.groups.map(\.id) == ["e"])
+        #expect(following.groups.map(\.proxyJump) == ["gateway"])
+    }
+
+    @Test("an unchanged name takes nothing, and a change of case settles the spelling")
+    func unchangedOrRecased() {
+        let same = Host(id: "b", name: "bastion", addr: "192.0.2.10")
+        let none = Validation.renaming(same, from: "bastion", hosts: hosts, groups: groups)
+        #expect(none.hosts.isEmpty && none.groups.isEmpty)
+        let recased = Host(id: "b", name: "Bastion", addr: "192.0.2.10")
+        let settled = Validation.renaming(recased, from: "bastion", hosts: hosts, groups: groups)
+        #expect(settled.hosts.map(\.proxyJump) == ["Bastion"])
+        #expect(settled.groups.map(\.proxyJump) == ["Bastion"])
+    }
+
+    /// A list from before names had to differ can hold two hosts by one
+    /// name. The fields naming it still reach the other, so none of them is
+    /// rewritten onto this one.
+    @Test("nothing follows while another host still answers to the old name")
+    func anotherAnswers() {
+        let twice = hosts + [Host(id: "4", name: "Bastion", addr: "192.0.2.99")]
+        let following = Validation.renaming(renamed, from: "bastion", hosts: twice, groups: groups)
+        #expect(following.hosts.isEmpty && following.groups.isEmpty)
+        #expect(Validation.renameNote(for: renamed, from: "bastion", hosts: twice, groups: groups) == nil)
+    }
+
+    @Test("the editor says what will follow, before Save")
+    func note() {
+        #expect(Validation.renameNote(for: renamed, from: "bastion", hosts: hosts, groups: groups)
+            == "2 hosts and the group EU go through bastion, and will follow the new name.")
+        let alone = [Group(id: "e", name: "EU", proxyJump: "bastion")]
+        #expect(Validation.renameNote(for: renamed, from: "bastion", hosts: [hosts[0]], groups: alone)
+            == "The group EU goes through bastion, and will follow the new name.")
+        // Nothing goes through web, so renaming it says nothing.
+        let www = Host(id: "3", name: "www", addr: "10.0.0.3", proxyJump: "edge")
+        #expect(Validation.renameNote(for: www, from: "web", hosts: hosts, groups: groups) == nil)
+    }
+}
