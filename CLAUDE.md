@@ -933,6 +933,11 @@ credentials, which is most of it.
   and `click at` do nothing here — focus the outline once and arrow instead —
   and a row's context menu cannot be opened from a script. Drive connecting
   against `127.0.0.1` port 1, and pin every preference an assertion leans on.
+  **Compile every helper with `osacompile` before a drive**: one that does
+  not compile returns nothing, and AppleScript keeps words a helper reaches
+  for — `middle`, `items`, `times`, `buttons`. Read `front window` again
+  after anything that retitles it: a reference held from before names the
+  old title and no longer resolves.
   → [System Events](docs/notes/driving.md#system-events)
 - **A key path is spelled however it was typed**, so anything comparing two
   must settle both first — tilde expanded, `.pub` dropped. Nothing compares
@@ -1174,7 +1179,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.1.2 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.1.3 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`, whose
 clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`:
 fast-forward it before copying a cask in. The notarytool profile `Shellhand`
@@ -1182,8 +1187,9 @@ is stored, the EdDSA key is backed up off this disk, and release notes live
 at `docs/release-notes/<version>.md` — write one per version or the update
 window comes up blank. **Updating is proven end to end**, the dialog a new
 user meets included. Every release is checked the same way before and after
-publishing: hash a download as it streams, and compare a release page's notes
-as JSON. Don't predict when a release will reach an installed copy, and never
+publishing: hash a download as it streams, compare a release page's notes
+as JSON, and fetch the tag `gh release create` made before comparing the
+release's target to it. Don't predict when a release will reach an installed copy, and never
 trigger Check for Updates from here.
 → [every release](docs/notes/releases.md#every-release)
 

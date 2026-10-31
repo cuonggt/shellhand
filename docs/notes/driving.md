@@ -133,6 +133,19 @@ several into a list and returning that fails, which is why `findNthOutline`
 counts through a `property` instead. Ungated routes are still the cheapest
 when they fit: `New Group…` opens the group editor with nothing selected,
 and Shellhand ▸ SFTP opens without a selection.
+**A helper that does not compile returns nothing, which reads as an app that
+did nothing.** In the drive of 0.1.3's SFTP work the window "did not open",
+call after call, because the helper looking for it named a variable
+`middle`, which AppleScript keeps for itself — and the first theory, that the
+menu had been pressed too early, was wrong. `items`, `times` and `buttons`
+are taken too, the last by System Events' dictionary. Pull each helper out
+of the script and run `osacompile` on it before driving; it takes a second.
+**A window reference goes stale when the title changes.** System Events
+names a window by its title, so a `w` taken before a row is picked no longer
+resolves once the title is that row's name, and a pick that had worked
+reported an error. Read `front window of p` again each time instead. And
+not every window's list is the same outline: the Settings window's sidebar
+is its first, where the host window's pane is its second.
 
 ## The lock
 

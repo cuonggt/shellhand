@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0, 0.1.1 and 0.1.2, are out**, each
+**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.3, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -454,6 +454,51 @@ keeps its `launch.json` and its worktrees there, untracked, and the script
 counts anything `git status --porcelain` prints. The build ran with
 `--allow-dirty` once the porcelain said exactly `?? .claude/` and nothing
 else, so the DMG is still the commit the tag names.
+
+**0.1.3 is the UI/UX review's last three phases**, published at `7e2c548`
+and live on release, feed, cask and tap. Phase 3 made a session say what it
+is doing: the route and the time while connecting, with Stop Connecting on
+⌘.; an ending in words, with ssh's own line explained; a host-key sheet that
+names the hop; tab states as a symbol and words; and Reconnect in place.
+Phase 4 made SFTP lead somewhere: a host it cannot open says why, with Open
+in Terminal and Try Again; the window answers to its own keys; and transfers
+say which way they go and can be retried. Phase 5 made the app consistent:
+palettes chosen by looking everywhere, an import that runs on exactly what it
+previewed, one settings file that Settings can make, deletes that say what
+else goes, ⌘F for hosts, a tag bar that wraps, and no strip holding a lone
+Hosts tab. The suite went 677 → 737, and CI passed it on GitHub's Mac at
+`7c36c21` — the tagged commit's code with the feed and cask on top, the run
+for `7e2c548` itself again cancelled by that push.
+Verified the way 0.1.2 was, and everything passed. **Before publishing:** the
+app inside the DMG accepted by Gatekeeper as notarized, stapled, 0.1.3 (16),
+with the hardened runtime and a timestamp; the DMG's staple; all three feed
+items' notes identical to their files, each served from its own release; the
+0.1.3 item's length the DMG's size; the signature reproduced by re-signing;
+and the cask's digest the DMG's. **After:** every appcast URL answering 200
+at the length the feed claims; the DMG streamed back from GitHub hashing to
+the built one and to both casks; the feed's and the tap's cask blobs matching
+the committed ones through the API; and the release page's notes identical
+to the file, with the tagged commit as its target. Both notarizations went
+through the first time, and `generate_appcast` printed twelve "failed to
+move" warnings, the housekeeping described above.
+**Fetch the tag before comparing the release's target to it.** `gh release
+create` makes the tag on GitHub, not in this clone, so the after-check's
+`git rev-list -n1 v0.1.3` found nothing and reported the release's target as
+a mismatch against an empty string. Once `git fetch origin tag v0.1.3` had
+brought it here, the tag named `7e2c548` and everything matched.
+**Looking before building found two things, and one was the look's own
+doing.** The first drive of Phase 5's screens, on a scratch copy, found the
+delete warning calling bastion "the jump host for 2 groups" when six hosts
+go through it — it counted jump fields rather than what reaches each host.
+It also found File ▸ Import… opening on its user's own `~/.ssh/config` and
+listing two of their hosts in its preview: the resolver read the run's own
+ssh config under test, but the import sheet and the welcome still read the
+real one. Nothing was imported, and the picture was deleted at once. Both
+were fixed before the build, in `0795548`, and the second drive read the
+import sheet's file field before photographing it, ready to stop without a
+picture had it named anything under `.ssh`. The Mac sat idle through both
+drives, so this release was looked at in the app itself rather than
+rendered.
 
 ## The icon bundle
 
