@@ -309,9 +309,13 @@ struct HostsPane: View {
     }
 
     /// Wide enough for a name and a destination without wrapping, and as many
-    /// across as the pane has room for.
+    /// across as the pane has room for. Where only one fits it takes the
+    /// pane's width: held to 340, it left a third of a narrow pane empty
+    /// beside a single column.
     private var cards: [GridItem] {
-        [GridItem(.adaptive(minimum: 230, maximum: 340), spacing: 10, alignment: .topLeading)]
+        columns == 1
+            ? [GridItem(.flexible(), spacing: 10, alignment: .topLeading)]
+            : [GridItem(.adaptive(minimum: 230, maximum: 340), spacing: 10, alignment: .topLeading)]
     }
 
     /// The way back, which there was none of: once a group was open, nothing
@@ -372,14 +376,32 @@ struct HostsPane: View {
         .accessibilityLabel("\(folder.name), \(counted(folder))")
     }
 
+    /// A host's row with as much as the pane has room for: everything; then
+    /// without its tags; then without its group too; and last a narrower
+    /// name. Squeezed into a narrow pane instead, the tags wrapped a letter
+    /// to a line, group names hyphenated and destinations were cut to "d…2".
     private func row(for host: Host) -> some View {
+        ViewThatFits(in: .horizontal) {
+            line(for: host, nameWidth: 240, showsGroup: true, showsTags: true)
+            line(for: host, nameWidth: 240, showsGroup: true, showsTags: false)
+            line(for: host, nameWidth: 240, showsGroup: false, showsTags: false)
+            line(for: host, nameWidth: 160, showsGroup: false, showsTags: false)
+        }
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel("\(host.name), \(destination(of: host))")
+    }
+
+    private func line(
+        for host: Host, nameWidth: CGFloat, showsGroup: Bool, showsTags: Bool
+    ) -> some View {
         HStack(spacing: 10) {
             HostIcon(os: host.os, named: host.osLabel)
             // A set width, not a minimum: with a minimum the destination
             // starts wherever the name happens to end, so the second
             // column is ragged down the page and cannot be scanned.
             Text(host.name)
-                .frame(width: 240, alignment: .leading)
+                .frame(width: nameWidth, alignment: .leading)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Text(destination(of: host))
@@ -389,20 +411,23 @@ struct HostsPane: View {
             Spacer(minLength: 12)
             // Only when it is not already the answer: inside a group,
             // every row would say the same thing.
-            if group == nil, let folder = store.group(host.groupId) {
+            if showsGroup, group == nil, let folder = store.group(host.groupId) {
                 Text(folder.name).font(.caption).foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
-            ForEach(host.tags, id: \.self) { tag in
-                Text(tag)
-                    .font(.caption)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(.quaternary, in: Capsule())
+            if showsTags {
+                ForEach(host.tags, id: \.self) { tag in
+                    Text(tag)
+                        .font(.caption)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.quaternary, in: Capsule())
+                }
             }
         }
-        .padding(.vertical, 2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
 
     private func card(for folder: Group) -> some View {

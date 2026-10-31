@@ -236,6 +236,12 @@ credentials, which is most of it.
   text and the chosen tags belong to the window, and the pane narrows to the
   sidebar's own matches (`SidebarRows.matches`) and says so: they narrowed
   the sidebar alone, beside a pane still listing everything.
+- **A narrow pane drops before it squeezes.** A host's row shows what fits
+  (`ViewThatFits`): its tags go first, then its group, then the name column
+  narrows; and a grid with room for one column lets it fill the pane. In a
+  pane about 450pt wide — a wide sidebar does it — the tags wrapped a letter
+  to a line, group names hyphenated and destinations read "d…2", and one
+  column of cards left a third of the pane empty.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) and what is inside; a local shell; or a machine typed into
