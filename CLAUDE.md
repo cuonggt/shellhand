@@ -241,10 +241,14 @@ credentials, which is most of it.
 - **A destination has one spelling, `Host.destinationLine`**, which is
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says
-  "from Production", in the inspector as in the editors, and What will run
-  is read one argument a line (`HostPreview.lines`), a long value wrapping
-  under itself rather than under its option, while Copy gives the quoted
-  line: wrapped to the margin, a jump host read as a second destination.
+  "from Production", in the inspector as in the editors, and the command is
+  read one argument a line (`HostPreview.lines`, drawn by `CommandLines`),
+  a long value wrapping under itself rather than under its option — in the
+  inspector's What will run and along the host editor's foot alike — while
+  Copy gives the quoted line: wrapped to the margin, a jump host read as a
+  second destination, and the editor's quoted line, cut to two, hid a jump
+  chain's middle in `'"'"'`. The editor's box hugs the command up to six
+  lines and scrolls past that.
 - **A host is drawn with its operating system's mark**, learned by reading
   `/etc/os-release` over a connection of its own (`Core.osOf`), once a day per
   host — `Host.shouldAskOS`, on `osSeen`, which records the asking and not the
@@ -937,7 +941,7 @@ credentials, which is most of it.
   the first row: a name is not a fact about the machine, so it does not belong
   beside the address.
 - The destination is **one row**, `user@host:port`, because that is one thing —
-  it is how ssh is typed and how the preview line along the bottom renders it.
+  it is how ssh is typed and how the command along the bottom ends.
   Three rows said the same and left you to infer they belonged together.
 - Advanced carries a **mark when what is wrong is on it**, worked out by asking
   whether the problem survives clearing the ssh options. A greyed-out Save with
@@ -965,9 +969,12 @@ credentials, which is most of it.
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor is
-  650 General / 570 Advanced, the group editor 570 / 555. The earlier
-  500/490 and 600/480 were measured against **new** records and scrolled on
-  every tab but one as soon as a real host or group was opened in them.
+  720 General / 640 Advanced — room for the command's six lines at its foot
+  and one line more, a problem or a rename note — and the group editor
+  570 / 555. The earlier 500/490 and 600/480 were measured against **new**
+  records and scrolled on every tab but one as soon as a real host or group
+  was opened in them; 650/570 was 41pt short on both tabs once the command
+  was drawn a line an argument.
 - **Whether a form fits is its own scroll area** — the sheet's direct child,
   not a recursive search — where no scroll bar means it fits, and a thumb's
   size gives the missing height in one pass.

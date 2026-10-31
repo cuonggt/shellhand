@@ -11,9 +11,9 @@ import SwiftUI
 /// A field left empty takes its value from the group above, and the row says
 /// where from — worked out again whenever the group changes,
 /// so it describes the host being typed rather than the one that was opened.
-/// The line along the bottom is the command the whole of it adds up to, which
-/// is the only honest way to show what a form full of inherited values will
-/// actually do.
+/// Along the bottom is the command the whole of it adds up to, which is the
+/// only honest way to show what a form full of inherited values will actually
+/// do.
 struct HostEditorSheet: View {
     let store: HostStore
     @State private var host: Host
@@ -31,6 +31,8 @@ struct HostEditorSheet: View {
     @State private var newGroupName = ""
     @State private var optionsText: String
     @State private var tab: Tab = .general
+    /// How tall the command along the bottom is, whole.
+    @State private var commandHeight: CGFloat = 0
     @FocusState private var focus: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -46,6 +48,11 @@ struct HostEditorSheet: View {
     }
 
     private var isNew: Bool { host.id.isEmpty }
+
+    /// The most of the command the foot shows before it scrolls: six lines,
+    /// which a host behind a jump host fills. The heights below make room
+    /// for it.
+    private static let commandRoom: CGFloat = 116
 
     /// Stands for "one that does not exist yet" in the group picker. Not an
     /// id anything could have: ids are hex.
@@ -77,7 +84,14 @@ struct HostEditorSheet: View {
         // edit scrolled, and so did Advanced on a new one. Editing is the
         // case that has to fit, so a new host sits with some slack — which is
         // the right way round, a scroll bar being the thing worth avoiding.
-        .frame(width: DialogSize.medium, height: tab == .general ? 650 : 570)
+        //
+        // The command along the bottom takes up to `commandRoom` where it
+        // took two lines, and at 650/570 that left both tabs of a host behind
+        // a jump host 41pt short, read off the scroll bars' thumbs. 45pt more
+        // fitted it with 4 to spare, which a problem along the foot then
+        // overran by 19 — where 650/570 had room for one — so each is 70pt
+        // taller.
+        .frame(width: DialogSize.medium, height: tab == .general ? 720 : 640)
         .task(id: previewKey) {
             // Its own palette left out, so what the preview inherits is what
             // inheriting would give — `HostDetailView.inheriting`.
@@ -214,7 +228,7 @@ struct HostEditorSheet: View {
     }
 
     /// `user@host:port`, as one row, because that is one destination — it is
-    /// how ssh is typed and how the line along the bottom renders it. Three
+    /// how ssh is typed and how the command along the bottom ends. Three
     /// rows said the same thing and left you to infer they belonged together.
     private var destination: some View {
         HStack(spacing: 4) {
@@ -369,16 +383,21 @@ struct HostEditorSheet: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             // What the form adds up to, once there is an address to put in it:
-            // `ssh ''` for an empty form says nothing anyone needs.
+            // `ssh ''` for an empty form says nothing anyone needs. One
+            // argument a line, as the inspector draws it, in a box as tall as
+            // the command up to `commandRoom` and scrolled past that: the
+            // quoted line, cut to two, hid a jump chain's middle in `'"'"'`.
             if !preview.argv.isEmpty,
                !host.addr.trimmingCharacters(in: .whitespaces).isEmpty {
-                Text(preview.command)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-                    .truncationMode(.middle)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                ScrollView {
+                    CommandLines(preview: preview)
+                        .padding(8)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                            commandHeight = $0
+                        }
+                }
+                .frame(height: min(commandHeight, Self.commandRoom))
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
 
             HStack {

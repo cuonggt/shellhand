@@ -198,30 +198,10 @@ struct HostDetailView: View {
                 .disabled(preview.argv.isEmpty)
             }
             // One argument a line, as ssh receives it; Copy gives the line
-            // quoted for a shell. Drawn as that quoted line, a jump chain was
-            // a wall of `'"'"'` cut in the middle of a path.
-            VStack(alignment: .leading, spacing: 2) {
-                if preview.argv.isEmpty {
-                    Text("Working it out…").foregroundStyle(.secondary)
-                } else {
-                    ForEach(Array(preview.lines.enumerated()), id: \.offset) { index, line in
-                        // A space's width apart, the value in a column of its
-                        // own, so a long one wraps under itself.
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            if !line.option.isEmpty { Text(line.option) }
-                            Text(line.value)
-                        }
-                        .padding(.leading, index == 0 ? 0 : 14)
-                    }
-                }
-            }
-            .font(.caption.monospaced())
-            .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(8)
-            .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(preview.argv.isEmpty ? "Working it out" : preview.command)
+            // quoted for a shell.
+            CommandLines(preview: preview)
+                .padding(8)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
         }
     }
 
