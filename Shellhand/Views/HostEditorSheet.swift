@@ -251,7 +251,9 @@ struct HostEditorSheet: View {
                 content()
                 if set.trimmingCharacters(in: .whitespaces).isEmpty,
                    !from.isEmpty, from != "itself" {
-                    Text(from)
+                    // "from Production", as the group editor and the
+                    // inspector say it: the name alone read as a value.
+                    Text("from \(from)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)

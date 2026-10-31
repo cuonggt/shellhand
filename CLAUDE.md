@@ -968,7 +968,8 @@ credentials, which is most of it.
   → [arrowing](docs/notes/driving.md#arrowing)
 - **Where an inherited value comes from is a caption beside the field**, not
   part of the placeholder, which is the inherited value or an example — never
-  `—`.
+  `—`. The caption says "from Production" in every editor: the host
+  editor's said "Production" alone up to 0.1.5, which read as a value.
   → [where a value comes from](docs/notes/window.md#where-a-value-comes-from)
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their
