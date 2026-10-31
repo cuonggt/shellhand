@@ -180,12 +180,21 @@ session dictionary — because a guard nobody can make fire is worth nothing.
 
 ## Taking the README's picture
 
-**The README's picture was retaken on 2026-10-29**, from a scratch copy on a
-host list of its own: Production with EU and US inside it, Staging, a few
-ungrouped machines, the marks of eight distributions and one host never
-asked, all on documentation addresses — and `db-01` in the inspector, since
-it inherits its user, key and palette from Production and its jump host
-from US. Four things to know before taking it again:
+**The README's picture was retaken on 2026-10-31, for 0.1.3's look** — the
+bolt, no strip holding a lone Hosts tab, inherited values said "from
+Production", What will run one argument a line — the same way as on
+2026-10-29: from a scratch copy on a host list of its own, Production with
+EU and US inside it, Staging, a few ungrouped machines, the marks of eight
+distributions and one host never asked, all on documentation addresses —
+and `db-01` in the inspector, since it inherits its user, key and palette
+from Production and its jump host from US. The site's images are made from
+it again afterwards (`tools/site-images.swift`); a re-rendered icon comes
+out a few bytes different with nothing changed, so keep those out of the
+commit. Five things to know before taking it again:
+- **Quit every other copy first**, the user's own included, with their
+  word: they share the preference domain the run borrows and gives back.
+  Launch with `-ApplePersistenceIgnoreState YES` too, so nothing an earlier
+  copy saved about its windows comes back over the frame it is given.
 - **Launch it with `XCTestSessionIdentifier` set**, which is `TestRun`'s
   switch. A copy launched the ordinary way reads the real `~/.ssh/config`
   into the inspector, and a `Host *` there would put somebody's own bastion
