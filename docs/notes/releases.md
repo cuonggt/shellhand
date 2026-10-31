@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.6, are out**, each
+**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.7, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -587,6 +587,31 @@ that is in it; "Show Beside" while a pane is beside; the import's group
 field looking like a value already chosen; the editor's command still on
 one line; New Host's greyed Add with no reason given; and the polish after
 those.
+
+**0.1.7 is the last of what the walk found**, published at `f6ae472` and
+live on release, feed, cask and tap: the six smaller things 0.1.6 left. An
+SFTP side pointed nowhere counts nothing, and the other side's Copy is plain
+Copy; ⌘K's typed row says "As typed, without web's settings" under the
+saved host it reaches; ⌘D's item says Hide Beside while a tab is beside;
+the import's group is a field beside its label; the host editor draws its
+command one argument a line, as the inspector does, in a box that hugs it
+up to six lines and scrolls past that; and New Host says what it needs from
+the start, quietly, as New Group now does too, rather than as a warning.
+The suite went 756 → 759, and CI passed the code at `6b57bfb`; the run for
+`5c9cab1`, the tagged commit's code with the feed and cask on top, had not
+finished when this was written, and the one for `f6ae472` itself was
+cancelled by that push.
+Verified the way 0.1.6 was, and everything passed, the tag fetched first;
+both notarizations went through the first time, and `generate_appcast`
+printed sixteen "failed to move" warnings. The DMG came out 25KB smaller
+than 0.1.6's, so there was nothing to compare file by file.
+**Each fix was checked on a scratch copy as it was made**, and the host
+editor's new height was measured rather than reasoned: at 695/615 both tabs
+fitted a host behind a jump host with 4pt to spare, and a problem along the
+foot then overran them by 19, where 650/570 had held one line there. So it
+is 720/640, checked with nothing scrolling as opened, with a problem
+showing, and on a host whose command passes six lines. **The walk's list is
+empty.**
 
 ## The icon bundle
 
