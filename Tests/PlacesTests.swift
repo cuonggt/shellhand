@@ -36,6 +36,15 @@ nonisolated struct PlacesTests {
         #expect(Places.title(chosen: true, host: "web") == "web")
     }
 
+    /// The other side's title is a question while it is pointed nowhere,
+    /// and the button read "Copy to Choose a host".
+    @Test("Copy names the other side once there is one")
+    func copyTitle() {
+        #expect(Places.copyTitle(to: false, title: "Choose a host") == "Copy")
+        #expect(Places.copyTitle(to: true, title: "web") == "Copy to web")
+        #expect(Places.copyTitle(to: true, title: "This Mac") == "Copy to This Mac")
+    }
+
     // MARK: whether it is this Mac
 
     /// This matters beyond the label: `isLocal` decides whether a name clash

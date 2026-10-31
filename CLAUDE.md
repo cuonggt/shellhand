@@ -617,6 +617,10 @@ credentials, which is most of it.
   weeks it left an `ssh` child per pane running until quit, while a comment
   beside it said the opposite.
   → [closing the window](docs/notes/sftp.md#closing-the-window)
+- **A side showing no listing counts nothing**, and the other side's Copy is
+  plain Copy while this one is pointed nowhere (`Places.copyTitle`): "0
+  items" read as an empty folder, and the button said "Copy to Choose a
+  host".
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
   a question (`chosen` is false) and says "Choose a host". Without that state
   an unpointed pane reads as "This Mac" with an empty listing, which looks

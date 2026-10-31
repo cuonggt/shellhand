@@ -20,6 +20,13 @@ nonisolated enum Places {
         return host ?? "This Mac"
     }
 
+    /// The Copy button's name for the other side: "Copy to web", or plain
+    /// Copy while that side is pointed nowhere — its title is then the
+    /// question, and the button read "Copy to Choose a host".
+    static func copyTitle(to chosen: Bool, title: String) -> String {
+        chosen ? "Copy to \(title)" : "Copy"
+    }
+
     /// Whether this side is this Mac.
     ///
     /// Carries more than it looks: it is what decides whether a name clash is

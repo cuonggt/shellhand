@@ -340,7 +340,7 @@ private struct PlacePane: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button("Copy to \(other.title)") {
+            Button(Places.copyTitle(to: other.chosen, title: other.title)) {
                 let going = chosen
                 Task { await files.copy(going, from: place, to: other) }
             }
@@ -357,7 +357,7 @@ private struct PlacePane: View {
     private func menu(for names: Set<String>) -> some View {
         let picked = entries.filter { names.contains($0.name) }
         if !picked.isEmpty {
-            Button("Copy to \(other.title)") {
+            Button(Places.copyTitle(to: other.chosen, title: other.title)) {
                 Task { await files.copy(picked, from: place, to: other) }
             }
             .disabled(other.listing.path.isEmpty)
@@ -399,7 +399,10 @@ private struct PlacePane: View {
         Task { await files.copy(picked, from: place, to: other) }
     }
 
+    /// Nothing for a side showing no listing — pointed nowhere, connecting
+    /// or refused — where "0 items" read as an empty folder it did not have.
     private var count: String {
+        guard !place.listing.path.isEmpty else { return "" }
         var said = chosen.isEmpty
             ? (entries.count == 1 ? "1 item" : "\(entries.count) items")
             : "\(chosen.count) of \(entries.count) selected"
