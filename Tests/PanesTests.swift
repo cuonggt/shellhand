@@ -363,4 +363,27 @@ nonisolated struct PanesTests {
         #expect(elsewhere.front == .hosts)
         #expect(elsewhere.beside == two)
     }
+
+    // MARK: side by side
+
+    /// Out of the width there is, never more: Show Beside widened the window
+    /// past the screen while the split decided its own widths.
+    @Test("the split shares out the width it is given")
+    func sharesTheWidth() {
+        #expect(Panes.frontWidth(share: 0.5, of: 1000) == 500)
+        #expect(Panes.frontWidth(share: 0.625, of: 1000) == 625)
+        // The side beside keeps its minimum too, so the front stops short.
+        #expect(Panes.frontWidth(share: 0.75, of: 1000) == 1000 - Panes.besideMinimum)
+        // Dragged as far as it goes either way, each side keeps its minimum.
+        #expect(Panes.frontWidth(share: 0.05, of: 1000) == Panes.besideMinimum)
+        #expect(Panes.frontWidth(share: 1.4, of: 1000) == 1000 - Panes.besideMinimum)
+    }
+
+    @Test("too narrow for two minimums, the sides halve it")
+    func halvesWhatThereIs() {
+        #expect(Panes.frontWidth(share: 0.9, of: 500) == 250)
+        #expect(Panes.frontWidth(share: 0.1, of: 500) == 250)
+        #expect(Panes.frontWidth(share: 0.5, of: 0) == 0)
+        #expect(Panes.frontWidth(share: 0.5, of: -10) == 0)
+    }
 }

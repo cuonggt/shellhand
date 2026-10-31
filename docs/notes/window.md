@@ -532,6 +532,19 @@ where "what is in front" is decided.
 Picking the tab already shown beside this one **trades the two places**
 rather than drawing the same thing twice: a terminal is one view and can
 only be in one place, so the second pane drew nothing.
+**The split is the app's own, `SideBySide`.** It was an `HSplitView`, which
+is an `NSSplitView`, and that sized each side from the terminal view's own
+frame — 900pt, the size a session makes its view at — rather than from the
+window: the walk after 0.1.4 found Show Beside widening a 1220pt window to
+1648, past the screen's edge, with the card on the right cut off and the
+inspector pushed out of the window. Telling the terminal to take whatever
+it is given (`sizeThatFits` on its representable) was tried first and made
+it worse — 2016pt with two local shells — which is how the frame, not the
+terminal's wish for eighty columns, was found to be the cause. The sides
+are now laid out in the room the window has, the front one at
+`Panes.frontWidth` of it, each keeping 320pt while there is room for two,
+with a line to drag between them. Checked on screen with two local shells:
+1220pt before, during and after.
 
 ## onChange
 

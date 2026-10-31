@@ -524,7 +524,11 @@ credentials, which is most of it.
   → [what is on screen](docs/notes/window.md#what-is-on-screen)
 - **The strip's selection is what the pane shows**: a `PaneTab`, held as `pane`
   in front and `beside` for the split. Picking the tab shown beside trades the
-  two places, since a terminal is one view and can be in one place.
+  two places, since a terminal is one view and can be in one place. **The
+  split is `SideBySide`, not an `HSplitView`**: an `NSSplitView` sized its
+  sides from the terminal views' own frames, 900pt from when they are made,
+  and Show Beside widened the window past the screen. The sides are laid out
+  in the room the window has, by `Panes.frontWidth`, with a line to drag.
   → [the strip's selection](docs/notes/window.md#the-strips-selection)
 - **Never change the inspector in the same update that swaps the pane**:
   it crashes, intermittently, as a reentrant table-view operation. Defer it a

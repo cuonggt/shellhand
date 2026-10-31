@@ -14,6 +14,7 @@
 		06DD0C0471C7F9A3191B0985 /* os-linuxmint.svg in Resources */ = {isa = PBXBuildFile; fileRef = 49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */; };
 		084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */ = {isa = PBXBuildFile; fileRef = 125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */; };
 		08BB898DE5F756AF7F9E6DE5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7CDBA13103F885C1CB1E8B27 /* README.md */; };
+		094D15CB16BD9D082CDB479B /* SideBySide.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8875931BB3C9ACBF903F3F5 /* SideBySide.swift */; };
 		09C95B906A367ECF575444AE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 84B8116AD7A03666013C2119 /* SwiftTerm */; };
 		0AA4EAF57EC939A59E0A3E5D /* SSHConfigReachTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */; };
 		0C61DE7F90B8987A39C2F283 /* HostIconTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E03A862A4C79B550AF1DAB5 /* HostIconTests.swift */; };
@@ -307,6 +308,7 @@
 		C11557A4783217279E63F09A /* Validation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Validation.swift; sourceTree = "<group>"; };
 		C24EBE917B8223281F23B516 /* SFTPDeadlineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPDeadlineTests.swift; sourceTree = "<group>"; };
 		C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickConnectSheet.swift; sourceTree = "<group>"; };
+		C8875931BB3C9ACBF903F3F5 /* SideBySide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SideBySide.swift; sourceTree = "<group>"; };
 		C90CCBBC70703651BE9ADC36 /* OSRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSRelease.swift; sourceTree = "<group>"; };
 		C980CDA163D4D20A0C1C3D6F /* Portable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Portable.swift; sourceTree = "<group>"; };
 		CA3966F3845382E6166AE1A0 /* Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
@@ -596,6 +598,7 @@
 				EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */,
 				E3B0CD60231E15370665FF94 /* SidebarRows.swift */,
 				BE455F58F183312F905772BE /* SidebarView.swift */,
+				C8875931BB3C9ACBF903F3F5 /* SideBySide.swift */,
 				A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */,
 				E8C564CAC406B2F78C655FD3 /* TagField.swift */,
 				ED9F08CFB4CE47D072E27962 /* TerminalPane.swift */,
@@ -856,6 +859,7 @@
 				F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */,
 				A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */,
 				25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */,
+				094D15CB16BD9D082CDB479B /* SideBySide.swift in Sources */,
 				F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */,
 				7A151960D143D2D93DCBDC59 /* SidebarView.swift in Sources */,
 				B87D4AFF1469A46ACD14E3E8 /* Store.swift in Sources */,

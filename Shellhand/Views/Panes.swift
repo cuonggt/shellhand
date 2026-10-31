@@ -200,6 +200,19 @@ nonisolated enum Panes {
         sessions > 0
     }
 
+    /// Narrower than this a side beside another stops being worth reading.
+    static let besideMinimum: CGFloat = 320
+
+    /// The front side's width, for the share of the split's width it has
+    /// been dragged to: each side keeps `besideMinimum` while the whole has
+    /// room for two of it, and the two halve what there is where it has not.
+    /// Out of the window it is given and never more — see `SideBySide`.
+    static func frontWidth(share: CGFloat, of width: CGFloat) -> CGFloat {
+        let width = max(0, width)
+        let floor = min(besideMinimum, width / 2)
+        return min(max(width * share, floor), width - floor)
+    }
+
     /// Where the front pane lands when the current terminal moves under it,
     /// which is what closing a tab does — to another session, or to nothing
     /// when that was the last one.

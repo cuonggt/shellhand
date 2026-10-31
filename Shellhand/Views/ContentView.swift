@@ -858,6 +858,8 @@ struct DetailView: View {
     let pane: PaneTab
     /// What is beside it, when the split is open.
     let beside: PaneTab?
+    /// The front side's share of the width while another is beside it.
+    @State private var besideShare: CGFloat = 0.5
     let onConnect: (Host) -> Void
     /// Picking a tab in the strip, or a session under "Open now".
     let onPickTab: (PaneTab) -> Void
@@ -892,15 +894,13 @@ struct DetailView: View {
             } else if case .hosts = pane {
                 hostsSide
             } else if let beside {
-                // A minimum on each side, or the greedy one takes nearly all
-                // of it: `FilesPane` holds an `HSplitView` of its own and
-                // claims whatever it is offered, which left a terminal beside
-                // it as a strip too narrow to read one column of output.
-                HSplitView {
+                // Laid out in the room the window has: an `HSplitView` sized
+                // its sides from the terminal views' own frames and widened
+                // the window past the screen — see `SideBySide`.
+                SideBySide(share: $besideShare) {
                     side(pane, front: true)
-                        .frame(minWidth: 320, maxWidth: .infinity)
+                } beside: {
                     side(beside, front: false)
-                        .frame(minWidth: 320, maxWidth: .infinity)
                 }
             } else {
                 side(pane, front: true)
