@@ -28,12 +28,25 @@ nonisolated struct SheetHeightTests {
 
     @Test("the host editor's command gives way before its form does")
     func commandGivesWay() {
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720) == HostEditorSheet.commandRoom)
-        // 30pt short: the command's box is 30pt shorter and the form untouched.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 690)
-            == HostEditorSheet.commandRoom - 30)
-        // 68 short, at the window's default: two lines of it are left.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652) == HostEditorSheet.leastCommand)
+        let room = HostEditorSheet.commandRoom
+        let spare = HostEditorSheet.formSpare
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720) == room)
+        // Less short than the form can spare: the form gives it all.
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720 - spare) == room)
+        // 68 short, at the window's default: the box gives what the form
+        // cannot, where it gave all 68 and kept two lines and a half.
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652) == room - (68 - spare))
         #expect(HostEditorSheet.commandCap(wanted: 720, height: 400) == HostEditorSheet.leastCommand)
+    }
+
+    @Test("a line along the foot takes what the form could spare the command")
+    func footLinesTakeTheSpare() {
+        let room = HostEditorSheet.commandRoom
+        let spare = HostEditorSheet.formSpare - HostEditorSheet.footLine
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652, lines: 1) == room - (68 - spare))
+        // Two lines take more than there is to spare, and no more than that.
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652, lines: 2) == room - 68)
+        // With room enough, a line along the foot changes nothing.
+        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720, lines: 2) == room)
     }
 }

@@ -1001,8 +1001,11 @@ credentials, which is most of it.
   rather than the whole window and its menus): the editors
   and the import are what they were measured to need where that fits, and
   otherwise the room less a margin, with what scrolls in them giving way —
-  in the host editor the command's box first, so the form keeps its room.
-  At 720, 0.1.7's host editor hung below the window at its default
+  in the host editor the command's box first, so the form keeps its room —
+  but only what the form cannot spare (`commandCap`, with the lines along
+  the foot taking that spare): giving up all of it left the box two lines and
+  a half under 55pt of empty form. At 720, 0.1.7's host editor hung below
+  the window at its default
   1100×720, where every check had run at the README's 1220×798. **Check a
   sheet at the window's default size as well.**
 - **Whether a form fits is its own scroll area** — the sheet's direct child,

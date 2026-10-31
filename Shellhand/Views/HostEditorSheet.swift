@@ -62,12 +62,23 @@ struct HostEditorSheet: View {
     /// Two lines of the command, the least the foot shows.
     nonisolated static let leastCommand: CGFloat = 48
 
+    /// What the form has over db-01's General at the height it was measured
+    /// for, with nothing along the foot but the command: 29pt, less 4 kept.
+    nonisolated static let formSpare: CGFloat = 25
+
+    /// One line along the foot — a problem, a rename note, a refused save.
+    nonisolated static let footLine: CGFloat = 23
+
     /// How much of the command the foot shows in an editor `height` tall that
-    /// wanted `wanted`: `commandRoom`, less whatever the window could not
-    /// give, so the form keeps the room it was measured to fit and the
-    /// command scrolls in its box instead — never less than two lines.
-    nonisolated static func commandCap(wanted: CGFloat, height: CGFloat) -> CGFloat {
-        max(leastCommand, commandRoom - (wanted - height))
+    /// wanted `wanted`, with `lines` lines along the foot above it:
+    /// `commandRoom`, less whatever the window could not give and the form
+    /// cannot spare, so the form keeps the room it was measured to fit and
+    /// the command scrolls in its box instead — never less than two lines.
+    /// It gave up all of the shortfall, leaving the box two lines and a half
+    /// under 55pt of the form standing empty.
+    nonisolated static func commandCap(wanted: CGFloat, height: CGFloat, lines: Int = 0) -> CGFloat {
+        let spare = max(0, formSpare - footLine * CGFloat(lines))
+        return max(leastCommand, commandRoom - max(0, wanted - height - spare))
     }
 
     /// What each tab was measured to need; see the frame for how.
@@ -75,6 +86,13 @@ struct HostEditorSheet: View {
 
     /// What it gets, over the window it opens over.
     private var height: CGFloat { SheetHeight.fitted(wanted, in: room.height) }
+
+    /// The lines along the foot above the command, each taking room the form
+    /// could otherwise spare it.
+    private var footLines: Int {
+        [saveFailure != nil, problem != nil, store.renameNote(for: host) != nil]
+            .filter { $0 }.count
+    }
 
     /// Stands for "one that does not exist yet" in the group picker. Not an
     /// id anything could have: ids are hex.
@@ -425,7 +443,8 @@ struct HostEditorSheet: View {
                             commandHeight = $0
                         }
                 }
-                .frame(height: min(commandHeight, Self.commandCap(wanted: wanted, height: height)))
+                .frame(height: min(commandHeight, Self.commandCap(
+                    wanted: wanted, height: height, lines: footLines)))
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
 
