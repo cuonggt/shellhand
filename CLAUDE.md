@@ -980,6 +980,17 @@ credentials, which is most of it.
   records and scrolled on every tab but one as soon as a real host or group
   was opened in them; 650/570 was 41pt short on both tabs once the command
   was drawn a line an argument.
+- **A sheet over the host window is no taller than the room below its
+  toolbar** (`SheetHeight`, the room read off the window's
+  `contentLayoutRect` by `MeasuresRoom` — SwiftUI's geometry took the toolbar
+  off twice — and held in `SheetRoom`, so a resize redraws an open sheet
+  rather than the whole window and its menus): the editors
+  and the import are what they were measured to need where that fits, and
+  otherwise the room less a margin, with what scrolls in them giving way —
+  in the host editor the command's box first, so the form keeps its room.
+  At 720, 0.1.7's host editor hung below the window at its default
+  1100×720, where every check had run at the README's 1220×798. **Check a
+  sheet at the window's default size as well.**
 - **Whether a form fits is its own scroll area** — the sheet's direct child,
   not a recursive search — where no scroll bar means it fits, and a thumb's
   size gives the missing height in one pass.

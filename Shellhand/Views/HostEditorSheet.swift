@@ -40,8 +40,13 @@ struct HostEditorSheet: View {
 
     private enum Tab: Hashable { case general, advanced }
 
-    init(store: HostStore, host: Host) {
+    /// The room below the toolbar of the window this opens over, which it
+    /// fits in — `SheetHeight`.
+    let room: SheetRoom
+
+    init(store: HostStore, host: Host, room: SheetRoom = SheetRoom()) {
         self.store = store
+        self.room = room
         _host = State(initialValue: host)
         _tagText = State(initialValue: Tags.text(host.tags))
         _optionsText = State(initialValue: host.sshOptions.joined(separator: "\n"))
@@ -52,7 +57,24 @@ struct HostEditorSheet: View {
     /// The most of the command the foot shows before it scrolls: six lines,
     /// which a host behind a jump host fills. The heights below make room
     /// for it.
-    private static let commandRoom: CGFloat = 116
+    nonisolated static let commandRoom: CGFloat = 116
+
+    /// Two lines of the command, the least the foot shows.
+    nonisolated static let leastCommand: CGFloat = 48
+
+    /// How much of the command the foot shows in an editor `height` tall that
+    /// wanted `wanted`: `commandRoom`, less whatever the window could not
+    /// give, so the form keeps the room it was measured to fit and the
+    /// command scrolls in its box instead — never less than two lines.
+    nonisolated static func commandCap(wanted: CGFloat, height: CGFloat) -> CGFloat {
+        max(leastCommand, commandRoom - (wanted - height))
+    }
+
+    /// What each tab was measured to need; see the frame for how.
+    private var wanted: CGFloat { tab == .general ? 720 : 640 }
+
+    /// What it gets, over the window it opens over.
+    private var height: CGFloat { SheetHeight.fitted(wanted, in: room.height) }
 
     /// Stands for "one that does not exist yet" in the group picker. Not an
     /// id anything could have: ids are hex.
@@ -91,7 +113,12 @@ struct HostEditorSheet: View {
         // fitted it with 4 to spare, which a problem along the foot then
         // overran by 19 — where 650/570 had room for one — so each is 70pt
         // taller.
-        .frame(width: DialogSize.medium, height: tab == .general ? 720 : 640)
+        //
+        // Where the window has less room than that below its toolbar — 668
+        // at its default 1100×720 — the editor is the room less a margin, and
+        // the command's box gives up the difference: at 720 General hung
+        // below the window's bottom edge.
+        .frame(width: DialogSize.medium, height: height)
         .task(id: previewKey) {
             // Its own palette left out, so what the preview inherits is what
             // inheriting would give — `HostDetailView.inheriting`.
@@ -387,7 +414,7 @@ struct HostEditorSheet: View {
             // What the form adds up to, once there is an address to put in it:
             // `ssh ''` for an empty form says nothing anyone needs. One
             // argument a line, as the inspector draws it, in a box as tall as
-            // the command up to `commandRoom` and scrolled past that: the
+            // the command up to `commandCap` and scrolled past that: the
             // quoted line, cut to two, hid a jump chain's middle in `'"'"'`.
             if !preview.argv.isEmpty,
                !host.addr.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -398,7 +425,7 @@ struct HostEditorSheet: View {
                             commandHeight = $0
                         }
                 }
-                .frame(height: min(commandHeight, Self.commandRoom))
+                .frame(height: min(commandHeight, Self.commandCap(wanted: wanted, height: height)))
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
 

@@ -43,6 +43,9 @@ struct ContentView: View {
     @State private var chosenTags: Set<String> = []
     @State private var editing: Host?
     @State private var editingGroup: Group?
+    /// The room below this window's toolbar, which the sheets over it fit in
+    /// (`SheetHeight`).
+    @State private var sheetRoom = SheetRoom()
     @State private var deletingHost: Host?
     @State private var deletingGroup: Group?
     /// A tab waiting on an answer before it is closed or reconnected.
@@ -155,6 +158,10 @@ struct ContentView: View {
         // ⌃⇥ and ⌃⇧⇥ through the strip, which the Window menu cannot carry
         // beside ⇧⌘] and ⇧⌘[ — an item holds one key.
         .background(StepsTabs(step: step(by:)))
+        // The room below the toolbar, which the sheets over this window fit
+        // in, read again whenever the window is laid out — so a sheet that is
+        // up follows the window as it is resized.
+        .background(MeasuresRoom(room: sheetRoom))
         .navigationTitle(windowTitle)
         .navigationSubtitle(windowSubtitle)
         .inspector(isPresented: $showingInspector) {
@@ -204,10 +211,10 @@ struct ContentView: View {
             pane = .hosts
         }
         .sheet(item: $editing) { host in
-            HostEditorSheet(store: store, host: host)
+            HostEditorSheet(store: store, host: host, room: sheetRoom)
         }
         .sheet(item: $editingGroup) { group in
-            GroupEditorSheet(store: store, group: group)
+            GroupEditorSheet(store: store, group: group, room: sheetRoom)
         }
         .confirmationDialog(
             deletingHost.map { "Delete \($0.name)?" } ?? "",
@@ -287,7 +294,7 @@ struct ContentView: View {
         // crashes the app on the way back out of SFTP. An `onChange` runs
         // after the update instead, which is the whole difference.
         .sheet(item: $importing) { source in
-            ImportSheet(store: store, start: source)
+            ImportSheet(store: store, start: source, room: sheetRoom)
         }
         .fileExporter(
             isPresented: $exportingList,

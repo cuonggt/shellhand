@@ -102,6 +102,53 @@ struct StepsTabs: NSViewRepresentable {
     }
 }
 
+/// Put behind the host list, to read the room below its window's toolbar
+/// into a `SheetRoom` whenever the window is laid out.
+///
+/// AppKit's `contentLayoutRect` is exactly that room. SwiftUI's geometry was
+/// tried first, its height less its safe area, and came out 52pt short at
+/// every size: the frame already stopped at the toolbar and the safe area
+/// took it off again, so every sheet shrank where it should have fitted.
+struct MeasuresRoom: NSViewRepresentable {
+    let room: SheetRoom
+
+    func makeNSView(context: Context) -> Measuring { Measuring(room: room) }
+
+    func updateNSView(_ view: Measuring, context: Context) { view.room = room }
+
+    final class Measuring: NSView {
+        var room: SheetRoom
+
+        init(room: SheetRoom) {
+            self.room = room
+            super.init(frame: .zero)
+        }
+
+        required init?(coder: NSCoder) { nil }
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            measure()
+        }
+
+        override func setFrameSize(_ newSize: NSSize) {
+            super.setFrameSize(newSize)
+            measure()
+        }
+
+        /// A turn of the loop late, so nothing SwiftUI is laying out is
+        /// changed under it; and only when it differs, since an observable
+        /// that is set redraws whatever reads it.
+        private func measure() {
+            DispatchQueue.main.async { [weak self] in
+                guard let self, let window = self.window else { return }
+                let height = window.contentLayoutRect.height
+                if self.room.height != height { self.room.height = height }
+            }
+        }
+    }
+}
+
 /// Put behind the host list, to stand a `ClosingGuard` in front of its
 /// window's delegate — on update rather than on make, for the reason
 /// `TagsHostsWindow` gives.

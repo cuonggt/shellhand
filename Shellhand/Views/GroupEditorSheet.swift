@@ -31,8 +31,13 @@ struct GroupEditorSheet: View {
 
     private enum Tab: Hashable { case general, advanced }
 
-    init(store: HostStore, group: Group) {
+    /// The room below the toolbar of the window this opens over, which it
+    /// fits in — `SheetHeight`, the form scrolling in what is left.
+    let room: SheetRoom
+
+    init(store: HostStore, group: Group, room: SheetRoom = SheetRoom()) {
         self.store = store
+        self.room = room
         _group = State(initialValue: group)
         _optionsText = State(initialValue: group.sshOptions.joined(separator: "\n"))
     }
@@ -64,7 +69,8 @@ struct GroupEditorSheet: View {
         // Both measured on screen in the end: editing a group gives the
         // form 421 and 406pt with no scroll bar, against a new one's 396 and
         // 381. The 23pt an edit costs is the Delete its footer gains.
-        .frame(width: DialogSize.medium, height: tab == .general ? 570 : 555)
+        .frame(width: DialogSize.medium,
+               height: SheetHeight.fitted(tab == .general ? 570 : 555, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible

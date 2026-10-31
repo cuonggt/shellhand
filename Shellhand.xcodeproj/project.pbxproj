@@ -118,6 +118,7 @@
 		9FCF3EA94B2A850EE56D6C91 /* ThemeInheritanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */; };
 		A044E587C5DBA2004A69D3FF /* Descriptors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D05B62E7B658B3DDBB3926F /* Descriptors.swift */; };
 		A0F334DE8B14FFD274D09204 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 531C7DCC9E4C7E12F56A543C /* Theme.swift */; };
+		A3383A32655BFC16E83BC3BD /* SheetHeightTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BC2178830C8666996C59D1D /* SheetHeightTests.swift */; };
 		A3458987A2D5B009D6C90CCA /* HostKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20E60B26760CD52D26C77F6 /* HostKey.swift */; };
 		A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */; };
 		A5222C311175118B3748066D /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C1020FE3A76905A97685B4 /* Files.swift */; };
@@ -132,6 +133,7 @@
 		B57872FBBCB2B2C9A9BFD845 /* Places.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06523BF579AB128F2163614 /* Places.swift */; };
 		B7726D0FD34AD2849F9DA97F /* GridMove.swift in Sources */ = {isa = PBXBuildFile; fileRef = 529E2D11C3179D88458A3779 /* GridMove.swift */; };
 		B87D4AFF1469A46ACD14E3E8 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F618F3BB7CC761EA980324 /* Store.swift */; };
+		BC15478DE15B88767C66063C /* SheetHeight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E90F01AA6850EC14084DCEE /* SheetHeight.swift */; };
 		BDE0C20CE01CDBFBAFD62422 /* SessionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB6DD2DA8DF6EB5C326F77 /* SessionStatus.swift */; };
 		C0A2550D1969F2F6C19A4CE8 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3966F3845382E6166AE1A0 /* Commands.swift */; };
 		C1483227B1300FF71FBC66FF /* ReplacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */; };
@@ -207,6 +209,7 @@
 		2719DDE5E363B72B59964667 /* TransferQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueueTests.swift; sourceTree = "<group>"; };
 		287AE931BEA1EE294A3CD956 /* StoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreTests.swift; sourceTree = "<group>"; };
 		2A94C6CEECFE9EC0C9B824BC /* ImportPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPlanTests.swift; sourceTree = "<group>"; };
+		2BC2178830C8666996C59D1D /* SheetHeightTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetHeightTests.swift; sourceTree = "<group>"; };
 		2D4C89B31825E734E49A057E /* HostHeaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostHeaderTests.swift; sourceTree = "<group>"; };
 		2E03A862A4C79B550AF1DAB5 /* HostIconTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostIconTests.swift; sourceTree = "<group>"; };
 		31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortableTests.swift; sourceTree = "<group>"; };
@@ -255,6 +258,7 @@
 		6BDC08352C1F8A4C8A0F8A68 /* os-arch.svg */ = {isa = PBXFileReference; path = "os-arch.svg"; sourceTree = "<group>"; };
 		6C19A882D9D32CC6EEFFC555 /* YAMLDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YAMLDocuments.swift; sourceTree = "<group>"; };
 		6CCC0BF8C7154EAC7804EAB5 /* TransferQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferQueue.swift; sourceTree = "<group>"; };
+		6E90F01AA6850EC14084DCEE /* SheetHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetHeight.swift; sourceTree = "<group>"; };
 		6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyTests.swift; sourceTree = "<group>"; };
 		709897B4D50481E64978D1C7 /* Browsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsing.swift; sourceTree = "<group>"; };
 		732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorSheet.swift; sourceTree = "<group>"; };
@@ -416,6 +420,7 @@
 				1A1E1982747B39B2219C4D67 /* SFTPRealServerTests.swift */,
 				92963BFA25E6683E3DB57652 /* SFTPTransferTests.swift */,
 				6ABAA816E3EA039F63AB0B6D /* SFTPWireTests.swift */,
+				2BC2178830C8666996C59D1D /* SheetHeightTests.swift */,
 				82A997119B2CC5E497A51D04 /* SidebarRowsTests.swift */,
 				C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */,
 				ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */,
@@ -599,6 +604,7 @@
 				7641273D876FDBB807FCBED0 /* SettingsPanes.swift */,
 				57C58D904DA593CE634918A8 /* SettingsView.swift */,
 				EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */,
+				6E90F01AA6850EC14084DCEE /* SheetHeight.swift */,
 				E3B0CD60231E15370665FF94 /* SidebarRows.swift */,
 				BE455F58F183312F905772BE /* SidebarView.swift */,
 				C8875931BB3C9ACBF903F3F5 /* SideBySide.swift */,
@@ -790,6 +796,7 @@
 				19ABB89373C267976713D650 /* SessionStatusTests.swift in Sources */,
 				458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */,
 				11FE2167ECBBCA1687B0913E /* SettingsFileTests.swift in Sources */,
+				A3383A32655BFC16E83BC3BD /* SheetHeightTests.swift in Sources */,
 				A967E12D8A3D8405DFFFEA00 /* SidebarRowsTests.swift in Sources */,
 				CEDAB3A5BBE2915170D1A377 /* StoreTests.swift in Sources */,
 				2E390979637313C7C5F70738 /* TabKeysTests.swift in Sources */,
@@ -862,6 +869,7 @@
 				8E23CA0238D0E009763C676A /* SettingsPanes.swift in Sources */,
 				F39D17F252399974E8C6BE77 /* SettingsView.swift in Sources */,
 				A417A0EBDBD1BDE167F329F9 /* SettingsWindowController.swift in Sources */,
+				BC15478DE15B88767C66063C /* SheetHeight.swift in Sources */,
 				25278B5F37FA81ADA01019D3 /* ShellhandApp.swift in Sources */,
 				094D15CB16BD9D082CDB479B /* SideBySide.swift in Sources */,
 				F46C7C2357872D6B0164FA1C /* SidebarRows.swift in Sources */,

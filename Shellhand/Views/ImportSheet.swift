@@ -32,9 +32,13 @@ nonisolated enum ImportPlan {
 /// applies, worked out by the same function, so what is listed is what lands.
 struct ImportSheet: View {
     let store: HostStore
+    /// The room below the toolbar of the window this opens over, which it
+    /// fits in — `SheetHeight`.
+    let room: SheetRoom
 
-    init(store: HostStore, start: Source = .sshConfig) {
+    init(store: HostStore, start: Source = .sshConfig, room: SheetRoom = SheetRoom()) {
         self.store = store
+        self.room = room
         // From the first frame rather than from `task`, so the picker does
         // not visibly flip from one tab to another on the way in.
         _source = State(initialValue: start)
@@ -144,7 +148,7 @@ struct ImportSheet: View {
             Divider()
             footer
         }
-        .frame(width: DialogSize.medium, height: 560)
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(560, in: room.height))
         .fileImporter(isPresented: $choosing, allowedContentTypes: source.types) { result in
             guard case let .success(url) = result else { return }
             Task { await take(url) }
