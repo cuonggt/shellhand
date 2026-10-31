@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.3, are out**, each
+**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.4, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -499,6 +499,30 @@ import sheet's file field before photographing it, ready to stop without a
 picture had it named anything under `.ssh`. The Mac sat idle through both
 drives, so this release was looked at in the app itself rather than
 rendered.
+
+**0.1.4 is what came after 0.1.3**, published at `dc2a447` and live on
+release, feed, cask and tap. Renaming a host now takes the jump fields that
+named it along, in the rename's own transaction, and the editor says what
+will follow before Save — a gap written down since 0.1.3's delete warning;
+the window opens with the keyboard in the host list, where every release
+had given it to the search field; and a host called bastion is no longer
+offered itself as the Through field's example. Behind those, every `ssh` a
+run under test starts is handed the run's own config, and the README's
+picture and the site's images were retaken for 0.1.3's look. The suite went
+737 → 746, and CI passed the code at `f735ae1`, its last change before the
+bump; the run for `7504dbe`, the tagged commit with the feed and cask on
+top, had not finished when this was written.
+Verified the way 0.1.3 was, and everything passed, with the tag fetched
+before the after-check this time, so the release's target matched on the
+first run. Both notarizations went through the first time, and
+`generate_appcast` printed thirteen "failed to move" warnings.
+**Nothing was driven for the release itself**: each change had been seen on
+a scratch copy as it was made — the rename note in the editor's footer, the
+keys at launch before and after, the new picture — so the build followed the
+notes and the bump directly. The user's own Debug copy was open twice along
+the way: quit with their word, by `tell application` with the build's path,
+which asks before dropping a session as ⌘Q does, for the picture; left
+alone, with a session in it, for a suite run built elsewhere.
 
 ## The icon bundle
 

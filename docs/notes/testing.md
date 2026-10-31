@@ -180,6 +180,15 @@ what stops a run is not any live Shellhand: it is one launched from the same
 build products the test host wants, which is the copy you have been looking
 at in `-derivedDataPath`. Quit that one; the installed copy can stay, open
 or shut.
+**When that copy is in use, build the run somewhere else.** Before 0.1.4 the
+copy built to `build/` was open with an ssh session in it, and quitting it
+was not the run's to do. The usual run would have rebuilt the app in
+`build/`, replacing the program that copy was running from under its
+session. `-derivedDataPath build/separate` gave the run a build of its own —
+the packages built again from nothing, a few minutes more — and all 746
+passed beside the open copy, which was left as it was. Delete the folder
+afterwards: it is 1.4 GB, and a second copy of the app for LaunchServices to
+find.
 
 ## A copy beside the run
 

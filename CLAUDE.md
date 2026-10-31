@@ -1055,6 +1055,9 @@ credentials, which is most of it.
   can stop `xcodebuild test` before it starts** — *"Failed to send resume to
   target process"* and `Executed 0 tests` — while the installed copy in
   `/Applications` can stay open. Quit the copy built to `build/` first.
+  When that copy is somebody's and in use — a session open in it — give the
+  run a `-derivedDataPath` of its own instead: the usual run rebuilds the
+  very program that copy is running from.
   → [a copy in the way](docs/notes/testing.md#a-copy-in-the-way)
 - `Executed 0 tests, with 0 failures` is the **XCTest** counter, and every test
   here is swift-testing, so that line says nothing either way — grepping for it
@@ -1191,7 +1194,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.1.3 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.1.4 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`, whose
 clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`:
 fast-forward it before copying a cask in. The notarytool profile `Shellhand`
