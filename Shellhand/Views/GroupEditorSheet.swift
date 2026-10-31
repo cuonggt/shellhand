@@ -195,10 +195,13 @@ struct GroupEditorSheet: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
+            // Said quietly while a new group has no name yet, as the host
+            // editor says it, where it was a warning before anything had
+            // been typed.
             if let problem {
-                Label(problem, systemImage: "exclamationmark.triangle")
+                Label(problem, systemImage: isUntouched ? "info.circle" : "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(isUntouched ? Color.secondary : Color.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             HStack {
@@ -302,6 +305,10 @@ struct GroupEditorSheet: View {
         !group.theme.isEmpty || group.forwardAgent != nil
             || !SSHOptionsField.parse(optionsText).isEmpty
     }
+
+    /// A new group nobody has named yet: what it needs is said, but not as a
+    /// warning.
+    private var isUntouched: Bool { isNew && group.name.isEmpty }
 
     private var problem: String? {
         var asSaved = group

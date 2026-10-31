@@ -367,11 +367,13 @@ struct HostEditorSheet: View {
             }
             // Both, not one or the other. The command used to be replaced by
             // the problem, which took the thing away exactly when you wanted
-            // to look at what was wrong with it.
-            if let problem, !isUntouched {
-                Label(problem, systemImage: "exclamationmark.triangle")
+            // to look at what was wrong with it. Said quietly on a new host
+            // nobody has typed into, where it used to be left out: Add sat
+            // greyed with no reason given, while New Group gave one.
+            if let problem {
+                Label(problem, systemImage: isUntouched ? "info.circle" : "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(isUntouched ? Color.secondary : Color.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             // A rename takes the jump fields that name the host along, which
@@ -445,8 +447,9 @@ struct HostEditorSheet: View {
          host.forwardAgent.map(String.init) ?? "-"].joined(separator: "\u{2}")
     }
 
-    /// A new host nobody has typed into yet. Telling someone a host needs a
-    /// name before they have had the chance to give it one is nagging.
+    /// A new host nobody has typed into yet, which is told what it needs but
+    /// not warned: a warning that a host needs a name, before anyone has had
+    /// the chance to give it one, is nagging.
     private var isUntouched: Bool {
         isNew && host.name.isEmpty && host.addr.isEmpty
     }

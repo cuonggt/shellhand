@@ -953,6 +953,11 @@ credentials, which is most of it.
 - The problem and the preview command are **both shown**. The problem used to
   replace the command, which took it away exactly when you wanted to see what
   was wrong with it.
+- **A greyed Add says why from the start, in both editors**: a new host or
+  group nobody has typed into says what it needs quietly, in grey with an
+  info mark, and as a warning only once something has been typed. New Host
+  said nothing, leaving Add greyed with no reason, while New Group warned
+  before anything had been typed.
 - **A grouped `Form` right-aligns what it is given, and that reaches inside a
   `.roundedBorder` field**: every placeholder sat against the right edge of its
   own box, which reads as a value somebody chose. `.multilineTextAlignment(
