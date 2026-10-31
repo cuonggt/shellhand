@@ -509,9 +509,9 @@ had given it to the search field; and a host called bastion is no longer
 offered itself as the Through field's example. Behind those, every `ssh` a
 run under test starts is handed the run's own config, and the README's
 picture and the site's images were retaken for 0.1.3's look. The suite went
-737 → 746, and CI passed the code at `f735ae1`, its last change before the
-bump; the run for `7504dbe`, the tagged commit with the feed and cask on
-top, had not finished when this was written.
+737 → 746, and CI passed it on GitHub's Mac at `7504dbe` — the tagged
+commit's code with the feed and cask on top, the run for `dc2a447` itself
+cancelled by that push — as it had the code's last change, `f735ae1`.
 Verified the way 0.1.3 was, and everything passed, with the tag fetched
 before the after-check this time, so the release's target matched on the
 first run. Both notarizations went through the first time, and
