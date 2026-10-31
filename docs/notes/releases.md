@@ -566,9 +566,10 @@ apart in the Window menu; Delete Group says what moves and what goes; the
 palette picker fits the window it opens over; the SFTP window opens with the
 keyboard in This Mac's list; and the host editor says "from Production" and
 calls the jump host and agent forwarding what everything else calls them.
-The suite went 753 → 756, and CI passed the code at `2a5a468`; the run for
-`ccc51ae`, the tagged commit with the feed and cask on top, had not finished
-when this was written.
+The suite went 753 → 756, and CI passed it on GitHub's Mac at `ccc51ae` —
+the tagged commit's code with the feed and cask on top, the run for
+`8fb0482` itself cancelled by that push — as it had the code's last change,
+`2a5a468`.
 Verified the way 0.1.5 was, and everything passed, the tag fetched first;
 both notarizations went through the first time, and `generate_appcast`
 printed fifteen "failed to move" warnings. **The DMG grew 434KB with little
