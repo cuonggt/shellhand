@@ -211,6 +211,28 @@ holders=$(osascript -e "$CLOSERS" 2>/dev/null)
 [ "$holders" = "Close Tab" ] || fail "⌘W belongs to ${holders:-nothing}, not to Close Tab alone"
 echo "window-check: ⌘W is Close Tab's alone"
 
+# macOS's own window tabs are off: sessions are a strip inside the one window,
+# and left on, View and Window offered tab bars and merging, and a second Show
+# Next Tab on the strip's own key.
+read -r -d '' TABBING <<'APPLESCRIPT'
+tell application "System Events" to tell process "Shellhand"
+	set out to {}
+	repeat with barName in {"View", "Window"}
+		repeat with i in (every menu item of menu 1 of menu bar item (barName as text) of menu bar 1)
+			try
+				set n to name of i as text
+				if n is in {"Show Tab Bar", "Show All Tabs", "Merge All Windows", "Move Tab to New Window"} then set end of out to n
+			end try
+		end repeat
+	end repeat
+	set AppleScript's text item delimiters to "|"
+	return out as text
+end tell
+APPLESCRIPT
+tabbing=$(osascript -e "$TABBING" 2>/dev/null)
+[ -z "$tabbing" ] || fail "macOS's own window tabs are on: $tabbing"
+echo "window-check: macOS's own window tabs are off"
+
 # Walk with `UI elements` and `role of`, never System Events' own class names:
 # `outlines of x` and `rows of x` return 0 at levels where `UI elements of x`
 # returns children, which is what made the sidebar look like a dead end for

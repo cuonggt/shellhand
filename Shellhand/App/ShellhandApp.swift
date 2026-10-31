@@ -75,6 +75,14 @@ nonisolated struct LaunchConfig: Equatable {
 /// keeps a list of itself: quitting ends all of them, and this delegate has
 /// no way into a window's state otherwise.
 final class ShellhandAppDelegate: NSObject, NSApplicationDelegate {
+    /// macOS's own window tabs, off before any window is made. Sessions are
+    /// a strip inside the one window; left on, View offered Show Tab Bar and
+    /// Show All Tabs, and Window offered Merge All Windows and a second Show
+    /// Previous and Next Tab on ⇧⌘[ and ⇧⌘], the strip's own keys.
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let question = Self.question() else { return .terminateNow }
         return NSAlert(asking: question).runModal() == .alertFirstButtonReturn

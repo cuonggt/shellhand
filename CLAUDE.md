@@ -584,7 +584,10 @@ credentials, which is most of it.
   `config.yml` keeps blank issues allowed for the link 0.1.0 shipped. Quote a
   placeholder that looks like a number. → [Help](docs/notes/window.md#help)
 - **Each session as its own `NSWindow`, drawn as a real macOS tab bar, was
-  built and thrown away. Don't offer it again.**
+  built and thrown away. Don't offer it again.** macOS's own window tabs are
+  switched off at launch (`NSWindow.allowsAutomaticWindowTabbing`), or View
+  and Window offer them anyway, beside a second pair of items on the
+  strip's ⇧⌘[ and ⇧⌘]; `window-check.sh` checks they are gone.
   → [windows as tabs](docs/notes/window.md#windows-as-tabs)
 - **This Mac is always the left side** of the browser; the right is the host
   it was opened on. Opened from no host in particular — ⌘B, the toolbar
