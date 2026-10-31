@@ -97,15 +97,23 @@ struct ImportSheet: View {
                     Text(source.about)
                 }
                 Section {
-                    TextField("Put new hosts in", text: $group, prompt: Text("optional group"))
-                        // Looked at again once typing stops, rather than a
-                        // preview for every key.
-                        .task(id: group) {
-                            guard preview != nil else { return }
-                            try? await Task.sleep(for: .milliseconds(400))
-                            guard !Task.isCancelled else { return }
-                            await look()
-                        }
+                    // A field beside its label, as every other in the app: a
+                    // bare one in a grouped form sits right-aligned against
+                    // the label, and "optional group" read as a group chosen.
+                    LabeledContent("Put new hosts in") {
+                        TextField("", text: $group, prompt: Text("optional group"))
+                            .textFieldStyle(.roundedBorder)
+                            .labelsHidden()
+                            .multilineTextAlignment(.leading)
+                            // Looked at again once typing stops, rather than a
+                            // preview for every key.
+                            .task(id: group) {
+                                guard preview != nil else { return }
+                                try? await Task.sleep(for: .milliseconds(400))
+                                guard !Task.isCancelled else { return }
+                                await look()
+                            }
+                    }
                 } footer: {
                     Text("Hosts already in your list stay where they are, and so does one the file files itself.")
                         .font(.caption)
