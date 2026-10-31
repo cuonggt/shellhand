@@ -599,6 +599,9 @@ credentials, which is most of it.
   and Window offer them anyway, beside a second pair of items on the
   strip's ⇧⌘[ and ⇧⌘]; `window-check.sh` checks they are gone.
   → [windows as tabs](docs/notes/window.md#windows-as-tabs)
+- **The SFTP window opens with the keyboard in the active side's list**, This
+  Mac's, as the host window opens in its host list: left alone, AppKit gave
+  it to the first path field, where ↓, Space and ⌫ edited the path.
 - **This Mac is always the left side** of the browser; the right is the host
   it was opened on. Opened from no host in particular — ⌘B, the toolbar
   button with nothing selected — the right side **asks which host** rather

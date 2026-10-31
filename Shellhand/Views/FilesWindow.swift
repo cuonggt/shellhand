@@ -279,6 +279,11 @@ private struct PlacePane: View {
         // The side last worked in is the one ⌘R and ⇧⌘N act on.
         .focused($listFocused)
         .onChange(of: listFocused) { _, now in if now { files.active = place } }
+        // The keyboard starts in the list of the side in front, as the host
+        // window's starts in its host list: left alone, AppKit gave it to
+        // This Mac's path field, the window's first text field, where ↓,
+        // Space and ⌫ edited the path rather than acting on a file.
+        .task { if isActive { listFocused = true } }
         // ⌫ asks first, through the same question as the menu's Delete.
         .onDeleteCommand { if !selection.isEmpty { confirmingDelete = true } }
         // Space, as in Finder: a look at the file picked, on this Mac. A file
