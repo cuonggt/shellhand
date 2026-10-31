@@ -52,6 +52,18 @@ nonisolated struct ValidationTests {
             among: existing) == nil)
     }
 
+    /// The editor's example for an empty jump field is never the host's own
+    /// name, or bastion's own editor suggests the loop the rule above refuses.
+    @Test("the jump field's example is never the host itself")
+    func jumpExample() {
+        #expect(HostEditorSheet.jumpExample(for: "web") == "bastion")
+        #expect(HostEditorSheet.jumpExample(for: " Bastion ") == "gateway")
+        #expect(Validation.problem(
+            with: Host(id: "c", name: "bastion", addr: "10.0.0.9",
+                       proxyJump: HostEditorSheet.jumpExample(for: "bastion")),
+            among: existing) == nil)
+    }
+
     @Test("a group needs a name of its own, and cannot be inside itself")
     func groups() {
         let groups = [Group(id: "g", name: "Production")]

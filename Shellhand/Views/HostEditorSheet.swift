@@ -280,6 +280,14 @@ struct HostEditorSheet: View {
         value.isEmpty ? example : value
     }
 
+    /// The jump field's example, never the host's own name: on bastion's own
+    /// editor "bastion" read as bastion going through itself, which saving
+    /// refuses.
+    nonisolated static func jumpExample(for name: String) -> String {
+        name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare("bastion") == .orderedSame
+            ? "gateway" : "bastion"
+    }
+
     /// Whether what is wrong is the ssh options, which live on the other tab.
     private var optionsProblem: Bool {
         var asSaved = host
@@ -313,7 +321,7 @@ struct HostEditorSheet: View {
     private var jumpField: some View {
         HStack(spacing: 6) {
             TextField("", text: $host.proxyJump,
-                      prompt: Text(shown(preview.effective.proxyJump, "bastion")))
+                      prompt: Text(shown(preview.effective.proxyJump, Self.jumpExample(for: host.name))))
                 .textFieldStyle(.roundedBorder)
                 .labelsHidden()
                 .multilineTextAlignment(.leading)
