@@ -153,7 +153,7 @@ struct HostEditorSheet: View {
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
                 }
-                row("Through", from: preview.effective.proxyJumpFrom, set: host.proxyJump) {
+                row("Jump host", from: preview.effective.proxyJumpFrom, set: host.proxyJump) {
                     jumpField
                 }
             }
@@ -196,7 +196,7 @@ struct HostEditorSheet: View {
                         inheritedPalette: TerminalSession.palette(named: preview.effective.theme),
                         onChoose: { host.theme = $0 })
                 }
-                LabeledContent("Agent") {
+                LabeledContent("Agent forwarding") {
                     Picker("", selection: $host.forwardAgent) {
                         Text(inheritedAgent).tag(Bool?.none)
                         Text("Carried to this host").tag(Bool?.some(true))
