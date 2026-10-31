@@ -726,7 +726,11 @@ credentials, which is most of it.
   the real store's timestamp after touching that code; `--db` and `--config`
   still win when they are named. **Everything that reads ssh's config reads
   `SSHConfigFile.pathInUse`**: the import sheet and the welcome read the real
-  one, and a drive's import sheet listed its user's own hosts.
+  one, and a drive's import sheet listed its user's own hosts. **So does
+  every `ssh` a run starts**, handed it with `-F` (`TestRun.sshFixed`) at the
+  front of a session's argv and every hop's, and of a file session's: ssh
+  reads `~/.ssh/config` by itself otherwise. ssh keeps the last `-F`, so the
+  suite's own `-F /dev/null` still wins; the line shown and copied has none.
   → [the hosted test bundle](docs/notes/testing.md#the-hosted-test-bundle)
 - A palette is inherited like every other group setting: the host's own, then
   each group going up, then the one in Settings. Empty means "ask above";

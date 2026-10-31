@@ -103,6 +103,13 @@ actor SFTPClient {
         _ = fcntl(outDescriptor, F_SETNOSIGPIPE, 1)
     }
 
+    /// What the `ssh` behind a file session is started with. A run under
+    /// test leads with its own config (`TestRun.sshFixed`), ahead of what the
+    /// caller fixes, so a caller's own `-F` comes later and is the one kept.
+    static func arguments(_ resolved: Resolved, fixed: [String] = []) -> [String] {
+        SSHArgs.subsystem(resolved, "sftp", fixed: TestRun.sshFixed + SSHArgs.unattended + fixed)
+    }
+
     /// Opens a session to a host.
     ///
     /// BatchMode is fixed rather than preferred: the child's stdin carries the
@@ -116,7 +123,7 @@ actor SFTPClient {
     /// /dev/null`, and the known-hosts and agent settings — which has to reach
     /// the jump hosts as surely as the host. The app passes nothing.
     static func connect(_ resolved: Resolved, fixed: [String] = []) async throws -> SFTPClient {
-        let args = SSHArgs.subsystem(resolved, "sftp", fixed: SSHArgs.unattended + fixed)
+        let args = arguments(resolved, fixed: fixed)
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
         process.arguments = args

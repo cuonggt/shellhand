@@ -150,6 +150,18 @@ Nothing was imported and the picture was deleted; both now read
 `pathInUse`, and `SSHConfigReachTests` checks that the count and a dry-run
 import read the run's own file. A path that means "the default" has to be
 followed to every place that reads it, not only the one it was written for.
+**And ssh reads its config by itself.** With every one of those pointed at
+scratch, the `ssh` a scratch copy started still read `~/.ssh/config` on its
+own, so a drive that connected — to `127.0.0.1` port 1, as the rules say —
+took its user's `Host *` along, a `ProxyCommand` included. `TestRun.sshFixed`
+hands every ssh a run starts the run's own config with `-F`, or `/dev/null`
+where there is none, since ssh refuses a `-F` it cannot open: at the front of
+a session's argv, carried into every hop's `ProxyCommand`, and of a file
+session's. ssh keeps the **last** `-F` it is given — `ssh -F <missing> -F
+/dev/null -G` reads the second, and the reverse fails on the missing one — so
+the suite's own `-F /dev/null`, which comes later, still wins. The line the
+inspector shows and Copy gives carries none of it, or the README's picture,
+taken under test, would show a scratch path.
 
 ## A copy in the way
 

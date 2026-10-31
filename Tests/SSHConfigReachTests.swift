@@ -105,6 +105,53 @@ struct SSHConfigReachTests {
         }
     }
 
+    // MARK: what the run's own ssh reads
+
+    /// ssh reads `~/.ssh/config` by itself, whatever the app reads, so every
+    /// ssh a run starts is handed the run's own: the file the resolver reads,
+    /// or none where there is no file, since ssh refuses a `-F` it cannot
+    /// open.
+    @Test("a run's ssh is handed the run's own config, never the user's")
+    func sshIsHandedTheRunsConfig() async {
+        try? FileManager.default.removeItem(atPath: SSHConfigFile.pathInUse)
+        #expect(TestRun.sshFixed == ["-F", "/dev/null"])
+        await withConfig("Host probe-fixed\n  HostName 10.0.0.41\n") {
+            #expect(TestRun.sshFixed == ["-F", SSHConfigFile.pathInUse])
+        }
+    }
+
+    /// Into every hop, since a jump is an `ssh` of its own that reads a
+    /// config too — and only into what connects: the line the window shows
+    /// and Copy gives stays the user's.
+    @Test("a session leads with it and carries it into every hop")
+    func sessionCarriesIt() async throws {
+        try? FileManager.default.removeItem(atPath: SSHConfigFile.pathInUse)
+        let db = TestScratch.database()
+        let store = HostStore(dbPath: db)
+        await store.refresh()
+        await store.save(AppHost(name: "probe-hop", addr: "192.0.2.10"))
+        let behind = await store.save(
+            AppHost(name: "probe-behind", addr: "10.0.0.42", proxyJump: "probe-hop"))!
+        let argv = try await Core.shared.connection(db: db, hostID: behind.id).argv
+        #expect(Array(argv.prefix(2)) == ["-F", "/dev/null"])
+        let hop = argv.first { $0.hasPrefix("ProxyCommand=") } ?? ""
+        #expect(hop.hasPrefix("ProxyCommand=ssh -F /dev/null "))
+        let shown = await store.sshArgs(for: behind) ?? []
+        #expect(!shown.isEmpty && !shown.contains("-F"))
+        #expect(!shown.contains { $0.contains(" -F ") })
+    }
+
+    /// File sessions too, the run's own leading, so that a caller's own `-F`
+    /// — the suite's `-F /dev/null` — comes later and is the one ssh keeps.
+    @Test("a file session leads with it, and a caller's own -F comes later")
+    func fileSessionCarriesIt() {
+        let resolved = Resolved(host: AppHost(name: "probe-files", addr: "10.0.0.43"))
+        let args = SFTPClient.arguments(resolved, fixed: ["-F", "callers-own"])
+        #expect(Array(args.prefix(2)) == TestRun.sshFixed)
+        let last = args.lastIndex(of: "-F").map { args[$0 + 1] }
+        #expect(last == "callers-own")
+    }
+
     /// The control, and the one that keeps the wiring from inventing things:
     /// a host the config has never heard of is reached exactly as before.
     @Test("a host the config does not name is untouched")

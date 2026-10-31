@@ -94,7 +94,9 @@ actor Core {
     }
 
     /// What ssh would be run with to reach a host — the line the window shows
-    /// and the line it connects with, which have to be the same line.
+    /// and the line it connects with, which have to be the same line. The one
+    /// difference is a run under test's: its sessions lead with
+    /// `TestRun.sshFixed`, which is nothing anyone should see or copy.
     func sshArgs(db: String, hostID: String) throws -> [String] {
         let snapshot = try store(db).snapshot()
         guard let host = snapshot.hosts.first(where: { $0.id == hostID }) else {
@@ -122,15 +124,20 @@ actor Core {
 
     /// What a session on a listed host is opened with: the argv, and the
     /// route the connecting screen and the host-key question name.
+    ///
+    /// Under test it leads with the run's own ssh config, carried into every
+    /// hop, since each jump is an `ssh` of its own that reads one too.
     func connection(db: String, hostID: String) throws -> Connection {
         let resolved = try resolved(db: db, hostID: hostID)
-        return Connection(argv: SSHArgs.build(resolved), route: resolved.route)
+        return Connection(
+            argv: SSHArgs.build(resolved, fixed: TestRun.sshFixed), route: resolved.route)
     }
 
     /// The same for a machine typed into ⌘K, resolved as it stands.
     func connection(db: String, unsaved host: Host) throws -> Connection {
         let resolved = resolver(try store(db).snapshot()).resolve(host)
-        return Connection(argv: SSHArgs.build(resolved), route: resolved.route)
+        return Connection(
+            argv: SSHArgs.build(resolved, fixed: TestRun.sshFixed), route: resolved.route)
     }
 
     @discardableResult

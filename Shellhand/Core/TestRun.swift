@@ -42,6 +42,18 @@ nonisolated enum TestRun {
     static var config: String { directory + "config.yaml" }
     static var sshConfig: String { directory + "ssh_config" }
 
+    /// What a run hands every `ssh` it starts, ahead of everything else: the
+    /// config the resolver reads, or none where there is no such file, since
+    /// ssh refuses a `-F` it cannot open. Left alone, ssh reads the user's
+    /// own `~/.ssh/config` by itself, whatever the app reads — so a drive
+    /// that connected from a scratch copy took their `Host *` along. ssh
+    /// keeps the **last** `-F` it is given, so leading lets a caller's own,
+    /// the suite's `-F /dev/null`, win. Nothing outside a test run.
+    static var sshFixed: [String] {
+        guard active else { return [] }
+        return ["-F", FileManager.default.fileExists(atPath: sshConfig) ? sshConfig : "/dev/null"]
+    }
+
     /// Where the SFTP window's This Mac opens: a folder of the run's own.
     /// The real home holds Desktop, Documents and Downloads, and listing it
     /// puts up macOS's privacy prompt whenever the build's signature is not
