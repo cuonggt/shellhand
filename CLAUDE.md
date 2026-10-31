@@ -220,7 +220,11 @@ credentials, which is most of it.
 - **The host pane shows the list, always, and the inspector says what a
   host is.** Where the pane is *looking*, `Browsing`, is kept apart from what
   is *selected* — a group is a place, a host a thing — so **don't collapse
-  `browsing` back into `Selection`**. The grid's arrow keys follow
+  `browsing` back into `Selection`**. A group picked in the sidebar is gone
+  to; one picked in the pane is only selected, and two clicks or ⏎ open it
+  (`Browsing.scope`'s `pickedInPane`) — it opened on any pick, so the list
+  was replaced under the highlight and ↓ could not get past Production. The
+  grid's arrow keys follow
   `Views/GridMove.swift`, which takes the sections; a row's menu is
   `Views/RowMenu.swift`, handed its subject rather than reading the
   selection; and the inspector opens a turn of the loop after a selection.

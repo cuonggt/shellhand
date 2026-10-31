@@ -30,6 +30,22 @@ nonisolated struct BrowsingTests {
         #expect(Browsing.scope(after: .group("g-eu"), from: "g-prod") == "g-eu")
     }
 
+    /// A group picked in the pane went there too, which replaced the list
+    /// under the highlight: ↓ from the top of All Hosts dropped into
+    /// Production, and the hosts below could not be reached by arrowing.
+    @Test("a group picked in the pane is selected and the pane stays")
+    func groupInPaneStays() {
+        #expect(Browsing.scope(after: .group("g-prod"), from: "", pickedInPane: true) == "")
+        #expect(Browsing.scope(after: .group("g-eu"), from: "g-prod", pickedInPane: true) == "g-prod")
+    }
+
+    /// The exception covers groups alone: a host picked in the pane is on
+    /// screen already, and one picked elsewhere still brings the pane to it.
+    @Test("a host picked in the pane is ruled as before")
+    func hostInPane() {
+        #expect(Browsing.scope(after: .host("h-web"), from: "g-prod", pickedInPane: true) == "g-prod")
+    }
+
     // MARK: a host is a thing
 
     /// The whole point of the split. Without it the pane took `selectedGroup`,

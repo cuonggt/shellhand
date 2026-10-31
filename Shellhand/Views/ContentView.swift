@@ -43,6 +43,10 @@ struct ContentView: View {
     @State private var chosenTags: Set<String> = []
     @State private var editing: Host?
     @State private var editingGroup: Group?
+    /// What the pane picked last, until the selection changes to it. A pick
+    /// of what is already selected changes nothing, so this can outlive its
+    /// pick; it is only read against the selection it became.
+    @State private var pickedInPane: Selection?
     /// The room below this window's toolbar, which the sheets over it fit in
     /// (`SheetHeight`).
     @State private var sheetRoom = SheetRoom()
@@ -137,7 +141,13 @@ struct ContentView: View {
                 tabActions: tabActions,
                 onEdit: { editing = $0 },
                 onEditGroup: { editingGroup = $0 },
-                onPick: { selection = $0 },
+                onPick: { picked in
+                    // Said before the selection changes, so the change knows
+                    // where it came from: a group picked in the pane is only
+                    // selected (`Browsing.scope`).
+                    pickedInPane = picked
+                    selection = picked
+                },
                 onImport: { open(import: $0) }, onNewHost: { editing = Host() },
                 search: search, tags: chosenTags, onBrowse: browse(to:),
                 onClearFilter: {
@@ -195,7 +205,9 @@ struct ContentView: View {
                 hostsGroup: {
                     guard case let .host(id) = now else { return nil }
                     return store.snapshot.hosts.first { $0.id == id }?.groupId
-                }())
+                }(),
+                pickedInPane: pickedInPane == now)
+            pickedInPane = nil
             if case let .host(id) = now {
                 storedHostID = id
                 // **Deferred a turn of the loop on purpose.** Changing the
@@ -804,6 +816,10 @@ struct ContentView: View {
             if case .group = selection { selection = nil }
             browsing = ""
         } else {
+            // Gone to here as well as selected: a group picked in the pane is
+            // the selection already, so selecting it again changes nothing
+            // and the change would never say to open it.
+            browsing = scope
             selection = .group(scope)
         }
         pane = .hosts

@@ -9,8 +9,9 @@ import SwiftUI
 ///
 /// Picking anything here selects it in the sidebar rather than navigating
 /// somewhere of its own, so there are never two ideas about what is selected.
-/// A group picked here shows its own contents next, which is the same view
-/// one level down.
+/// A group picked here is only selected — the pane stays, so the arrows walk
+/// past it — and two clicks or ⏎ open it, the same view one level down. It
+/// used to open on any pick, which replaced the list under the highlight.
 struct HostsPane: View {
     let store: HostStore
     /// Whose contents to show, or nil for the whole list.
@@ -130,23 +131,29 @@ struct HostsPane: View {
         .contextMenu(forSelectionType: Selection.self) { items in
             rowMenu(for: items.first)
         } primaryAction: { items in
-            guard case let .host(id) = items.first,
-                  let host = hosts.first(where: { $0.id == id })
-            else { return }
-            onConnect(host)
+            open(items.first)
         }
         .focusEffectDisabled()
         // ⏎ as well as the Host menu's ⌘↩: in a list you have arrowed down,
         // Return is the key the hand reaches for, and the menu item is across
-        // the screen. Ignored unless a host is selected, so Return on a group
-        // row falls through rather than connecting to something else.
-        .onKeyPress(.return) {
-            guard case let .host(id) = selection,
-                  let host = hosts.first(where: { $0.id == id })
-            else { return .ignored }
+        // the screen. On a group it opens the group, which picking no longer
+        // does.
+        .onKeyPress(.return) { open(selection) }
+    }
+
+    /// What two clicks or ⏎ do: connect to a host, open a group.
+    @discardableResult
+    private func open(_ item: Selection?) -> KeyPress.Result {
+        switch item {
+        case let .host(id):
+            guard let host = hosts.first(where: { $0.id == id }) else { return .ignored }
             onConnect(host)
-            return .handled
+        case let .group(id):
+            onBrowse(id)
+        case nil:
+            return .ignored
         }
+        return .handled
     }
 
     /// Grid mode keeps its buttons — a `LazyVGrid` has no selection of its
@@ -195,7 +202,7 @@ struct HostsPane: View {
         .onKeyPress(.rightArrow) { move(.right) }
         .onKeyPress(.upArrow) { move(.up) }
         .onKeyPress(.downArrow) { move(.down) }
-        .onKeyPress(.return) { connectPicked() }
+        .onKeyPress(.return) { open(selection) }
     }
 
     /// The width the grids are actually given, measured **inside** the frame
@@ -231,14 +238,6 @@ struct HostsPane: View {
             sections: [groups.count, hosts.count], columns: columns)
         else { return .ignored }
         onPick(order[landed])
-        return .handled
-    }
-
-    private func connectPicked() -> KeyPress.Result {
-        guard case let .host(id) = selection,
-              let host = hosts.first(where: { $0.id == id })
-        else { return .ignored }
-        onConnect(host)
         return .handled
     }
 
@@ -408,9 +407,13 @@ struct HostsPane: View {
 
     private func card(for folder: Group) -> some View {
         Button {
-            // Two clicks goes in, which is what two clicks on a folder means;
-            // one selects it, and the pane follows either way.
-            onPick(.group(folder.id))
+            // Two clicks go in, which is what two clicks on a folder mean; one
+            // selects it and the pane stays, as the host cards beside it do.
+            if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                onBrowse(folder.id)
+            } else {
+                onPick(.group(folder.id))
+            }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
                 Image(systemName: "folder").font(.title3).foregroundStyle(.tint)
