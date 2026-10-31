@@ -169,6 +169,27 @@ done
 osascript -e 'tell application "Shellhand" to activate' >/dev/null 2>&1
 sleep 1
 
+# The keyboard starts in the sidebar's host list, so the arrows and Return
+# work before anything is clicked. Left alone, macOS hands a window's keyboard
+# to its first text field, which is the sidebar's search — where ↓ and Return
+# reached nothing until the list was clicked, in every release up to 0.1.3.
+# The sidebar's list is the outline at the window's left edge; the pane's
+# starts past the sidebar.
+for _ in $(seq 1 12); do
+    focused=$(osascript -e 'tell application "System Events" to tell process "Shellhand"
+        set el to value of attribute "AXFocusedUIElement"
+        set {fx, fy} to position of el
+        set {wx, wy} to position of front window
+        return (role of el) & " " & ((fx - wx) as integer)
+    end tell' 2>/dev/null)
+    case "$focused" in AXOutline\ [0-9]|AXOutline\ [0-9][0-9]) break ;; esac
+    sleep 0.25
+done
+case "$focused" in
+    AXOutline\ [0-9]|AXOutline\ [0-9][0-9]) echo "window-check: the window opened with the keyboard in the host list" ;;
+    *) fail "the window opened with the keyboard elsewhere (${focused:-nothing}), not in the sidebar's host list" ;;
+esac
+
 # Walk with `UI elements` and `role of`, never System Events' own class names:
 # `outlines of x` and `rows of x` return 0 at levels where `UI elements of x`
 # returns children, which is what made the sidebar look like a dead end for

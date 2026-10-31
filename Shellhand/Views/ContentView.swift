@@ -33,9 +33,9 @@ struct ContentView: View {
     @State private var sessions = Sessions()
     @State private var selection: Selection?
     @State private var search = ""
-    /// The sidebar's search field, which ⌘F puts the keyboard in with no
-    /// session in front.
-    @FocusState private var searchFocused: Bool
+    /// Where the sidebar's keyboard is: the host list when the window opens,
+    /// and the search field, which ⌘F puts it in with no session in front.
+    @FocusState private var sidebarFocus: SidebarFocus?
     /// Whether the sidebar is out, so that ⌘F can bring it back to search.
     @State private var columns = NavigationSplitViewVisibility.automatic
     /// The sidebar's chosen tags, held here with the search so that the host
@@ -113,7 +113,7 @@ struct ContentView: View {
         NavigationSplitView(columnVisibility: $columns) {
             SidebarView(
                 store: store, selection: $selection, search: $search,
-                searchFocus: $searchFocused,
+                focus: $sidebarFocus,
                 chosenTags: $chosenTags,
                 actions: actions, onConnect: connect,
                 onBrowse: { now in
@@ -174,6 +174,11 @@ struct ContentView: View {
                store.snapshot.hosts.contains(where: { $0.id == storedHostID }) {
                 selection = .host(storedHostID)
             }
+            // The keyboard starts in the host list, so the arrows and Return
+            // work before anything is clicked. Left alone, macOS hands it to
+            // the window's first text field — the search, up to 0.1.3 —
+            // where ↓ and Return reached nothing.
+            sidebarFocus = .hosts
         }
         .onChange(of: selection) { _, now in
             browsing = Browsing.scope(
@@ -538,7 +543,7 @@ struct ContentView: View {
                     if columns == .detailOnly { columns = .all }
                     // A turn later, so a sidebar just brought back is there
                     // to take the keyboard.
-                    DispatchQueue.main.async { searchFocused = true }
+                    DispatchQueue.main.async { sidebarFocus = .search }
                 }
             },
             findNext: { _ = frontSession?.findNext() },

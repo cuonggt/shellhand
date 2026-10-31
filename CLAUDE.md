@@ -456,6 +456,11 @@ credentials, which is most of it.
 - **⌘F finds hosts with the hosts in front** — it puts the keyboard in the
   sidebar's search field, bringing a hidden sidebar back — and a session's
   scrollback with one in front. With the hosts in front it did nothing.
+- **The window opens with the keyboard in the sidebar's host list**
+  (`SidebarFocus`), so the arrows and Return work before anything is
+  clicked. Left alone, macOS hands a window's keyboard to its first text
+  field — the search — where ↓ and Return reached nothing, in every release
+  up to 0.1.3. `window-check.sh` checks it as the window comes up.
 - **It is called SFTP, everywhere**, at the user's word — **don't re-argue
   it**. Anything still called Files is a spot the rename missed, except
   `setFrameAutosaveName("FilesWindow")`, which must not change or every saved

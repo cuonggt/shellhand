@@ -1,6 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// The two places in the sidebar that take the keyboard.
+enum SidebarFocus: Hashable {
+    case hosts, search
+}
+
 /// Hosts in their groups: a group's own settings
 /// reach everything beneath it, so the tree is the point rather than
 /// decoration.
@@ -18,9 +23,9 @@ struct SidebarView: View {
     let store: HostStore
     @Binding var selection: Selection?
     @Binding var search: String
-    /// The search field's focus, the window's to set: ⌘F with the hosts in
-    /// front puts the keyboard here.
-    var searchFocus: FocusState<Bool>.Binding
+    /// Where the sidebar's keyboard is, the window's to set: the host list
+    /// when the window opens, and the search field once ⌘F sends it there.
+    var focus: FocusState<SidebarFocus?>.Binding
     /// The tags chosen in the bar. More than one narrows rather than widens:
     /// `web` and `eu` asks for the European web servers. The window holds
     /// them, so the host pane narrows to the same hosts as this list does.
@@ -63,6 +68,7 @@ struct SidebarView: View {
                 view(of: row)
             }
         }
+        .focused(focus, equals: .hosts)
         .onClickedRow(clicked(row:))
         .safeAreaInset(edge: .top) {
             VStack(spacing: 0) {
@@ -171,7 +177,7 @@ struct SidebarView: View {
                 .foregroundStyle(.secondary)
             TextField("Name, address or tag", text: $search)
                 .textFieldStyle(.plain)
-                .focused(searchFocus)
+                .focused(focus, equals: .search)
             if !search.isEmpty {
                 Button {
                     search = ""
