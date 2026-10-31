@@ -147,14 +147,22 @@ nonisolated enum Validation {
     }
 
     /// Deleting a group keeps what was under it, which is the part worth
-    /// saying: nothing is lost but the group.
+    /// saying: nothing is lost but the group, and what it gives the hosts
+    /// beneath it.
+    ///
+    /// **What moves is what the store moves** (`Store.deleteGroup`): the
+    /// hosts filed in it, and the groups inside it, which take their own
+    /// hosts along. It said "Its 7 hosts move to the top of the list" of a
+    /// group holding one, the other six staying in EU and US — and nothing
+    /// of the user, the key and the palette it gave all seven, which reach
+    /// none of them afterwards.
     static func deletionWarning(
         for group: Group, groups: [Group], hosts: [Host]
     ) -> String {
         let parent = groups.first { $0.id == group.parentId }
         let destination = parent.map { "to \($0.name)" } ?? "to the top of the list"
 
-        // Everything beneath, however deep, because that is what moves.
+        // Everything beneath, however deep: whom what it sets reaches.
         var beneath: Set<String> = [group.id]
         var frontier = [group.id]
         while let id = frontier.popLast() {
@@ -163,19 +171,46 @@ nonisolated enum Validation {
                 frontier.append(child.id)
             }
         }
-        var parts: [String] = []
-        switch hosts.count(where: { beneath.contains($0.groupId) }) {
+        let own = hosts.count(where: { $0.groupId == group.id })
+        let reached = hosts.count(where: { beneath.contains($0.groupId) })
+        let inside = groups.count(where: { $0.parentId == group.id })
+        guard own + inside > 0 else { return "Nothing is filed under it. This cannot be undone." }
+
+        var moves: [String] = []
+        switch own {
         case 0: break
-        case 1: parts.append("Its one host moves \(destination)")
-        case let count: parts.append("Its \(count) hosts move \(destination)")
+        case 1: moves.append("Its one host moves \(destination)")
+        case let count: moves.append("Its \(count) hosts move \(destination)")
         }
-        switch groups.count(where: { $0.parentId == group.id }) {
-        case 0: break
-        case 1: parts.append("so does the group inside it")
-        case let count: parts.append("so do the \(count) groups inside it")
+        if inside > 0 {
+            let carried = reached - own
+            let hostsOf = carried == 1 ? "1 host" : "\(carried) hosts"
+            let theirs = carried == 0 ? "" : inside == 1 ? ", with its \(hostsOf)" : ", with their \(hostsOf)"
+            switch (moves.isEmpty, inside) {
+            case (true, 1): moves.append("The group inside it moves \(destination)\(theirs)")
+            case (true, _): moves.append("The \(inside) groups inside it move \(destination)\(theirs)")
+            case (false, 1): moves.append("so does the group inside it\(theirs)")
+            case (false, _): moves.append("so do the \(inside) groups inside it\(theirs)")
+            }
         }
-        guard !parts.isEmpty else { return "Nothing is filed under it. This cannot be undone." }
-        return parts.joined(separator: ", and ") + ". Nothing is deleted but the group itself."
+        var said = moves.joined(separator: ", and ") + "."
+
+        // What it gives the hosts beneath it, which goes with it.
+        var gives: [String] = []
+        if !group.user.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the user") }
+        if !group.identity.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the key") }
+        if !group.proxyJump.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the jump host") }
+        if group.forwardAgent != nil { gives.append("agent forwarding") }
+        if !group.theme.isEmpty { gives.append("the palette") }
+        if !group.sshOptions.isEmpty { gives.append("its ssh options") }
+        if !gives.isEmpty, reached > 0 {
+            let listed = gives.count == 1 ? gives[0]
+                : gives.dropLast().joined(separator: ", ") + " and " + gives.last!
+            let whom = reached == 1 ? "that host" : "those \(reached) hosts"
+            said += " \(listed.prefix(1).uppercased() + listed.dropFirst()) it gives \(whom) "
+                + (gives.count == 1 ? "goes" : "go") + " with it."
+        }
+        return said + " Nothing is deleted but the group itself."
     }
 
     /// The groups that could hold this one: everything except itself and

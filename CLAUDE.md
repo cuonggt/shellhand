@@ -779,6 +779,12 @@ credentials, which is most of it.
   over `Tags.removing`'s count): it went from every host at once without a
   word. The chips **wrap** (`TagFlow`) rather than scrolling sideways, which
   clipped mid-word with nothing to say there were more.
+- **Deleting a group says what moves and what goes** (`Validation
+  .deletionWarning(for:groups:hosts:)`): the hosts filed in it, and the groups
+  inside it with their own hosts, as `Store.deleteGroup` moves them, and
+  what it gives the hosts beneath it — the user, the key, the palette — which
+  goes with it. It said all seven of Production's hosts moved to the top,
+  six staying in EU and US, and nothing of what they would lose.
 - **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
   matched as the resolver matches a jump: a host counts if its jump field
   names it or a group above it does (`effective`), and the groups that name

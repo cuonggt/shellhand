@@ -198,13 +198,38 @@ nonisolated struct DeletionWarningTests {
         #expect(said == "Nothing is filed under it. This cannot be undone.")
     }
 
-    @Test("a group counts every host beneath it, however deep, and says where they go")
-    func countsEverythingBeneath() {
+    /// What moves is what the store moves: the host filed in it, and the
+    /// group inside it with its own two, which stay in it. It said all three
+    /// moved to the top of the list.
+    @Test("a group says what moves: its own hosts, and the groups inside with theirs")
+    func saysWhatMoves() {
         let said = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: hosts)
-        #expect(said.contains("Its 3 hosts move to the top of the list"))
-        #expect(said.contains("so does the group inside it"))
-        #expect(said.contains("Nothing is deleted but the group itself."))
+        #expect(said == "Its one host moves to the top of the list, and so does the group "
+            + "inside it, with its 2 hosts. Nothing is deleted but the group itself.")
+        // Nothing filed in it directly, only a group inside.
+        let onlyInside = Validation.deletionWarning(
+            for: groups[0], groups: groups, hosts: Array(hosts.dropFirst()))
+        #expect(onlyInside.hasPrefix("The group inside it moves to the top of the list, with its 2 hosts."))
+    }
+
+    /// Deleting Production took the user, the key and the palette from
+    /// every host beneath it, and the question never said so.
+    @Test("a group says that what it gives the hosts beneath it goes with it")
+    func saysWhatItGives() {
+        var production = Group(id: "p", name: "Production", user: "deploy", identity: "~/.ssh/id_ed25519")
+        production.theme = "Nord"
+        let said = Validation.deletionWarning(
+            for: production, groups: [production, groups[1]], hosts: hosts)
+        #expect(said.contains("The user, the key and the palette it gives those 3 hosts go with it."))
+        var nordOnly = Group(id: "p", name: "Production")
+        nordOnly.theme = "Nord"
+        let one = Validation.deletionWarning(
+            for: nordOnly, groups: [nordOnly], hosts: [hosts[0]])
+        #expect(one.contains("The palette it gives that host goes with it."))
+        // A group that sets nothing has nothing to say about it.
+        #expect(!Validation.deletionWarning(for: groups[0], groups: groups, hosts: hosts)
+            .contains("it gives"))
     }
 
     @Test("a group inside another says which one its hosts move to")
