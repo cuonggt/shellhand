@@ -335,7 +335,11 @@ credentials, which is most of it.
   `ClosingGuard`, which stands **in front of** SwiftUI's own window delegate
   and is held by the window; ⌘Q through `ShellhandAppDelegate`, over every
   window's `Sessions`. ⌘W never reaches the window, so with the Hosts tab in
-  front it does nothing. The SFTP window asks the same way before it stops
+  front it does nothing — **because nothing else holds it**: Close Tab stands
+  in place of the system's Close and Close All (`CommandGroup(replacing:
+  .saveItem)`). Beside them SwiftUI gave ⌘W to its own Close in 0.1.3 and
+  0.1.4, and ⌘W closed the whole window, asking only when a session was
+  live. `window-check.sh` checks who holds it. The SFTP window asks the same way before it stops
   transfers still to go, and ⌘Q counts those too. Sweep preference keys as
   well as functions: this switch did nothing for eleven releases.
   → [closing](docs/notes/window.md#closing)

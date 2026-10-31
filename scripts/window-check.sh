@@ -190,6 +190,27 @@ case "$focused" in
     *) fail "the window opened with the keyboard elsewhere (${focused:-nothing}), not in the sidebar's host list" ;;
 esac
 
+# ⌘W is Close Tab's, and nothing else in File holds it. Beside the system's
+# own Close, SwiftUI gave the key to that one from 0.1.3, and ⌘W closed the
+# whole window; the system's Close and Close All are replaced for it now.
+# Read into a variable first, as WALK is below: bash 3.2 cannot parse a
+# here-document holding an apostrophe inside $(…).
+read -r -d '' CLOSERS <<'APPLESCRIPT'
+tell application "System Events" to tell process "Shellhand"
+	set out to {}
+	repeat with i in (every menu item of menu 1 of menu bar item "File" of menu bar 1)
+		try
+			if (value of attribute "AXMenuItemCmdChar" of i) is "W" and (value of attribute "AXMenuItemCmdModifiers" of i) is 0 then set end of out to (name of i as text)
+		end try
+	end repeat
+	set AppleScript's text item delimiters to "|"
+	return out as text
+end tell
+APPLESCRIPT
+holders=$(osascript -e "$CLOSERS" 2>/dev/null)
+[ "$holders" = "Close Tab" ] || fail "⌘W belongs to ${holders:-nothing}, not to Close Tab alone"
+echo "window-check: ⌘W is Close Tab's alone"
+
 # Walk with `UI elements` and `role of`, never System Events' own class names:
 # `outlines of x` and `rows of x` return 0 at levels where `UI elements of x`
 # returns children, which is what made the sidebar look like a dead end for

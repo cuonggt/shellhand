@@ -123,11 +123,24 @@ is not used. Three places put the question, each where it can be put:
   is answered yes, SwiftUI's own answer is asked too. The **window** holds
   the guard, as an associated object: a delegate is held weakly, and a
   guard owned by a view SwiftUI rebuilt would have left the window with no
-  delegate at all. This catches the close button, File ▸ Close and Close
-  All. **⌘W never reaches the window**, which was written here the other
-  way round until a drive measured it: "Close Tab" holds ⌘W, SwiftUI's own
-  File ▸ Close is left with **no key equivalent at all**, so with the Hosts
-  tab in front ⌘W does nothing — neither asks nor closes.
+  delegate at all. This catches the close button. **⌘W never reaches the
+  window**, which was written here the other way round until a drive
+  measured it: "Close Tab" holds ⌘W, so with the Hosts tab in front ⌘W does
+  nothing — neither asks nor closes. It held it then beside SwiftUI's own
+  File ▸ Close, which was left with **no key equivalent at all** — until
+  0.1.3 made the item's title change with what is in front (Close Window
+  over SFTP and Settings). From then SwiftUI gave ⌘W to its own Close
+  instead, and nothing said so: ⌘W on a tab put up the **window's**
+  question, "Close the window and end the session on …?", and with nothing
+  live it closed the window and every tab in it. The walk after 0.1.4 read
+  it off the menu, where Close Tab had no key, and one ⌘W pressed as a key
+  confirmed it. Which of two items on one key gets it is SwiftUI's to
+  decide, so the fix leaves it nothing to decide: Close Tab stands in place
+  of the system's Close and Close All (`CommandGroup(replacing:
+  .saveItem)`), and `window-check.sh` checks that it alone holds ⌘W. Driven
+  after the fix: a stopped tab and a refused one closed without a word, the
+  hosts tab alone did nothing, a live local shell asked the tab's question,
+  and Settings and SFTP closed.
 - **⌘Q** asks in `ShellhandAppDelegate.applicationShouldTerminate`, through
   `@NSApplicationDelegateAdaptor` — the app's first delegate. It needs
   every window's sessions, and a delegate cannot reach a window's state,

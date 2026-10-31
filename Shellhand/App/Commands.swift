@@ -225,7 +225,14 @@ struct ShellhandCommands: Commands {
         // closes that window, as everywhere on a Mac: before, this item took
         // ⌘W there while disabled, and no window of this app but the host
         // window could be closed from the keyboard.
-        CommandGroup(after: .newItem) {
+        //
+        // **It stands in place of the system's own Close and Close All**,
+        // which sit on ⌘W too. With two items on one key, SwiftUI picks the
+        // one that gets it, and it changed its mind: Close Tab held ⌘W until
+        // its title began to change in 0.1.3, then the system's Close did,
+        // and ⌘W closed the whole window. With nothing else on ⌘W, nothing
+        // is left to pick between. `window-check.sh` checks who holds it.
+        CommandGroup(replacing: .saveItem) {
             Button(actions == nil ? "Close Window" : "Close Tab") {
                 if let actions { actions.closeTab() } else { NSApp.keyWindow?.performClose(nil) }
             }

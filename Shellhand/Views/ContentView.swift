@@ -148,9 +148,9 @@ struct ContentView: View {
         // in focus.
         .background(TagsHostsWindow())
         // And asks before the window closes on sessions somebody is in: the
-        // close button, File ▸ Close and Close All all go through its
-        // delegate, which is where this stands. (⌘W never reaches the window:
-        // Close Tab holds it, and SwiftUI's Close is left with no key at all.)
+        // close button goes through its delegate, which is where this stands.
+        // (⌘W never reaches the window: Close Tab holds it, in place of the
+        // system's own Close and Close All — see Commands.)
         .background(GuardsClosing(sessions: sessions))
         // ⌃⇥ and ⌃⇧⇥ through the strip, which the Window menu cannot carry
         // beside ⇧⌘] and ⇧⌘[ — an item holds one key.
