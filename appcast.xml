@@ -3,6 +3,44 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.1.5</title>
+            <pubDate>Sat, 31 Oct 2026 16:38:44 +0700</pubDate>
+            <sparkle:version>18</sparkle:version>
+            <sparkle:shortVersionString>0.1.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**⌘W closes the tab again, not the window.** Since 0.1.3, ⌘W went to the
+system's own Close rather than Shellhand's Close Tab, so it closed the whole
+window. With a session still running it asked about the window; with nothing
+running it closed the window and every tab in it without a word. ⌘W closes
+the tab in front again, asking first while its session is still running, and
+closes SFTP or Settings when one of them is in front.
+
+**A session that is still connecting says so.** A warning ssh prints before it
+reaches the host — a key file that is not there is the usual one — made the
+session read as connected: its tab went green and Stop Connecting greyed out
+while ssh was still trying. Those warnings no longer count as the host
+answering, so the session stays connecting, with its time and Stop
+Connecting, until something does.
+
+**Show Beside fits the window.** Showing a tab beside the one in front widened
+the window past the edge of the screen, cutting off the right-hand side and
+pushing the inspector out of reach. The two sides now share the width the
+window has, half each to begin with, and the line between them can be
+dragged.
+
+**An import leaves your hosts where you filed them.** The group typed into
+"Put new hosts in" was given to every host the file left unfiled, including
+ones already in your list, so importing your ssh config a second time with a
+group typed moved hosts out of the groups you had put them in. It now files
+only the hosts the import adds.
+
+Nothing else here is visible from the outside. The suite went from 746 checks
+to 753. A walk through the whole window after 0.1.4 found all four of these,
+and the window check now fails if ⌘W belongs to anything but Close Tab.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.5/Shellhand-0.1.5.dmg" length="14422501" type="application/octet-stream" sparkle:edSignature="MfIyz+aRW2MpGo/WcyW1NWAOF8HODysWUnl1NClQ8cGMrnJJZR+MBSKMzABXCL0/2oszeiom5L1YrgKYJbbEBg=="/>
+        </item>
+        <item>
             <title>0.1.4</title>
             <pubDate>Sat, 31 Oct 2026 12:03:13 +0700</pubDate>
             <sparkle:version>17</sparkle:version>
@@ -124,85 +162,6 @@ a host list of its own. That is how the delete warning was found saying "the
 jump host for 2 groups" about a machine six hosts go through.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.3/Shellhand-0.1.3.dmg" length="14432955" type="application/octet-stream" sparkle:edSignature="+m6lEtweVE+bZATN1kGcLAhncARlRVs2XozjMJdZJWVf343VV18vnyZGsUi3GYFKi9nUlu3/W6ywOKnrBO1CBw=="/>
-        </item>
-        <item>
-            <title>0.1.2</title>
-            <pubDate>Fri, 30 Oct 2026 16:04:13 +0700</pubDate>
-            <sparkle:version>15</sparkle:version>
-            <sparkle:shortVersionString>0.1.2</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**SFTP can no longer delete a file on this Mac while it names a host.**
-Pointing a pane at another host dropped its old connection before the new one
-was open, but left the old listing on screen, and to the file window no
-connection meant this Mac. A Delete made in that moment, or after the host
-refused, went to the same path here — while the question named the host. Up to
-0.1.1 that could take a file off this Mac's disk. A pane pointed at a host now
-clears its listing at once, acts through that host's connection or not at all,
-and a host that refuses keeps its name rather than the pane calling itself This
-Mac.
-
-**Deleting on this Mac moves to the Trash.** The file window removed a local
-file for good, which no other Mac app does to a file you picked. It now goes to
-the Trash, and the question says so: Move to Trash, and that you can put it
-back. Deleting on a host is still final, and still says so.
-
-**What goes wrong in the SFTP window stays on screen.** A rename, a new folder,
-a delete or a path that failed with files listed said nothing at all: the
-window only showed an error in place of an empty listing. It now says what
-failed, and which file, in a banner over the listing until you dismiss it. A
-folder on a host that is not empty explains why it stayed: SFTP deletes a
-folder only once it is empty.
-
-**Closing the SFTP window asks while files are still moving**, and so does
-quitting, by the same switch in Settings ▸ General that asks before ending a
-session. Both used to stop every transfer still going or waiting its turn
-without a word.
-
-**A group's menu acts on the group you clicked.** Right-clicking a group's card
-in the grid and choosing Edit Group…, Delete Group… or New Group Inside… acted
-on whichever group was selected before — Delete Group… on EU asked to delete
-Production. Each item now carries the group it was opened on.
-
-**The host editor keeps your edits when a save fails**, and says why inside
-it, where it used to close and lose them. A tag still being typed when you
-press Save is kept, as it would be on Return.
-
-**The host list says what it holds, and how to get back.** A group counts every
-host beneath it, so Production reads "7 hosts: 1 here, 6 in 2 groups" rather
-than "1 host". An All Hosts row under the search field, and a path over an open
-group — All Hosts › Production › EU — lead back up, where nothing did once a
-group was open. The search field and the tags narrow the list in the middle as
-well as the sidebar's, and it says so — "3 of 12 · tagged db" — with Show All
-beside it.
-
-**The menus act on what is in front.** With a terminal in front, ⌘B, the
-toolbar's SFTP, Copy as ssh Command, Edit and Connect act on that terminal's
-host, as ⌘T already did, rather than on whatever the sidebar had selected. ⌘↩
-is the Host menu's alone.
-
-**The inspector has something to say about more than a host.** A group shows
-what it passes down to everything inside it — the user, the key, the jump host,
-agent forwarding and colours, each marked with where it came from — and what is
-inside it. A local shell says it is one. A machine typed into ⌘K shows where it
-connects, with Save as Host…, which opens New Host filled in from what you
-typed: there was no way to save one.
-
-**One way of writing a destination.** `deploy@192.0.2.21:2222`, the way ssh is
-typed, in the sidebar, the list, the inspector, ⌘K and the window's title,
-which between them wrote it five ways. An inherited value says "from
-Production" everywhere. What will run reads one argument a line, and Copy still
-gives the whole command, quoted for a shell.
-
-**A tab opened from ⌘K no longer repeats the port.** A machine typed with one
-had a tab reading "root@127.0.0.1:1 — 1", the port taken for the folder the
-shell was in, until the far end sent a title of its own.
-
-Nothing else here is visible from the outside. The suite went from 643 checks
-to 677, and every change to the code is now built and tested on a Mac at
-GitHub as well as here — which found that Shellhand did not build with Xcode
-26, and it does now.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.2/Shellhand-0.1.2.dmg" length="14514811" type="application/octet-stream" sparkle:edSignature="+YGt8p3pP8J1P+qHxcjpdt8bLFHZkzC/7SJyc9To5e3nErxEttBLQ1VZIUslS7iz+Q9xrMXhz1zjoghPjGKBDQ=="/>
         </item>
     </channel>
 </rss>
