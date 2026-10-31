@@ -160,6 +160,13 @@ names it. **A guard can catch the shell that runs it.** `window-check.sh`
 refused to start, "another copy of Shellhand is running", and the copy it
 had found was the shell running the command, whose own command line named
 the app's path in a `pgrep` beside it. Run a drive from a file.
+**⌘B connects too.** With a host selected, ⌘B opens SFTP on that host and
+connects at once. The check of the inconsistencies fixed after 0.1.5 pressed
+it with db-01 still selected from looking at its editor, and the right side
+went to `192.0.2.21` through `192.0.2.10` — documentation addresses nothing
+answers on, ended a few seconds later when the copy was quit, but past
+loopback all the same. Press Escape in the list first, so nothing is
+selected and SFTP asks which host.
 
 ## The lock
 

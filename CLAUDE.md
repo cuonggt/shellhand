@@ -985,8 +985,9 @@ credentials, which is most of it.
   and a row's context menu cannot be opened from a script. Drive connecting
   against `127.0.0.1` port 1 — **picking the host by searching for it, and
   pressing Connect only once the title names it**: an arrow walk that missed
-  connected whatever it stopped on — and pin every preference an assertion
-  leans on. A shell whose command line names the app's path trips the
+  connected whatever it stopped on. ⌘B connects SFTP to the host selected,
+  so clear the selection before pressing it. Pin every preference an
+  assertion leans on. A shell whose command line names the app's path trips the
   "another copy" guards, so run a drive or `window-check.sh` from a file.
   **Compile every helper with `osacompile` before a drive**: one that does
   not compile returns nothing, and AppleScript keeps words a helper reaches
