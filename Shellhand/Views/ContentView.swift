@@ -553,9 +553,9 @@ struct ContentView: View {
             smallerText: { frontSession?.changeFontSize(by: -1) },
             actualSize: { frontSession?.resetFontSize() },
             toggleInspector: { showingInspector.toggle() },
-            openSessions: sessions.all.map {
-                SessionItem(id: $0.id, title: Sessions.shortTitle(of: $0))
-            },
+            openSessions: zip(
+                sessions.all, Panes.menuTitles(sessions.all.map { Sessions.shortTitle(of: $0) })
+            ).map { SessionItem(id: $0.id, title: $1) },
             showSession: show(session:),
             nextTab: { step(by: 1) },
             previousTab: { step(by: -1) },

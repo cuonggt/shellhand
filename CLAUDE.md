@@ -556,7 +556,10 @@ credentials, which is most of it.
 - The **Window menu lists the sessions too**, with ⌘1 to ⌘9 for the first
   nine. That came in with the column and stays without it: a keyboard way to
   the fourth session is worth having whatever the switcher looks like, and
-  one menu is cheaper than a second switcher.
+  one menu is cheaper than a second switcher. Sessions of one name are told
+  apart there — "refuser", "refuser (2)", `Panes.menuTitles` — because
+  SwiftUI matches menu items by title: two of one name came out as one item
+  twice, both on ⌘2 and nothing on ⌘4.
 - **⇧⌘] and ⇧⌘[, and ⌃⇥ and ⌃⇧⇥, step through the strip** by
   `Panes.stepping`, the Hosts tab included, going round. The first pair are
   Window menu items; ⌃⇥ is `StepsTabs`, a local key monitor that sees the key

@@ -200,6 +200,24 @@ nonisolated enum Panes {
         sessions > 0
     }
 
+    /// The Window menu's names for the open sessions, told apart: a second
+    /// of one name carries its number among them — "refuser", "refuser (2)".
+    /// SwiftUI matches a menu's items by title, so two sessions on one host
+    /// came out as one item twice over, both on ⌘2 and nothing on ⌘4.
+    static func menuTitles(_ titles: [String]) -> [String] {
+        var taken = Set<String>()
+        return titles.map { title in
+            var told = title
+            var number = 1
+            while taken.contains(told) {
+                number += 1
+                told = "\(title) (\(number))"
+            }
+            taken.insert(told)
+            return told
+        }
+    }
+
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 

@@ -364,6 +364,20 @@ nonisolated struct PanesTests {
         #expect(elsewhere.beside == two)
     }
 
+    // MARK: the Window menu
+
+    /// Two sessions on one host came out of the Window menu as one item
+    /// twice, both on ⌘2 and nothing on ⌘4, SwiftUI matching items by title.
+    @Test("sessions of one name are told apart in the Window menu")
+    func menuTitlesDiffer() {
+        #expect(Panes.menuTitles(["waiter", "refuser", "Local — ~", "refuser"])
+            == ["waiter", "refuser", "Local — ~", "refuser (2)"])
+        #expect(Panes.menuTitles(["web", "web", "web"]) == ["web", "web (2)", "web (3)"])
+        // One already called what a second would be is still kept apart.
+        #expect(Set(Panes.menuTitles(["web (2)", "web", "web"])).count == 3)
+        #expect(Panes.menuTitles([]).isEmpty)
+    }
+
     // MARK: side by side
 
     /// Out of the width there is, never more: Show Beside widened the window
