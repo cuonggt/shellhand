@@ -190,6 +190,22 @@ So both halves are pinned in different places on purpose —
 `SessionProgressTests` for the rule, `TerminalSessionTests` for the buffer
 being non-empty *and* blank — because the rule is only right while that
 second fact holds, and SwiftTerm is free to change it.
+**And not everything said is the far side speaking.** The walk after 0.1.4
+connected a host whose key file was not there, and the tab went green, Stop
+Connecting greyed out, while ssh was still waiting on a machine that never
+answered: "Warning: Identity file … not accessible" had been printed on the
+terminal, and any output read as through. Measured with a real `ssh`: `-E`
+does not keep that warning off the terminal — ssh says it before its log
+takes over, while the connection's own refusal went to the log — and a jump
+hop's `ssh`, which has no `-E`, writes everything to the terminal, its
+failures included. `SessionProgress.heardFromTheFarSide` sets ssh's own
+warnings aside, the ones it goes on trying after — the missing key, and a
+hop's "Permanently added" — with the rows put back together and the
+whitespace out, as `HostKey` reads a question, since the warning wraps at
+any width a terminal is given: on screen it broke as "…shellhand-wal" /
+"k-no-such-key". A banner, a password prompt or a shell still count, and the
+check runs only while connecting, so the 10,000 lines of a session through
+are never filtered.
 
 ## Wrapped questions
 

@@ -78,6 +78,47 @@ nonisolated struct SessionProgressTests {
         #expect(SessionProgress.next(from: .connecting, screen: "deploy@web:~$ ") == .connected)
     }
 
+    /// OpenSSH's own words for a key file that is not there. It prints this
+    /// before it starts writing to its log, so `-E` does not keep it off the
+    /// terminal — measured, beside a connection refused that went to the log.
+    private static let missingKey =
+        "Warning: Identity file /Users/someone/.ssh/id_ed25519 not accessible: No such file or directory."
+
+    /// The walk after 0.1.4 found a session still trying to reach its host
+    /// shown connected, because ssh had warned about a key file it could not
+    /// find — twice, the hop's ssh warning too.
+    @Test("ssh's own warnings are not the far side answering")
+    func warningsDoNotConnect() {
+        #expect(SessionProgress.next(from: .connecting, screen: Self.missingKey) == nil)
+        #expect(SessionProgress.next(
+            from: .connecting, screen: Self.missingKey + "\n" + Self.missingKey + "\n\n") == nil)
+        let added = "Warning: Permanently added 'bastion' (ED25519) to the list of known hosts."
+        #expect(SessionProgress.next(from: .connecting, screen: added) == nil)
+    }
+
+    /// However narrow the terminal: the warning arrives as rows with its
+    /// words cut between them, as it did in the walk, and each row trimmed.
+    @Test("a warning cut across rows is still ssh's own")
+    func cutWarningsDoNotConnect() {
+        let warning = Array(Self.missingKey)
+        for width in [17, 40, 70] {
+            let rows = stride(from: 0, to: warning.count, by: width).map {
+                String(warning[$0..<min($0 + width, warning.count)])
+                    .trimmingCharacters(in: .whitespaces)
+            }
+            #expect(SessionProgress.next(from: .connecting, screen: rows.joined(separator: "\n")) == nil,
+                    "at \(width) columns")
+        }
+    }
+
+    @Test("the far side after a warning is through")
+    func farSideAfterAWarningConnects() {
+        #expect(SessionProgress.next(
+            from: .connecting, screen: Self.missingKey + "\ndeploy@web:~$ ") == .connected)
+        #expect(SessionProgress.next(
+            from: .connecting, screen: Self.missingKey + "\ndeploy@web's password: ") == .connected)
+    }
+
     @Test("a session already connected is left alone")
     func connectedStaysPut() {
         #expect(SessionProgress.next(from: .connected, screen: "deploy@web:~$ ls") == nil)

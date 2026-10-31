@@ -350,6 +350,23 @@ struct TerminalSessionTests {
         #expect(session.state == .connecting)
     }
 
+    /// ssh warning about a key file that is not there, as it does before its
+    /// log takes over: five looks — a whole second — and still connecting,
+    /// then through as soon as the far side says anything. The walk after
+    /// 0.1.4 found this shown connected while ssh was still trying.
+    @Test("the watchdog leaves a session connecting through ssh's own warning")
+    func watchdogLeavesWarningsAlone() async {
+        let session = session()
+        session.view.feed(text: "Warning: Identity file /Users/someone/.ssh/id_ed25519 "
+            + "not accessible: No such file or directory.\r\n")
+        session.watch()
+        _ = await waitUntil { session.ticks >= 5 }
+        #expect(session.ticks >= 5, "the watchdog stopped looking")
+        #expect(session.state == .connecting)
+        session.view.feed(text: "deploy@web:~$ ")
+        #expect(await waitUntil { session.state == .connected })
+    }
+
     @Test("the watchdog raises a host key question off the real screen")
     func watchdogAsks() async {
         let session = session()

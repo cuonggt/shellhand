@@ -837,7 +837,12 @@ credentials, which is most of it.
   connected, was lost, was stopped or simply ended, with ssh's own line and
   what it means (`SessionEnding`) — where "status 255" read the same as
   `exit`. **Through is no proof of logging in**: an answered question or a
-  password prompt reads as through, so what ssh said decides first.
+  password prompt reads as through, so what ssh said decides first. **ssh's
+  own warnings are no word from the far side** (`SessionProgress
+  .heardFromTheFarSide`): it warns about a key file that is not there on the
+  terminal, before its log takes over, and a hop's ssh writes everything
+  there — read as output, a session still trying showed as connected.
+  → [blank, not empty](docs/notes/terminal.md#blank-not-empty)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a
   question is up and for `settling`, two minutes, after coming through. Every

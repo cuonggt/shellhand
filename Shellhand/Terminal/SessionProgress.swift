@@ -6,7 +6,7 @@ import Foundation
 /// runs it. The loop is machinery — sleep, tick, read the log, look — and the
 /// decision is the part worth holding still: that a host-key question is only
 /// taken from the end of the buffer, that it is not re-posed while it is being
-/// answered, that any output at all means the connection is through, and that
+/// answered, that anything from the far side means the connection is through, and that
 /// a session which has ended is not moved by anything.
 ///
 /// Driving it needed a pty, an unknown host and a window before this; it needs
@@ -44,27 +44,52 @@ nonisolated enum SessionProgress {
             return .askingHostKey(question)
         }
 
-        // Nothing said yet is no evidence of a connection, and **a terminal
-        // that has heard nothing does not come back empty**: its buffer is its
-        // own blank rows, which `isEmpty` happily called output. That took
-        // every session to `.connected` on the watchdog's first look, 200ms
-        // after opening, whether or not anything had answered — so
-        // `.connecting` never meant anything and a host that was refusing to
-        // answer looked connected. Blank is the test, not empty.
-        guard !screen.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
-        }
-
         switch state {
         case .connecting, .askingHostKey:
             // Anything at all from the far side means we are through. A
             // question that has been answered leaves its own text on screen,
             // which is why `.askingHostKey` moves on from here too.
-            return .connected
+            return heardFromTheFarSide(screen) ? .connected : nil
         case .connected, .ended:
             return nil
         }
     }
+
+    /// Whether anything on the screen came from the far side: anything but
+    /// blank rows and ssh's own warnings.
+    ///
+    /// Nothing said yet is no evidence of a connection, and **a terminal
+    /// that has heard nothing does not come back empty**: its buffer is its
+    /// own blank rows, which `isEmpty` happily called output. That took
+    /// every session to `.connected` on the watchdog's first look, 200ms
+    /// after opening, whether or not anything had answered — so
+    /// `.connecting` never meant anything and a host that was refusing to
+    /// answer looked connected. Blank is the test, not empty.
+    ///
+    /// **ssh's own warnings are not the far side either.** ssh prints one
+    /// about a key file that is not there before it starts writing to its
+    /// log, and a jump hop's ssh prints all of its to the terminal, so they
+    /// land on a screen nothing has answered yet. Read as output, they showed
+    /// a session still trying to reach its host as connected, Stop Connecting
+    /// greyed out — the walk after 0.1.4 found it. The rows are put back
+    /// together with the whitespace out, as `HostKey` does, since a warning
+    /// wider than the terminal arrives split between them.
+    static func heardFromTheFarSide(_ screen: String) -> Bool {
+        var said = screen.filter { !$0.isWhitespace }
+        for warning in sshsOwn {
+            said = said.replacingOccurrences(of: warning, with: "", options: .regularExpression)
+        }
+        return !said.isEmpty
+    }
+
+    /// The warnings ssh prints and then goes on trying, with the whitespace
+    /// out, in OpenSSH's own words.
+    private static let sshsOwn = [
+        // A key named that is not there: `-i`, or an IdentityFile.
+        #"Warning:Identityfile.*?notaccessible:[^.]*\."#,
+        // A hop told about a key it had not met, as `accept-new` does.
+        #"Warning:Permanentlyadded.*?tothelistofknownhosts\."#,
+    ]
 
     /// How long after a session comes through its screen is still read, in
     /// seconds. **Through is not settled.** An answered question on screen
