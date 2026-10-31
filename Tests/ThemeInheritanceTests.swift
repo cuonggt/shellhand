@@ -214,3 +214,18 @@ nonisolated struct ThemePortableTests {
         }
     }
 }
+
+/// The picker over a window too short for it: Settings, 500 tall and down to
+/// 420, hung the picker's Done below the window's edge.
+@Suite("The palette picker's height")
+nonisolated struct PalettePickerHeightTests {
+    @Test("the picker fits under the toolbar of the window it opens over")
+    func fits() {
+        #expect(PalettePicker.height(in: nil) == PalettePicker.tallest)
+        #expect(PalettePicker.height(in: 700) == PalettePicker.tallest)
+        // Settings at its default: the room below its toolbar, less a margin.
+        #expect(PalettePicker.height(in: 420) == 380)
+        // However little room, never so short that nothing fits in it.
+        #expect(PalettePicker.height(in: 100) == 240)
+    }
+}

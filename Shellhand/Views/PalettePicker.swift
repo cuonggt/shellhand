@@ -111,8 +111,23 @@ struct PalettePicker: View {
     /// The palette inheriting resolves to, for the row's own swatch.
     let inheritedPalette: Palette?
     let onChoose: (String) -> Void
+    /// How tall it is, from the room in the window it opens over.
+    var height: CGFloat = PalettePicker.tallest
 
     @Environment(\.dismiss) private var dismiss
+
+    /// Tall enough for every palette that ships, where there is room.
+    nonisolated static let tallest: CGFloat = 460
+
+    /// How tall the picker is over a window with this much room below its
+    /// toolbar: `tallest` where that fits, and otherwise the room less a
+    /// margin, the palettes scrolling in what is left. Settings opens 500
+    /// tall and goes down to 420, and a 460 sheet hung its Done below the
+    /// window's edge.
+    nonisolated static func height(in room: CGFloat?) -> CGFloat {
+        guard let room else { return tallest }
+        return max(240, min(tallest, room - 40))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -125,7 +140,7 @@ struct PalettePicker: View {
             }
             .padding(14)
         }
-        .frame(width: DialogSize.medium, height: 460)
+        .frame(width: DialogSize.medium, height: height)
         .onExitCommand { dismiss() }
     }
 
@@ -192,10 +207,21 @@ struct PaletteChoice: View {
     let inheritedPalette: Palette?
     let onChoose: (String) -> Void
 
-    @State private var choosing = false
+    /// The picker open, with the height it opens at — carried in the
+    /// binding, since a sheet built from `isPresented` reads state set in
+    /// the same gesture as it was before.
+    @State private var choosing: Opening?
+
+    private struct Opening: Identifiable {
+        let id = UUID()
+        let height: CGFloat
+    }
 
     var body: some View {
-        Button { choosing = true } label: {
+        Button {
+            choosing = Opening(
+                height: PalettePicker.height(in: NSApp.keyWindow?.contentLayoutRect.height))
+        } label: {
             HStack(spacing: 7) {
                 TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
                 Text(title)
@@ -207,10 +233,10 @@ struct PaletteChoice: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Colours: \(title)")
-        .sheet(isPresented: $choosing) {
+        .sheet(item: $choosing) { opening in
             PalettePicker(
                 chosen: chosen, inherited: inherited, inheritedPalette: inheritedPalette,
-                onChoose: onChoose)
+                onChoose: onChoose, height: opening.height)
         }
     }
 
