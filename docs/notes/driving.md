@@ -333,3 +333,19 @@ two separate alarms in one sitting, both of them a production hostname that
 was never contacted. **The title is not evidence.** `pgrep -P <pid>` is:
 this app connects by spawning `ssh` on a pty, so no child means no
 connection.
+
+## A crash's notice
+
+**A scratch copy that crashes leaves "Shellhand quit unexpectedly" on the
+screen**, and it stays there through every drive after it: `screencapture -R`
+photographs the screen's rectangle, so the notice sat over the middle of
+every later photo of the second walk, and its reviewers had to read the text
+dumps and crop around it. After a crash, check for the notice before the next
+drive, or ask whoever is at the Mac to dismiss it.
+
+**A drive's window is shaped by the preferences it borrows.** The split's
+column widths are saved under the bundle id like the window's frame, so a
+drive inherits its user's sidebar — 432pt on this Mac, against a fresh
+install's 280 — and every width it measures is that sidebar's. Say so beside
+any width written down, and take a fresh install's own by deleting the frame
+key inside the borrowed domain, which is given back whole.

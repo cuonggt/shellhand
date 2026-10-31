@@ -228,6 +228,19 @@ nonisolated enum Panes {
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 
+    /// The least the middle column's content is given, whatever it shows —
+    /// fixed, so that no selection moves the column. Left to its content it
+    /// moved: picking a group raised it 34pt, so a window already at its
+    /// narrowest had to widen inside a layout pass, and AppKit ends that by
+    /// throwing. 0.1.7 crashed there.
+    ///
+    /// Measured against this at nought, the content asked for 140 with nothing
+    /// or a host picked, 174 with a group and 180 on the welcome; the column
+    /// keeps about 300 of its own besides, so the window's narrowest is this
+    /// plus the sidebar, the inspector and that. 500 put it at 1532 beside a
+    /// 432pt sidebar, wider than a 13-inch screen.
+    static let paneMinimum: CGFloat = 200
+
     /// The front side's width, for the share of the split's width it has
     /// been dragged to: each side keeps `besideMinimum` while the whole has
     /// room for two of it, and the two halve what there is where it has not.

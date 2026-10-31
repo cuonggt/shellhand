@@ -144,6 +144,8 @@ struct ContentView: View {
                     search = ""
                     chosenTags = []
                 })
+                // One minimum, whatever the column shows: `Panes.paneMinimum`.
+                .frame(minWidth: Panes.paneMinimum, maxWidth: .infinity)
                 .toolbar { paneToolbar }
         }
         // Tags the window so Shellhand ▸ Hosts can find it again from an

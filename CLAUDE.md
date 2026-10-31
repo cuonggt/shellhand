@@ -543,6 +543,16 @@ credentials, which is most of it.
   ⌘D's item reads Hide Beside while a tab is beside (`Panes.splitTitle`),
   since that is when it closes the split.
   → [the strip's selection](docs/notes/window.md#the-strips-selection)
+- **The middle column has one minimum, whatever it shows**
+  (`Panes.paneMinimum`, a frame on `DetailView`). Left to its content it
+  moved — picking a group raised it 34pt — and a window already at its
+  narrowest then had to widen inside a layout pass, which AppKit ends by
+  throwing: 0.1.7 crashed on the first group picked there, every time.
+  `window-check.sh` arrows through the sidebar at the narrowest. The column
+  keeps about 300pt of its own beside that minimum while the inspector is
+  up, so 500 made the narrowest window 1532 — **measure the narrowest window
+  after touching either**.
+  → [the narrowest window](docs/notes/window.md#the-narrowest-window)
 - **Never change the inspector in the same update that swaps the pane**:
   it crashes, intermittently, as a reentrant table-view operation. Defer it a
   turn of the loop with `DispatchQueue.main.async`, and prove a change here

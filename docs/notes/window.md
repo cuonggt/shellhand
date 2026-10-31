@@ -721,3 +721,47 @@ Not `.accessibilityElement(children: .ignore)` — that names the row but
 replaces the button's own element, and then pressing it does nothing at all.
 The label lands in `AXAttributedDescription`, which AppleScript cannot read
 back, so `description of button 1` still says "button".
+
+## The narrowest window
+
+**At its narrowest, the host window crashed on the first group picked** —
+0.1.7 and everything before it. The second walk, at the default 1100×720,
+found it: the drive asked for a window narrower than allowed, AppKit held it
+at its narrowest, and arrowing onto Production aborted the app. The report
+is an uncaught `NSGenericException` from `NSWindow`'s display cycle, raised
+under SwiftUI's `SplitViewChildController.hostingView(_:didUpdateMinSize:
+maxSize:)` — a column's minimum changed in the middle of a constraint pass
+(in 0.1.7 the same exception surfaces in the layout pass instead, through
+`_crashOnException`).
+
+**The column's minimum moved with what it showed.** Read with the window
+roomy, a row picked, then the window asked for 1000 and held at its
+narrowest: 1172 with nothing or a host picked, 1206 with a group, 1212 on the
+welcome, 1180 with sessions — beside a 432pt sidebar, which is what the
+drives' borrowed preferences hold. At 1172, picking a group meant widening
+34pt inside the pass. Measured both ways in one sitting: a window set to
+exactly 1172 crashed three times in three, in main and in 0.1.7's own code;
+a fresh install's window, which comes up at 1212, survived three in three,
+and at 1220 neither build ever crashed. **A user gets there by dragging the
+window as narrow as it goes**, which is why nobody had: this Mac's window is
+the whole screen.
+
+**The fix is one minimum for the middle column**, `Panes.paneMinimum`, a
+flexible frame on `DetailView` that its content cannot push past, so no
+selection moves it. The number was not reasoned: with the frame at 0, 300
+and 500 the narrowest window was 1032, 1332 and 1532 — the column keeps
+about 300 of its own besides while the inspector is up — and 1532 is wider
+than a 13-inch screen. Against the 1032, the content had asked for 140
+(nothing, a host), 174 (a group) and 180 (the welcome), so 200: the
+narrowest window is 1232 in every state, walking the whole sidebar there
+survived 56 keys three times, and hiding and showing the inspector at the
+narrowest is fine too. `window-check.sh` now asks for a window smaller than
+it can be and arrows through the sidebar, groups included, as the probe that
+crashed 0.1.7 three times in three did; it passed against the fix, twice.
+Run against 0.1.7 as a control it never reached that step: window-check's
+own tree-opening step ("after opening the groups, EU is still missing")
+failed first. **That step fails when window-check runs straight after
+another window-check**, whichever build, the script as committed included,
+and passed both times it followed a drive — so a run leaves something its
+next run trips on. Unexplained; this Mac also had nine copies of the app
+registered under one bundle id by then.

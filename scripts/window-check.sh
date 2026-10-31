@@ -545,4 +545,61 @@ printf '%s' "$pane_said" | grep -q "Colours" \
     || fail "the inspector has no palette picker: $pane_said"
 echo "window-check: the inspector offers the palette picker"
 
+# At its narrowest the window survives picking a group. The middle column's
+# minimum moved with what it showed — a group raised it 34pt — so a window
+# already at its narrowest had to widen inside a layout pass, and AppKit ends
+# that by throwing: 0.1.7 crashed on the first group arrowed to, every time.
+# `Panes.paneMinimum` holds the column still. Asking for a window smaller than
+# it can be leaves AppKit holding it at its narrowest; then the sidebar is
+# arrowed up to its top and down to its end, every group and host picked.
+read -r -d '' NARROWEST <<'APPLESCRIPT'
+on findOutline(el, depth)
+	if depth > 12 then return missing value
+	tell application "System Events"
+		try
+			if role of el is "AXOutline" then return el
+		end try
+		try
+			repeat with child in UI elements of el
+				set got to my findOutline(child, depth + 1)
+				if got is not missing value then return got
+			end repeat
+		end try
+	end tell
+	return missing value
+end findOutline
+
+tell application "System Events"
+	tell process "Shellhand"
+		set w to front window
+		set size of w to {600, 600}
+		delay 1
+		set {ww, wh} to size of w
+		set side to my findOutline(w, 0)
+		if side is missing value then return "NO-SIDEBAR"
+		set focused of side to true
+		delay 0.4
+		set seen to ""
+		repeat with theKey in {126, 125}
+			repeat 8 times
+				key code (theKey as integer)
+				delay 0.6
+				set seen to seen & " / " & (name of front window as text)
+			end repeat
+		end repeat
+		return ((ww as integer) as text) & seen
+	end tell
+end tell
+APPLESCRIPT
+
+narrowest=$(osascript -e "$NARROWEST" 2>&1)
+kill -0 "$window_pid" 2>/dev/null \
+    || fail "the window crashed at its narrowest, arrowing through the sidebar: $narrowest"
+case "$narrowest" in
+    NO-SIDEBAR*) fail "at its narrowest the window has no sidebar list to arrow through" ;;
+    *Production*) ;;
+    *) fail "at its narrowest the arrows never reached a group: $narrowest" ;;
+esac
+echo "window-check: at its narrowest, ${narrowest%% *}pt, the window survives picking a group"
+
 echo "window-check: PASSED — a window loaded a store of its own and drew it"
