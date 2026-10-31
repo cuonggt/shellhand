@@ -81,10 +81,29 @@ nonisolated enum QuickConnect {
     private static func names(_ host: Host, _ destination: Destination, _ typed: String) -> Bool {
         let typed = typed.trimmingCharacters(in: .whitespaces)
         if host.name.caseInsensitiveCompare(typed) == .orderedSame { return true }
+        return reaches(host, destination)
+    }
+
+    /// Whether a destination is this saved host's machine: its address, with
+    /// no user and no port typed that say otherwise.
+    private static func reaches(_ host: Host, _ destination: Destination) -> Bool {
         guard host.addr.caseInsensitiveCompare(destination.host) == .orderedSame else { return false }
         if !destination.user.isEmpty && destination.user != host.effective.user { return false }
         if destination.port != 0 && destination.port != host.effective.port { return false }
         return true
+    }
+
+    /// What the typed row says under itself: "Not in your list", unless a
+    /// saved host is that very machine — then the row goes to it as typed,
+    /// without the host's own key, jump host and options, and says so. It
+    /// said "Not in your list" directly under the host it named. A name is
+    /// not that machine: a machine called `web` is wherever ssh finds it, and
+    /// the saved host called web is at its own address.
+    static func typedCaption(among hosts: [Host], for typed: String) -> String {
+        guard let destination = destination(from: typed),
+              let saved = hosts.filter({ reaches($0, destination) }).sorted(by: byName).first
+        else { return "Not in your list" }
+        return "As typed, without \(saved.name)'s settings"
     }
 
     /// A machine typed into ⌘K rather than picked from the list:

@@ -914,6 +914,10 @@ credentials, which is most of it.
   that grid: ⌘K, type, return, the shape Spotlight has, where a footer would
   be noise. What a palette does owe you is a way out, and with no button bound
   to `.cancelAction` nothing answers Escape — `onExitCommand` is what does.
+- **⌘K's typed row says what it is**: "Not in your list", or — where a saved
+  host is that very machine — "As typed, without web's settings"
+  (`QuickConnect.typedCaption`). It said "Not in your list" under the host
+  it named.
 - **⌘K connects to machines not in the list** — `host`, `user@host:port`,
   `[v6]:port` or an `ssh://` link, read by `QuickConnect.destination` and
   ranked by `QuickConnect.rows`. Nothing typed may start with `-`, which ssh

@@ -85,7 +85,7 @@ struct QuickConnectSheet: View {
         case let .typed(destination):
             VStack(alignment: .leading, spacing: 1) {
                 Text("Connect to \(destination.spelled)")
-                Text("Not in your list")
+                Text(QuickConnect.typedCaption(among: store.snapshot.hosts, for: text))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

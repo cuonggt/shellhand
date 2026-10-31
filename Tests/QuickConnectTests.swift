@@ -258,6 +258,24 @@ nonisolated struct QuickConnectTests {
         #expect(ids("db.prod", among: list) == ["1", "typed:db.prod", "2"])
     }
 
+    /// The walk typed refuser's own destination, and the row under refuser
+    /// said "Not in your list".
+    @Test("the typed row says when a saved host is that very machine")
+    func typedCaption() {
+        var refuser = Self.host("r", "refuser", addr: "127.0.0.1")
+        refuser.effective.user = "root"
+        refuser.effective.port = 1
+        #expect(QuickConnect.typedCaption(among: [refuser], for: "root@127.0.0.1:1")
+            == "As typed, without refuser's settings")
+        #expect(QuickConnect.typedCaption(among: [refuser], for: "10.9.9.9") == "Not in your list")
+        // Another user is another request, so not that host.
+        #expect(QuickConnect.typedCaption(among: [refuser], for: "deploy@127.0.0.1:1")
+            == "Not in your list")
+        // A machine called refuser is wherever ssh finds it, not at
+        // refuser's address.
+        #expect(QuickConnect.typedCaption(among: [refuser], for: "refuser") == "Not in your list")
+    }
+
     @Test("the arrows move over the typed row like any other")
     func movesOverTheTypedRow() {
         let rows = QuickConnect.rows(among: hosts, for: "web")
