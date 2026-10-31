@@ -3,6 +3,45 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.1.6</title>
+            <pubDate>Sat, 31 Oct 2026 18:40:37 +0700</pubDate>
+            <sparkle:version>19</sparkle:version>
+            <sparkle:shortVersionString>0.1.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**The menus offer only what works.** With the SFTP window or Settings in
+front, New Host…, New Group…, New Local Shell, Import… and Quick Connect…
+were enabled and did nothing, and so was Shellhand ▸ SFTP with nothing to open
+it from. Reconnect was live on a local shell, which has no host to reconnect
+to. They grey out now. macOS's own window tabs are gone from View and Window,
+where they offered a tab bar and a second pair of tab items on the strip's own
+keys. And two tabs on the same host each get a ⌘ number of their own in the
+Window menu — "refuser" and "refuser (2)" — where both landed on one.
+
+**Deleting a group says what really happens.** It said all of a group's hosts
+moved to the top of the list, when only the ones filed in it directly do: the
+groups inside it move up with their own hosts still in them. It says so now,
+and says that what the group gives those hosts — the user, the key, the
+palette — goes with it.
+
+**The palette picker fits in Settings.** It was taller than the Settings
+window, which left its Done button below the window's edge. It now fits the
+window it opens over.
+
+**The SFTP window opens with the keyboard in This Mac's list**, as the host
+window opens in its host list, rather than in the path field, where ↓, Space
+and ⌫ edited the path.
+
+**The host editor speaks like the rest of the app.** Its inherited values say
+"from Production", as the group editor and the inspector do, and the settings
+it called Through and Agent are Jump host and Agent forwarding, as they are
+everywhere else.
+
+Nothing else here is visible from the outside. The suite went from 753 checks
+to 756.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.6/Shellhand-0.1.6.dmg" length="14856719" type="application/octet-stream" sparkle:edSignature="Fh/5D6vx3oPQ2lLDQXzsQOFv5dFibeQ3laeROSvXLyrQrQuLi9WpeRaeZPQ3vZq7kI0FNJ35tZQswn7J+O3CAQ=="/>
+        </item>
+        <item>
             <title>0.1.5</title>
             <pubDate>Sat, 31 Oct 2026 16:38:44 +0700</pubDate>
             <sparkle:version>18</sparkle:version>
@@ -69,99 +108,6 @@ to 746, and the README's picture and shellhand.com show the window as it is
 now, where they showed an older one.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.4/Shellhand-0.1.4.dmg" length="14422989" type="application/octet-stream" sparkle:edSignature="+rlgdd+YeuTfWBsQArurULQeY/6xJmFRk5SuakIPJi5DnNmYgHG+fMoFKeMLRGCiAs0C8p0IWuh1ZKN7OYrqDQ=="/>
-        </item>
-        <item>
-            <title>0.1.3</title>
-            <pubDate>Sat, 31 Oct 2026 06:46:53 +0700</pubDate>
-            <sparkle:version>16</sparkle:version>
-            <sparkle:shortVersionString>0.1.3</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**A session says what it is doing while it connects.** A tab that is
-connecting shows where it is going, the way there and how long it has taken —
-"deploy@192.0.2.21:2222, through bastion · 4 s" — with Stop Connecting beside
-it, and on ⌘. in the Terminal menu, where the only way out was closing the
-tab.
-
-**An ending says what happened, in words.** A session that finishes says
-whether it couldn't connect, lost its connection, was stopped, or simply
-ended. Up to 0.1.2 "status 255" read the same as typing `exit`. ssh's last
-line is shown, with what it means under it for somebody who did not write
-ssh: a name this Mac can't look up, a machine that answered with nothing
-listening, a key the machine turned down, a key that has changed.
-Reconnecting keeps the tab where it was in the strip, where it used to close
-it and open another at the end.
-
-**A new machine's key is asked about by name.** The first time ssh meets a
-machine, the question comes up in a sheet over its tab, saying which machine
-it is, where it sits on the way to the host you asked for, and its
-fingerprint. Return trusts it and Esc does not. A question in a tab behind
-another marks that tab Needs you, since ssh gives up on a question left
-unanswered too long.
-
-**A tab shows its state as a symbol and says it in words**, under the
-window's title, where a colour alone said it to nobody who cannot tell red
-from green.
-
-**SFTP says why it cannot open a host, and what to do about it.** A key that
-has changed, a machine never connected to, a host that takes only a password,
-a key the host turned down: each is said as itself. Where a terminal can do
-what SFTP cannot — answer ssh's question about a new machine's key, or type a
-password — Open in Terminal opens a tab on that host. Every failure offers
-Try Again.
-
-**The SFTP window answers to its keys.** ⌘R refreshes the side you are
-working in and ⇧⌘N makes a folder there. Space opens Quick Look, ⌫ deletes,
-and a folder can be renamed as a file can. The host menu is in order.
-
-**A transfer says which way it goes.** Each row in the strip says where it
-comes from and where it lands — "This Mac → web-us-1:/var/www/site" — and a
-failed one can be retried in its own row while the connections it went
-through are still open. Opening a folder clears what was selected in the one
-before. One file is "1 item", not "1 items". A finished transfer's bar is
-drawn full.
-
-**A palette is chosen by looking at it, everywhere.** The inspector, the host
-and group editors and Settings ▸ Terminal all open the same picker, which
-draws each palette in its own colours and applies a choice at once, so two
-can be compared on the terminal behind it. Three of the four were a menu of
-names. What a host inherits is named for what it inherits — "From Production —
-Gruvbox Dark".
-
-**Import brings in what it showed you.** A path changed and Returned, or a
-group typed after the preview, used to import a file or into a group nobody
-had looked at, and a second press reported the first one's count. The import
-now runs on exactly what was previewed. The preview says what it would do —
-"Would add 5 and update 2 · 3 already here" — and a file that isn't there is
-said as one.
-
-**The settings file has one name, and Settings can make it.** Settings ▸
-General ▸ Where things are names it, with Create Settings File, which writes
-one with every setting explained and commented out — never over a file
-already there. Once it exists, the button opens it. It was called three
-different things, and nothing made it.
-
-**Deleting says what else goes.** Deleting a host that others jump through
-says how many hosts reach their machines through it and which groups name it,
-and that without it ssh is left to find a machine by that name on its own.
-Deleting a tag asks first, with the number of hosts it comes off, where it
-went from all of them without a word.
-
-**⌘F finds hosts.** With the host list in front, ⌘F puts the keyboard in the
-sidebar's search field, bringing the sidebar back if it was hidden; with a
-session in front it still searches the terminal. Quick Connect wears a bolt
-in the toolbar, rather than the magnifying glass the search field under it
-already wears. The tags under the sidebar wrap onto another line instead of
-running off its edge. With nothing open there is no strip holding a lone
-Hosts tab.
-
-**⌘W closes Settings and the SFTP window**, where it did nothing.
-
-Nothing else here is visible from the outside. The suite went from 677 checks
-to 737, and every change was driven on screen against a copy of the app with
-a host list of its own. That is how the delete warning was found saying "the
-jump host for 2 groups" about a machine six hosts go through.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.3/Shellhand-0.1.3.dmg" length="14432955" type="application/octet-stream" sparkle:edSignature="+m6lEtweVE+bZATN1kGcLAhncARlRVs2XozjMJdZJWVf343VV18vnyZGsUi3GYFKi9nUlu3/W6ywOKnrBO1CBw=="/>
         </item>
     </channel>
 </rss>
