@@ -43,6 +43,13 @@ nonisolated enum Panes {
         beside == nil ? open.first { $0 != front } : nil
     }
 
+    /// ⌘D's item, named for what it would do: Hide Beside while a tab is
+    /// shown beside, since that is when it closes the split. It said Show
+    /// Beside either way.
+    static func splitTitle(besideOpen: Bool) -> String {
+        besideOpen ? "Hide Beside" : "Show Beside"
+    }
+
     /// Whether ⌘D is worth offering: not while the hosts are in front, and
     /// not with a single session, because there would be nothing to put
     /// beside it.

@@ -566,6 +566,7 @@ struct ContentView: View {
             canStopConnecting: frontSession?.status == .connecting,
             canReconnect: frontSession?.host != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
+            besideOpen: beside != nil,
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
             exportList: {
                 Task {

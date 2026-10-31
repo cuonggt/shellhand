@@ -536,6 +536,8 @@ credentials, which is most of it.
   sides from the terminal views' own frames, 900pt from when they are made,
   and Show Beside widened the window past the screen. The sides are laid out
   in the room the window has, by `Panes.frontWidth`, with a line to drag.
+  ⌘D's item reads Hide Beside while a tab is beside (`Panes.splitTitle`),
+  since that is when it closes the split.
   → [the strip's selection](docs/notes/window.md#the-strips-selection)
 - **Never change the inspector in the same update that swaps the pane**:
   it crashes, intermittently, as a reentrant table-view operation. Defer it a

@@ -378,6 +378,14 @@ nonisolated struct PanesTests {
         #expect(Panes.menuTitles([]).isEmpty)
     }
 
+    /// ⌘D closes the split while one is open, and its item said Show
+    /// Beside all the same.
+    @Test("⌘D's item says what it would do")
+    func splitTitle() {
+        #expect(Panes.splitTitle(besideOpen: false) == "Show Beside")
+        #expect(Panes.splitTitle(besideOpen: true) == "Hide Beside")
+    }
+
     // MARK: side by side
 
     /// Out of the width there is, never more: Show Beside widened the window

@@ -105,6 +105,8 @@ struct AppActions {
     /// Whether there are two things that could go side by side — terminals
     /// and SFTP tabs alike — and the one in front is one of them.
     var canSplit = false
+    /// Whether a tab is shown beside the one in front, which ⌘D would close.
+    var besideOpen = false
     /// Whether the strip holds more than the hosts, so stepping goes anywhere.
     var canStepTabs = false
     /// File ▸ Export…: the list as YAML, the way the import sheet's Export…
@@ -300,7 +302,7 @@ struct ShellhandCommands: Commands {
                 .keyboardShortcut(".", modifiers: .command)
                 .disabled(!(actions?.canStopConnecting ?? false))
             Divider()
-            Button("Show Beside") { actions?.toggleSplit() }
+            Button(Panes.splitTitle(besideOpen: actions?.besideOpen ?? false)) { actions?.toggleSplit() }
                 .keyboardShortcut("d", modifiers: .command)
                 .disabled(!(actions?.canSplit ?? false))
             Divider()
