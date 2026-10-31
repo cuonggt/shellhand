@@ -3,6 +3,36 @@
     <channel>
         <title>Shellhand</title>
         <item>
+            <title>0.1.4</title>
+            <pubDate>Sat, 31 Oct 2026 12:03:13 +0700</pubDate>
+            <sparkle:version>17</sparkle:version>
+            <sparkle:shortVersionString>0.1.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[**Renaming a host takes what goes through it along.** A host that others
+jumped through, named in their Through field or in a group's, left them
+naming a machine no longer in the list once it was renamed, and ssh was left
+to find one by that name on its own. Saving a new name now rewrites every
+host's and group's Through field that named the old one, and the editor says
+what will follow before you save — "6 hosts and the groups EU and US go
+through bastion, and will follow the new name."
+
+**The window opens with the keyboard in the host list.** macOS gave it to the
+search field, the window's first text field, so ↓ and Return did nothing
+until the list was clicked. Now the arrows walk the list and Return connects
+from the moment the window opens. ⌘F still goes to the search.
+
+**A host called bastion is no longer offered itself to jump through.** The
+Through field's grey example was "bastion" on every host, which on a host
+called bastion read as the loop Shellhand refuses to save. There it suggests
+"gateway" instead.
+
+Nothing else here is visible from the outside. The suite went from 737 checks
+to 746, and the README's picture and shellhand.com show the window as it is
+now, where they showed an older one.
+]]></description>
+            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.4/Shellhand-0.1.4.dmg" length="14422989" type="application/octet-stream" sparkle:edSignature="+rlgdd+YeuTfWBsQArurULQeY/6xJmFRk5SuakIPJi5DnNmYgHG+fMoFKeMLRGCiAs0C8p0IWuh1ZKN7OYrqDQ=="/>
+        </item>
+        <item>
             <title>0.1.3</title>
             <pubDate>Sat, 31 Oct 2026 06:46:53 +0700</pubDate>
             <sparkle:version>16</sparkle:version>
@@ -173,54 +203,6 @@ GitHub as well as here — which found that Shellhand did not build with Xcode
 26, and it does now.
 ]]></description>
             <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.2/Shellhand-0.1.2.dmg" length="14514811" type="application/octet-stream" sparkle:edSignature="+YGt8p3pP8J1P+qHxcjpdt8bLFHZkzC/7SJyc9To5e3nErxEttBLQ1VZIUslS7iz+Q9xrMXhz1zjoghPjGKBDQ=="/>
-        </item>
-        <item>
-            <title>0.1.1</title>
-            <pubDate>Fri, 30 Oct 2026 06:37:03 +0700</pubDate>
-            <sparkle:version>14</sparkle:version>
-            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[**A terminal keeps 10,000 lines of history.** It kept 500 — SwiftTerm's own
-default — so a log or a long build scrolled out of reach within a few
-screens, and Find could only search what was left. Raising it waited on
-something else: every ssh session read its whole screen five times a second,
-history and all, to watch for a host-key question, which already cost a
-session up to 6% of the main thread at 500 lines and would have cost far more
-at 10,000. A session now reads its screen only while it is connecting, while a
-question is up, and for two minutes after it comes through, which covers every
-hop of a jump chain. After that, a host-key question asked by something you
-run inside the session — an `ssh` typed there, `git` over ssh — is answered in
-the terminal itself, as in Terminal.app, rather than through Shellhand's
-dialog.
-
-**Shellhand asks a host what it runs only while you let it.** Asking is a
-second login, once a day per host, and on a machine with login alerts or a
-session recorder that is something somebody sees. Settings ▸ General has a
-Hosts section now, with a switch that turns the asking off. It starts on, as
-asking always has, and turning it off keeps the marks already learned.
-
-**Report a Problem opens a form.** Help ▸ Report a Problem… opens a new issue
-on a form that asks what happened and what you expected, with the versions of
-Shellhand and macOS already filled in. Questions and ideas have a place of
-their own now, in the repository's Discussions.
-
-**A settings file Shellhand cannot use says so now, and so does an import.**
-A mistake in `config.yaml` — an unclosed quote, a setting spelled wrong, an
-option ssh would refuse — left Shellhand running without the file, its ssh
-options and palettes quietly not applied, and a YAML import with a mistake in
-it came in as an empty list. Neither said a word, in any release so far. Now
-the window says what is wrong with the settings file when it opens, the import
-refuses the file with its reason, and a YAML mistake comes with its line and
-column. The settings file is read when Shellhand opens, so a fix takes effect
-the next time it does.
-
-Nothing else here is visible from the outside. The suite went from 622 checks
-to 643, the history's size was measured before it was chosen — about 8 bytes
-a column for each line, so 8 to 16 MB a session at 10,000 lines — and the
-settings file's message was checked on screen, against a copy of the app with
-a broken file of its own.
-]]></description>
-            <enclosure url="https://github.com/cuonggt/shellhand/releases/download/v0.1.1/Shellhand-0.1.1.dmg" length="14289105" type="application/octet-stream" sparkle:edSignature="rBVRTTx0EsEVrtBMo6drrIfQ42D/X824piBsw495GJ9nh0bpsc2vkMrPxScHEx1z9+uXmXGKlXB/xYi8FdQXDQ=="/>
         </item>
     </channel>
 </rss>
