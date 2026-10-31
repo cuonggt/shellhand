@@ -597,10 +597,10 @@ the import's group is a field beside its label; the host editor draws its
 command one argument a line, as the inspector does, in a box that hugs it
 up to six lines and scrolls past that; and New Host says what it needs from
 the start, quietly, as New Group now does too, rather than as a warning.
-The suite went 756 → 759, and CI passed the code at `6b57bfb`; the run for
-`5c9cab1`, the tagged commit's code with the feed and cask on top, had not
-finished when this was written, and the one for `f6ae472` itself was
-cancelled by that push.
+The suite went 756 → 759, and CI passed it on GitHub's Mac at `5c9cab1` —
+the tagged commit's code with the feed and cask on top, the run for
+`f6ae472` itself cancelled by that push — as it had the code's last change,
+`6b57bfb`.
 Verified the way 0.1.6 was, and everything passed, the tag fetched first;
 both notarizations went through the first time, and `generate_appcast`
 printed sixteen "failed to move" warnings. The DMG came out 25KB smaller
