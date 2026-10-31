@@ -957,7 +957,11 @@ credentials, which is most of it.
   accessors, and `repeat with x in y`, never `item 1 of y`. `select` on a row
   and `click at` do nothing here — focus the outline once and arrow instead —
   and a row's context menu cannot be opened from a script. Drive connecting
-  against `127.0.0.1` port 1, and pin every preference an assertion leans on.
+  against `127.0.0.1` port 1 — **picking the host by searching for it, and
+  pressing Connect only once the title names it**: an arrow walk that missed
+  connected whatever it stopped on — and pin every preference an assertion
+  leans on. A shell whose command line names the app's path trips the
+  "another copy" guards, so run a drive or `window-check.sh` from a file.
   **Compile every helper with `osacompile` before a drive**: one that does
   not compile returns nothing, and AppleScript keeps words a helper reaches
   for — `middle`, `items`, `times`, `buttons`. Read `front window` again
@@ -1213,7 +1217,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.1.4 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.1.5 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`, whose
 clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`:
 fast-forward it before copying a cask in. The notarytool profile `Shellhand`

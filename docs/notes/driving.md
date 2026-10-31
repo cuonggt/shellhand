@@ -146,6 +146,20 @@ resolves once the title is that row's name, and a pick that had worked
 reported an error. Read `front window of p` again each time instead. And
 not every window's list is the same outline: the Settings window's sidebar
 is its first, where the host window's pane is its second.
+**Pick a host to connect by searching for it, and connect only once the
+title names it.** The ⌘W drive before 0.1.5 meant to connect a listener of
+its own on `127.0.0.1` and arrowed up the pane to find it — from a row below
+it, so the walk went the other way, ran out of tries on api-eu-2, and the
+drive pressed Connect anyway: a session to `198.51.100.22` through
+`192.0.2.10`. Both are documentation addresses nothing answers on, and the
+run's ssh read its own config, so nothing was reached — but it broke the
+drive's own rule, and only luck made it harmless. The drives after it type
+the host's name into the sidebar's search, so the pane holds that host
+alone, arrow to it, and refuse to connect unless the window's title then
+names it. **A guard can catch the shell that runs it.** `window-check.sh`
+refused to start, "another copy of Shellhand is running", and the copy it
+had found was the shell running the command, whose own command line named
+the app's path in a `pgrep` beside it. Run a drive from a file.
 
 ## The lock
 

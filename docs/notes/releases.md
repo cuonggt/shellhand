@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.4, are out**, each
+**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.5, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -523,6 +523,38 @@ notes and the bump directly. The user's own Debug copy was open twice along
 the way: quit with their word, by `tell application` with the build's path,
 which asks before dropping a session as ⌘Q does, for the picture; left
 alone, with a session in it, for a suite run built elsewhere.
+
+**0.1.5 is what a walk through the whole window found after 0.1.4**,
+published at `d3da461` and live on release, feed, cask and tap. Four bugs,
+each fixed on its own and checked on a scratch copy: ⌘W closing the whole
+window since 0.1.3, because the system's own Close had taken the key from
+Close Tab; a session shown connected as soon as ssh printed a warning —
+a key file that was not there — while it was still trying; Show Beside
+widening the window past the screen, because the `HSplitView` sized its
+sides from the terminal views' own frames; and an import moving hosts
+already filed into the group typed for new ones. The suite went 746 → 753,
+and CI passed it on GitHub's Mac at `e600ac3` — the tagged commit's code
+with the feed and cask on top, the run for `d3da461` itself cancelled by
+that push. Verified the way 0.1.4 was, and everything passed, the tag
+fetched before the after-check; both notarizations went through the first
+time, and `generate_appcast` printed fourteen "failed to move" warnings.
+**How the walk went.** Four drives on a scratch copy, built apart in
+`build/walk`: the host window with both editors and every menu, sessions
+against a silent listener and a refusal on loopback, the SFTP window, and
+Settings, import, export and the welcome — 34 photographs, with every static
+text and every menu item dumped beside them, and the preferences given back
+byte for byte each time. Four reviewers read one drive each, and every
+finding ranked was checked against its photograph, its menu dump or the
+code before it was. The ⌘W finding was read off the menus, where Close Tab
+had no key, and confirmed with one ⌘W pressed as a key. That confirming
+drive also connected a documentation address by mistake (the driving notes
+have why), and its screen is how the connecting bug was found. **Still open
+from the walk**: two sessions of one name sharing a ⌘ number in the Window
+menu; menu items enabled with SFTP or Settings in front that do nothing;
+Delete Group saying its hosts move to the top of the list when most stay in
+the groups inside it, and not that what it passes down goes too; the
+palette picker running off the bottom of Settings; and macOS's own window
+tabs still offered in View and Window.
 
 ## The icon bundle
 
