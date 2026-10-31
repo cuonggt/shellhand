@@ -18,27 +18,6 @@ nonisolated enum Portable {
         var passedOver: [String] = []
 
         var isEmpty: Bool { groups.isEmpty && hosts.isEmpty }
-
-        /// Puts every host that does not already name a group into one,
-        /// declaring that group if the file did not.
-        ///
-        /// What makes a first import tidy: thirty machines out of an ssh
-        /// config land in one place rather than loose at the top of the list,
-        /// and a file that does say where its hosts belong is left alone.
-        func grouped(under name: String) -> Document {
-            let name = name.trimmingCharacters(in: .whitespaces)
-            guard !name.isEmpty else { return self }
-            var document = self
-            if !document.groups.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-                document.groups.append(Group(name: name))
-            }
-            document.hosts = document.hosts.map { host in
-                var host = host
-                if host.group.isEmpty { host.group = name }
-                return host
-            }
-            return document
-        }
     }
 
     struct Group: Sendable, Equatable {

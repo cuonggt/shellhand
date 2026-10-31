@@ -179,17 +179,17 @@ actor Core {
     func importYAML(db: String, text: String, group: String = "", dryRun: Bool) throws
         -> MergeResult
     {
-        try apply(try Portable.parse(text).grouped(under: group), db: db, dryRun: dryRun)
+        try apply(try Portable.parse(text), newHostsIn: group, db: db, dryRun: dryRun)
     }
 
-    /// Reads OpenSSH's own config as a host list. A group puts everything it
-    /// brings in one place, which is what makes a first import tidy.
+    /// Reads OpenSSH's own config as a host list. A group puts the hosts it
+    /// adds in one place, which is what makes a first import tidy.
     func importSSHConfig(
         db: String, path: String = "", group: String = "", dryRun: Bool
     ) throws -> MergeResult {
         let document = SSHConfigFile.read(
             path: path.isEmpty ? SSHConfigFile.pathInUse : path)
-        return try apply(document.grouped(under: group), db: db, dryRun: dryRun)
+        return try apply(document, newHostsIn: group, db: db, dryRun: dryRun)
     }
 
     /// Reads a list a spreadsheet or another client wrote.
@@ -201,16 +201,16 @@ actor Core {
         db: String, text: String, group: String = "", dryRun: Bool
     ) throws -> CSVImport {
         let reading = try CSVHosts.read(text)
-        let result = try apply(reading.document.grouped(under: group), db: db, dryRun: dryRun)
+        let result = try apply(reading.document, newHostsIn: group, db: db, dryRun: dryRun)
         return CSVImport(result: result, used: reading.used, ignored: reading.ignored)
     }
 
-    private func apply(_ document: Portable.Document, db: String, dryRun: Bool) throws
-        -> MergeResult
-    {
+    private func apply(
+        _ document: Portable.Document, newHostsIn group: String, db: String, dryRun: Bool
+    ) throws -> MergeResult {
         let store = try store(db)
         let plan = try Portable.merge(
-            document, into: try store.snapshot())
+            document, into: try store.snapshot(), newHostsIn: group)
         if !dryRun { try store.apply(plan) }
         return plan.result
     }

@@ -210,38 +210,58 @@ nonisolated struct GroupedTests {
         Portable.Document(
             groups: [Portable.Group(name: "Staging")],
             hosts: [
-                Portable.Host(name: "loose"),
-                Portable.Host(name: "filed", group: "Staging"),
+                Portable.Host(name: "loose", addr: "10.0.0.1"),
+                Portable.Host(name: "filed", addr: "10.0.0.2", group: "Staging"),
             ])
     }
 
-    @Test("a host that names no group goes into the one asked for")
-    func fillsIn() {
-        let grouped = document.grouped(under: "Imported")
-        #expect(grouped.hosts.first { $0.name == "loose" }?.group == "Imported")
+    private func filed(_ name: String, in plan: Portable.Plan) -> String? {
+        guard let host = plan.hosts.first(where: { $0.name == name }) else { return nil }
+        return plan.groups.first { $0.id == host.groupId }?.name ?? ""
     }
 
-    @Test("a host the file already filed stays where it was put")
-    func leavesFiledAlone() {
-        let grouped = document.grouped(under: "Imported")
-        #expect(grouped.hosts.first { $0.name == "filed" }?.group == "Staging")
+    @Test("a new host that names no group goes into the one asked for")
+    func fillsIn() throws {
+        let plan = try Portable.merge(document, into: Snapshot(), newHostsIn: "Imported")
+        #expect(filed("loose", in: plan) == "Imported")
     }
 
-    @Test("the group is declared, so the merge creates it rather than refusing")
-    func declaresTheGroup() {
-        #expect(document.grouped(under: "Imported").groups.map(\.name).contains("Imported"))
+    @Test("a host the file files stays where the file put it")
+    func leavesFiledAlone() throws {
+        let plan = try Portable.merge(document, into: Snapshot(), newHostsIn: "Imported")
+        #expect(filed("filed", in: plan) == "Staging")
     }
 
-    @Test("a group the file already declares is not declared twice")
-    func noDuplicate() {
-        let grouped = document.grouped(under: "staging")
-        #expect(grouped.groups.count == 1)
+    @Test("the group asked for is made, once, even when the file names it too")
+    func makesTheGroup() throws {
+        let plan = try Portable.merge(document, into: Snapshot(), newHostsIn: "Imported")
+        #expect(plan.groups.map(\.name).sorted() == ["Imported", "Staging"])
+        let same = try Portable.merge(document, into: Snapshot(), newHostsIn: "staging")
+        #expect(same.groups.map(\.name) == ["Staging"])
+        #expect(filed("loose", in: same) == "Staging")
     }
 
-    @Test("no group asked for leaves the document exactly as it was")
-    func nothingAsked() {
-        #expect(document.grouped(under: "") == document)
-        #expect(document.grouped(under: "   ") == document)
+    @Test("no group asked for files nothing")
+    func nothingAsked() throws {
+        for blank in ["", "   "] {
+            let plan = try Portable.merge(document, into: Snapshot(), newHostsIn: blank)
+            #expect(plan.hosts.first { $0.name == "loose" }?.groupId == "")
+            #expect(plan.groups.map(\.name) == ["Staging"])
+        }
+    }
+
+    /// The bug: the group went to every loose host before the merge could
+    /// tell new from old, so importing an ssh config a second time with a
+    /// group typed moved hosts filed in Production into it. One already in
+    /// the list stays put, and a group nothing new lands in is not made.
+    @Test("a host already in the list stays where it was filed")
+    func leavesTheListAlone() throws {
+        let production = Shellhand.Group(id: "p", name: "Production")
+        let web = Shellhand.Host(id: "w", name: "loose", addr: "10.0.0.1", groupId: "p")
+        let plan = try Portable.merge(
+            document, into: Snapshot(groups: [production], hosts: [web]), newHostsIn: "Imported")
+        #expect(plan.hosts.first { $0.name == "loose" } == nil, "it was moved: \(plan.changes)")
+        #expect(!plan.groups.map(\.name).contains("Imported"))
     }
 }
 
@@ -262,9 +282,9 @@ nonisolated struct CSVRoundTripTests {
 
     @discardableResult
     private func bring(_ csv: String, group: String = "", into store: Store) throws -> MergeResult {
-        let document = try CSVHosts.read(csv).document.grouped(under: group)
+        let document = try CSVHosts.read(csv).document
         let plan = try Portable.merge(
-            document, into: try store.snapshot())
+            document, into: try store.snapshot(), newHostsIn: group)
         try store.apply(plan)
         return plan.result
     }
@@ -293,6 +313,22 @@ nonisolated struct CSVRoundTripTests {
         let production = try #require(snapshot.groups.first { $0.name == "Production" })
         #expect(snapshot.hosts.first { $0.name == "loose" }?.groupId == imported.id)
         #expect(snapshot.hosts.first { $0.name == "bastion" }?.groupId == production.id)
+    }
+
+    /// Against a store: the same sheet again with a group typed moves
+    /// nothing already in it — loose stays loose, Production keeps its own —
+    /// and only a row that is new goes into the group.
+    @Test("a group asked for on a second import takes only what is new")
+    func secondImportMovesNothing() throws {
+        let store = try scratch()
+        try bring(sheet, into: store)
+        try bring(sheet + "\nnewcomer,10.9.9.10,,root,,,,", group: "Imported", into: store)
+        let snapshot = try store.snapshot()
+        let imported = try #require(snapshot.groups.first { $0.name == "Imported" })
+        let production = try #require(snapshot.groups.first { $0.name == "Production" })
+        #expect(snapshot.hosts.first { $0.name == "loose" }?.groupId == "")
+        #expect(snapshot.hosts.first { $0.name == "bastion" }?.groupId == production.id)
+        #expect(snapshot.hosts.first { $0.name == "newcomer" }?.groupId == imported.id)
     }
 
     @Test("the same file twice changes nothing the second time")

@@ -107,7 +107,7 @@ struct ImportSheet: View {
                             await look()
                         }
                 } footer: {
-                    Text("A host the file already files somewhere stays there.")
+                    Text("Hosts already in your list stay where they are, and so does one the file files itself.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

@@ -1008,6 +1008,12 @@ credentials, which is most of it.
   the first's count. A preview that comes back after the window has moved on
   is let go; the plan says what it would do (`MergeResult.plan`); a missing
   file is said as one.
+- **The group typed into an import files only the hosts it adds**
+  (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
+  was filed, and one the file files goes where the file says. The group was
+  given to every loose host before the merge could tell new from old, so
+  importing an ssh config again with a group typed moved hosts filed in
+  Production into it, under a field that said "Put new hosts in".
 - **Read YAML through `Core/YAMLDocuments.swift`**, never
   `try load_all(…).compactMap { $0 }`: Yams's sequence keeps a scan error in
   its `error` and simply ends, so that expression reads a broken file as no

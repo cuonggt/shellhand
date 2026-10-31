@@ -43,8 +43,17 @@ nonisolated extension Portable {
     /// lets an ssh config be imported twice without the second pass wiping a
     /// user or a tag added here in between, and the cost is that a field
     /// cannot be cleared by importing — which the editor does instead.
+    ///
+    /// `newHostsIn` is the group typed into the import sheet, for the hosts
+    /// this import adds and the file leaves loose: thirty machines out of an
+    /// ssh config land in one place rather than at the top of the list. A
+    /// host **already in the list stays where it was filed**, and one the
+    /// file files itself goes where the file says. The group was given to
+    /// every loose host before the merge could tell new from old, so
+    /// importing an ssh config again with a group typed moved hosts filed
+    /// in Production into it, the sheet saying "Put new hosts in" all along.
     static func merge(
-        _ document: Document, into snapshot: Snapshot
+        _ document: Document, into snapshot: Snapshot, newHostsIn: String = ""
     ) throws -> Plan {
         try document.validate()
         var plan = Plan()
@@ -121,12 +130,16 @@ nonisolated extension Portable {
             if !input.options.isEmpty { now.sshOptions = input.options }
             now.forwardAgent = input.forwardAgent ?? was?.forwardAgent
             now.theme = pick(input.theme, was?.theme ?? "")
-            // A host naming a group nothing has heard of creates it, exactly as
-            // typing an unknown group into the host form does.
-            if !input.group.isEmpty {
-                let group = ensure(input.group)
+            // Where the file files it, or — a new host it leaves loose — the
+            // group the import was given. A host naming a group nothing has
+            // heard of creates it, exactly as typing an unknown group into
+            // the host form does.
+            let filing = !input.group.isEmpty ? input.group
+                : was == nil ? newHostsIn.trimmingCharacters(in: .whitespaces) : ""
+            if !filing.isEmpty {
+                let group = ensure(filing)
                 now.groupId = group.id
-                let gk = key(input.group)
+                let gk = key(filing)
                 if !accounted.contains(gk) {
                     accounted.insert(gk)
                     if fresh.contains(gk) {
