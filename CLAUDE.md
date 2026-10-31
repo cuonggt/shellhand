@@ -441,6 +441,11 @@ credentials, which is most of it.
   controls see a key before the menus, so the SFTP window's ⌘R and ⇧⌘N are
   its active pane's buttons (`FilesModel.active`), and ⌘W with no host window
   in front is Close Window, where it did nothing.
+- **A menu item that would do nothing is greyed out**: File's New items,
+  Import… and Quick Connect… need the host window, Shellhand ▸ SFTP a host
+  window or a browser to bring forward, and Reconnect a host — a local
+  shell has none. With SFTP or Settings in front they were live and did
+  nothing.
 - **A menu is named for what its items act on, and that gates it**:
   **Host** needs a listed host — the session in front's, or else the one
   selected (`Panes.subject`, ⌘T's rule) — **Terminal** a session in front,

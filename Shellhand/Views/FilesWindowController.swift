@@ -31,6 +31,10 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
     /// answer starts goes through rather than asking again.
     private var answered = false
 
+    /// Whether there is a browser to bring forward, for Shellhand ▸ SFTP to
+    /// grey out when there is neither one nor a host window to open one.
+    static var isOpen: Bool { shared != nil }
+
     /// What closing the window would stop, for quitting to count as well.
     static var transfersStillToGo: Int {
         shared.map { TransferQueue.stillToGo($0.files.transfers) } ?? 0

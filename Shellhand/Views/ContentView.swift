@@ -564,6 +564,7 @@ struct ContentView: View {
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,
             canStopConnecting: frontSession?.status == .connecting,
+            canReconnect: frontSession?.host != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
             exportList: {

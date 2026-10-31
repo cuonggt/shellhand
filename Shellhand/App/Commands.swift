@@ -99,6 +99,9 @@ struct AppActions {
     var hasSession = false
     /// Whether the session in front is still connecting.
     var canStopConnecting = false
+    /// Whether the session in front has a host to reconnect to, which a
+    /// local shell has not: Reconnect was live there and did nothing.
+    var canReconnect = false
     /// Whether there are two things that could go side by side — terminals
     /// and SFTP tabs alike — and the one in front is one of them.
     var canSplit = false
@@ -163,8 +166,9 @@ struct ShellhandCommands: Commands {
         // `HostsWindow.front()` asks AppKit directly instead.
         //
         // SFTP does go through it, because opening the window needs the
-        // store the host window holds — so ⌘B is dead while the SFTP window
-        // itself is in front. Bring the host list forward and it works.
+        // store the host window holds — so with Settings in front and no
+        // browser open to bring forward, it greys out rather than doing
+        // nothing. Bring the host list forward and it works.
         CommandGroup(after: .appInfo) {
             Divider()
             // Straight under About, where every Mac app keeps it. Like Hosts
@@ -186,6 +190,7 @@ struct ShellhandCommands: Commands {
                 if !FilesWindowController.front() { actions?.openFiles() }
             }
             .keyboardShortcut("b", modifiers: .command)
+            .disabled(actions == nil && !FilesWindowController.isOpen)
         }
 
         // Settings is a window of this app's own making, not a `Settings`
@@ -201,20 +206,26 @@ struct ShellhandCommands: Commands {
         }
 
         // Replacing .newItem puts these where New and Open live in every
-        // other Mac app, rather than adding a menu nobody looks in.
+        // other Mac app, rather than adding a menu nobody looks in. Each
+        // needs the host window, so with SFTP or Settings in front they grey
+        // out: they were live there and did nothing.
         CommandGroup(replacing: .newItem) {
             Button("New Tab") { actions?.newTab() }
                 .keyboardShortcut("t", modifiers: .command)
                 .disabled(!(actions?.canNewTab ?? false))
             Button("New Local Shell") { actions?.newLocalShell() }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
+                .disabled(actions == nil)
             Divider()
             Button("New Host…") { actions?.newHost() }
                 .keyboardShortcut("n", modifiers: .command)
+                .disabled(actions == nil)
             Button(newGroupTitle) { actions?.newGroup() }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+                .disabled(actions == nil)
             Button("Import…") { actions?.openImport() }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
+                .disabled(actions == nil)
             // No key: ⇧⌘E, the usual one, is Edit Group's here.
             Button("Export…") { actions?.exportList() }
                 .disabled(!(actions?.canExport ?? false))
@@ -252,6 +263,7 @@ struct ShellhandCommands: Commands {
                 .disabled(!(actions?.hasHost ?? false))
             Button("Quick Connect…") { actions?.quickConnect() }
                 .keyboardShortcut("k", modifiers: .command)
+                .disabled(actions == nil)
             Divider()
             Button("Edit Host…") { actions?.editHost() }
                 .keyboardShortcut("e", modifiers: .command)
@@ -280,7 +292,7 @@ struct ShellhandCommands: Commands {
         CommandMenu("Terminal") {
             Button("Reconnect") { actions?.reconnect() }
                 .keyboardShortcut("r", modifiers: .command)
-                .disabled(!(actions?.hasSession ?? false))
+                .disabled(!(actions?.canReconnect ?? false))
             // ⌘., the Mac's key for giving up on something under way, and
             // only while a connection is. Disabled, it still takes the key —
             // a menu item does — which nothing else here wants.
