@@ -1244,7 +1244,7 @@ checks for its own updates through Sparkle. Hopmeter's `scripts/release.sh` in
 `~/Projects/nettoolbox` was the model, and most of what is worth knowing about
 it is in the conventions above.
 
-**0.0.1 through 0.1.5 are out**, each tagged at the commit its DMG was built
+**0.0.1 through 0.1.6 are out**, each tagged at the commit its DMG was built
 from, with the appcast on `main` and the cask in `cuonggt/homebrew-tap`, whose
 clone on this Mac is Homebrew's own, under `/opt/homebrew/Library/Taps`:
 fast-forward it before copying a cask in. The notarytool profile `Shellhand`
@@ -1254,7 +1254,8 @@ window comes up blank. **Updating is proven end to end**, the dialog a new
 user meets included. Every release is checked the same way before and after
 publishing: hash a download as it streams, compare a release page's notes
 as JSON, and fetch the tag `gh release create` made before comparing the
-release's target to it. Don't predict when a release will reach an installed copy, and never
+release's target to it. A DMG that grew more than its changes explain is
+mounted beside the last one and compared file by file before it goes out. Don't predict when a release will reach an installed copy, and never
 trigger Check for Updates from here.
 → [every release](docs/notes/releases.md#every-release)
 

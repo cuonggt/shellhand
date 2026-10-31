@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.5, are out**, each
+**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.6, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -555,6 +555,37 @@ Delete Group saying its hosts move to the top of the list when most stay in
 the groups inside it, and not that what it passes down goes too; the
 palette picker running off the bottom of Settings; and macOS's own window
 tabs still offered in View and Window.
+
+**0.1.6 is the rest of what the walk found**, published at `8fb0482` and
+live on release, feed, cask and tap: the five bugs 0.1.5 left open, and
+the three inconsistencies first in line after them. The menus offer only
+what works — File's New items, Import and Quick Connect greyed away from the
+host window, SFTP with nothing to open it from, Reconnect on a local shell
+— with macOS's own window tabs switched off and sessions of one name told
+apart in the Window menu; Delete Group says what moves and what goes; the
+palette picker fits the window it opens over; the SFTP window opens with the
+keyboard in This Mac's list; and the host editor says "from Production" and
+calls the jump host and agent forwarding what everything else calls them.
+The suite went 753 → 756, and CI passed the code at `2a5a468`; the run for
+`ccc51ae`, the tagged commit with the feed and cask on top, had not finished
+when this was written.
+Verified the way 0.1.5 was, and everything passed, the tag fetched first;
+both notarizations went through the first time, and `generate_appcast`
+printed fifteen "failed to move" warnings. **The DMG grew 434KB with little
+code to show for it**, so before publishing it was mounted beside 0.1.5's
+and the two compared file by file: the same 87 files, the app's binary 52KB
+bigger and nothing else changed. The rest was compression.
+**Each fix was checked on a scratch copy as it was made**, by reading the
+menus, the editors' words and what holds the keyboard, and once more after
+all of them. One of those checks pressed ⌘B with db-01 still selected, and
+SFTP connected to its documentation address through bastion's; nothing
+answered, and the driving notes have the rule it cost. **What the walk still
+has**, smaller than all of the above: SFTP's empty side saying "0 items" and
+"Copy to Choose a host"; Quick Connect's "Not in your list" under a host
+that is in it; "Show Beside" while a pane is beside; the import's group
+field looking like a value already chosen; the editor's command still on
+one line; New Host's greyed Add with no reason given; and the polish after
+those.
 
 ## The icon bundle
 
