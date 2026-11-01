@@ -1147,7 +1147,8 @@ credentials, which is most of it.
   example never names something in the list** (`HostEditorSheet
   .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
   Jump host, with bastion filed there, read as Production going through it,
-  and "Production" over "Inside: Production" as the name already chosen.
+  and "Production" over "Inside: Production" as the name already chosen —
+  in the host editor's New group… as well, under a menu listing Production.
 - **One setting has one name** wherever it is shown: Jump host and Agent
   forwarding, in both editors and the inspectors, and Colours in Settings as
   well. The host editor called the first two Through and Agent up to 0.1.5,

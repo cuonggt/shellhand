@@ -274,9 +274,14 @@ struct HostEditorSheet: View {
                 }
                 if makingGroup {
                     LabeledContent("Called") {
-                        TextField("", text: $newGroupName, prompt: Text("Production"))
+                        // The group editor's example, never a group already
+                        // there: "Production" sat under a menu listing it.
+                        TextField("", text: $newGroupName, prompt: Text(
+                            GroupEditorSheet.nameExample(
+                                avoiding: store.snapshot.groups.map(\.name))))
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
+                            .multilineTextAlignment(.leading)
                     }
                 }
                 LabeledContent("Tags") {
