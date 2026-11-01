@@ -265,7 +265,9 @@ struct HostEditorSheet: View {
                 }
             }
 
-            Section("ssh options") {
+            // No section header: the field writes its own label, and the two
+            // stacked read "ssh options" twice — as the group editor learned.
+            Section {
                 SSHOptionsField(text: $optionsText)
             }
         }
