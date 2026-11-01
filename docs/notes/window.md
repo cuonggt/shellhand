@@ -763,5 +763,25 @@ own tree-opening step ("after opening the groups, EU is still missing")
 failed first. **That step fails when window-check runs straight after
 another window-check**, whichever build, the script as committed included,
 and passed both times it followed a drive — so a run leaves something its
-next run trips on. Unexplained; this Mac also had nine copies of the app
-registered under one bundle id by then.
+next run trips on. The next section says what.
+
+## The window left behind
+
+**What a run leaves is its window.** window-check ends by killing the copy
+it drove, and a copy killed comes back at its next launch as it was left —
+its tree as open as the run left it, and the host it had picked, which is
+`@SceneStorage`. The seeded store has the same ids every run, so the next
+run came up in the last one's window rather than a fresh one, and failed its
+first look with the tree open: "EU is drawn while Production is folded". The
+drives never tripped on it, because they launch with
+`-ApplePersistenceIgnoreState YES`, and window-check now does too.
+
+Measured in one sitting on one build. The script as committed passed, then
+failed straight after itself; with the flag it passed twice, the first time
+straight after that failure; and the script as committed failed again after
+those two — so a run with the flag still leaves its window for the next
+launch without it. Every failure came up with Production and EU open, edge-1
+and web-1 drawn. The earlier "EU is still missing" fits the same cause — a
+window come back with its selection where the arrows that open the tree had
+nowhere to go — but was not seen again, and why a run after a drive passed,
+a drive's window being of a store with other ids, was not measured.

@@ -115,7 +115,10 @@ db="$scratch/shellhand.sqlite"
 # import because it was testing the import; this is testing whether a window
 # draws a store, and putting the import in the way would mean a failure could
 # be either.
-"$binary" --db "$db" >/dev/null 2>&1 &
+#
+# Both launches ignore the window a copy left behind, for the reason given
+# at the second.
+"$binary" --db "$db" -ApplePersistenceIgnoreState YES >/dev/null 2>&1 &
 first=$!
 for _ in $(seq 1 50); do
     [ -f "$db" ] && sqlite3 "$db" '.tables' 2>/dev/null | grep -q hosts && break
@@ -150,7 +153,15 @@ defaults write com.shellhand.Shellhand hostInspector -bool true
 
 # --- the window, driven the way a person on the keyboard drives it ---------
 
-"$binary" --db "$db" >/dev/null 2>&1 &
+# A fresh window, never the one the last copy left. A copy killed at the end
+# of a run comes back at the next launch as it was left, and this store has
+# the same ids every run: run straight after another, this check came up with
+# the tree open where the last run had opened it, and failed its first look —
+# "EU is drawn while Production is folded" — whichever build. In one sitting
+# on one build, without this flag: a pass, then a failure straight after it;
+# with it, two passes, the first straight after that failure; then without
+# it, a failure again. So a run with it still leaves its window behind.
+"$binary" --db "$db" -ApplePersistenceIgnoreState YES >/dev/null 2>&1 &
 window_pid=$!
 stop() {
     kill "$window_pid" 2>/dev/null

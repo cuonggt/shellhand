@@ -710,6 +710,13 @@ credentials, which is most of it.
   → [the sidebar's rows](docs/notes/window.md#the-sidebars-rows)
 - Anything automated waits for **its own copy** of the app. `pgrep Shellhand`
   matches every copy, including one the user has open.
+- **Every scratch copy launches with `-ApplePersistenceIgnoreState YES`**,
+  `window-check.sh`'s as well as the drives': a copy killed at the end of a
+  run comes back at its next launch as it was left, and one launched with the
+  flag still leaves its window behind. Without it window-check, run straight
+  after itself, came up in the last run's window with the tree open and
+  failed its first look, whichever build — the failure noted as unexplained.
+  → [the window left behind](docs/notes/window.md#the-window-left-behind)
 - **Driving Quick Connect against a real host list connects to a real
   machine**: synthetic keys get dropped and arrive late. Drive a scratch store
   with a host at `127.0.0.1:1`, which fails at once and reaches nothing.
