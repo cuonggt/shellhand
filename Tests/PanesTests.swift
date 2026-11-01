@@ -370,8 +370,8 @@ nonisolated struct PanesTests {
     /// twice, both on ⌘2 and nothing on ⌘4, SwiftUI matching items by title.
     @Test("sessions of one name are told apart in the Window menu")
     func menuTitlesDiffer() {
-        #expect(Panes.menuTitles(["waiter", "refuser", "Local — ~", "refuser"])
-            == ["waiter", "refuser", "Local — ~", "refuser (2)"])
+        #expect(Panes.menuTitles(["waiter", "refuser", "This Mac — ~", "refuser"])
+            == ["waiter", "refuser", "This Mac — ~", "refuser (2)"])
         #expect(Panes.menuTitles(["web", "web", "web"]) == ["web", "web (2)", "web (3)"])
         // One already called what a second would be is still kept apart.
         #expect(Set(Panes.menuTitles(["web (2)", "web", "web"])).count == 3)

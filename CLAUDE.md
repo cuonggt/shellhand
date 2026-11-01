@@ -554,7 +554,11 @@ credentials, which is most of it.
 - **Sessions are a strip of tabs across the terminal**, at the user's word, and
   the sidebar is the host list alone. A tab shows its name from
   `Sessions.titles` — `Sessions.shortTitle`, a second of one name numbered
-  as the Window menu and the inspector's Open now number it — capped at
+  as the Window menu, the inspector's Open now and **the title bar**
+  (`Sessions.title(of:)`) number it, and a local shell named This Mac, as
+  the inspector and SFTP call it; the title bar showed the shell's own title,
+  "cuonggt@Cuongs-MacBook-Pro:~" over a tab saying "Local — ~", and
+  "refuser" over "refuser (2)" — capped at
   180pt and cut in the middle; as the strip fills the tabs share its room
   down to 60 (`Panes.tabTitleWidth`) before it scrolls, and the Hosts tab
   stays outside the scrolling, where a full strip pushed it half off its

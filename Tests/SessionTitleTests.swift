@@ -45,10 +45,14 @@ nonisolated struct SessionTitleTests {
             == "root@127.0.0.1:1 — ~/srv")
     }
 
-    @Test("a session on no host is a local shell")
+    /// This Mac, as the inspector and SFTP call it: the tab said Local, the
+    /// title bar the shell's own title, and the inspector This Mac.
+    @Test("a session on no host is a local shell, on This Mac")
     func local() {
-        #expect(Sessions.shortTitle(host: nil, title: "me@mac:~/Projects") == "Local — ~/Projects")
-        #expect(Sessions.shortTitle(host: nil, title: "no colon here") == "Local")
+        #expect(Sessions.shortTitle(host: nil, title: "me@mac:~/Projects") == "This Mac — ~/Projects")
+        #expect(Sessions.shortTitle(host: nil, title: "no colon here") == "This Mac")
+        // As it starts, before the shell names itself.
+        #expect(Sessions.shortTitle(host: nil, title: Sessions.localName) == "This Mac")
     }
 
     /// The name is the host's as the list has it, not whatever the shell

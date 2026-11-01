@@ -531,6 +531,20 @@ final class Sessions {
     /// The strip and Open now said "refuser" twice.
     var titles: [String] { Panes.menuTitles(all.map { Self.shortTitle(of: $0) }) }
 
+    /// One session's name as the strip gives it, numbered where it shares
+    /// one — for the title bar and the inspector's Open now, so that a tab,
+    /// its menu item and the window over it say the same. The title bar
+    /// showed the shell's own title, "cuonggt@Cuongs-MacBook-Pro:~" over a
+    /// tab saying "Local — ~", and "refuser" over "refuser (2)".
+    func title(of id: UUID) -> String? {
+        guard let at = all.firstIndex(where: { $0.id == id }) else { return nil }
+        return titles[at]
+    }
+
+    /// What a local shell is called — This Mac, as the inspector and SFTP
+    /// call this machine, where its tab said Local.
+    nonisolated static let localName = "This Mac"
+
     /// The rule itself, over the only two things it reads.
     ///
     /// Separate from the overload above so that checking it costs nothing: a
@@ -538,7 +552,7 @@ final class Sessions {
     /// notification observer, which is a lot of machinery to stand up in
     /// order to test where a string gets cut.
     nonisolated static func shortTitle(host: String?, title: String) -> String {
-        let name = host ?? "Local"
+        let name = host ?? localName
         // A session starts out titled with its host's name, which is no
         // place: a machine typed into ⌘K is named `root@127.0.0.1:1`, and its
         // tab read "root@127.0.0.1:1 — 1" until the shell said otherwise.
@@ -596,7 +610,7 @@ final class Sessions {
 
     @discardableResult
     func openLocalShell() -> TerminalSession {
-        let session = TerminalSession(title: "Local", host: nil)
+        let session = TerminalSession(title: Sessions.localName, host: nil)
         all.append(session)
         selected = session.id
         session.startLocalShell()

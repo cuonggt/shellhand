@@ -263,9 +263,7 @@ struct HostDetailView: View {
     /// A session's name as the strip and the Window menu give it: two on
     /// this host read "refuser" twice here.
     private func title(of session: TerminalSession) -> String {
-        guard let sessions, let at = sessions.all.firstIndex(where: { $0.id == session.id })
-        else { return Sessions.shortTitle(of: session) }
-        return sessions.titles[at]
+        sessions?.title(of: session.id) ?? Sessions.shortTitle(of: session)
     }
 }
 

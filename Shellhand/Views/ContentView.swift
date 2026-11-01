@@ -427,7 +427,8 @@ struct ContentView: View {
         case .hosts:
             return selectedHost?.name ?? selectedGroup?.name ?? "Shellhand"
         case let .session(id):
-            return sessions.all.first { $0.id == id }?.title ?? "Shellhand"
+            // The tab's own name, numbered as it is, not the shell's title.
+            return sessions.title(of: id) ?? "Shellhand"
         }
     }
 
@@ -447,7 +448,8 @@ struct ContentView: View {
             guard let session = sessions.all.first(where: { $0.id == id }) else { return "" }
             // A machine typed into ⌘K is named as it was typed, which is the
             // destination already — and the title, until its shell sends one.
-            let destination = session.host.map { $0.id.isEmpty ? $0.name : $0.destinationLine } ?? "local"
+            let destination = session.host.map { $0.id.isEmpty ? $0.name : $0.destinationLine }
+                ?? "local shell"
             return session.status.subtitle(destination: destination == session.title ? "" : destination)
         }
     }
