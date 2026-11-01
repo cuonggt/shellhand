@@ -111,22 +111,29 @@ struct PalettePicker: View {
     /// The palette inheriting resolves to, for the row's own swatch.
     let inheritedPalette: Palette?
     let onChoose: (String) -> Void
-    /// How tall it is, from the room in the window it opens over.
-    var height: CGFloat = PalettePicker.tallest
+    /// How tall it is, from its rows and the room in the window it opens over.
+    var height: CGFloat = PalettePicker.height(rows: Themes.names.count + 1, in: nil)
 
     @Environment(\.dismiss) private var dismiss
 
-    /// Tall enough for every palette that ships, where there is room.
-    nonisolated static let tallest: CGFloat = 460
+    /// A palette's row: its swatch's 48, the row's padding and the gap.
+    nonisolated static let rowHeight: CGFloat = 64
 
-    /// How tall the picker is over a window with this much room below its
-    /// toolbar: `tallest` where that fits, and otherwise the room less a
-    /// margin, the palettes scrolling in what is left. Settings opens 500
-    /// tall and goes down to 420, and a 460 sheet hung its Done below the
-    /// window's edge.
-    nonisolated static func height(in room: CGFloat?) -> CGFloat {
-        guard let room else { return tallest }
-        return max(240, min(tallest, room - 40))
+    /// The rest of the sheet: the list's padding, the divider and Done.
+    nonisolated static let chrome: CGFloat = 73
+
+    /// How tall the picker is for `rows` rows over a window with this much
+    /// room below its toolbar: tall enough for every row where that fits,
+    /// and otherwise the room less a margin, the palettes scrolling in what
+    /// is left — never under 240. Settings opens 500 tall and goes down to
+    /// 420, and a 460 sheet hung its Done below the window's edge. It was
+    /// 460 wherever there was room, tall enough for the palettes that ship
+    /// but not for the inherit row above them, which pushed the last one
+    /// out of sight.
+    nonisolated static func height(rows: Int, in room: CGFloat?) -> CGFloat {
+        let needed = chrome + rowHeight * CGFloat(rows)
+        guard let room else { return needed }
+        return max(240, min(needed, room - 40))
     }
 
     var body: some View {
@@ -219,8 +226,9 @@ struct PaletteChoice: View {
 
     var body: some View {
         Button {
-            choosing = Opening(
-                height: PalettePicker.height(in: NSApp.keyWindow?.contentLayoutRect.height))
+            choosing = Opening(height: PalettePicker.height(
+                rows: Themes.names.count + (inherited == nil ? 0 : 1),
+                in: NSApp.keyWindow?.contentLayoutRect.height))
         } label: {
             HStack(spacing: 7) {
                 TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))

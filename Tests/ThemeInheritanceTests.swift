@@ -221,11 +221,14 @@ nonisolated struct ThemePortableTests {
 nonisolated struct PalettePickerHeightTests {
     @Test("the picker fits under the toolbar of the window it opens over")
     func fits() {
-        #expect(PalettePicker.height(in: nil) == PalettePicker.tallest)
-        #expect(PalettePicker.height(in: 700) == PalettePicker.tallest)
+        let seven = PalettePicker.chrome + 7 * PalettePicker.rowHeight
+        // Every row, the inherit row with the palettes, where there is room:
+        // held to 460, the last palette was out of sight in a window of 668.
+        #expect(PalettePicker.height(rows: 7, in: nil) == seven)
+        #expect(PalettePicker.height(rows: 7, in: 700) == seven)
         // Settings at its default: the room below its toolbar, less a margin.
-        #expect(PalettePicker.height(in: 420) == 380)
+        #expect(PalettePicker.height(rows: 6, in: 420) == 380)
         // However little room, never so short that nothing fits in it.
-        #expect(PalettePicker.height(in: 100) == 240)
+        #expect(PalettePicker.height(rows: 7, in: 100) == 240)
     }
 }

@@ -308,9 +308,12 @@ credentials, which is most of it.
   that opens `PalettePicker`; three of the four were a menu of names.
   `PalettePicker` draws each as a `TerminalMiniature` in its own colours,
   applies a choice at once and stays open, so two can be compared on the
-  terminal behind. It is as tall as the window it opens over has room for
+  terminal behind. It is as tall as its rows need, where the window it
+  opens over has room, and otherwise as the room allows
   (`PalettePicker.height`): Settings is shorter than the 460 it was, and
-  its Done hung below the window's edge. What inheriting gives is read with the host's own palette
+  its Done hung below the window's edge; and held to 460 with room to
+  spare, the inherit row pushed the last palette out of sight. What
+  inheriting gives is read with the host's own palette
   left out (`HostDetailView.inheriting`) and drawn through
   `TerminalSession.palette(named:)`, or a host's inherit row was named after
   its own palette. Test what a view draws by rendering it with
