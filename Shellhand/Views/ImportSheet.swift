@@ -114,6 +114,10 @@ struct ImportSheet: View {
     @State private var targeted = false
     @Environment(\.dismiss) private var dismiss
 
+    /// The File field's width and the group field's, which stand in one
+    /// column: modest, so the form keeps its labels beside its fields.
+    private static let fieldWidth: CGFloat = 260
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
@@ -130,18 +134,26 @@ struct ImportSheet: View {
                     // bare one in a grouped form sits right-aligned against
                     // the label, and "optional group" read as a group chosen.
                     LabeledContent("Put new hosts in") {
-                        TextField("", text: $group, prompt: Text("optional group"))
-                            .textFieldStyle(.roundedBorder)
-                            .labelsHidden()
-                            .multilineTextAlignment(.leading)
-                            // Looked at again once typing stops, rather than a
-                            // preview for every key.
-                            .task(id: group) {
-                                guard preview != nil else { return }
-                                try? await Task.sleep(for: .milliseconds(400))
-                                guard !Task.isCancelled else { return }
-                                await look()
+                        HStack {
+                            TextField("", text: $group, prompt: Text("optional group"))
+                                .textFieldStyle(.roundedBorder)
+                                .labelsHidden()
+                                .multilineTextAlignment(.leading)
+                                .frame(width: Self.fieldWidth)
+                                // Looked at again once typing stops, rather than a
+                                // preview for every key.
+                                .task(id: group) {
+                                    guard preview != nil else { return }
+                                    try? await Task.sleep(for: .milliseconds(400))
+                                    guard !Task.isCancelled else { return }
+                                    await look()
+                                }
+                            // File's button, unseen, so the two fields stand in
+                            // one column: one left edge and one width.
+                            if source == .sshConfig {
+                                Button("Choose…") {}.hidden()
                             }
+                        }
                     }
                 } footer: {
                     // What `Portable.merge(newHostsIn:)` does, by source: an
@@ -241,11 +253,12 @@ struct ImportSheet: View {
                         // run here anyway: it is off until what is on screen
                         // has been previewed.
                         .onSubmit { Task { await look() } }
-                        // Asking for a modest width and taking what there is:
-                        // asking for the whole path's, the field put the form
-                        // in two lines, "File" above it, where every other
-                        // field has its label beside it.
-                        .frame(idealWidth: 220, maxWidth: .infinity)
+                        // A modest width, the group field's: asking for the
+                        // whole path's, the field put the form in two lines,
+                        // "File" above it; taking all there was, it ran from
+                        // its short label while the group field sat 125pt
+                        // off its own.
+                        .frame(width: Self.fieldWidth)
                     Button("Choose…") { choosing = true }
                 }
             }

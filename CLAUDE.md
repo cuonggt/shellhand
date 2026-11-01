@@ -1139,7 +1139,11 @@ credentials, which is most of it.
   **asks for a modest width and takes what there is** (`idealWidth` with
   `maxWidth: .infinity`): a grouped form puts the label above a field that
   wants more than the room beside it, and a field wants its text's width —
-  the import's File, holding a long path, sat under its label.
+  the import's File, holding a long path, sat under its label. Two fields
+  one above the other in a sheet stand in one column instead, one fixed
+  modest width: the import's File took all there was after its short label
+  while its group field sat 125pt off its own, and the group field keeps an
+  unseen twin of File's Choose… beside it to match.
 - **The group editor's tabs divide what a group is from what happens on its
   hosts**, and its Advanced tab shows `•` when anything there is set, the
   palette included.
