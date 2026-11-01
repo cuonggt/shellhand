@@ -331,7 +331,8 @@ credentials, which is most of it.
   that opens `PalettePicker`; three of the four were a menu of names. Its
   name is black when set there and grey when inherited, since a grouped
   form greys whatever it is handed: a group's own Gruvbox Dark read as
-  grey as one from Production.
+  grey as one from Production. Its arrows sit in a round bezel, as a menu's
+  do beside it, where bare and grey they read as another kind of control.
   `PalettePicker` draws each as a `TerminalMiniature` in its own colours,
   applies a choice at once and stays open, so two can be compared on the
   terminal behind. It is as tall as its rows need, where the window it
@@ -369,7 +370,10 @@ credentials, which is most of it.
   the same defaults observer and keep their size; Actual Size keeps the
   family. Its sample line is shown whole at any size, on two lines where one
   will not hold it: held to one, it lost "{} [] =>", the characters it is
-  there to show, from about 19pt. → [the font](docs/notes/terminal.md#the-font)
+  there to show, from about 19pt. Its caption ends on the keys, "with ⌘+ and
+  ⌘-", where "⌘-" ended a line above "change" and read as "⌘-change"; and
+  Colours' says palettes are added in the settings file, not "under themes",
+  its key. → [the font](docs/notes/terminal.md#the-font)
 - **Clear Scrollback is ⌥⌘K**, and ⌘K stays Quick Connect's. It shrinks
   the history to nothing and back through `changeScrollback` — never by
   feeding `ESC [3J`, which acts on the buffer in front only and could land

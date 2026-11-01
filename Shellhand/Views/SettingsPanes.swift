@@ -187,8 +187,10 @@ struct TerminalSettingsPane: View {
                 }
                 .font(Font(TerminalFont.font(named: fontFamily, size: fontSize) as CTFont))
                 .textSelection(.enabled)
+                // The keys last: mid-sentence, "⌘-" ended a line above
+                // "change", and read as "⌘-change".
                 Text("Sessions take the font as soon as you choose. New ones start at this size; "
-                    + "⌘+ and ⌘- change the one in front.")
+                    + "resize the one in front with ⌘+ and ⌘-.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -217,8 +219,10 @@ struct TerminalSettingsPane: View {
                 TerminalMiniature(palette: Themes.named(theme),
                                   size: CGSize(width: 160, height: 100))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                // Not "under themes", the settings file's key, read here as a
+                // word nobody had been told.
                 Text(Themes.named(theme) == nil
-                    ? "The terminal's own colours. Your settings file can add palettes under themes."
+                    ? "The terminal's own colours. More palettes can be added in your settings file."
                     : "Open terminals repaint as soon as you choose. Going back to System takes a new one.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

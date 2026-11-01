@@ -259,9 +259,13 @@ struct PaletteChoice: View {
                     Text(title)
                         .foregroundStyle(chosen.isEmpty ? .secondary : .primary)
                 }
+                // In a round bezel, as a menu draws its own arrows — Font's in
+                // Settings, Agent forwarding's in the editors: bare and grey,
+                // the swatch's read as another kind of control beside them.
                 Image(systemName: "chevron.up.chevron.down")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 9, weight: .bold))
+                    .frame(width: 20, height: 20)
+                    .background(.quaternary, in: Circle())
             }
             .contentShape(Rectangle())
         }
