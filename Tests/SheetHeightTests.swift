@@ -18,7 +18,7 @@ nonisolated struct SheetHeightTests {
 
     @Test("over a window too short for it, a sheet is the room less a margin")
     func shorter() {
-        // The window at its default 1100×720: 668 below its toolbar.
+        // The window at its default 1106×720: 668 below its toolbar.
         #expect(SheetHeight.fitted(720, in: 668) == 668 - SheetHeight.margin)
         // However little room, never so short that nothing fits in it…
         #expect(SheetHeight.fitted(720, in: 200) == SheetHeight.least)

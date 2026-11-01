@@ -628,7 +628,9 @@ credentials, which is most of it.
   `window-check.sh` arrows through the sidebar at the narrowest. The column
   keeps about 300pt of its own beside that minimum while the inspector is
   up, so 500 made the narrowest window 1532 — **measure the narrowest window
-  after touching either**.
+  after touching either**, and keep the window's `defaultSize` at it: it
+  asked for 1100 beside a narrowest of 1106, so every check at "the default
+  1100×720" ran at 1106.
   → [the narrowest window](docs/notes/window.md#the-narrowest-window)
 - **Never change the inspector in the same update that swaps the pane**:
   it crashes, intermittently, as a reentrant table-view operation. Defer it a

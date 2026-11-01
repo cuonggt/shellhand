@@ -18,7 +18,7 @@ final class SheetRoom {
 ///
 /// A sheet taller than that room hangs off the window's bottom edge, and on a
 /// window low on the screen its buttons go with it. The host editor did at the
-/// window's default size, 1100×720, once 0.1.7 made it 720 tall; the palette
+/// window's default size, 1106×720, once 0.1.7 made it 720 tall; the palette
 /// picker did in Settings, which is why `PalettePicker.height` has this shape.
 /// What a sheet loses comes out of what scrolls in it.
 nonisolated enum SheetHeight {

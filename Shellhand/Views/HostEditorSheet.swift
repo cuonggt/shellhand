@@ -217,7 +217,7 @@ struct HostEditorSheet: View {
         // to within a point.
         //
         // Where the window has less room than that below its toolbar — 668
-        // at its default 1100×720 — the editor is the room less a margin, and
+        // at its default 1106×720 — the editor is the room less a margin, and
         // the command's box gives up the difference: at 720 General hung
         // below the window's bottom edge.
         .frame(width: DialogSize.medium, height: height)

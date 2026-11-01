@@ -211,7 +211,7 @@ nonisolated struct BrowsingTests {
     }
 
     /// The grid inside its padding is about 453pt wide at the window's
-    /// default 1100×720, and 573 at the README's 1220×798. Cards of 230
+    /// default 1106×720, and 573 at the README's 1220×798. Cards of 230
     /// needed 470 for two, so the default size had one column of wide cards.
     @Test("two cards across at the window's default size, where there was one")
     func cardColumns() {

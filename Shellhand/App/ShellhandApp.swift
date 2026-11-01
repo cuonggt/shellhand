@@ -32,7 +32,11 @@ struct ShellhandApp: App {
         WindowGroup {
             ContentView(dbPath: options.db, configPath: config.path, configProblem: config.problem)
         }
-        .defaultSize(width: 1100, height: 720)
+        // The window's narrowest with the inspector up, as `window-check.sh`
+        // measures it, so the default is a width the window can be: asked
+        // for 1100, AppKit opened it at 1106 anyway, and every check "at the
+        // default size" had run at a width nothing named.
+        .defaultSize(width: 1106, height: 720)
         .commands {
             ShellhandCommands(storePath: options.db, configPath: config.path)
         }
