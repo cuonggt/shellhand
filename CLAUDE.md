@@ -651,7 +651,8 @@ credentials, which is most of it.
 - **A side showing no listing counts nothing**, and the other side's Copy is
   plain Copy while this one is pointed nowhere (`Places.copyTitle`): "0
   items" read as an empty folder, and the button said "Copy to Choose a
-  host".
+  host". Its path field greys with the buttons beside it, where Return in
+  it went nowhere and said nothing.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
   a question (`chosen` is false) and says "Choose a host". Without that state
   an unpointed pane reads as "This Mac" with an empty listing, which looks

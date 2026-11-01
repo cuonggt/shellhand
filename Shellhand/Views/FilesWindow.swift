@@ -220,6 +220,10 @@ private struct PlacePane: View {
                 TextField("Path", text: $typedPath)
                     .textFieldStyle(.roundedBorder)
                     .font(.caption)
+                    // Greyed with the buttons beside it while there is no
+                    // listing — a side asking which host, or refused: Return
+                    // there went nowhere and said nothing.
+                    .disabled(place.listing.path.isEmpty)
                     .onSubmit { Task { await place.go(to: typedPath) } }
                     .onChange(of: place.listing.path) { _, now in typedPath = now }
                     .onAppear { typedPath = place.listing.path }
