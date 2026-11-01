@@ -79,10 +79,14 @@ struct ImportSheet: View {
 
         /// What each is, in the same words here and on the welcome: the CSV
         /// tab said "A sheet, or an export from another client." — inside a
-        /// sheet — where the welcome said a spreadsheet.
+        /// sheet — where the welcome said a spreadsheet. The ssh config's
+        /// line on the welcome is what the file holds, which this tab says
+        /// under its field, so its heading is the welcome's name for it: it
+        /// said "The machines OpenSSH already knows about", which the welcome
+        /// never did.
         var about: String {
             switch self {
-            case .sshConfig: "The machines OpenSSH already knows about"
+            case .sshConfig: "Your SSH config"
             case .csv: "From a spreadsheet, or another client's export"
             case .yaml: "A list exported from Shellhand"
             }
@@ -198,8 +202,12 @@ struct ImportSheet: View {
             }
         }
         .task {
+            // Spelled as the line under it spells it, and as its own example
+            // does: "~/.ssh/config", which is read settled. It held the
+            // whole of /Users/…/.ssh/config over "~/.ssh/config names 12".
             if configPath.isEmpty {
-                configPath = Core.shared.defaultSSHConfigPath()
+                configPath = NSString(string: Core.shared.defaultSSHConfigPath())
+                    .abbreviatingWithTildeInPath
             }
             countConfig(at: configPath)
             if source == .sshConfig, (configCount ?? 0) > 0 { await look() }
@@ -439,7 +447,7 @@ struct ImportSheet: View {
     /// the file is reached for once rather than twice.
     private func take(_ url: URL) async {
         if source == .sshConfig {
-            configPath = url.path
+            configPath = NSString(string: url.path).abbreviatingWithTildeInPath
             countConfig(at: configPath)
             await look()
             return

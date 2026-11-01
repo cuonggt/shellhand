@@ -27,7 +27,7 @@ struct WelcomeView: View {
             VStack(spacing: 8) {
                 source(
                     .sshConfig, "doc.text",
-                    title: "Your SSH config",
+                    title: ImportSheet.Source.sshConfig.about,
                     // The import sheet's words, which it says of the file
                     // it looks at: three ways were two too many.
                     detail: ImportPlan.configSays(configCount, at: SSHConfigFile.pathInUse),
