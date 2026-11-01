@@ -599,7 +599,9 @@ struct ContentView: View {
             showSession: show(session:),
             nextTab: { step(by: 1) },
             previousTab: { step(by: -1) },
-            groupInside: selectedGroup?.name ?? "",
+            // By its path, as the host editor's New group… names it: "Inside
+            // EU" there was "inside Production / EU" in the editor.
+            groupInside: selectedGroup.map { store.path(of: $0) } ?? "",
             hasHost: subjectHost != nil,
             hasGroup: selectedGroup != nil,
             hasSession: frontSession != nil,

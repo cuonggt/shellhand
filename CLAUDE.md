@@ -575,8 +575,11 @@ credentials, which is most of it.
   `hasHost`, which meant deleting a group needed a host selected as well.
 - **New Group… lives in File and says where it will land** — "New Group Inside
   Production…" — because it reads the selection; an item that quietly does two
-  things has earned a longer label. **Inside is where a group sits**, there,
-  in a row's menu and in the group editor's row; what a group holds is its
+  things has earned a longer label. It names the group by its path, "Inside
+  Production / EU…", as the host editor's item does: by its name it said
+  "Inside EU" where the editor said "inside Production / EU". **Inside is
+  where a group sits**, there, in a row's menu and in the group editor's
+  row; what a group holds is its
   Contents in the inspector and its Groups in the pane, where both said
   Inside, beside the editor's row meaning the opposite. **The host editor's
   New group… lands where the host was filed** and its item says so — "New
