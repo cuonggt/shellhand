@@ -732,7 +732,11 @@ credentials, which is most of it.
   (`Places.trouble`): one never connected to, or one taking only a password,
   offers Open in Terminal — a tab can answer what SFTP's `BatchMode=yes`
   cannot — and every failure offers Edit Host…, as a terminal tab that could
-  not connect does, and Try Again, which reads the host from the list afresh.
+  not connect does, and Try Again, which reads the host from the list afresh
+  (`FilePlace.tryAgain(with:)`, handed it by the window): it went again with
+  the copy the side was pointed with, so a host renamed in Edit Host… kept
+  its old name there. A host deleted since offers Try Again alone, which
+  says so; its Edit Host… opened nothing.
   Only Try Again was there, under advice to check the host's user and key.
   Both reach the host window as a `HostRequest`, which one window takes. **It
   is drawn as the terminal's card for the same refusal**: the headline red

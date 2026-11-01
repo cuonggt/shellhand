@@ -124,11 +124,14 @@ final class FilePlace {
     /// Takes what went wrong off the pane, once it has been read.
     func clearFailure() { failure = nil }
 
-    /// Try Again, on a host that would not open: the host's name stays on
-    /// the pane, so another go is what the pane can offer.
-    func tryAgain() async {
+    /// Try Again, on a host that would not open: another go, on the host as
+    /// the list has it now — `fresh`, which the window reads, or the one the
+    /// pane holds once it is gone, which Core then says. It went again with
+    /// the copy the pane was pointed with, so a host renamed in Edit Host…
+    /// went on being named as it was.
+    func tryAgain(with fresh: Host?) async {
         guard let host else { return }
-        await use(host)
+        await use(fresh ?? host)
     }
 
     func refresh() async { await go(to: listing.path) }

@@ -81,6 +81,30 @@ struct FilesTests {
         #expect(!place.listing.path.isEmpty)
     }
 
+    /// Try Again goes again on the host as the list has it now. It went with
+    /// the copy the pane was pointed with, so a host renamed in Edit Host…
+    /// kept its old name there. Neither is in the scratch list, so each go
+    /// fails at once, without a connection.
+    @Test("Try Again names the host as the list has it now")
+    func tryAgainReadsAfresh() async {
+        let place = FilePlace(db: scratchDB(), home: scratchHome())
+        let was = AppHost(id: "gone", name: "refuser", addr: "127.0.0.1")
+        await place.use(was)
+        #expect(place.failure != nil)
+        #expect(place.title == "refuser")
+
+        var renamed = was
+        renamed.name = "refused"
+        await place.tryAgain(with: renamed)
+        #expect(place.host?.name == "refused")
+        #expect(place.title == "refused")
+
+        // Gone from the list: the pane keeps its host, and Core says why.
+        await place.tryAgain(with: nil)
+        #expect(place.host?.name == "refused")
+        #expect(place.failure?.contains("no longer in the list") == true)
+    }
+
     /// The guard that keeps opening to once. Without it every re-entry walks
     /// to the home directory again — and what that cost was worse than a
     /// wasted walk: two opens went through together, the second's walk landed

@@ -345,8 +345,12 @@ private struct PlacePane: View {
         if place.connecting {
             ProgressView("Connecting to \(place.title)…")
         } else if let failure = place.failure, let host = place.host {
-            Unreached(host: host, said: failure, trouble: Places.trouble(failure, on: host.name)) {
-                Task { await place.tryAgain() }
+            // The host as the list has it now, for Try Again and for what the
+            // card offers: one deleted since has no editor and no tab to open.
+            let listed = store.snapshot.hosts.first { $0.id == host.id }
+            Unreached(host: host, listed: listed != nil, said: failure,
+                      trouble: Places.trouble(failure, on: host.name)) {
+                Task { await place.tryAgain(with: listed) }
             }
         } else if let failure = place.failure {
             ContentUnavailableView {
@@ -452,6 +456,9 @@ private struct PlacePane: View {
 /// two things in two windows.
 private struct Unreached: View {
     let host: Host
+    /// Whether the list still holds it: a host deleted since has nothing for
+    /// Open in Terminal or Edit Host… to open, and both did nothing.
+    let listed: Bool
     let said: String
     let trouble: Places.Trouble
     let onTryAgain: () -> Void
@@ -489,7 +496,7 @@ private struct Unreached: View {
     /// otherwise another go — then the host's editor, as the card has it.
     @ViewBuilder
     private var buttons: some View {
-        if trouble.offersTerminal {
+        if trouble.offersTerminal && listed {
             Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }
                 .buttonStyle(.borderedProminent)
             Button("Try Again", action: onTryAgain)
@@ -499,9 +506,9 @@ private struct Unreached: View {
         }
         // As a terminal tab that could not connect offers it. Only Try Again
         // was here, under advice to check the host's user and key; Try Again
-        // reads the host from the list afresh, so what is put right there is
-        // what it tries.
-        if !host.id.isEmpty {
+        // reads the host from the list afresh (`FilePlace.tryAgain(with:)`),
+        // so what is put right there is what it tries, under its new name.
+        if listed {
             Button("Edit Host…") { HostRequest.post(.editor, for: host) }
         }
     }
