@@ -430,6 +430,12 @@ private struct PlacePane: View {
 /// a terminal tab, where a new key's question and a password can be
 /// answered, the host's editor, where its address, user and key are put
 /// right, and another go. It said "Cannot show this" over ssh's sentence.
+///
+/// **Drawn as the terminal's card for the same refusal is**: the headline in
+/// red with its mark, ssh's own line boxed and first, what it means under it,
+/// and the way on leading, prominent. It was plain black, with the line
+/// unboxed after the advice and the retry last, so one failure looked like
+/// two things in two windows.
 private struct Unreached: View {
     let host: Host
     let said: String
@@ -437,39 +443,53 @@ private struct Unreached: View {
     let onTryAgain: () -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
-            Text(trouble.title)
+        VStack(alignment: .leading, spacing: 8) {
+            Label(trouble.title, systemImage: SessionStatus.couldNotConnect.symbol)
                 .font(.headline)
-                .multilineTextAlignment(.center)
-            if !trouble.advice.isEmpty {
-                Text(trouble.advice)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+                .foregroundStyle(SwiftUI.Color.red)
             Text(said)
                 .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
                 .selectable(said)
-            HStack {
-                if trouble.offersTerminal {
-                    Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }
-                        .buttonStyle(.borderedProminent)
-                }
-                // As a terminal tab that could not connect offers it. Only Try
-                // Again was here, under advice to check the host's user and
-                // key; Try Again reads the host from the list afresh, so what
-                // is put right there is what it tries.
-                if !host.id.isEmpty {
-                    Button("Edit Host…") { HostRequest.post(.editor, for: host) }
-                }
-                Button("Try Again", action: onTryAgain)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+            if !trouble.advice.isEmpty {
+                Text(trouble.advice)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 4)
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons }
+                VStack(alignment: .leading) { buttons }
+            }
         }
+        .padding(14)
+        .frame(maxWidth: 460, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
         .padding(24)
-        .frame(maxWidth: 460)
+    }
+
+    /// The way on first and prominent, as Reconnect leads the terminal's
+    /// card: a terminal tab where one can answer what SFTP cannot, and
+    /// otherwise another go — then the host's editor, as the card has it.
+    @ViewBuilder
+    private var buttons: some View {
+        if trouble.offersTerminal {
+            Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }
+                .buttonStyle(.borderedProminent)
+            Button("Try Again", action: onTryAgain)
+        } else {
+            Button("Try Again", action: onTryAgain)
+                .buttonStyle(.borderedProminent)
+        }
+        // As a terminal tab that could not connect offers it. Only Try Again
+        // was here, under advice to check the host's user and key; Try Again
+        // reads the host from the list afresh, so what is put right there is
+        // what it tries.
+        if !host.id.isEmpty {
+            Button("Edit Host…") { HostRequest.post(.editor, for: host) }
+        }
     }
 }
 
