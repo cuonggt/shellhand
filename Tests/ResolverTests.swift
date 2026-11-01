@@ -196,6 +196,14 @@ nonisolated struct FromAboveTests {
         let above = FromAbove(of: groups[2], among: groups)
         #expect(above.theme == "Solarized")
         #expect(above.themeFrom == "Production")
+        // In two parts, for the group editor's inherit row and the group
+        // inspector's swatch: the palette, and where it comes from.
+        #expect(above.paletteParts.name == "Solarized")
+        #expect(above.paletteParts.from == "Production")
+        // Nothing above names one: Settings' palette, whatever it is.
+        let top = FromAbove(of: groups[0], among: groups)
+        #expect(top.paletteParts.name == Themes.inSettings)
+        #expect(top.paletteParts.from == "Settings")
     }
 
     /// Nothing anywhere above is a third answer, not a no: a host under a

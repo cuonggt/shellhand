@@ -118,6 +118,13 @@ nonisolated struct FromAbove: Sendable, Equatable {
         var from: String
     }
 
+    /// What inheriting gives a palette, in two parts — the palette, and
+    /// where it comes from, Settings where nothing above names one — as the
+    /// group editor's inherit row and the group inspector's swatch say it.
+    var paletteParts: (name: String, from: String) {
+        theme.isEmpty ? (Themes.inSettings, "Settings") : (theme, themeFrom)
+    }
+
     init() {}
 
     init(of group: Group, among groups: [Group]) {

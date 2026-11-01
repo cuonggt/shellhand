@@ -316,9 +316,8 @@ struct GroupEditorSheet: View {
 
     /// What the hosts under this group would come up in if it chose nothing.
     private func inheritedTheme(_ above: FromAbove) -> String {
-        above.theme.isEmpty
-            ? Effective.inherited(Themes.inSettings, from: "Settings")
-            : Effective.inherited(above.theme, from: above.themeFrom)
+        let (name, from) = above.paletteParts
+        return Effective.inherited(name, from: from)
     }
 
     /// What the groups above this one say about the agent.

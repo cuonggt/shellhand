@@ -335,8 +335,10 @@ credentials, which is most of it.
   OpenSSH sends at most 100 names per `readdir`.
   → [the real server](docs/notes/sftp.md#the-real-server)
 - **A palette is chosen by looking at it**, everywhere one is chosen — the
-  inspector, both editors and Settings — through `PaletteChoice`, a swatch
-  that opens `PalettePicker`; three of the four were a menu of names. Its
+  inspectors, both editors and Settings — through `PaletteChoice`, a swatch
+  that opens `PalettePicker`; three of them were a menu of names, and the
+  group inspector's row the palette's name, beside a host's swatch, though
+  a group's palette is what tells production from staging. Its
   name is black when set there and grey when inherited, since a grouped
   form greys whatever it is handed: a group's own Gruvbox Dark read as
   grey as one from Production. Its arrows sit in a round bezel, as a menu's

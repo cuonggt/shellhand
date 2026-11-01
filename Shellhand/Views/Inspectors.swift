@@ -97,10 +97,35 @@ struct GroupInspector: View {
         return ValueRow("Agent forwarding", value, from: from)
     }
 
-    private func colours(_ above: FromAbove) -> ValueRow {
-        if !group.theme.isEmpty { return ValueRow("Colours", group.theme) }
-        if !above.theme.isEmpty { return ValueRow("Colours", above.theme, from: above.themeFrom) }
-        return ValueRow("Colours", Themes.inSettings, from: "Settings")
+    /// A swatch that opens the picker, as a host's row is, and the group's
+    /// palette changed from here: it is what tells production from staging,
+    /// and the row was a name, the one thing here a host's inspector draws
+    /// as itself. A save repaints the tabs beneath it, through
+    /// `Sessions.repaint(from:)`.
+    private func colours(_ above: FromAbove) -> some View {
+        let parts = above.paletteParts
+        return GridRow(alignment: .top) {
+            Text("Colours")
+                .foregroundStyle(.secondary)
+                .gridColumnAlignment(.trailing)
+            PaletteChoice(
+                chosen: group.theme,
+                inherited: Effective.inherited(parts.name, from: parts.from),
+                inheritedPalette: TerminalSession.palette(named: above.theme),
+                inheritedParts: parts,
+                onChoose: { choose(palette: $0) })
+        }
+    }
+
+    /// Saves the choice and nothing else, read again from the list rather
+    /// than from the copy this view is drawing, as the host inspector's does.
+    private func choose(palette: String) {
+        guard palette != group.theme else { return }
+        Task {
+            guard var now = store.group(group.id) else { return }
+            now.theme = palette
+            _ = await store.save(now)
+        }
     }
 
     /// Its own ssh options, then each group's above with whose they are,
