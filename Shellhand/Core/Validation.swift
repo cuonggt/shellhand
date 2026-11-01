@@ -156,11 +156,16 @@ nonisolated enum Validation {
     /// group holding one, the other six staying in EU and US — and nothing
     /// of the user, the key and the palette it gave all seven, which reach
     /// none of them afterwards.
+    ///
+    /// **Where they land is named as the sidebar and the editors name it**:
+    /// the group above, or with none, Ungrouped for the hosts and "a group
+    /// of its own", as the group editor's Inside says, for the groups. "The
+    /// top of the list" named both, and the hosts land at its foot.
     static func deletionWarning(
         for group: Group, groups: [Group], hosts: [Host]
     ) -> String {
         let parent = groups.first { $0.id == group.parentId }
-        let destination = parent.map { "to \($0.name)" } ?? "to the top of the list"
+        let hostsGo = "to \(parent?.name ?? "Ungrouped")"
 
         // Everything beneath, however deep: whom what it sets reaches.
         var beneath: Set<String> = [group.id]
@@ -179,21 +184,27 @@ nonisolated enum Validation {
         var moves: [String] = []
         switch own {
         case 0: break
-        case 1: moves.append("Its one host moves \(destination)")
-        case let count: moves.append("Its \(count) hosts move \(destination)")
+        case 1: moves.append("Its one host moves \(hostsGo)")
+        case let count: moves.append("Its \(count) hosts move \(hostsGo)")
         }
         if inside > 0 {
             let carried = reached - own
             let hostsOf = carried == 1 ? "1 host" : "\(carried) hosts"
             let theirs = carried == 0 ? "" : inside == 1 ? ", with its \(hostsOf)" : ", with their \(hostsOf)"
-            switch (moves.isEmpty, inside) {
-            case (true, 1): moves.append("The group inside it moves \(destination)\(theirs)")
-            case (true, _): moves.append("The \(inside) groups inside it move \(destination)\(theirs)")
-            case (false, 1): moves.append("so does the group inside it\(theirs)")
-            case (false, _): moves.append("so do the \(inside) groups inside it\(theirs)")
+            let them = inside == 1 ? "the group inside it" : "the \(inside) groups inside it"
+            if parent == nil {
+                // Not where the hosts go: a group with none above stands at
+                // the head of the list, not under Ungrouped.
+                moves.append(them + (inside == 1 ? " becomes a group of its own"
+                                                 : " become groups of their own") + theirs)
+            } else if moves.isEmpty {
+                moves.append(them + (inside == 1 ? " moves " : " move ") + hostsGo + theirs)
+            } else {
+                moves.append((inside == 1 ? "so does " : "so do ") + them + theirs)
             }
         }
-        var said = moves.joined(separator: ", and ") + "."
+        let moved = moves.joined(separator: ", and ")
+        var said = moved.prefix(1).uppercased() + moved.dropFirst() + "."
 
         // What it gives the hosts beneath it, which goes with it.
         var gives: [String] = []

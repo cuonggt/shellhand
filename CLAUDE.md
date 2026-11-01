@@ -840,7 +840,11 @@ credentials, which is most of it.
   inside it with their own hosts, as `Store.deleteGroup` moves them, and
   what it gives the hosts beneath it — the user, the key, the palette — which
   goes with it. It said all seven of Production's hosts moved to the top,
-  six staying in EU and US, and nothing of what they would lose.
+  six staying in EU and US, and nothing of what they would lose. Where they
+  land is named as the sidebar and the editors name it — into the group
+  above, or with none, the hosts to Ungrouped and the groups each "a group
+  of its own", Inside's words — where "the top of the list" named both and
+  the hosts land at its foot.
 - **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
   matched as the resolver matches a jump: a host counts if its jump field
   names it or a group above it does (`effective`), and the groups that name

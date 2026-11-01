@@ -216,12 +216,38 @@ nonisolated struct DeletionWarningTests {
     func saysWhatMoves() {
         let said = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: hosts)
-        #expect(said == "Its one host moves to the top of the list, and so does the group "
-            + "inside it, with its 2 hosts. Nothing is deleted but the group itself.")
+        #expect(said == "Its one host moves to Ungrouped, and the group inside it becomes a "
+            + "group of its own, with its 2 hosts. Nothing is deleted but the group itself.")
         // Nothing filed in it directly, only a group inside.
         let onlyInside = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: Array(hosts.dropFirst()))
-        #expect(onlyInside.hasPrefix("The group inside it moves to the top of the list, with its 2 hosts."))
+        #expect(onlyInside.hasPrefix("The group inside it becomes a group of its own, with its 2 hosts."))
+    }
+
+    /// Where they land, named as the sidebar and the editors name each
+    /// place: "the top of the list" named both, and hosts with no group
+    /// land at its foot, under Ungrouped. With a group above, everything
+    /// goes into it.
+    @Test("hosts land under Ungrouped and groups on their own, or all in the group above")
+    func whereTheyLand() {
+        // Production › EU › Frankfurt, a host in Frankfurt as well.
+        let deeper = groups + [Group(id: "f", name: "Frankfurt", parentId: "e")]
+        let filed = hosts + [Host(id: "d", name: "d", addr: "10.0.0.4", groupId: "f")]
+        #expect(Validation.deletionWarning(for: deeper[1], groups: deeper, hosts: filed)
+            .hasPrefix("Its 2 hosts move to Production, and so does the group inside it, with its 1 host."))
+        let emptied = Validation.deletionWarning(
+            for: deeper[1], groups: deeper, hosts: [filed[0], filed[3]])
+        #expect(emptied.hasPrefix("The group inside it moves to Production, with its 1 host."))
+        // Two groups with nothing above them.
+        let top = [
+            Group(id: "t", name: "Top"), Group(id: "a", name: "A", parentId: "t"),
+            Group(id: "b", name: "B", parentId: "t"),
+        ]
+        let two = Validation.deletionWarning(for: top[0], groups: top, hosts: [
+            Host(id: "1", name: "one", addr: "10.0.0.5", groupId: "a"),
+            Host(id: "2", name: "two", addr: "10.0.0.6", groupId: "b"),
+        ])
+        #expect(two.hasPrefix("The 2 groups inside it become groups of their own, with their 2 hosts."))
     }
 
     /// Deleting Production took the user, the key and the palette from
