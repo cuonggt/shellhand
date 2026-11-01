@@ -1099,7 +1099,10 @@ credentials, which is most of it.
 - The detail pane's `.navigationTitle` becomes the **window** title, so the
   title bar says which pane you are on rather than "Settings". That is what
   System Settings does, and `window.title` set in the controller is
-  overridden by it.
+  overridden by it. **The Window menu lists it as Settings all the same**
+  (`NSApp.changeWindowsItem`, put back whenever the title changes, since
+  AppKit lists a window afresh by its title): by the pane's name it read
+  "SFTP" on its SFTP pane, beside the SFTP window.
 - A sidebar footer goes in a **`safeAreaInset`, not a `List` row**: a row is
   indented for a selection it will never have, and the inset left so little
   width that the build number fell off the end of "Version 0.0.1 (1)".

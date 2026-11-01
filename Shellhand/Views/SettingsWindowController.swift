@@ -16,6 +16,13 @@ import SwiftUI
 final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private static var shared: SettingsWindowController?
 
+    /// The Window menu lists it as Settings, whichever pane is in front. By
+    /// its title — the pane's name, as System Settings titles itself — it was
+    /// "SFTP" on its SFTP pane, beside the SFTP window of the same name.
+    /// AppKit lists a window afresh whenever its title changes, so this puts
+    /// the name back each time it does.
+    private var titleWatch: NSKeyValueObservation?
+
     /// Opens Settings, on a given tab if one is asked for.
     static func show(storePath: String, configPath: String, tab: SettingsTab? = nil) {
         if let tab { SettingsNavigation.shared.selectedTab = tab }
@@ -47,6 +54,9 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.delegate = self
         window.contentViewController = NSHostingController(
             rootView: SettingsRootView(storePath: storePath, configPath: configPath))
+        titleWatch = window.observe(\.title) { [weak self] _, _ in
+            Task { @MainActor in self?.listInWindowMenu() }
+        }
     }
 
     @available(*, unavailable)
@@ -60,6 +70,14 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         // Shellhand keeps a Dock icon, so there is no activation policy to
         // step up here — the window just needs bringing to the front.
         NSApp.activate(ignoringOtherApps: true)
+        listInWindowMenu()
+    }
+
+    /// Only while it is up: AppKit adds a window not in the menu, and drops
+    /// one as it closes.
+    private func listInWindowMenu() {
+        guard let window, window.isVisible else { return }
+        NSApp.changeWindowsItem(window, title: "Settings", filename: false)
     }
 
     func windowWillClose(_ notification: Notification) {
