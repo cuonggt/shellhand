@@ -177,11 +177,16 @@ struct TerminalSettingsPane: View {
                 }
                 // A font is chosen by looking at it, as a palette is: a line
                 // a terminal might show, in the font and size chosen, with the
-                // characters fonts most often confuse.
-                Text("deploy@web:~$ ls -l  0O 1lI {} [] =>")
-                    .font(Font(TerminalFont.font(named: fontFamily, size: fontSize) as CTFont))
-                    .lineLimit(1)
-                    .textSelection(.enabled)
+                // characters fonts most often confuse — whole at any size, on
+                // two lines where one will not hold it. Held to one, it lost
+                // "{} [] =>", what it is there to show, from about 19pt.
+                ViewThatFits(in: .horizontal) {
+                    Text("deploy@web:~$ ls -l  0O 1lI {} [] =>")
+                        .lineLimit(1)
+                    Text("deploy@web:~$ ls -l\n0O 1lI {} [] =>")
+                }
+                .font(Font(TerminalFont.font(named: fontFamily, size: fontSize) as CTFont))
+                .textSelection(.enabled)
                 Text("Sessions take the font as soon as you choose. New ones start at this size; "
                     + "⌘+ and ⌘- change the one in front.")
                     .font(.caption)

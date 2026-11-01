@@ -359,7 +359,9 @@ credentials, which is most of it.
   default. `TerminalFont` decides what is offered, and falls back to SF Mono
   for a family not installed or not monospaced. Open sessions follow through
   the same defaults observer and keep their size; Actual Size keeps the
-  family. → [the font](docs/notes/terminal.md#the-font)
+  family. Its sample line is shown whole at any size, on two lines where one
+  will not hold it: held to one, it lost "{} [] =>", the characters it is
+  there to show, from about 19pt. → [the font](docs/notes/terminal.md#the-font)
 - **Clear Scrollback is ⌥⌘K**, and ⌘K stays Quick Connect's. It shrinks
   the history to nothing and back through `changeScrollback` — never by
   feeding `ESC [3J`, which acts on the buffer in front only and could land
