@@ -481,7 +481,10 @@ credentials, which is most of it.
   button's tooltip too), greyed with no host window in front, and Show or
   Hide Sidebar on ⌃⌘S, the system's own `SidebarCommands`. It said Toggle
   Host Details — a host over a group as well, Toggle beside ⌘D's Show
-  Beside — and had nothing for the sidebar.
+  Beside — and had nothing for the sidebar. **Photograph the sidebar's item,
+  don't read it**: the open menu says Hide Sidebar with the sidebar up, while
+  System Events reads Show Sidebar however it stands, menu open or not.
+  Whether VoiceOver hears the same is unchecked.
 - **The toolbar is placed by what each item acts on**, like the menus:
   Quick Connect, New Host and SFTP over the sidebar, and the inspector toggle
   alone at the trailing edge. Keep `paneToolbar` even with one item, since
@@ -1119,7 +1122,8 @@ credentials, which is most of it.
   "another copy" guards, so run a drive or `window-check.sh` from a file.
   **Compile every helper with `osacompile` before a drive**: one that does
   not compile returns nothing, and AppleScript keeps words a helper reaches
-  for — `middle`, `items`, `times`, `buttons`. Read `front window` again
+  for — `middle`, `items`, `times`, `buttons`, `row`, `th`, `my`; inline
+  ones too, or the shell does arithmetic on the error. Read `front window` again
   after anything that retitles it: a reference held from before names the
   old title and no longer resolves.
   → [System Events](docs/notes/driving.md#system-events)
