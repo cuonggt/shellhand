@@ -169,9 +169,11 @@ struct TerminalSettingsPane: View {
                     HStack(spacing: 12) {
                         Slider(value: $fontSize, in: 9...24, step: 1)
                             .frame(width: 180)
+                        // Black, as a value set here is beside it: grey in
+                        // this app says inherited.
                         Text(fontSize.formatted(.number.precision(.fractionLength(0))))
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                             .frame(width: 24, alignment: .trailing)
                     }
                 }
@@ -259,9 +261,10 @@ struct FilesSettingsPane: View {
                 // left and the arrows 330pt away at the right.
                 LabeledContent("At once") {
                     HStack(spacing: 12) {
+                        // Black, as Size's number is.
                         Text("\(transferWidth)")
                             .monospacedDigit()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.primary)
                             .frame(width: 24, alignment: .trailing)
                         Stepper("At once", value: $transferWidth, in: TransferQueue.widths)
                             .labelsHidden()

@@ -1123,6 +1123,8 @@ credentials, which is most of it.
   slider — a `LabeledContent` around both, the stepper's label hidden.
   Written as the stepper's label, `Stepper { LabeledContent(…) }`, SFTP's
   "At once 2" sat with its label at the left and the arrows 330pt away.
+  Both numbers are black, as a value set there is: grey, beside "SF Mono"
+  and "System" in black, they read as inherited, which grey says here.
 - **Dialogs come in three widths**, `Views/DialogSize.swift`: 460 for one
   question, 560 for a record or a plain list, 820 for a list beside its detail.
   Width only: each dialog measures its own height.
