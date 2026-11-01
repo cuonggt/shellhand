@@ -195,6 +195,9 @@ nonisolated struct PlacesTests {
         #expect(Places.newFolderPlace(in: "~/Projects", on: "This Mac")
             == "It goes in ~/Projects on This Mac.")
         #expect(Places.newFolderPlace(in: "/var/www", on: "web") == "It goes in /var/www on web.")
+        // The home folder by name, where a bare "~" read as a stray mark.
+        #expect(Places.newFolderPlace(in: "~", on: "This Mac")
+            == "It goes in your home folder on This Mac.")
     }
 
     // MARK: a host it cannot reach

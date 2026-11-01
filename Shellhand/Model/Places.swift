@@ -104,8 +104,11 @@ nonisolated enum Places {
     /// names its host: ⇧⌘N acts on whichever side last had the keyboard,
     /// and the question said only "New Folder", with nothing to tell This Mac
     /// from the host.
+    ///
+    /// The home folder by name, as the local shell's inspector names it: a
+    /// bare "~" read as a stray character, "It goes in ~ on This Mac."
     static func newFolderPlace(in folder: String, on place: String) -> String {
-        "It goes in \(folder) on \(place)."
+        "It goes in \(folder == "~" ? "your home folder" : folder) on \(place)."
     }
 
     /// Which of a listing's entries a pane shows. Dotfiles are hidden by

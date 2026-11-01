@@ -782,7 +782,8 @@ credentials, which is most of it.
   question and did nothing. **New Folder says where the folder goes**
   (`Places.newFolderPlace`, `FilePlace.folder`) — "It goes in ~/Projects on
   This Mac", as Delete names its host: ⇧⌘N acts on whichever side last had
-  the keyboard, and the question said only "New Folder".
+  the keyboard, and the question said only "New Folder". The home folder is
+  named, "your home folder", where a bare "~" read as a stray mark.
 - **There are no secondary `Window` scenes.** If one comes back: `openWindow`
   works only when a live view asks, and the first scene in `body` opens at
   launch, so another needs `.defaultLaunchBehavior(.suppressed)`.
