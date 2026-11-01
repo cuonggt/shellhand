@@ -252,7 +252,12 @@ struct PaletteChoice: View {
                         }
                     }
                 } else {
+                    // A palette set here reads as set, and one inherited as
+                    // grey as an inherited field's value: a grouped form greys
+                    // whatever it is handed, so in both editors a group's own
+                    // Gruvbox Dark was as grey as one from Production.
                     Text(title)
+                        .foregroundStyle(chosen.isEmpty ? .secondary : .primary)
                 }
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption2)

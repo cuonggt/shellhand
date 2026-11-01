@@ -315,7 +315,10 @@ credentials, which is most of it.
   → [the real server](docs/notes/sftp.md#the-real-server)
 - **A palette is chosen by looking at it**, everywhere one is chosen — the
   inspector, both editors and Settings — through `PaletteChoice`, a swatch
-  that opens `PalettePicker`; three of the four were a menu of names.
+  that opens `PalettePicker`; three of the four were a menu of names. Its
+  name is black when set there and grey when inherited, since a grouped
+  form greys whatever it is handed: a group's own Gruvbox Dark read as
+  grey as one from Production.
   `PalettePicker` draws each as a `TerminalMiniature` in its own colours,
   applies a choice at once and stays open, so two can be compared on the
   terminal behind. It is as tall as its rows need, where the window it
