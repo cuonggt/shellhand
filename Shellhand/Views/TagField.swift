@@ -16,8 +16,24 @@ struct TagField: View {
 
     private var tags: [String] { Tags.clean(text) }
 
+    /// Where AppKit puts a borderless field's first baseline, from its top,
+    /// in the body font: what the typing field says it has. Asked from
+    /// inside the flow, it answered 8pt down a 22pt field, above its words,
+    /// where its words sit 13pt down.
+    private static let fieldBaseline: CGFloat = {
+        let probe = NSTextField(string: "")
+        probe.isBezeled = false
+        probe.font = .systemFont(ofSize: NSFont.systemFontSize)
+        probe.sizeToFit()
+        return probe.firstBaselineOffsetFromTop
+    }()
+
     var body: some View {
-        HStack(alignment: .top, spacing: 6) {
+        // On the text's line, the row's label with it: the form lines a
+        // label up with the baseline of what is beside it, and this said
+        // none, or one it took from the typing field 5pt too high — "Tags"
+        // stood above "add a tag" either way.
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             FlowLayout(spacing: 4) {
                 ForEach(tags, id: \.self) { tag in
                     TagToken(tag: tag) { remove(tag) }
@@ -32,6 +48,7 @@ struct TagField: View {
                     // token, and "web, eu" sat 25pt inside an empty box.
                     .multilineTextAlignment(.leading)
                     .frame(minWidth: 72)
+                    .alignmentGuide(.firstTextBaseline) { d in d[.top] + Self.fieldBaseline }
                     .onSubmit { commit() }
                     // One rule for reading tags, and it says a comma, a
                     // semicolon, a bar or a space all separate — so typing any
@@ -149,5 +166,17 @@ struct FlowLayout: Layout {
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
+    }
+
+    /// The first line's text baseline, its first view's, which sits at the
+    /// top: without it the flow said no baseline at all, and a label lined
+    /// up with it stood off the text.
+    func explicitAlignment(
+        of guide: VerticalAlignment, in bounds: CGRect, proposal: ProposedViewSize,
+        subviews: Subviews, cache: inout ()
+    ) -> CGFloat? {
+        guard guide == .firstTextBaseline, let first = subviews.first else { return nil }
+        let size = first.sizeThatFits(.unspecified)
+        return bounds.minY + first.dimensions(in: ProposedViewSize(size))[.firstTextBaseline]
     }
 }

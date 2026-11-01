@@ -1287,7 +1287,13 @@ credentials, which is most of it.
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their
   field is drawn with a border like every other, because a row that is a field
-  and does not look like one reads as decoration.
+  and does not look like one reads as decoration. **Its first line's baseline
+  is the row's** (`FlowLayout`'s `explicitAlignment`), the typing field's
+  said by hand where AppKit puts a borderless field's
+  (`TagField.fieldBaseline`): asked from inside a custom layout, a text field
+  answered 8pt down a 22pt field, above its words at 13, and "Tags" stood
+  5pt above "add a tag" — with a token first, it lined up. An offscreen form
+  drew that row 2.5pt apart from the app's; measure the app.
 - **The window can be driven through System Events, keyboard paths
   included**: walk with `UI elements` and `role of`, never the per-class
   accessors, and `repeat with x in y`, never `item 1 of y`. `select` on a row
