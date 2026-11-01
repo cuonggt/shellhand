@@ -1008,9 +1008,10 @@ credentials, which is most of it.
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor is
-  720 General / 640 Advanced — room for the command's six lines at its foot
-  and one line more, a problem or a rename note — and the group editor
-  570 / 555. The earlier 500/490 and 600/480 were measured against **new**
+  736 General / 640 Advanced — room for the command's six lines at its foot
+  and one line more, a problem or a rename note, and for the inherited
+  user's caption under Connect to — and the group editor 570 / 555. The
+  earlier 500/490 and 600/480 were measured against **new**
   records and scrolled on every tab but one as soon as a real host or group
   was opened in them; 650/570 was 41pt short on both tabs once the command
   was drawn a line an argument.
@@ -1039,7 +1040,9 @@ credentials, which is most of it.
 - **Where an inherited value comes from is a caption beside the field**, not
   part of the placeholder, which is the inherited value or an example — never
   `—`. The caption says "from Production" in every editor: the host
-  editor's said "Production" alone up to 0.1.5, which read as a value. **An
+  editor's said "Production" alone up to 0.1.5, which read as a value.
+  Connect to's user says it under the row, which has no room beside it —
+  "user from Production" — where it said nothing at all. **An
   example never names something in the list** (`HostEditorSheet
   .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
   Jump host, with bastion filed there, read as Production going through it,

@@ -30,23 +30,24 @@ nonisolated struct SheetHeightTests {
     func commandGivesWay() {
         let room = HostEditorSheet.commandRoom
         let spare = HostEditorSheet.formSpare
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720) == room)
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 736) == room)
         // Less short than the form can spare: the form gives it all.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720 - spare) == room)
-        // 68 short, at the window's default: the box gives what the form
-        // cannot, where it gave all 68 and kept two lines and a half.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652) == room - (68 - spare))
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 400) == HostEditorSheet.leastCommand)
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 736 - spare) == room)
+        // 84 short, at the window's default: the box gives what the form
+        // cannot, where it gave all of it and kept two lines and a half.
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 652) == room - (84 - spare))
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 400) == HostEditorSheet.leastCommand)
     }
 
     @Test("a line along the foot takes what the form could spare the command")
     func footLinesTakeTheSpare() {
         let room = HostEditorSheet.commandRoom
         let spare = HostEditorSheet.formSpare - HostEditorSheet.footLine
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652, lines: 1) == room - (68 - spare))
-        // Two lines take more than there is to spare, and no more than that.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 652, lines: 2) == room - 68)
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 652, lines: 1) == room - (84 - spare))
+        // Two lines take more than there is to spare, down to the least.
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 652, lines: 2)
+            == HostEditorSheet.leastCommand)
         // With room enough, a line along the foot changes nothing.
-        #expect(HostEditorSheet.commandCap(wanted: 720, height: 720, lines: 2) == room)
+        #expect(HostEditorSheet.commandCap(wanted: 736, height: 736, lines: 2) == room)
     }
 }

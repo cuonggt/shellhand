@@ -59,12 +59,13 @@ struct HostEditorSheet: View {
     /// for it.
     nonisolated static let commandRoom: CGFloat = 116
 
-    /// Two lines of the command, the least the foot shows.
-    nonisolated static let leastCommand: CGFloat = 48
+    /// One line of the command, the least the foot shows: two left the form
+    /// scrolling at the window's default size with a problem along the foot.
+    nonisolated static let leastCommand: CGFloat = 32
 
     /// What the form has over db-01's General at the height it was measured
-    /// for, with nothing along the foot but the command: 29pt, less 4 kept.
-    nonisolated static let formSpare: CGFloat = 25
+    /// for, with nothing along the foot but the command: 28pt, less 4 kept.
+    nonisolated static let formSpare: CGFloat = 24
 
     /// One line along the foot — a problem, a rename note, a refused save.
     nonisolated static let footLine: CGFloat = 23
@@ -82,7 +83,16 @@ struct HostEditorSheet: View {
     }
 
     /// What each tab was measured to need; see the frame for how.
-    private var wanted: CGFloat { tab == .general ? 720 : 640 }
+    private var wanted: CGFloat { tab == .general ? 736 : 640 }
+
+    /// Where the user this host logs in as comes from while its own field is
+    /// empty: nil when it says one itself, or nothing above gives one.
+    private var userFrom: String? {
+        let from = preview.effective.userFrom
+        guard host.user.trimmingCharacters(in: .whitespaces).isEmpty,
+              !from.isEmpty, from != "itself" else { return nil }
+        return from
+    }
 
     /// What it gets, over the window it opens over.
     private var height: CGFloat { SheetHeight.fitted(wanted, in: room.height) }
@@ -130,7 +140,9 @@ struct HostEditorSheet: View {
         // a jump host 41pt short, read off the scroll bars' thumbs. 45pt more
         // fitted it with 4 to spare, which a problem along the foot then
         // overran by 19 — where 650/570 had room for one — so each is 70pt
-        // taller.
+        // taller. The caption under Connect to saying where the user comes
+        // from added 17pt to General's form, so it is 736 — the spare back
+        // to within a point.
         //
         // Where the window has less room than that below its toolbar — 668
         // at its default 1100×720 — the editor is the room less a margin, and
@@ -198,7 +210,19 @@ struct HostEditorSheet: View {
                     needed("Name")
                 }
                 LabeledContent {
-                    destination
+                    VStack(alignment: .leading, spacing: 3) {
+                        destination
+                        // Where an empty user comes from, as Key and Jump
+                        // host say beside theirs — under this row, which has
+                        // no room beside it. It said nothing, the inherited
+                        // name sitting in the field as if typed.
+                        if let userFrom {
+                            Text("user from \(userFrom)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .help("Inherited from \(userFrom). Type a user to set it on this host.")
+                        }
+                    }
                 } label: {
                     needed("Connect to")
                 }
