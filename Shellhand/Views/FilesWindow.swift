@@ -362,11 +362,12 @@ private struct PlacePane: View {
             // Only the far side is ever unpointed — this Mac is always the
             // near one — so this asks for a host rather than for "a place",
             // in the header's own words: it said "Pick a host" under a header
-            // saying "Choose a host".
+            // saying "Choose a host". Its "its" is the host's: after "Use the
+            // menu above" it read as the menu's.
             ContentUnavailableView {
                 Label("Choose a host", systemImage: "server.rack")
             } description: {
-                Text("Use the menu above, and its files show here beside your own.")
+                Text("Choose one from the menu above, and its files show here beside your own.")
             }
         }
     }

@@ -739,7 +739,9 @@ credentials, which is most of it.
   see the listing it comes back with.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
   a question (`chosen` is false) and says "Choose a host", its header and
-  its empty side alike (the side said "Pick a host"); and the window says
+  its empty side alike (the side said "Pick a host"), and under it "Choose
+  one from the menu above, and its files show here" — after "Use the menu
+  above", "its" read as the menu's; and the window says
   folder, never directory. Without that state
   an unpointed pane reads as "This Mac" with an empty listing, which looks
   like an empty home directory. `chosen` is set **before** the connecting
