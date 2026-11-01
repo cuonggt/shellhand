@@ -68,8 +68,10 @@ struct HostEditorSheet: View {
     /// for it.
     nonisolated static let commandRoom: CGFloat = 116
 
-    /// One line of the command, the least the foot shows: two left the form
-    /// scrolling at the window's default size with a problem along the foot.
+    /// One line of the command, the least the foot shows while it shows any:
+    /// two left the form scrolling at the window's default size with a
+    /// problem along the foot. Read off the form as drawn, less than a line
+    /// shows none (`commandCap(room:)`).
     nonisolated static let leastCommand: CGFloat = 32
 
     /// What the form has over db-01's General at the height it was measured
@@ -97,8 +99,12 @@ struct HostEditorSheet: View {
     /// The estimate guesses the form's spare from db-01's General, which
     /// carries a caption under Connect to that a host typed into ⌘K does
     /// not: Save as Host… cut a three-line command under 58pt of empty form.
+    ///
+    /// Where not even a line fits without scrolling the form, the box gives
+    /// way altogether: held to a line, it left the form 39pt short with New
+    /// group… chosen at the window's default size, its Tags under the foot.
     nonisolated static func commandCap(room: CGFloat) -> CGFloat {
-        min(commandRoom, max(leastCommand, room))
+        room < leastCommand ? 0 : min(commandRoom, room)
     }
 
     /// The box's inset around the command, and one of its lines with the gap
@@ -112,6 +118,7 @@ struct HostEditorSheet: View {
     /// default size showed three lines that read as the whole command, the
     /// jump host's ProxyCommand and the destination out of sight beneath.
     nonisolated static func commandShown(_ content: CGFloat, cap: CGFloat) -> CGFloat {
+        guard cap > 0 else { return 0 }
         guard content > cap else { return content }
         let whole = ((cap - commandInset - 4) / commandLine).rounded(.down)
         return min(cap, commandInset + commandLine * whole + 8)
@@ -315,29 +322,34 @@ struct HostEditorSheet: View {
 
             Section("File it under") {
                 LabeledContent("Group") {
-                    Picker("", selection: $host.groupId) {
-                        Text("Ungrouped").tag("")
-                        ForEach(store.snapshot.groups) { group in
-                            Text(store.path(of: group)).tag(group.id)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Picker("", selection: $host.groupId) {
+                            Text("Ungrouped").tag("")
+                            ForEach(store.snapshot.groups) { group in
+                                Text(store.path(of: group)).tag(group.id)
+                            }
+                            Divider()
+                            Text(newGroupTitle).tag(Self.newGroup)
                         }
-                        Divider()
-                        Text(newGroupTitle).tag(Self.newGroup)
-                    }
-                    .labelsHidden()
-                    .onChange(of: host.groupId) { was, now in
-                        if now == Self.newGroup, was != Self.newGroup { newGroupParent = was }
-                    }
-                }
-                if makingGroup {
-                    LabeledContent("Called") {
+                        .labelsHidden()
+                        .onChange(of: host.groupId) { was, now in
+                            if now == Self.newGroup, was != Self.newGroup { newGroupParent = was }
+                        }
+                        // The new group's name under the menu naming where it
+                        // goes, in the row, not one of its own: a Called row
+                        // scrolled the form at the window's default size.
                         // The group editor's example, never a group already
                         // there: "Production" sat under a menu listing it.
-                        TextField("", text: $newGroupName, prompt: Text(
-                            GroupEditorSheet.nameExample(
-                                avoiding: store.snapshot.groups.map(\.name))))
-                            .textFieldStyle(.roundedBorder)
-                            .labelsHidden()
-                            .multilineTextAlignment(.leading)
+                        if makingGroup {
+                            TextField("", text: $newGroupName, prompt: Text(
+                                GroupEditorSheet.nameExample(
+                                    avoiding: store.snapshot.groups.map(\.name))))
+                                .textFieldStyle(.roundedBorder)
+                                .labelsHidden()
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity)
+                                .accessibilityLabel("Name of the new group")
+                        }
                     }
                 }
                 LabeledContent("Tags") {

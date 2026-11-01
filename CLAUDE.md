@@ -1163,6 +1163,10 @@ credentials, which is most of it.
   drawn (`commandCap(room:)`: its scroll area less its content, with the
   box), the estimate standing in until it is laid out — guessed from db-01's
   General, Save as Host… cut a three-line command under 58pt of empty form.
+  Where not a line of it fits beside the form, the box gives way altogether,
+  and New group…'s name sits in the Group row under its menu, not a row of
+  its own: held to a line beside a Called row, the form scrolled 39pt at the
+  window's default size, its Tags under the foot.
   At 720, 0.1.7's host editor hung below
   the window at its default
   1100×720, where every check had run at the README's 1220×798. **Check a
