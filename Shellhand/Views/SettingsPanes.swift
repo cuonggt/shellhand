@@ -245,8 +245,18 @@ struct FilesSettingsPane: View {
     var body: some View {
         Form {
             Section("Transfers") {
-                Stepper(value: $transferWidth, in: TransferQueue.widths) {
-                    LabeledContent("At once", value: "\(transferWidth)")
+                // The number beside its stepper, as Size's beside its slider:
+                // drawn as the stepper's label, it sat with "At once" at the
+                // left and the arrows 330pt away at the right.
+                LabeledContent("At once") {
+                    HStack(spacing: 12) {
+                        Text("\(transferWidth)")
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24, alignment: .trailing)
+                        Stepper("At once", value: $transferWidth, in: TransferQueue.widths)
+                            .labelsHidden()
+                    }
                 }
                 .onChange(of: transferWidth) { _, now in
                     Task { await Core.shared.setTransferWidth(now) }

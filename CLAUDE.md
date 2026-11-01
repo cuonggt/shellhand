@@ -1018,6 +1018,10 @@ credentials, which is most of it.
   width that the build number fell off the end of "Version 0.0.1 (1)".
 - Settings is a **window**, like Files, so the three dialog widths below do
   not apply to it. It opens at 700×500 and will not go below 620×420.
+- **A stepper's number sits beside its arrows**, as Size's sits beside its
+  slider — a `LabeledContent` around both, the stepper's label hidden.
+  Written as the stepper's label, `Stepper { LabeledContent(…) }`, SFTP's
+  "At once 2" sat with its label at the left and the arrows 330pt away.
 - **Dialogs come in three widths**, `Views/DialogSize.swift`: 460 for one
   question, 560 for a record or a plain list, 820 for a list beside its detail.
   Width only: each dialog measures its own height.
