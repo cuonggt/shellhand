@@ -696,7 +696,11 @@ credentials, which is most of it.
   plain Copy while this one is pointed nowhere (`Places.copyTitle`): "0
   items" read as an empty folder, and the button said "Copy to Choose a
   host". Its path field greys with the buttons beside it, where Return in
-  it went nowhere and said nothing.
+  it went nowhere and said nothing. **It draws no table**: the question or
+  the refusal stands alone on the table's ground, where it was laid over an
+  empty table whose stripes ran through it under a sortable header. A
+  side's selection is cleared on the side, since the table is not there to
+  see the listing it comes back with.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
   a question (`chosen` is false) and says "Choose a host", its header and
   its empty side alike (the side said "Pick a host"); and the window says

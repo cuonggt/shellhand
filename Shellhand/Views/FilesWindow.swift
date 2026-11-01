@@ -114,10 +114,22 @@ private struct PlacePane: View {
                 banner(failure)
                 Divider()
             }
-            table
+            // A side with no listing says why on the table's own ground, with
+            // no table: laid over one, its stripes ran through the question
+            // and the refusal's card, under a sortable header over nothing.
+            if place.listing.path.isEmpty {
+                waiting
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(SwiftUI.Color(nsColor: .controlBackgroundColor))
+            } else {
+                table
+            }
             Divider()
             footer
         }
+        // On the side, not the table, which is not there while a side is
+        // re-pointed and so would miss the listing it came back with.
+        .onChange(of: place.listing.path) { _, _ in selection = [] }
         .frame(minWidth: 400)
         .confirmationDialog(
             deleting.title, isPresented: $confirmingDelete, titleVisibility: .visible
@@ -307,11 +319,9 @@ private struct PlacePane: View {
             QuickLook.shared.show(place.localURL(named: entry.name))
             return .handled
         }
-        // A folder opened takes its selection with it: kept, the folder you
-        // went into stayed selected inside itself — "1 of 0 selected", and a
-        // Copy button live with nothing to copy.
-        .onChange(of: place.listing.path) { _, _ in selection = [] }
-        .overlay { if place.listing.path.isEmpty { waiting } }
+        // A folder opened takes its selection with it (`body`): kept, the
+        // folder you went into stayed selected inside itself — "1 of 0
+        // selected", and a Copy button live with nothing to copy.
         // From the other pane, and from Finder.
         .dropDestination(for: FileRef.self) { refs, _ in
             let names = Set(refs.filter { $0.place != side }.map(\.name))
