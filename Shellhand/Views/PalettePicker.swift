@@ -215,6 +215,11 @@ struct PaletteChoice: View {
     let inherited: String?
     /// The palette inheriting gives, for its swatch.
     let inheritedPalette: Palette?
+    /// What inheriting gives in two parts, for a label that says where from
+    /// in grey under or beside the palette, as the inspector's other rows
+    /// do; without it the label is the inherit row's sentence, which in the
+    /// inspector's column wrapped a word to a line.
+    var inheritedParts: (name: String, from: String)?
     let onChoose: (String) -> Void
 
     /// The picker open, with the height it opens at — carried in the
@@ -233,9 +238,22 @@ struct PaletteChoice: View {
                 rows: Themes.names.count + (inherited == nil ? 0 : 1),
                 in: NSApp.keyWindow?.contentLayoutRect.height))
         } label: {
-            HStack(spacing: 7) {
+            HStack(alignment: parts == nil ? .center : .top, spacing: 7) {
                 TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
-                Text(title)
+                if let parts {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(parts.name)
+                            source(parts.from)
+                        }
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(parts.name)
+                            source(parts.from)
+                        }
+                    }
+                } else {
+                    Text(title)
+                }
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -254,4 +272,14 @@ struct PaletteChoice: View {
     private var shown: Palette? { chosen.isEmpty ? inheritedPalette : Themes.named(chosen) }
 
     private var title: String { chosen.isEmpty ? (inherited ?? "") : chosen }
+
+    /// What inheriting gives in two parts, where it is what is shown.
+    private var parts: (name: String, from: String)? { chosen.isEmpty ? inheritedParts : nil }
+
+    /// "from Production", as `ValueRow` says it.
+    private func source(_ from: String) -> some View {
+        Text("from \(from)")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
 }

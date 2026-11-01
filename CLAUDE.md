@@ -1121,7 +1121,11 @@ credentials, which is most of it.
   "user from Production" — where it said nothing at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",
   "System from Settings" (`Effective.inherited`) — where it said "From
-  Production — Gruvbox Dark", and the group inspector "As in Settings". So
+  Production — Gruvbox Dark", and the group inspector "As in Settings"; and
+  the host inspector's Colours row draws it as its neighbours do, the palette
+  with "from Production" in grey beside or under it
+  (`Effective.inheritedPaletteParts`), where the one sentence wrapped a word
+  to a line in full-size type, the label centred against it. So
   does agent forwarding — "Carried from Production", or "Not carried by
   default" where nothing says (`Effective.agent`) — in both editors and both
   inspectors, where it read "From Production — carried", "Not carried

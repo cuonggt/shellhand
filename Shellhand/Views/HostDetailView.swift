@@ -34,14 +34,20 @@ struct HostDetailView: View {
     /// The same picker the editor's Advanced tab has, down to the sentence
     /// labelling "inherit" — `Effective.inheritedPalette`, so the two cannot
     /// come to say different things about the same host.
+    ///
+    /// **Laid out as the rows around it are**: the label level with the first
+    /// line, and what reaches the host as the palette with "from Production"
+    /// in grey beside or under it. The sentence wrapped to "Gruvbox Dark /
+    /// from / Production" in full-size type, the label centred against it.
     @ViewBuilder private var colours: some View {
-        GridRow {
+        GridRow(alignment: .top) {
             Text("Colours")
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
             PaletteChoice(
                 chosen: host.theme, inherited: preview.effective.inheritedPalette,
                 inheritedPalette: TerminalSession.palette(named: preview.effective.theme),
+                inheritedParts: preview.effective.inheritedPaletteParts,
                 onChoose: { choose(palette: $0) })
         }
     }

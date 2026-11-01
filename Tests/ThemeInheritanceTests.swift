@@ -31,6 +31,10 @@ nonisolated struct ThemeInheritanceTests {
         let asked = HostDetailView.inheriting(host)
         let out = resolver(hosts: [host], groups: groups).resolve(asked).effective
         #expect(out.inheritedPalette == "Gruvbox Dark from Production")
+        // In two parts for the inspector's row, which says where from as a
+        // caption: the sentence wrapped a word to a line there.
+        #expect(out.inheritedPaletteParts.name == "Gruvbox Dark")
+        #expect(out.inheritedPaletteParts.from == "Production")
         #expect(host.theme == "Dracula", "the host itself was changed")
     }
 

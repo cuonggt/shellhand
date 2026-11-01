@@ -151,8 +151,16 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// "inherit" option with it, and two copies of a sentence drift — which
     /// this app has already watched happen with error handling.
     var inheritedPalette: String {
-        guard !theme.isEmpty else { return Self.inherited(Themes.inSettings, from: "Settings") }
-        return Self.inherited(theme, from: themeFrom.isEmpty ? "above" : themeFrom)
+        let (name, from) = inheritedPaletteParts
+        return Self.inherited(name, from: from)
+    }
+
+    /// The same in two parts, the palette and where it comes from, for the
+    /// inspector's row, which says the second under or beside the first as
+    /// its other rows do.
+    var inheritedPaletteParts: (name: String, from: String) {
+        guard !theme.isEmpty else { return (Themes.inSettings, "Settings") }
+        return (theme, themeFrom.isEmpty ? "above" : themeFrom)
     }
 
     /// An inherited value as an inherit row names it: the value, then where
