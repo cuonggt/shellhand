@@ -426,7 +426,8 @@ private struct PlacePane: View {
 
 /// A host SFTP could not open, said as what it means and what to do about it:
 /// a terminal tab, where a new key's question and a password can be
-/// answered, and another go. It said "Cannot show this" over ssh's sentence.
+/// answered, the host's editor, where its address, user and key are put
+/// right, and another go. It said "Cannot show this" over ssh's sentence.
 private struct Unreached: View {
     let host: Host
     let said: String
@@ -451,8 +452,15 @@ private struct Unreached: View {
                 .textSelection(.enabled)
             HStack {
                 if trouble.offersTerminal {
-                    Button("Open in Terminal") { TerminalRequest.post(for: host) }
+                    Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }
                         .buttonStyle(.borderedProminent)
+                }
+                // As a terminal tab that could not connect offers it. Only Try
+                // Again was here, under advice to check the host's user and
+                // key; Try Again reads the host from the list afresh, so what
+                // is put right there is what it tries.
+                if !host.id.isEmpty {
+                    Button("Edit Host…") { HostRequest.post(.editor, for: host) }
                 }
                 Button("Try Again", action: onTryAgain)
             }
@@ -463,24 +471,31 @@ private struct Unreached: View {
     }
 }
 
-/// SFTP asking the host window for a terminal tab on a host. An object rather
-/// than a bare id, so that one host window takes it and any other leaves it.
+/// SFTP asking the host window for something about a host: a terminal tab
+/// on it, or its editor. An object rather than a bare id, so that one host
+/// window takes it and any other leaves it.
 @MainActor
-final class TerminalRequest {
+final class HostRequest {
+    enum Wanted { case terminal, editor }
+
     let hostID: String
+    let wanted: Wanted
     var taken = false
 
-    init(hostID: String) { self.hostID = hostID }
+    init(hostID: String, wanted: Wanted) {
+        self.hostID = hostID
+        self.wanted = wanted
+    }
 
-    static func post(for host: Host) {
+    static func post(_ wanted: Wanted, for host: Host) {
         NotificationCenter.default.post(
-            name: .shellhandOpenTerminal, object: TerminalRequest(hostID: host.id))
+            name: .shellhandHostRequest, object: HostRequest(hostID: host.id, wanted: wanted))
     }
 }
 
 extension Notification.Name {
-    /// SFTP's Open in Terminal, which the host window answers.
-    static let shellhandOpenTerminal = Notification.Name("shellhand.openTerminal")
+    /// SFTP's Open in Terminal and Edit Host…, which the host window answers.
+    static let shellhandHostRequest = Notification.Name("shellhand.hostRequest")
 }
 
 private struct TransfersStrip: View {

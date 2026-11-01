@@ -677,8 +677,10 @@ credentials, which is most of it.
 - **A host SFTP cannot open says what it means and what to do**
   (`Places.trouble`): one never connected to, or one taking only a password,
   offers Open in Terminal — a tab can answer what SFTP's `BatchMode=yes`
-  cannot — and every failure offers Try Again. Open in Terminal reaches the
-  host window as a `TerminalRequest`, which one window takes.
+  cannot — and every failure offers Edit Host…, as a terminal tab that could
+  not connect does, and Try Again, which reads the host from the list afresh.
+  Only Try Again was there, under advice to check the host's user and key.
+  Both reach the host window as a `HostRequest`, which one window takes.
 - **A transfer says which way it goes and where it lands**
   (`TransferQueue.route`): labels the engine's reports do not carry, which
   `Transfer.labelled` keeps across them. A failed one is retried in its own

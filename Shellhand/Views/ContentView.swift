@@ -289,16 +289,20 @@ struct ContentView: View {
         .onChange(of: sessions.selected) { _, now in
             pane = Panes.following(selected: now, front: pane)
         }
-        // SFTP's Open in Terminal: a terminal tab is where a new key's
-        // question and a password can be answered, which SFTP cannot do.
-        // Taken by one host window only.
-        .onReceive(NotificationCenter.default.publisher(for: .shellhandOpenTerminal)) { note in
-            guard let request = note.object as? TerminalRequest, !request.taken,
+        // SFTP's Open in Terminal and Edit Host…: a terminal tab is where a
+        // new key's question and a password can be answered, which SFTP
+        // cannot do, and the editor where an address, a user or a key is put
+        // right. Taken by one host window only.
+        .onReceive(NotificationCenter.default.publisher(for: .shellhandHostRequest)) { note in
+            guard let request = note.object as? HostRequest, !request.taken,
                   let host = store.snapshot.hosts.first(where: { $0.id == request.hostID })
             else { return }
             request.taken = true
             HostsWindow.front()
-            connect(host)
+            switch request.wanted {
+            case .terminal: connect(host)
+            case .editor: editing = host
+            }
         }
         // Closed on the way into SFTP and put back on the way out.
         //
