@@ -111,11 +111,23 @@ nonisolated struct FromAbove: Sendable, Equatable {
     init() {}
 
     init(of group: Group, among groups: [Group]) {
-        let byID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
         // The group's own id seeds the guard: a group that is somehow its own
         // ancestor stops the walk rather than hanging it.
-        var seen: Set<String> = [group.id]
-        var id = group.parentId
+        self.init(from: group.parentId, seen: [group.id], among: groups)
+    }
+
+    /// What a host would take from the groups it is filed under if it set
+    /// nothing itself, its own group first. What the host resolves to has
+    /// its own choices in it, so an inherit row read off that names the
+    /// host's own: chosen, the agent's read "From above — carried".
+    init(of host: Host, among groups: [Group]) {
+        self.init(from: host.groupId, seen: [], among: groups)
+    }
+
+    private init(from first: String, seen: Set<String>, among groups: [Group]) {
+        let byID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
+        var seen = seen
+        var id = first
         while !id.isEmpty, !seen.contains(id) {
             seen.insert(id)
             guard let parent = byID[id] else { break }

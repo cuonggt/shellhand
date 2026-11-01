@@ -311,8 +311,7 @@ struct GroupEditorSheet: View {
 
     /// What the groups above this one say about the agent.
     private func inheritedAgent(_ above: FromAbove) -> String {
-        guard let says = above.forwardAgent else { return "Not carried (nothing says)" }
-        return "From \(above.forwardAgentFrom) — \(says ? "carried" : "not carried")"
+        Effective.inheritedAgent(above.forwardAgent, from: above.forwardAgentFrom)
     }
 
     /// Whether what is wrong is on the Advanced tab. The ssh options are the

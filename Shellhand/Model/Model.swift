@@ -155,13 +155,30 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
         return Self.inherited(theme, from: themeFrom.isEmpty ? "above" : themeFrom)
     }
 
-    /// An inherited palette as an inherit row names it: the palette, then
-    /// where it comes from — "Gruvbox Dark from Production", as "deploy from
-    /// Production" reads everywhere else. It read "From Production — Gruvbox
-    /// Dark", source first, and the group inspector "As in Settings" where
-    /// the editors said "From Settings".
-    static func inherited(_ palette: String, from source: String) -> String {
-        "\(palette) from \(source)"
+    /// An inherited value as an inherit row names it: the value, then where
+    /// it comes from — "Gruvbox Dark from Production", as "deploy from
+    /// Production" reads everywhere else. A palette read "From Production —
+    /// Gruvbox Dark", source first, and the group inspector "As in Settings"
+    /// where the editors said "From Settings".
+    static func inherited(_ value: String, from source: String) -> String {
+        "\(value) from \(source)"
+    }
+
+    /// Agent forwarding as the inspectors show it: "Carried" or "Not
+    /// carried", with the group that said so where one did, and where
+    /// nothing says either way, what ssh does when it is told nothing.
+    static func agent(_ says: Bool?, from source: String) -> (value: String, from: String) {
+        guard let says else { return ("Not carried by default", "") }
+        return (says ? "Carried" : "Not carried", source)
+    }
+
+    /// The same as an inherit row names it — "Carried from Production". It
+    /// read "From Production — carried", source first, and "Not carried
+    /// (nothing says)" where the group inspector said "—" and the host
+    /// inspector had no row for it.
+    static func inheritedAgent(_ says: Bool?, from source: String) -> String {
+        let (value, from) = agent(says, from: source)
+        return from.isEmpty ? value : inherited(value, from: from)
     }
 
     /// What to show as the jump host, and what supplied it.

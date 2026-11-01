@@ -46,6 +46,15 @@ struct HostDetailView: View {
         }
     }
 
+    /// Its own choice, what reaches it from a group with the group's name, or
+    /// ssh's default — in the editors' words, `Effective.agent`. A group's
+    /// inspector had this row and a host's did not.
+    private var agent: ValueRow {
+        let (value, from) = Effective.agent(
+            host.effective.forwardAgent, from: host.effective.forwardAgentFrom)
+        return ValueRow("Agent forwarding", value, from: from)
+    }
+
     /// The host as previewed: its own palette left out, so the preview's
     /// says what inheriting would give. With it in, a host with a palette of
     /// its own had its "inherit" row named after that same palette.
@@ -120,6 +129,7 @@ struct HostDetailView: View {
                         ValueRow("Proxy command", host.effective.configProxyCommand,
                                  from: "your ssh config")
                     }
+                    agent
                     colours
                 }
                 .font(.callout)

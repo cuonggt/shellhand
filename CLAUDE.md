@@ -1062,7 +1062,14 @@ credentials, which is most of it.
   "user from Production" — where it said nothing at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",
   "System from Settings" (`Effective.inherited`) — where it said "From
-  Production — Gruvbox Dark", and the group inspector "As in Settings". **An
+  Production — Gruvbox Dark", and the group inspector "As in Settings". So
+  does agent forwarding — "Carried from Production", or "Not carried by
+  default" where nothing says (`Effective.agent`) — in both editors and both
+  inspectors, where it read "From Production — carried", "Not carried
+  (nothing says)" beside the group inspector's "—", and the host inspector
+  had no row for it. A host's inherit rows are read off its groups
+  (`FromAbove(of: host)`), not off what it resolves to, which has its own
+  choice in it. **An
   example never names something in the list** (`HostEditorSheet
   .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
   Jump host, with bastion filed there, read as Production going through it,

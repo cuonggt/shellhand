@@ -215,6 +215,44 @@ nonisolated struct FromAboveTests {
         #expect(FromAbove(of: groups[2], among: groups).forwardAgent == nil)
     }
 
+    /// A host's inherit rows need what its groups give with its own choices
+    /// left out: read off what the host resolves to, one that carried the
+    /// agent itself had its inherit row say "From above — carried".
+    @Test("a host takes from its own group first, and never from itself")
+    func ofAHost() {
+        var carried = groups
+        carried[1].forwardAgent = false
+        var host = Host(id: "1", name: "fra-1", addr: "10.0.0.1", groupId: "f")
+        host.forwardAgent = true
+        let above = FromAbove(of: host, among: carried)
+        #expect(above.forwardAgent == false)
+        #expect(above.forwardAgentFrom == "EU")
+        #expect(above.proxyJump == "bastion-eu")
+        #expect(above.user == "ubuntu")
+        // Filed in EU itself, EU's own is what it takes.
+        host.groupId = "e"
+        #expect(FromAbove(of: host, among: carried).forwardAgentFrom == "EU")
+        // Filed nowhere, nothing.
+        host.groupId = ""
+        #expect(FromAbove(of: host, among: carried) == FromAbove())
+    }
+
+    /// Value first, as every inherited value reads: it said "From
+    /// Production — carried", and "Not carried (nothing says)" in the
+    /// editors where the group inspector said "—".
+    @Test("the agent reads value first, and nothing said as ssh's default")
+    func agentWording() {
+        #expect(Effective.inheritedAgent(true, from: "Production") == "Carried from Production")
+        #expect(Effective.inheritedAgent(false, from: "EU") == "Not carried from EU")
+        #expect(Effective.inheritedAgent(nil, from: "") == "Not carried by default")
+        // The inspectors' row: the value, and where from beside it.
+        #expect(Effective.agent(true, from: "Production").value == "Carried")
+        #expect(Effective.agent(true, from: "Production").from == "Production")
+        #expect(Effective.agent(nil, from: "").value == "Not carried by default")
+        // A host's or a group's own choice came from nowhere.
+        #expect(Effective.agent(false, from: "").from.isEmpty)
+    }
+
     @Test("a group that does not exist yet still takes what its parent gives")
     func newOne() {
         let fresh = Group(name: "Berlin", parentId: "e")

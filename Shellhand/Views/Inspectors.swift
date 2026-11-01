@@ -83,13 +83,14 @@ struct GroupInspector: View {
         own.isEmpty ? ValueRow(label, above, from: from) : ValueRow(label, own)
     }
 
+    /// Its own choice, or what reaches it from above with where from, in the
+    /// editors' words: nothing said read "—" here and "Not carried (nothing
+    /// says)" there.
     private func agent(_ above: FromAbove) -> ValueRow {
-        if let says = group.forwardAgent {
-            return ValueRow("Agent forwarding", says ? "Carried" : "Not carried")
-        }
-        guard let says = above.forwardAgent else { return ValueRow("Agent forwarding", "") }
-        return ValueRow("Agent forwarding", says ? "Carried" : "Not carried",
-                        from: above.forwardAgentFrom)
+        let (value, from) = group.forwardAgent != nil
+            ? Effective.agent(group.forwardAgent, from: "")
+            : Effective.agent(above.forwardAgent, from: above.forwardAgentFrom)
+        return ValueRow("Agent forwarding", value, from: from)
     }
 
     private func colours(_ above: FromAbove) -> ValueRow {

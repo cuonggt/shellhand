@@ -548,12 +548,11 @@ struct HostEditorSheet: View {
     }
 
     /// What the groups above say about the agent, for the "leave it to them"
-    /// row — so choosing it is a decision rather than a shrug.
+    /// row — so choosing it is a decision rather than a shrug. Read off the
+    /// groups, not the preview, which has this host's own choice in it.
     private var inheritedAgent: String {
-        guard let says = preview.effective.forwardAgent else { return "Not carried (nothing says)" }
-        let from = preview.effective.forwardAgentFrom
-        let what = says ? "carried" : "not carried"
-        return from.isEmpty ? "From above — \(what)" : "From \(from) — \(what)"
+        let above = FromAbove(of: host, among: store.snapshot.groups)
+        return Effective.inheritedAgent(above.forwardAgent, from: above.forwardAgentFrom)
     }
 
     /// What the terminal would come up in if this host chose nothing: the
