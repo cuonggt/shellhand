@@ -170,6 +170,18 @@ nonisolated struct SSHConfigFileTests {
         #expect(hosts.allSatisfy { $0.port == 2222 })
     }
 
+    /// The import's File field offers "~/.ssh/config" as its example, and a
+    /// path typed so found no file: nothing that reads one expands a `~`.
+    /// Strings only — nothing under the home is read.
+    @Test("a path as typed is settled: a ~ expanded, and nothing the config in use")
+    func settled() {
+        let home = NSHomeDirectory()
+        #expect(SSHConfigFile.settled("~/.ssh/config") == home + "/.ssh/config")
+        #expect(SSHConfigFile.settled("~") == home)
+        #expect(SSHConfigFile.settled("/etc/ssh/ssh_config") == "/etc/ssh/ssh_config")
+        #expect(SSHConfigFile.settled("") == SSHConfigFile.pathInUse)
+    }
+
     @Test("a missing file is no hosts rather than a failure")
     func missing() throws {
         #expect(SSHConfigFile.read(path: "/nowhere/ssh/config").hosts.isEmpty)

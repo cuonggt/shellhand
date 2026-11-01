@@ -187,8 +187,7 @@ actor Core {
     func importSSHConfig(
         db: String, path: String = "", group: String = "", dryRun: Bool
     ) throws -> MergeResult {
-        let document = SSHConfigFile.read(
-            path: path.isEmpty ? SSHConfigFile.pathInUse : path)
+        let document = SSHConfigFile.read(path: SSHConfigFile.settled(path))
         return try apply(document, newHostsIn: group, db: db, dryRun: dryRun)
     }
 
@@ -222,7 +221,7 @@ actor Core {
     /// none, which are two answers: both were nil, so a config of `Host *`
     /// alone was said not to be there.
     nonisolated func sshConfigHosts(path: String = "") -> Int? {
-        let path = path.isEmpty ? SSHConfigFile.pathInUse : path
+        let path = SSHConfigFile.settled(path)
         guard FileManager.default.fileExists(atPath: path) else { return nil }
         return SSHConfigFile.read(path: path).hosts.count
     }

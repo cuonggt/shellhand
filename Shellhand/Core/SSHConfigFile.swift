@@ -32,6 +32,14 @@ nonisolated enum SSHConfigFile {
         TestRun.active ? TestRun.sshConfig : defaultPath
     }
 
+    /// A path as somebody typed it, settled before anything reads it:
+    /// nothing is the config in use, and a `~` is expanded, which nothing
+    /// that reads a file does by itself. The import's File field offers
+    /// "~/.ssh/config" as its example, and typed so it found no file.
+    static func settled(_ path: String) -> String {
+        path.isEmpty ? pathInUse : NSString(string: path).expandingTildeInPath
+    }
+
     /// The names this config gives machines.
     ///
     /// A host whose own name matches one of these is either reached by that

@@ -1229,7 +1229,9 @@ credentials, which is most of it.
   (`ImportPlan.configSays`) — "No file at ~/.ssh/config", or what it names
   — on the welcome and once in the sheet, under its field: the three said
   it three ways, two of them at once, and a file naming no machine
-  (`Core.sshConfigHosts` gives nought, not nil) was said to be no file.
+  (`Core.sshConfigHosts` gives nought, not nil) was said to be no file. A
+  path typed there is settled before it is read (`SSHConfigFile.settled`),
+  its `~` expanded: the field's own example, typed, found no file.
 - **The group typed into an import files only the hosts it adds**
   (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
   was filed, and one the file files goes where the file says. The group was
