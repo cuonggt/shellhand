@@ -598,7 +598,12 @@ credentials, which is most of it.
   and Show Beside widened the window past the screen. The sides are laid out
   in the room the window has, by `Panes.frontWidth`, with a line to drag.
   ⌘D's item reads Hide Beside while a tab is beside (`Panes.splitTitle`),
-  since that is when it closes the split.
+  since that is when it closes the split. **The hosts are never a side**:
+  with them in front the split waits unshown (`Panes.shownBeside`), its tab
+  not outlined and ⌘D not reading Hide Beside, and comes back with the next
+  session picked, while the tab that was beside comes in front alone. It was
+  outlined over the host list alone, and picking it put the list beside the
+  terminal.
   → [the strip's selection](docs/notes/window.md#the-strips-selection)
 - **The middle column has one minimum, whatever it shows**
   (`Panes.paneMinimum`, a frame on `DetailView`). Left to its content it

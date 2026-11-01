@@ -48,11 +48,28 @@ nonisolated struct PanesTests {
         #expect(after.beside == two)
     }
 
-    @Test("the hosts trade places like any other tab")
-    func tradesWithHosts() {
-        let after = Panes.picking(.hosts, front: one, beside: .hosts)
-        #expect(after.front == .hosts)
-        #expect(after.beside == one)
+    /// The hosts are never a side, as ⌘D never offers them: the trade put
+    /// the host list beside the terminal.
+    @Test("the tab that was beside comes in front alone from the hosts")
+    func hostsAreNeverBeside() {
+        let after = Panes.picking(two, front: .hosts, beside: two)
+        #expect(after.front == two)
+        #expect(after.beside == nil)
+    }
+
+    /// With the hosts in front nothing is beside on screen, so nothing says
+    /// so; the split comes back with the next session picked. Its tab was
+    /// outlined, and ⌘D read Hide Beside, over the host list alone.
+    @Test("the split waits behind the hosts, unshown, and comes back")
+    func splitWaitsBehindHosts() {
+        let away = Panes.picking(.hosts, front: one, beside: two)
+        #expect(away.front == .hosts)
+        #expect(away.beside == two)
+        #expect(Panes.shownBeside(front: away.front, beside: away.beside) == nil)
+        let back = Panes.picking(one, front: away.front, beside: away.beside)
+        #expect(back.front == one)
+        #expect(back.beside == two)
+        #expect(Panes.shownBeside(front: back.front, beside: back.beside) == two)
     }
 
     // MARK: the split

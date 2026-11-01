@@ -20,10 +20,23 @@ nonisolated enum Panes {
     /// places rather than drawing the same thing twice. A terminal is one
     /// view and can only be in one place, so without the trade the second
     /// pane drew nothing at all.
+    ///
+    /// **The hosts are never a side**, as `splitting` never offers them: with
+    /// the hosts in front the tab that was beside comes in front alone. The
+    /// trade put the host list beside the terminal.
     static func picking(
         _ tab: PaneTab, front: PaneTab, beside: PaneTab?
     ) -> (front: PaneTab, beside: PaneTab?) {
-        (front: tab, beside: beside == tab ? front : beside)
+        guard beside == tab else { return (front: tab, beside: beside) }
+        return (front: tab, beside: front == .hosts ? nil : front)
+    }
+
+    /// What is beside the tab in front **on screen**: nothing while the
+    /// hosts are in front, which are drawn alone. The split waits behind
+    /// them, to come back with the next session picked, but its tab was
+    /// outlined and ⌘D read Hide Beside over a host list with nothing beside.
+    static func shownBeside(front: PaneTab, beside: PaneTab?) -> PaneTab? {
+        front == .hosts ? nil : beside
     }
 
     /// Reconnecting: the new session goes wherever the one it replaces was,

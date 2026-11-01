@@ -136,7 +136,9 @@ struct ContentView: View {
                 store: store, sessions: sessions,
                 group: browsedGroup, selection: selection,
                 actions: actions,
-                pane: pane, beside: beside,
+                // What is beside on screen, which the strip outlines: the
+                // split waits unshown while the hosts are in front.
+                pane: pane, beside: Panes.shownBeside(front: pane, beside: beside),
                 onConnect: connect, onPickTab: pick(tab:),
                 tabActions: tabActions,
                 onEdit: { editing = $0 },
@@ -603,7 +605,7 @@ struct ContentView: View {
             canStopConnecting: frontSession?.status == .connecting,
             canReconnect: frontSession?.host != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
-            besideOpen: beside != nil,
+            besideOpen: Panes.shownBeside(front: pane, beside: beside) != nil,
             inspectorShown: showingInspector,
             sidebarShown: columns != .detailOnly,
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
