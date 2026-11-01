@@ -560,7 +560,15 @@ credentials, which is most of it.
   things has earned a longer label. **Inside is where a group sits**, there,
   in a row's menu and in the group editor's row; what a group holds is its
   Contents in the inspector and its Groups in the pane, where both said
-  Inside, beside the editor's row meaning the opposite.
+  Inside, beside the editor's row meaning the opposite. **The host editor's
+  New group… lands where the host was filed** and its item says so — "New
+  group inside Production / US…", as File's does, and it stays the menu's
+  value once chosen — so the host keeps what that group passes down; its
+  preview and inherit rows read the host filed there. It went to the top of
+  the list unsaid, taking the host's inherited user, key and jump host with
+  it; a caption under the name said where, and cost the form a line it did
+  not have at the window's default size. Its missing name is said quietly,
+  as New Group says it, where on a host being edited it was a warning.
   → [New Group](docs/notes/window.md#new-group)
 - **A menu on a row acts on that row**, handed it rather than reading the
   selection: a group's New Host… is `newHostIn` that group, while ⌘N in File

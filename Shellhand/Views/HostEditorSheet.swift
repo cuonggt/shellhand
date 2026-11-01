@@ -29,6 +29,11 @@ struct HostEditorSheet: View {
     /// The name for a group being made here. Until now groups could only
     /// arrive by import, so a host could not be filed anywhere new.
     @State private var newGroupName = ""
+    /// Where that group goes: where the host was filed when New group… was
+    /// chosen, so the host keeps what that group gives it. It went to the
+    /// top of the list unsaid, the host's inherited user, key and jump host
+    /// going with the move.
+    @State private var newGroupParent = ""
     @State private var optionsText: String
     @State private var tab: Tab = .general
     /// How tall the command along the bottom is, whole.
@@ -157,6 +162,14 @@ struct HostEditorSheet: View {
     private static let newGroup = "\u{1}new-group"
     private var makingGroup: Bool { host.groupId == Self.newGroup }
 
+    /// The host as it would be filed: a group still to be made passes
+    /// nothing down of its own, so what reaches the host is its parent's.
+    private var filed: Host {
+        var filed = host
+        if makingGroup { filed.groupId = newGroupParent }
+        return filed
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -211,7 +224,7 @@ struct HostEditorSheet: View {
         .task(id: previewKey) {
             // Its own palette left out, so what the preview inherits is what
             // inheriting would give — `HostDetailView.inheriting`.
-            var asTyped = HostDetailView.inheriting(host)
+            var asTyped = HostDetailView.inheriting(filed)
             asTyped.sshOptions = SSHOptionsField.parse(optionsText)
             preview = await store.preview(of: asTyped)
         }
@@ -308,9 +321,12 @@ struct HostEditorSheet: View {
                             Text(store.path(of: group)).tag(group.id)
                         }
                         Divider()
-                        Text("New group…").tag(Self.newGroup)
+                        Text(newGroupTitle).tag(Self.newGroup)
                     }
                     .labelsHidden()
+                    .onChange(of: host.groupId) { was, now in
+                        if now == Self.newGroup, was != Self.newGroup { newGroupParent = was }
+                    }
                 }
                 if makingGroup {
                     LabeledContent("Called") {
@@ -443,8 +459,7 @@ struct HostEditorSheet: View {
 
     /// Whether what is wrong is the ssh options, which live on the other tab.
     private var optionsProblem: Bool {
-        var asSaved = host
-        if makingGroup { asSaved.groupId = "" }
+        var asSaved = filed
         asSaved.sshOptions = SSHOptionsField.parse(optionsText)
         guard Validation.problem(with: asSaved, among: store.snapshot.hosts) != nil
         else { return false }
@@ -493,9 +508,9 @@ struct HostEditorSheet: View {
             // nobody has typed into, where it used to be left out: Add sat
             // greyed with no reason given, while New Group gave one.
             if let problem {
-                Label(problem, systemImage: isUntouched ? "info.circle" : "exclamationmark.triangle")
+                Label(problem, systemImage: problemIsANeed ? "info.circle" : "exclamationmark.triangle")
                     .font(.caption)
-                    .foregroundStyle(isUntouched ? Color.secondary : Color.orange)
+                    .foregroundStyle(problemIsANeed ? Color.secondary : Color.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             // A rename takes the jump fields that name the host along, which
@@ -563,7 +578,7 @@ struct HostEditorSheet: View {
     /// changes — the group, and the fields that stop a value
     /// being inherited at all.
     private var previewKey: String {
-        [host.groupId, host.user, host.identity, host.proxyJump,
+        [host.groupId, newGroupParent, host.user, host.identity, host.proxyJump,
          host.addr, String(host.port), optionsText,
          host.forwardAgent.map(String.init) ?? "-"].joined(separator: "\u{2}")
     }
@@ -575,17 +590,36 @@ struct HostEditorSheet: View {
         isNew && host.name.isEmpty && host.addr.isEmpty
     }
 
+    /// Whether what stops a save is only a need not met yet, said quietly: a
+    /// host nobody has typed into, or a group asked for and not yet named.
+    /// The second was a warning on a host being edited, where New Group says
+    /// the same words quietly.
+    private var problemIsANeed: Bool {
+        isUntouched || (makingGroup && newGroupName.trimmingCharacters(in: .whitespaces).isEmpty)
+    }
+
+    /// The Group menu's last item, saying where a group made there lands —
+    /// where the host is filed — as File's New Group Inside Production…
+    /// says where its own does; chosen, the menu goes on saying it. A
+    /// caption under the name said it too, and cost the form a line it did
+    /// not have at the window's default size.
+    private var newGroupTitle: String {
+        guard let parent = store.group(makingGroup ? newGroupParent : host.groupId)
+        else { return "New group…" }
+        return "New group inside \(store.path(of: parent))…"
+    }
+
     /// What stops this being saved, in one line. The rules are the engine's:
     /// they are about the host, not about this dialog.
     private var problem: String? {
         if makingGroup {
             if let said = Validation.problem(
-                with: Group(name: newGroupName), among: store.snapshot.groups) {
+                with: Group(name: newGroupName, parentId: newGroupParent),
+                among: store.snapshot.groups) {
                 return said
             }
         }
-        var asSaved = host
-        if makingGroup { asSaved.groupId = "" }
+        var asSaved = filed
         asSaved.sshOptions = SSHOptionsField.parse(optionsText)
         return Validation.problem(with: asSaved, among: store.snapshot.hosts)
     }
@@ -594,7 +628,7 @@ struct HostEditorSheet: View {
     /// row — so choosing it is a decision rather than a shrug. Read off the
     /// groups, not the preview, which has this host's own choice in it.
     private var inheritedAgent: String {
-        let above = FromAbove(of: host, among: store.snapshot.groups)
+        let above = FromAbove(of: filed, among: store.snapshot.groups)
         return Effective.inheritedAgent(above.forwardAgent, from: above.forwardAgentFrom)
     }
 
@@ -613,7 +647,8 @@ struct HostEditorSheet: View {
         Task {
             // The group first, so the host has somewhere to be filed.
             if makingGroup {
-                guard let group = await store.save(Group(name: newGroupName)) else {
+                guard let group = await store.save(
+                    Group(name: newGroupName, parentId: newGroupParent)) else {
                     return refused()
                 }
                 host.groupId = group.id
