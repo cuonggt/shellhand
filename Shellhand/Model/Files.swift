@@ -53,6 +53,11 @@ final class FilePlace {
     // opening a session to find out the answer.
     var isLocal: Bool { Places.isLocal(chosen: chosen, onAHost: host != nil) }
     var title: String { Places.title(chosen: chosen, host: host?.name) }
+    /// The folder this side is showing, as a sentence names it: from `~` on
+    /// this Mac, as a transfer's heading writes it, and whole on a host.
+    var folder: String {
+        isLocal ? Places.abbreviated(listing.path, home: home) : listing.path
+    }
 
     var entries: [RemoteEntry] { Places.shown(listing.entries, hidden: showHidden) }
 

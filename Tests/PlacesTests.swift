@@ -188,6 +188,15 @@ nonisolated struct PlacesTests {
         #expect(two.message == "They are deleted on web. This cannot be undone.")
     }
 
+    /// ⇧⌘N acts on whichever side last had the keyboard, and the question
+    /// said only "New Folder".
+    @Test("New Folder says where the folder goes, as Delete names its host")
+    func newFolderPlace() {
+        #expect(Places.newFolderPlace(in: "~/Projects", on: "This Mac")
+            == "It goes in ~/Projects on This Mac.")
+        #expect(Places.newFolderPlace(in: "/var/www", on: "web") == "It goes in /var/www on web.")
+    }
+
     // MARK: a host it cannot reach
 
     /// SFTP's ssh runs with `BatchMode=yes`, so a host whose key it has never

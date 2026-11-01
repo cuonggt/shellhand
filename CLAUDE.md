@@ -710,7 +710,10 @@ credentials, which is most of it.
 - **New Folder's Create and Rename's button grey for a name they would
   refuse** (`Places.usableName`, which `FilePlace`'s own guards use): empty,
   a path, `.` or `..`, or the name already held. They took one, closed the
-  question and did nothing.
+  question and did nothing. **New Folder says where the folder goes**
+  (`Places.newFolderPlace`, `FilePlace.folder`) — "It goes in ~/Projects on
+  This Mac", as Delete names its host: ⇧⌘N acts on whichever side last had
+  the keyboard, and the question said only "New Folder".
 - **There are no secondary `Window` scenes.** If one comes back: `openWindow`
   works only when a live view asks, and the first scene in `body` opens at
   launch, so another needs `.defaultLaunchBehavior(.suppressed)`.

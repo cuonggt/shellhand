@@ -148,6 +148,8 @@ private struct PlacePane: View {
             Button("Cancel", role: .cancel) {}
             Button("Create") { Task { await place.makeDirectory(named: name) } }
                 .disabled(!Places.usableName(name))
+        } message: {
+            Text(Places.newFolderPlace(in: place.folder, on: place.title))
         }
     }
 

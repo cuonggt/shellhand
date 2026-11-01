@@ -100,6 +100,14 @@ nonisolated enum Places {
             confirm: "Delete")
     }
 
+    /// Where New Folder's folder goes, said under its question as Delete's
+    /// names its host: ⇧⌘N acts on whichever side last had the keyboard,
+    /// and the question said only "New Folder", with nothing to tell This Mac
+    /// from the host.
+    static func newFolderPlace(in folder: String, on place: String) -> String {
+        "It goes in \(folder) on \(place)."
+    }
+
     /// Which of a listing's entries a pane shows. Dotfiles are hidden by
     /// default, as a file manager shows a home directory without forty of
     /// them in front of what you came for.
