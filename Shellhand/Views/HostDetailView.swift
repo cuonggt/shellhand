@@ -22,6 +22,8 @@ struct HostDetailView: View {
     let onConnect: (Host) -> Void
     /// Bringing one of the sessions in "Open now" to the front.
     var onShowSession: (UUID) -> Void = { _ in }
+    /// The session in front, which Open now says rather than offers to show.
+    var inFront: UUID? = nil
     let onEdit: (Host) -> Void
 
     /// The palette, changed from here rather than through the editor.
@@ -232,29 +234,41 @@ struct HostDetailView: View {
             Text(openHere.count == 1 ? "Open now" : "Open now (\(openHere.count))")
                 .font(.headline)
             ForEach(openHere, id: \.id) { session in
-                Button {
-                    onShowSession(session.id)
-                } label: {
-                    HStack(spacing: 8) {
-                        // The strip's mark for the tab: a terminal icon on
-                        // every row said a tab that never connected was as
-                        // open as a live one.
-                        StatusMark(status: session.status)
-                        Text(title(of: session))
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        Spacer()
-                        Text("Show").font(.caption).foregroundStyle(.secondary)
+                // The tab in front is said, not offered: its Show did nothing.
+                if session.id == inFront {
+                    openRow(session, saying: "In front")
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(
+                            "\(title(of: session)), \(session.status.spoken), in front")
+                } else {
+                    Button {
+                        onShowSession(session.id)
+                    } label: {
+                        openRow(session, saying: "Show")
                     }
-                    .padding(.vertical, 5)
-                    .padding(.horizontal, 8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        "Show the session \(title(of: session)), \(session.status.spoken)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Show the session \(title(of: session)), \(session.status.spoken)")
             }
         }
+    }
+
+    private func openRow(_ session: TerminalSession, saying what: String) -> some View {
+        HStack(spacing: 8) {
+            // The strip's mark for the tab: a terminal icon on every row said
+            // a tab that never connected was as open as a live one.
+            StatusMark(status: session.status)
+            Text(title(of: session))
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer()
+            Text(what).font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 5)
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
     }
 
     // MARK: what each section is made of

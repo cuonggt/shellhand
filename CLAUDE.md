@@ -253,7 +253,8 @@ credentials, which is most of it.
   ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
   them. **A host's Open now marks each of its tabs as the strip does**
   (`StatusMark`): every row wore one terminal icon, so a tab that never
-  connected was listed as open as a live one.
+  connected was listed as open as a live one. The tab in front says In
+  front, where its Show did nothing.
 - **A destination has one spelling, `Host.destinationLine`**, which is
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says

@@ -490,6 +490,7 @@ struct ContentView: View {
                     store: store, host: host, sessions: sessions,
                     onConnect: connect,
                     onShowSession: { pick(tab: .session($0)) },
+                    inFront: frontSession?.id,
                     onEdit: { editing = $0 })
             } else {
                 nothingSelected
