@@ -163,16 +163,23 @@ struct UnsavedHostInspector: View {
             }
             Button("Save as Host…") { onSave(Self.savable(host)) }
                 .buttonStyle(.borderedProminent)
+            // Written as a listed host's are: the address with its port, then
+            // the user. It gave the port a row of its own after the user.
             Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
-                ValueRow("Address", host.addr)
+                ValueRow("Address", Self.addressLine(of: host))
                 ValueRow("User", host.user)
-                ValueRow("Port", host.port == 0 ? "" : String(host.port))
             }
             .font(.callout)
             Spacer(minLength: 0)
         }
         .padding(24)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The address with its port unless 22, spelled as a listed host's
+    /// (`Host.addressLine`), from what was typed.
+    nonisolated static func addressLine(of host: Host) -> String {
+        QuickConnect.Destination(host: host.addr, port: host.port == 22 ? 0 : host.port).spelled
     }
 
     /// Spelled from what was typed: a machine from ⌘K has nothing above it

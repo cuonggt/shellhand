@@ -263,6 +263,18 @@ nonisolated struct PanesTests {
         #expect(saved.port == 2222)
     }
 
+    /// Its inspector writes the address as a listed host's does, the port in
+    /// it unless 22: it said "127.0.0.1" and gave the port a row of its own.
+    @Test("a machine from ⌘K has its address written as a listed host's")
+    func typedAddressLine() {
+        let typed = Shellhand.Host(name: "root@127.0.0.1:1", addr: "127.0.0.1", port: 1, user: "root")
+        #expect(UnsavedHostInspector.addressLine(of: typed) == "127.0.0.1:1")
+        let plain = Shellhand.Host(name: "web", addr: "web.example.com", port: 22)
+        #expect(UnsavedHostInspector.addressLine(of: plain) == "web.example.com")
+        let six = Shellhand.Host(name: "six", addr: "2001:db8::5", port: 2222)
+        #expect(UnsavedHostInspector.addressLine(of: six) == "[2001:db8::5]:2222")
+    }
+
     @Test("a local shell, a ⌘K machine or a deleted host leaves the Host menu nothing")
     func subjectWithNothingListed() {
         let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")

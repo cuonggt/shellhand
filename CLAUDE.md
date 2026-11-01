@@ -259,7 +259,9 @@ credentials, which is most of it.
   (`FromAbove`) — its ssh options too, and every group's above with whose
   they are, since they add up (`FromAbove.sshOptions`), where they showed
   nowhere but the editor — and what is inside; a local shell; or a machine typed into
-  ⌘K, with Save as Host…. It said "Nothing selected" for the last three, so a
+  ⌘K, with Save as Host…, its address written as a listed host's
+  (`UnsavedHostInspector.addressLine`), port and all — it gave the port a row
+  of its own. It said "Nothing selected" for the last three, so a
   ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
   them. **A host's Open now marks each of its tabs as the strip does**
   (`StatusMark`): every row wore one terminal icon, so a tab that never
