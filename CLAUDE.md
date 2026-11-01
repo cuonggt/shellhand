@@ -251,7 +251,9 @@ credentials, which is most of it.
   (`FromAbove`) and what is inside; a local shell; or a machine typed into
   ⌘K, with Save as Host…. It said "Nothing selected" for the last three, so a
   ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
-  them.
+  them. **A host's Open now marks each of its tabs as the strip does**
+  (`StatusMark`): every row wore one terminal icon, so a tab that never
+  connected was listed as open as a live one.
 - **A destination has one spelling, `Host.destinationLine`**, which is
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says

@@ -236,7 +236,10 @@ struct HostDetailView: View {
                     onShowSession(session.id)
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "terminal")
+                        // The strip's mark for the tab: a terminal icon on
+                        // every row said a tab that never connected was as
+                        // open as a live one.
+                        StatusMark(status: session.status)
                         Text(title(of: session))
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -249,7 +252,7 @@ struct HostDetailView: View {
                     .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Show the session \(title(of: session))")
+                .accessibilityLabel("Show the session \(title(of: session)), \(session.status.spoken)")
             }
         }
     }

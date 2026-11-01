@@ -256,8 +256,9 @@ private struct TabButton: View {
 /// A tab's state as a shape: a spinner while connecting, the green dot once
 /// through, and a symbol for everything else — `SessionStatus.symbol`.
 /// Never a colour alone, and in a box of one size, so the name beside it
-/// does not shift as the state moves on.
-private struct StatusMark: View {
+/// does not shift as the state moves on. The strip's, and the inspector's
+/// Open now's, which drew every tab alike, live or never connected.
+struct StatusMark: View {
     let status: SessionStatus
 
     var body: some View {
