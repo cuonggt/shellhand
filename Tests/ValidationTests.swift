@@ -52,16 +52,27 @@ nonisolated struct ValidationTests {
             among: existing) == nil)
     }
 
-    /// The editor's example for an empty jump field is never the host's own
-    /// name, or bastion's own editor suggests the loop the rule above refuses.
-    @Test("the jump field's example is never the host itself")
+    /// The editors' example for an empty jump field is never a host in the
+    /// list: bastion's own editor suggested the loop the rule above refuses,
+    /// and Production's group editor, with bastion filed in it, read as
+    /// Production going through bastion.
+    @Test("the jump field's example is never a host in the list")
     func jumpExample() {
-        #expect(HostEditorSheet.jumpExample(for: "web") == "bastion")
-        #expect(HostEditorSheet.jumpExample(for: " Bastion ") == "gateway")
+        #expect(HostEditorSheet.jumpExample(avoiding: ["web"]) == "bastion")
+        #expect(HostEditorSheet.jumpExample(avoiding: ["web", " Bastion "]) == "gateway")
+        #expect(HostEditorSheet.jumpExample(avoiding: ["bastion", "gateway"]) == "jumpbox")
         #expect(Validation.problem(
             with: Host(id: "c", name: "bastion", addr: "10.0.0.9",
-                       proxyJump: HostEditorSheet.jumpExample(for: "bastion")),
+                       proxyJump: HostEditorSheet.jumpExample(avoiding: ["bastion"])),
             among: existing) == nil)
+    }
+
+    /// New Group Inside Production offered "Production" for the name, right
+    /// above "Inside: Production", where it read as the name already chosen.
+    @Test("the group name's example is never a group in the list")
+    func groupNameExample() {
+        #expect(GroupEditorSheet.nameExample(avoiding: []) == "Production")
+        #expect(GroupEditorSheet.nameExample(avoiding: ["production", "Staging"]) == "Lab")
     }
 
     @Test("a group needs a name of its own, and cannot be inside itself")

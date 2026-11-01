@@ -44,6 +44,15 @@ struct GroupEditorSheet: View {
 
     private var isNew: Bool { group.id.isEmpty }
 
+    /// The name field's example, never a group already in the list: in New
+    /// Group Inside Production, "Production" sat right above "Inside:
+    /// Production" and read as the name already chosen.
+    nonisolated static func nameExample(avoiding names: [String]) -> String {
+        let taken = Set(names.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
+        return ["Production", "Staging", "Lab", "Home"].first { !taken.contains($0.lowercased()) }
+            ?? "Servers"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -137,7 +146,8 @@ struct GroupEditorSheet: View {
             // are already looking at.
             Section {
                 LabeledContent {
-                    TextField("", text: $group.name, prompt: Text("Production"))
+                    TextField("", text: $group.name, prompt: Text(
+                        Self.nameExample(avoiding: store.snapshot.groups.map(\.name))))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
@@ -162,7 +172,9 @@ struct GroupEditorSheet: View {
                 row("Key", value: above.identity, from: above.identityFrom,
                     example: "~/.ssh/id_ed25519", text: $group.identity)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
-                    example: "bastion", text: $group.proxyJump)
+                    example: HostEditorSheet.jumpExample(
+                        avoiding: store.snapshot.hosts.map(\.name)),
+                    text: $group.proxyJump)
             }
         }
         .formStyle(.grouped)

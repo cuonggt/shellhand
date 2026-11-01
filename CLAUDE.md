@@ -1039,7 +1039,11 @@ credentials, which is most of it.
 - **Where an inherited value comes from is a caption beside the field**, not
   part of the placeholder, which is the inherited value or an example — never
   `—`. The caption says "from Production" in every editor: the host
-  editor's said "Production" alone up to 0.1.5, which read as a value.
+  editor's said "Production" alone up to 0.1.5, which read as a value. **An
+  example never names something in the list** (`HostEditorSheet
+  .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
+  Jump host, with bastion filed there, read as Production going through it,
+  and "Production" over "Inside: Production" as the name already chosen.
 - **One setting has one name** wherever it is shown: Jump host and Agent
   forwarding, in both editors and the inspectors. The host editor called
   them Through and Agent up to 0.1.5.

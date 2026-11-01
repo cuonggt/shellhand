@@ -343,12 +343,14 @@ struct HostEditorSheet: View {
         value.isEmpty ? example : value
     }
 
-    /// The jump field's example, never the host's own name: on bastion's own
-    /// editor "bastion" read as bastion going through itself, which saving
-    /// refuses.
-    nonisolated static func jumpExample(for name: String) -> String {
-        name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare("bastion") == .orderedSame
-            ? "gateway" : "bastion"
+    /// The jump field's example — here and in the group editor — never a
+    /// host in the list, its own name included: on bastion's own editor
+    /// "bastion" read as bastion going through itself, which saving refuses,
+    /// and in Production's group editor, bastion filed there, as Production
+    /// going through it.
+    nonisolated static func jumpExample(avoiding names: [String]) -> String {
+        let taken = Set(names.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
+        return ["bastion", "gateway", "jumpbox"].first { !taken.contains($0) } ?? "jumphost"
     }
 
     /// Whether what is wrong is the ssh options, which live on the other tab.
@@ -384,7 +386,8 @@ struct HostEditorSheet: View {
     private var jumpField: some View {
         HStack(spacing: 6) {
             TextField("", text: $host.proxyJump,
-                      prompt: Text(shown(preview.effective.proxyJump, Self.jumpExample(for: host.name))))
+                      prompt: Text(shown(preview.effective.proxyJump, Self.jumpExample(
+                          avoiding: store.snapshot.hosts.map(\.name) + [host.name]))))
                 .textFieldStyle(.roundedBorder)
                 .labelsHidden()
                 .multilineTextAlignment(.leading)
