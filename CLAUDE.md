@@ -1200,8 +1200,10 @@ credentials, which is most of it.
   a Delete in its footer, which costs the form 23pt. The host editor's
   General needs 736 and its Advanced 640 — room for the command's six lines
   at its foot and one line more, a problem or a rename note, and for the
-  inherited user's caption under Connect to — and the group editor's 570 /
-  555. **Each editor is drawn at its taller tab's height on both tabs**: a
+  inherited user's caption under Connect to — and the group editor's 486,
+  General's with the footer's problem line up, where 570, measured when it
+  had rows since gone, left General 137pt of empty form and Advanced 160.
+  **Each editor is drawn at its taller tab's height on both tabs**: a
   sheet is centred on its window, so one that changed height with the tab
   moved the tab control under the pointer, 7pt in the group editor and 27
   in the host editor. The earlier 500/490 and 600/480 were measured against **new**

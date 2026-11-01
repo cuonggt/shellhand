@@ -82,7 +82,14 @@ struct GroupEditorSheet: View {
         // General's 570 on both tabs, where Advanced was 555: a sheet is
         // centred on its window, so the tab control moved 7pt under the
         // pointer each time the tab changed.
-        .frame(width: DialogSize.medium, height: SheetHeight.fitted(570, in: room.height))
+        //
+        // And 486 since: its rows had gone, and at 570 General ended 137pt
+        // above the footer and Advanced 160pt, an empty band under every
+        // form. What takes room now is the footer's line saying what is
+        // wrong, about 25pt, which comes out of the form: this leaves
+        // General a margin under its last row with that line up, and both
+        // tabs unscrolled.
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(486, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible
