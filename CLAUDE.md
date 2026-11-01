@@ -249,6 +249,8 @@ credentials, which is most of it.
   at its narrowest** (`Browsing.cardColumns`), so the grid holds two at the
   window's default size: at 230 two needed 470pt of the pane's 453, and the
   grid there was one column of wide cards, their words in the left quarter.
+  Its sections are named as the list's are, small, grey and semibold, where
+  they were bold headlines over the list's grey ones.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose

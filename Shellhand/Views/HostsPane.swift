@@ -177,7 +177,7 @@ struct HostsPane: View {
             VStack(alignment: .leading, spacing: 18) {
                 if !groups.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Groups").font(.headline)
+                        heading("Groups")
                         LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
                             ForEach(groups) { folder in
                                 card(for: folder)
@@ -187,7 +187,7 @@ struct HostsPane: View {
                 }
                 if !hosts.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Hosts").font(.headline)
+                        heading("Hosts")
                         LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
                             ForEach(hosts) { host in
                                 card(for: host)
@@ -216,6 +216,15 @@ struct HostsPane: View {
         .onKeyPress(.upArrow) { move(.up) }
         .onKeyPress(.downArrow) { move(.down) }
         .onKeyPress(.return) { open(selection) }
+    }
+
+    /// A section's name in the grid, drawn as the list draws its sections':
+    /// the grid's were bold headlines over the list's small grey ones, the
+    /// same two sections looking like two different things.
+    private func heading(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
     }
 
     /// The width the grids are actually given, measured **inside** the frame
