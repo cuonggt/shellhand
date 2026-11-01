@@ -238,34 +238,28 @@ struct PaletteChoice: View {
                 rows: Themes.names.count + (inherited == nil ? 0 : 1),
                 in: NSApp.keyWindow?.contentLayoutRect.height))
         } label: {
-            HStack(alignment: parts == nil ? .center : .top, spacing: 7) {
-                TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
-                if let parts {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(parts.name)
-                            source(parts.from)
-                        }
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(parts.name)
-                            source(parts.from)
-                        }
-                    }
-                } else {
-                    // A palette set here reads as set, and one inherited as
-                    // grey as an inherited field's value: a grouped form greys
-                    // whatever it is handed, so in both editors a group's own
-                    // Gruvbox Dark was as grey as one from Production.
-                    Text(title)
-                        .foregroundStyle(chosen.isEmpty ? .secondary : .primary)
+            // The words beside the swatch while each keeps its line, and
+            // under it where they would not: in the inspector's column the
+            // arrows' bezel left a palette's name too little room, and
+            // "Gruvbox Dark from Production" went down a word to a line.
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: parts == nil ? .center : .top, spacing: 7) {
+                    swatch
+                    words(stacked: false)
+                    arrows
                 }
-                // In a round bezel, as a menu draws its own arrows — Font's in
-                // Settings, Agent forwarding's in the editors: bare and grey,
-                // the swatch's read as another kind of control beside them.
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 9, weight: .bold))
-                    .frame(width: 20, height: 20)
-                    .background(.quaternary, in: Circle())
+                HStack(alignment: .top, spacing: 7) {
+                    swatch
+                    words(stacked: true)
+                    arrows
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 7) {
+                        swatch
+                        arrows
+                    }
+                    words(stacked: true)
+                }
             }
             .contentShape(Rectangle())
         }
@@ -275,6 +269,45 @@ struct PaletteChoice: View {
             PalettePicker(
                 chosen: chosen, inherited: inherited, inheritedPalette: inheritedPalette,
                 onChoose: onChoose, height: opening.height)
+        }
+    }
+
+    private var swatch: some View {
+        TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
+    }
+
+    /// In a round bezel, as a menu draws its own arrows — Font's in
+    /// Settings, Agent forwarding's in the editors: bare and grey, the
+    /// swatch's read as another kind of control beside them.
+    private var arrows: some View {
+        Image(systemName: "chevron.up.chevron.down")
+            .font(.system(size: 9, weight: .bold))
+            .frame(width: 20, height: 20)
+            .background(.quaternary, in: Circle())
+    }
+
+    /// The palette's name, and where it comes from beside it or under it.
+    @ViewBuilder
+    private func words(stacked: Bool) -> some View {
+        if let parts {
+            if stacked {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(parts.name)
+                    source(parts.from)
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(parts.name)
+                    source(parts.from)
+                }
+            }
+        } else {
+            // A palette set here reads as set, and one inherited as grey as
+            // an inherited field's value: a grouped form greys whatever it
+            // is handed, so in both editors a group's own Gruvbox Dark was as
+            // grey as one from Production.
+            Text(title)
+                .foregroundStyle(chosen.isEmpty ? .secondary : .primary)
         }
     }
 
