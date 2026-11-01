@@ -167,7 +167,7 @@ private struct PlacePane: View {
                 .accessibilityHidden(true)
             Text(failure)
                 .font(.callout)
-                .textSelection(.enabled)
+                .selectable(failure)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button("Dismiss") { place.clearFailure() }
                 .controlSize(.small)
@@ -449,7 +449,7 @@ private struct Unreached: View {
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-                .textSelection(.enabled)
+                .selectable(said)
             HStack {
                 if trouble.offersTerminal {
                     Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }

@@ -884,13 +884,16 @@ credentials, which is most of it.
   SwiftUI button alike, named or not, and cannot read the attributed
   description back. Accessibility Inspector or VoiceOver can.
   → [accessibility names](docs/notes/driving.md#accessibility-names)
-- **A selectable text whose words change in place is keyed by them**
-  (`.id`), as `ValueRow`'s value and `DestinationLine` are. A
+- **A selectable text whose words can change in place is made with
+  `.selectable(words)`**, which keys it by them (`.id`): the inspector's
+  values and destination, SFTP's failures, the import's problem, the
+  terminal's ssh line and host-key question, and Settings' trouble. A
   `.textSelection(.enabled)` text comes twice in the accessibility tree, and
   changed in place the first copy kept its first words: after a switch the
   inspector held the last host's user, address and jump host there while
-  the screen showed this one's. System Events reads that much — a static
-  text's value, which is not a button's name.
+  the screen showed this one's. Seen there, not yet elsewhere; text that
+  never changes keeps plain `.textSelection(.enabled)`. System Events reads
+  that much — a static text's value, which is not a button's name.
 - **One shape for managing a list**, for whenever one is wanted again: the
   list beside the one selected, in an `HSplitView`, with `+` and `−` at the
   bottom left and Done at the right. Snippets, Credentials and Tunnels were

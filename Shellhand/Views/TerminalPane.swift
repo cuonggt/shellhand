@@ -409,7 +409,7 @@ private struct EndedCard: View {
             if !said.isEmpty {
                 Text(said)
                     .font(.caption.monospaced())
-                    .textSelection(.enabled)
+                    .selectable(said)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
@@ -510,7 +510,7 @@ private struct HostKeySheet: View {
                         .foregroundStyle(.secondary)
                     Text(asked.fingerprint)
                         .font(.callout.monospaced())
-                        .textSelection(.enabled)
+                        .selectable(asked.fingerprint)
                 }
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -540,7 +540,7 @@ private struct HostKeySheet: View {
     private var asWritten: some View {
         Text(question)
             .font(.caption.monospaced())
-            .textSelection(.enabled)
+            .selectable(question)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
     }

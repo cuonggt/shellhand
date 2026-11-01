@@ -97,7 +97,7 @@ struct GeneralSettingsPane: View {
                     Text(trouble)
                         .font(.caption)
                         .foregroundStyle(.red)
-                        .textSelection(.enabled)
+                        .selectable(trouble)
                 }
             }
         }

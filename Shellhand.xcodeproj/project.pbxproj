@@ -108,6 +108,7 @@
 		8E23CA0238D0E009763C676A /* SettingsPanes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7641273D876FDBB807FCBED0 /* SettingsPanes.swift */; };
 		90B05B7092E0F280A22E9C0F /* Resolve.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8192A6AF313B243CB39AE9 /* Resolve.swift */; };
 		90D0957B423696CB8F482045 /* FilesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56CBAF06EEAEC36794910612 /* FilesWindowController.swift */; };
+		944D829CC695E6F942818678 /* Selectable.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB08C1CB269C73C6583B79AD /* Selectable.swift */; };
 		94CDCF4487611DD7D0E0CE87 /* SFTPFolderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B11BDA1B278165A7BB4747 /* SFTPFolderTests.swift */; };
 		96A0E900434750D98CCDAAF2 /* os-almalinux.svg in Resources */ = {isa = PBXBuildFile; fileRef = 81D1033DC7F2F7C4F0A367EB /* os-almalinux.svg */; };
 		9A9142B73A7544402CDF4131 /* os-nixos.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */; };
@@ -328,6 +329,7 @@
 		D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgressTests.swift; sourceTree = "<group>"; };
 		DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InheritanceTests.swift; sourceTree = "<group>"; };
 		DA96D946715413445668CB3B /* FindBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindBar.swift; sourceTree = "<group>"; };
+		DB08C1CB269C73C6583B79AD /* Selectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selectable.swift; sourceTree = "<group>"; };
 		DEA53B7D4A8AD5DC95A9CCA0 /* ScriptedSFTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptedSFTP.swift; sourceTree = "<group>"; };
 		DFC5B41C053B8973B6F4996E /* Core.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Core.swift; sourceTree = "<group>"; };
 		E076F9E53ED12B3045F8A6E6 /* os-sles.svg */ = {isa = PBXFileReference; path = "os-sles.svg"; sourceTree = "<group>"; };
@@ -601,6 +603,7 @@
 				C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */,
 				931C1FC210800200F259DC3B /* QuickLook.swift */,
 				7F5803CE04461D7956241D13 /* RowMenu.swift */,
+				DB08C1CB269C73C6583B79AD /* Selectable.swift */,
 				7641273D876FDBB807FCBED0 /* SettingsPanes.swift */,
 				57C58D904DA593CE634918A8 /* SettingsView.swift */,
 				EE70B996ABCAD60FBB203D3E /* SettingsWindowController.swift */,
@@ -864,6 +867,7 @@
 				3A2EB394976CF16932AA9BF0 /* SSHArgs.swift in Sources */,
 				8616DC3036D6892CAB562898 /* SSHConfigFile.swift in Sources */,
 				D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */,
+				944D829CC695E6F942818678 /* Selectable.swift in Sources */,
 				8086DD275B95B625F1291FCF /* SessionProgress.swift in Sources */,
 				BDE0C20CE01CDBFBAFD62422 /* SessionStatus.swift in Sources */,
 				8E23CA0238D0E009763C676A /* SettingsPanes.swift in Sources */,

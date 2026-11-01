@@ -294,7 +294,7 @@ struct ImportSheet: View {
         Section {
             Label(message, systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
-                .textSelection(.enabled)
+                .selectable(message)
         }
     }
 

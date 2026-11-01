@@ -302,12 +302,8 @@ struct DestinationLine: View {
             .foregroundStyle(.secondary)
             .lineLimit(1)
             .truncationMode(.middle)
-            .textSelection(.enabled)
+            .selectable(text)
             .help(text)
-            // Made afresh when the words change, as `ValueRow`'s value is:
-            // changed in place, it kept the last host's destination in the
-            // accessibility tree.
-            .id(text)
     }
 }
 
@@ -343,13 +339,8 @@ struct ValueRow: View {
 
     private var shown: some View {
         Text(value.isEmpty ? "—" : value)
-            .textSelection(.enabled)
+            .selectable(value)
             .foregroundStyle(value.isEmpty ? .secondary : .primary)
-            // Made afresh when the words change. A selectable text changed
-            // in place kept its first words in the accessibility tree, so
-            // after a switch the inspector's rows held the last host's user,
-            // address and jump host there while the screen showed this one's.
-            .id(value)
     }
 
     /// "from Production", the words the group editor uses. An arrow said the
