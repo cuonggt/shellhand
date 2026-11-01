@@ -26,6 +26,10 @@ struct TagField: View {
                     "", text: $typing,
                     prompt: Text(tags.isEmpty ? "web, eu" : "add a tag"))
                     .textFieldStyle(.plain)
+                    // A grouped form's rows right-align their fields, and
+                    // that reaches in here: "add a tag" floated off the last
+                    // token, and "web, eu" sat 25pt inside an empty box.
+                    .multilineTextAlignment(.leading)
                     .frame(minWidth: 72)
                     .onSubmit { commit() }
                     // One rule for reading tags, and it says a comma, a

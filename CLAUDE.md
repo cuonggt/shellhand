@@ -1035,8 +1035,11 @@ credentials, which is most of it.
 - **A grouped `Form` right-aligns what it is given, and that reaches inside a
   `.roundedBorder` field**: every placeholder sat against the right edge of its
   own box, which reads as a value somebody chose. `.multilineTextAlignment(
-  .leading)` on each field is the fix. And a placeholder of "—" for "nothing
-  inherited" reads as a value too — an example of what belongs there does not.
+  .leading)` on each field is the fix — **a plain field inside a view of its
+  own as well**: `TagField`'s typing field went without it through two walks,
+  "add a tag" floating off the last token. And a placeholder of "—" for
+  "nothing inherited" reads as a value too — an example of what belongs there
+  does not.
 - A label that is only a placeholder **disappears exactly when it is needed**.
   Two bare fields side by side in a row said which was which until both were
   filled, and then nothing did. Every field gets a label beside it, in the
