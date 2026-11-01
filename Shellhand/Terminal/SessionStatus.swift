@@ -135,8 +135,19 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     /// it has taken — "deploy@192.0.2.21:2222, through bastion · 4 s".
     static func connectingLine(destination: String, through: String, seconds: Int) -> String {
         let way = [destination, through].filter { !$0.isEmpty }.joined(separator: ", ")
-        let time = seconds < 60 ? "\(seconds) s" : "\(seconds / 60) min \(seconds % 60) s"
+        let time = elapsed(seconds)
         return way.isEmpty ? time : "\(way) · \(time)"
+    }
+
+    /// The same a part to a line, for a card too narrow to hold it on one:
+    /// broken between its parts rather than wherever the width ran out,
+    /// which beside another tab was inside the port.
+    static func connectingLines(destination: String, through: String, seconds: Int) -> [String] {
+        [destination, through, elapsed(seconds)].filter { !$0.isEmpty }
+    }
+
+    private static func elapsed(_ seconds: Int) -> String {
+        seconds < 60 ? "\(seconds) s" : "\(seconds / 60) min \(seconds % 60) s"
     }
 
     /// A far end's own status, said only where it is not plain success.

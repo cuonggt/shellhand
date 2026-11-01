@@ -118,6 +118,17 @@ nonisolated struct SessionStatusTests {
         #expect(SessionStatus.connectingLine(destination: "", through: "", seconds: 0) == "0 s")
     }
 
+    /// Beside another tab the one line broke wherever the width ran out —
+    /// "root@127.0.0.1:6189" over "1 · 3 s".
+    @Test("too narrow for one line, connecting breaks between its parts")
+    func connectingLines() {
+        #expect(SessionStatus.connectingLines(
+            destination: "deploy@192.0.2.21:2222", through: "through bastion", seconds: 4)
+            == ["deploy@192.0.2.21:2222", "through bastion", "4 s"])
+        #expect(SessionStatus.connectingLines(destination: "deploy@web", through: "", seconds: 75)
+            == ["deploy@web", "1 min 15 s"])
+    }
+
     @Test("a far end's own status is said, ssh's 255 and success are not")
     func exitNote() {
         #expect(SessionStatus.exitNote(3) == "It exited with status 3.")

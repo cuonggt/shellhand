@@ -898,6 +898,9 @@ credentials, which is most of it.
   .heardFromTheFarSide`): it warns about a key file that is not there on the
   terminal, before its log takes over, and a hop's ssh writes everything
   there — read as output, a session still trying showed as connected.
+  The cards hold at a side's width beside another tab: the connecting line
+  breaks between its parts (`SessionStatus.connectingLines`) and an ending's
+  buttons stack, where they broke inside a port and cut to "Recon…".
   → [blank, not empty](docs/notes/terminal.md#blank-not-empty)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a

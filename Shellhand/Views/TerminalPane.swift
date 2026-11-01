@@ -319,12 +319,23 @@ private struct ConnectingCard: View {
             Text(SessionStatus.connecting.headline(for: session.host?.name))
                 .font(.headline)
             TimelineView(.periodic(from: session.startedAt ?? .now, by: 1)) { context in
-                Text(SessionStatus.connectingLine(
-                    destination: destination, through: session.route.through,
-                    seconds: Int(context.date.timeIntervalSince(session.startedAt ?? context.date))))
-                    .font(.callout.monospaced())
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                let seconds = Int(context.date.timeIntervalSince(session.startedAt ?? context.date))
+                // On one line where it fits, and a part to a line where it
+                // does not: beside another tab it broke inside the port.
+                ViewThatFits(in: .horizontal) {
+                    Text(SessionStatus.connectingLine(
+                        destination: destination, through: session.route.through, seconds: seconds))
+                    VStack(spacing: 2) {
+                        ForEach(Array(SessionStatus.connectingLines(
+                            destination: destination, through: session.route.through,
+                            seconds: seconds).enumerated()), id: \.offset) { _, part in
+                            Text(part).lineLimit(1).truncationMode(.middle)
+                        }
+                    }
+                }
+                .font(.callout.monospaced())
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
             }
             // ⌘. is the Terminal menu's, where the keys live.
             Button("Stop Connecting") { session.stopConnecting() }
@@ -379,17 +390,11 @@ private struct EndedCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            HStack {
-                if session.host != nil {
-                    if status.isFailure {
-                        Button("Reconnect") { actions.reconnect(session) }
-                            .buttonStyle(.borderedProminent)
-                    } else {
-                        Button("Reconnect") { actions.reconnect(session) }
-                    }
-                }
-                if let onEdit { Button("Edit Host…", action: onEdit) }
-                Button("Close Tab") { actions.close(session) }
+            // Side by side where they fit, one above another where they do
+            // not: beside another tab they were cut to "Recon…", "Edit H…".
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons }
+                VStack(alignment: .leading) { buttons }
             }
             .controlSize(.small)
         }
@@ -397,6 +402,20 @@ private struct EndedCard: View {
         .frame(maxWidth: status.isBeforeAnything ? 480 : .infinity, alignment: .leading)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
         .padding(12)
+    }
+
+    @ViewBuilder
+    private var buttons: some View {
+        if session.host != nil {
+            if status.isFailure {
+                Button("Reconnect") { actions.reconnect(session) }
+                    .buttonStyle(.borderedProminent)
+            } else {
+                Button("Reconnect") { actions.reconnect(session) }
+            }
+        }
+        if let onEdit { Button("Edit Host…", action: onEdit) }
+        Button("Close Tab") { actions.close(session) }
     }
 
     private var said: String {
