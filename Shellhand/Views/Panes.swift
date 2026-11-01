@@ -255,9 +255,19 @@ nonisolated enum Panes {
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 
-    /// Room a session tab takes besides its title — its status mark, its ×,
-    /// the gaps between them and its padding.
-    static let tabChrome: CGFloat = 50
+    /// A session tab's parts besides its title, which `TabButton` is drawn
+    /// with: the padding at each end, the gap between each part, its status
+    /// mark (`StatusMark`'s width) and its ×.
+    static let tabPadding: CGFloat = 10
+    static let tabGap: CGFloat = 6
+    static let tabMark: CGFloat = 12
+    static let tabClose: CGFloat = 10
+
+    /// Room a session tab takes besides its title. It was a round 50, the
+    /// ×'s width a guess, about 3pt short of what a tab drew: four tabs ran
+    /// 12pt past the strip, and it scrolled — the first tab under its fade,
+    /// its mark a sliver — with every name still above 60.
+    static let tabChrome: CGFloat = 2 * tabPadding + tabMark + 2 * tabGap + tabClose
 
     /// Between two tabs in the strip.
     static let tabSpacing: CGFloat = 4
@@ -273,12 +283,14 @@ nonisolated enum Panes {
     /// they do not fit the rest share what is left, down to 60 — past which
     /// the strip scrolls. An even share cut "This Mac — ~" to "This…c — ~"
     /// with 65pt of the strip empty beside it; held at 180 each, a full
-    /// strip scrolled the Hosts tab half away.
-    static func tabTitleWidths(room: CGFloat, needs: [CGFloat]) -> [CGFloat] {
+    /// strip scrolled the Hosts tab half away. `extras` is what a tab draws
+    /// past its chrome — a Needs you badge, with its gap — which comes out of
+    /// the room before it is shared.
+    static func tabTitleWidths(room: CGFloat, needs: [CGFloat], extras: [CGFloat] = []) -> [CGFloat] {
         var widths = needs.map { min($0, tabTitleMost) }
         guard room > 0 else { return needs.map { _ in tabTitleMost } }
         var left = room - tabSpacing * CGFloat(max(0, needs.count - 1))
-            - tabChrome * CGFloat(needs.count)
+            - tabChrome * CGFloat(needs.count) - extras.reduce(0, +)
         var open = needs.indices.sorted { needs[$0] < needs[$1] }
         while let first = open.first {
             let share = left / CGFloat(open.count)

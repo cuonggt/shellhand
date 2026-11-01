@@ -607,6 +607,10 @@ credentials, which is most of it.
   by what each name needs, short names giving their spare to long ones,
   down to 60 (`Panes.tabTitleWidths`) before it scrolls — shared evenly,
   "This Mac — ~" was cut to "This…c — ~" with 65pt of the strip empty —
+  and what a tab takes besides its name is counted from the parts it is
+  drawn with (`Panes.tabChrome`, its × at a width of its own), a Needs you
+  badge included: a round 50 was 3pt short a tab, and four tabs scrolled
+  at 1220pt with every name above 60, the first under its fade;
   and a tab's tooltip is its name whole (`Panes.tabHelp`), where it was
   the shell's own title alone; and the Hosts tab
   stays outside the scrolling, where a full strip pushed it half off its

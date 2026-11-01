@@ -30,8 +30,11 @@ struct SessionTabBar: View {
         // Named as the Window menu names them, a second of one name with its
         // number: two tabs on one host read "refuser" twice.
         let titles = sessions.titles
-        // Each name measured, so the strip's room goes where it is needed.
-        let widths = Panes.tabTitleWidths(room: room, needs: titles.map(Self.measured))
+        // Each name measured, so the strip's room goes where it is needed,
+        // and a Needs you badge counted where one is drawn.
+        let widths = Panes.tabTitleWidths(
+            room: room, needs: titles.map(Self.measured),
+            extras: sessions.all.map { $0.status == .needsAnswer ? Panes.tabGap + TabButton.badgeWidth : 0 })
         HStack(spacing: Panes.tabSpacing) {
             // The way back to the list, outside the scrolling: with the strip
             // full, a new tab scrolled into view pushed Hosts half off the
@@ -182,11 +185,21 @@ private struct TabButton: View {
     let actions: TabActions
     let onShow: () -> Void
 
+    static let needsYou = "Needs you"
+    static let badgePadding: CGFloat = 6
+
+    /// The Needs you badge's width, in the font it is drawn in.
+    static let badgeWidth: CGFloat = (needsYou as NSString).size(withAttributes: [
+        .font: NSFont.systemFont(
+            ofSize: NSFont.preferredFont(forTextStyle: .caption2).pointSize, weight: .semibold),
+    ]).width.rounded(.up) + 2 * badgePadding
+
     var body: some View {
         Button {
             onShow()
         } label: {
-            HStack(spacing: 6) {
+            // Drawn with `Panes`'s parts, which the strip shares its room by.
+            HStack(spacing: Panes.tabGap) {
                 StatusMark(status: session.status)
                 // The machine and the tail of the path, not the whole of
                 // what the shell sent — and capped, because the tail can be
@@ -200,15 +213,16 @@ private struct TabButton: View {
                 // A question in a tab behind this one was a yellow dot, and
                 // the far end gives up on it after a couple of minutes.
                 if session.status == .needsAnswer {
-                    Text("Needs you")
+                    Text(Self.needsYou)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, Self.badgePadding)
                         .padding(.vertical, 1)
                         .background(SwiftUI.Color.orange.opacity(0.18), in: Capsule())
                 }
                 Button { actions.close(session) } label: {
                     Image(systemName: "xmark").font(.caption2)
+                        .frame(width: Panes.tabClose)
                 }
                 .buttonStyle(.plain)
                 // Which tab, not just "close": a strip of them all reading
@@ -216,7 +230,7 @@ private struct TabButton: View {
                 .accessibilityLabel("Close \(title)")
                 .help("Close this tab")
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, Panes.tabPadding)
             .padding(.vertical, 5)
             .background(background, in: RoundedRectangle(cornerRadius: 6))
             // Outlined while shown beside the tab in front, so a split says

@@ -426,6 +426,12 @@ nonisolated struct PanesTests {
             == [30, 60, 60, 60])
         let some: CGFloat = 3 * (100 + Panes.tabChrome) + 2 * Panes.tabSpacing
         #expect(Panes.tabTitleWidths(room: some, needs: [50, 200, 200]) == [50, 125, 125])
+        // A tab waiting on an answer draws its badge too, which comes out of
+        // the room before it is shared: left out, the strip scrolled.
+        #expect(Panes.tabTitleWidths(room: tight + 70, needs: [40, 48, 85, 70], extras: [0, 0, 70, 0])
+            == [40, 48, 85, 70])
+        #expect(Panes.tabTitleWidths(room: tight, needs: [90, 90, 90, 90], extras: [0, 0, 0, 40])
+            == [66, 66, 66, 66])
         // Before the strip has been measured, as they always were.
         #expect(Panes.tabTitleWidths(room: 0, needs: [10, 20]) == [180, 180])
         #expect(Panes.tabTitleWidths(room: 500, needs: []).isEmpty)
