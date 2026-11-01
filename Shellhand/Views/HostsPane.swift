@@ -55,6 +55,10 @@ struct HostsPane: View {
     /// assumed — see `gridWidth`.
     @State private var columns = 1
 
+    /// How wide a host's row is in the list, every row alike, which decides
+    /// the shape they all take (`Browsing.rowShape`).
+    @State private var rowWidth: CGFloat = 0
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Pinned rather than scrolling away with the rows: it carries the
@@ -94,7 +98,13 @@ struct HostsPane: View {
     /// replaces could be clicked and nothing else — no keyboard anywhere, and
     /// a row drew the same whether or not it was the one selected.
     private var rows: some View {
-        List(selection: picked) {
+        let hosts = self.hosts
+        // One shape for every row, from all of them, scrolled into sight or
+        // not; before the rows are measured, the most a row can hold.
+        let shape = rowWidth > 0
+            ? Browsing.rowShape(width: rowWidth, rows: hosts.map(measured))
+            : .everything
+        return List(selection: picked) {
             if !groups.isEmpty {
                 Section(group == nil ? "Groups" : "Inside") {
                     ForEach(groups) { folder in
@@ -105,7 +115,7 @@ struct HostsPane: View {
             if !hosts.isEmpty {
                 Section("Hosts") {
                     ForEach(hosts) { host in
-                        row(for: host)
+                        row(for: host, shape: shape)
                             .tag(Selection.host(host.id))
                             // **No double-click to connect here**, and
                             // the reason is worth the loss: a two-tap gesture
@@ -376,53 +386,72 @@ struct HostsPane: View {
         .accessibilityLabel("\(folder.name), \(counted(folder))")
     }
 
-    /// A host's row with as much as the pane has room for: everything; then
-    /// without its tags; then without its group too; and last a narrower
-    /// name. Squeezed into a narrow pane instead, the tags wrapped a letter
-    /// to a line, group names hyphenated and destinations were cut to "d…2".
-    private func row(for host: Host) -> some View {
+    /// A host's row in the list's `shape`, the one every row takes: as much as
+    /// the pane has room for — everything; then without its tags; then
+    /// without its group too; and last a narrower name. Squeezed into a
+    /// narrow pane instead, the tags wrapped a letter to a line, group names
+    /// hyphenated and destinations were cut to "d…2"; and left to choose each
+    /// for itself, the rows of one list showed different columns. The shapes
+    /// after it are there for a row the measuring got a point wrong.
+    private func row(for host: Host, shape: Browsing.RowShape) -> some View {
         ViewThatFits(in: .horizontal) {
-            line(for: host, nameWidth: 240, showsGroup: true, showsTags: true)
-            line(for: host, nameWidth: 240, showsGroup: true, showsTags: false)
-            line(for: host, nameWidth: 240, showsGroup: false, showsTags: false)
-            line(for: host, nameWidth: 160, showsGroup: false, showsTags: false)
+            line(for: host, shape)
+            line(for: host, shape.fallback)
+            line(for: host, shape.fallback.fallback)
+            line(for: host, .narrowName)
         }
         .padding(.vertical, 2)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: {
+            if rowWidth != $0 { rowWidth = $0 }
+        }
         .accessibilityLabel("\(host.name), \(destination(of: host))")
     }
 
-    private func line(
-        for host: Host, nameWidth: CGFloat, showsGroup: Bool, showsTags: Bool
-    ) -> some View {
-        HStack(spacing: 10) {
-            HostIcon(os: host.os, named: host.osLabel)
+    /// What `host`'s row would hold, measured in the fonts the row draws it
+    /// in, for `Browsing.rowShape`.
+    private func measured(_ host: Host) -> Browsing.RowWidths {
+        let body = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        let caption = NSFont.preferredFont(forTextStyle: .caption1)
+        func width(_ text: String, _ font: NSFont) -> CGFloat {
+            (text as NSString).size(withAttributes: [.font: font]).width.rounded(.up)
+        }
+        let folder = group == nil ? store.group(host.groupId) : nil
+        return Browsing.RowWidths(
+            destination: width(destination(of: host), body),
+            group: folder.map { width($0.name, caption) } ?? 0,
+            tags: host.tags.map { width($0, caption) })
+    }
+
+    private func line(for host: Host, _ shape: Browsing.RowShape) -> some View {
+        HStack(spacing: Browsing.rowSpacing) {
+            HostIcon(os: host.os, named: host.osLabel, size: Browsing.rowMark)
             // A set width, not a minimum: with a minimum the destination
             // starts wherever the name happens to end, so the second
             // column is ragged down the page and cannot be scanned.
             Text(host.name)
-                .frame(width: nameWidth, alignment: .leading)
+                .frame(width: shape.nameWidth, alignment: .leading)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Text(destination(of: host))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
-            Spacer(minLength: 12)
+            Spacer(minLength: Browsing.rowGap)
             // Only when it is not already the answer: inside a group,
             // every row would say the same thing.
-            if showsGroup, group == nil, let folder = store.group(host.groupId) {
+            if shape.showsGroup, group == nil, let folder = store.group(host.groupId) {
                 Text(folder.name).font(.caption).foregroundStyle(.secondary)
                     .lineLimit(1)
                     .fixedSize()
             }
-            if showsTags {
+            if shape.showsTags {
                 ForEach(host.tags, id: \.self) { tag in
                     Text(tag)
                         .font(.caption)
                         .lineLimit(1)
                         .fixedSize()
-                        .padding(.horizontal, 6)
+                        .padding(.horizontal, Browsing.chipPadding)
                         .padding(.vertical, 2)
                         .background(.quaternary, in: Capsule())
                 }

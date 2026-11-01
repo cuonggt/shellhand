@@ -95,4 +95,57 @@ nonisolated enum Browsing {
     static func narrowing(search: String, tags: Set<String>) -> Bool {
         !search.trimmingCharacters(in: .whitespaces).isEmpty || !tags.isEmpty
     }
+
+    // MARK: a host's row
+
+    /// What a host's row holds, from the most to the least: everything; then
+    /// without its tags; then without its group too; and last a narrower name.
+    enum RowShape: Int, CaseIterable, Comparable {
+        case everything, withoutTags, withoutGroup, narrowName
+
+        static func < (a: RowShape, b: RowShape) -> Bool { a.rawValue < b.rawValue }
+
+        var nameWidth: CGFloat { self == .narrowName ? 160 : 240 }
+        var showsGroup: Bool { self <= .withoutTags }
+        var showsTags: Bool { self == .everything }
+        /// The next down, for a row that the list's shape still does not hold.
+        var fallback: RowShape { RowShape(rawValue: rawValue + 1) ?? .narrowName }
+    }
+
+    /// A row's text, measured: its destination, its group's name where the
+    /// row would show one and nothing where it would not, and each tag.
+    struct RowWidths: Equatable {
+        var destination: CGFloat
+        var group: CGFloat = 0
+        var tags: [CGFloat] = []
+    }
+
+    /// What a row holds besides its text: the OS mark, the gap between its
+    /// pieces, the least room before the group and the tags, and a tag's
+    /// padding either side. The row is drawn with these, so the two agree.
+    static let rowMark: CGFloat = 16
+    static let rowSpacing: CGFloat = 10
+    static let rowGap: CGFloat = 12
+    static let chipPadding: CGFloat = 6
+
+    /// How wide a row has to be to hold `row` in `shape`.
+    static func rowNeeds(_ row: RowWidths, _ shape: RowShape) -> CGFloat {
+        var needs = rowMark + rowSpacing + shape.nameWidth + rowSpacing + row.destination
+            + rowSpacing + rowGap
+        if shape.showsGroup, row.group > 0 { needs += rowSpacing + row.group }
+        if shape.showsTags {
+            needs += row.tags.reduce(0) { $0 + rowSpacing + $1 + 2 * chipPadding }
+        }
+        return needs
+    }
+
+    /// The shape every row of a list takes, `width` wide: the first that
+    /// holds the widest of them. Each row chose its own, so at the window's
+    /// default size one host kept its tag where the next, carrying the same
+    /// tag, lost it, and the staging rows lost their group beside rows that
+    /// kept theirs.
+    static func rowShape(width: CGFloat, rows: [RowWidths]) -> RowShape {
+        RowShape.allCases.first { shape in rows.allSatisfy { rowNeeds($0, shape) <= width } }
+            ?? .narrowName
+    }
 }

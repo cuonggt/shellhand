@@ -156,4 +156,35 @@ nonisolated struct BrowsingTests {
         #expect(Browsing.narrowing(search: "db", tags: []))
         #expect(Browsing.narrowing(search: "", tags: ["db"]))
     }
+
+    /// Each row chose its own shape, so at the window's default size one
+    /// host kept its tag where the next, with the same tag, lost it.
+    @Test("every row of a list takes one shape: the first the widest of them fits")
+    func rowShape() {
+        let short = Browsing.RowWidths(destination: 100, group: 20, tags: [20])
+        let long = Browsing.RowWidths(destination: 160, group: 20, tags: [20, 30])
+        // The mark, the name and the destination, with the gaps between and
+        // the least room after: 16 + 10 + 240 + 10 + 100 + 10 + 12. Typed,
+        // because `#expect` reads a sum of literals on its right as an Int,
+        // and 428.0 is not equal to 428 there.
+        let base: CGFloat = 398
+        #expect(Browsing.rowNeeds(short, .withoutGroup) == base)
+        #expect(Browsing.rowNeeds(short, .withoutTags) == base + 10 + 20)
+        #expect(Browsing.rowNeeds(short, .everything) == base + 30 + (10 + 20 + 12))
+        #expect(Browsing.rowNeeds(short, .narrowName) == base - 80)
+
+        #expect(Browsing.rowShape(width: 1000, rows: [short, long]) == .everything)
+        // Room for the short row's tags but not the long one's: neither shows
+        // tags, where the short row kept its own.
+        #expect(Browsing.rowNeeds(short, .everything) <= 500)
+        #expect(Browsing.rowShape(width: 500, rows: [short, long]) == .withoutTags)
+        #expect(Browsing.rowShape(width: 470, rows: [short, long]) == .withoutGroup)
+        #expect(Browsing.rowShape(width: 400, rows: [short, long]) == .narrowName)
+        // Less room than anything holds: the narrowest, cut as it has to be.
+        #expect(Browsing.rowShape(width: 300, rows: [short, long]) == .narrowName)
+        // A row with no group to show loses nothing by dropping it.
+        let loose = Browsing.RowWidths(destination: 100)
+        #expect(Browsing.rowNeeds(loose, .everything) == Browsing.rowNeeds(loose, .withoutGroup))
+        #expect(Browsing.rowShape(width: 1000, rows: []) == .everything)
+    }
 }
