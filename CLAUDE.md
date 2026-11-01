@@ -1134,8 +1134,10 @@ credentials, which is most of it.
   Jump host, with bastion filed there, read as Production going through it,
   and "Production" over "Inside: Production" as the name already chosen.
 - **One setting has one name** wherever it is shown: Jump host and Agent
-  forwarding, in both editors and the inspectors. The host editor called
-  them Through and Agent up to 0.1.5.
+  forwarding, in both editors and the inspectors, and Colours in Settings as
+  well. The host editor called the first two Through and Agent up to 0.1.5,
+  and Settings the last Palette, under a header saying Colours, where an
+  inspector's "System from Settings" sent you.
   → [where a value comes from](docs/notes/window.md#where-a-value-comes-from)
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their

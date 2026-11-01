@@ -188,11 +188,15 @@ struct TerminalSettingsPane: View {
                     .foregroundStyle(.secondary)
             }
 
-            Section("Colours") {
+            // No header: the row is Colours, the setting's one name in the
+            // editors and the inspectors too — "System from Settings" sent
+            // you here to a row called Palette — and a header over it would
+            // say the same word twice.
+            Section {
                 // Chosen by looking at it, as everywhere a palette is; with
                 // no row for inheriting, since this is what everything else
                 // inherits.
-                LabeledContent("Palette") {
+                LabeledContent("Colours") {
                     PaletteChoice(
                         chosen: theme, inherited: nil, inheritedPalette: nil,
                         onChoose: { theme = $0 })
