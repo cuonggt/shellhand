@@ -124,9 +124,10 @@ struct SidebarView: View {
             if store.snapshot.hosts.isEmpty && !store.loading {
                 // Quiet on purpose: the detail pane beside it is showing the
                 // welcome, and two panels both saying "no hosts yet" with
-                // their own buttons read as a stutter.
+                // their own buttons read as a stutter — so it says where the
+                // hosts will be, where it said "No hosts yet" all the same.
                 ContentUnavailableView {
-                    Label("No hosts yet", systemImage: "tray")
+                    Label("Your hosts go here", systemImage: "tray")
                 }
             } else if filtering && found.isEmpty {
                 noMatches

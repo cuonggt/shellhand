@@ -588,7 +588,10 @@ credentials, which is most of it.
   install meets the **welcome** in place of the list.
 - **The welcome stands in for the hosts tab, not the window** —
   `Panes.welcoming` and `Panes.showsTabs` — or a local shell opened on a fresh
-  install runs hidden behind it.
+  install runs hidden behind it. Only the welcome says there are no hosts:
+  the sidebar says where they will go and the inspector what it will
+  describe, where the sidebar said "No hosts yet" too and the inspector
+  asked for a host to be picked from an empty list.
   → [the welcome](docs/notes/window.md#the-welcome)
 - The **Window menu lists the sessions too**, with ⌘1 to ⌘9 for the first
   nine. That came in with the column and stays without it: a keyboard way to

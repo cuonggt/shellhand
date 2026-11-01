@@ -506,10 +506,15 @@ struct ContentView: View {
         }
     }
 
+    /// With an empty list there is nothing to pick, and this asked for a
+    /// pick beside a welcome and a sidebar both saying there were no hosts.
     private var nothingSelected: some View {
-        ContentUnavailableView(
-            "Nothing selected", systemImage: "sidebar.right",
-            description: Text("Pick a host or a group to see what it connects with."))
+        let empty = store.snapshot.hosts.isEmpty && store.snapshot.groups.isEmpty
+        return ContentUnavailableView(
+            empty ? "Nothing to describe yet" : "Nothing selected", systemImage: "sidebar.right",
+            description: Text(empty
+                ? "A host you add is described here: where it goes, and what will run."
+                : "Pick a host or a group to see what it connects with."))
     }
 
     /// Opens the import sheet on one of its three ways in.
