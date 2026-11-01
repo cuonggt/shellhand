@@ -425,7 +425,10 @@ struct ContentView: View {
     private var windowTitle: String {
         switch pane {
         case .hosts:
-            return selectedHost?.name ?? selectedGroup?.name ?? "Shellhand"
+            // With nothing picked, Hosts, as Shellhand ▸ Hosts and the
+            // strip's tab call this window: the Window menu, which lists it
+            // by this title, called it Shellhand beside them.
+            return selectedHost?.name ?? selectedGroup?.name ?? "Hosts"
         case let .session(id):
             // The tab's own name, numbered as it is, not the shell's title.
             return sessions.title(of: id) ?? "Shellhand"
