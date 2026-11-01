@@ -1272,7 +1272,9 @@ credentials, which is most of it.
   (`FromAbove(of: host)`), not off what it resolves to, which has its own
   choice in it. **An
   example never names something in the list** (`HostEditorSheet
-  .jumpExample`, `.userExample`, `GroupEditorSheet.nameExample`): "bastion"
+  .jumpExample`, `.userExample`, `.nameExample`, `GroupEditorSheet
+  .nameExample`) — New Host's name "web" was a tag three hosts carried, the
+  one example nothing checked: "bastion"
   in Production's Jump host, with bastion filed there, read as Production
   going through it, and "Production" over "Inside: Production" as the name
   already chosen — in the host editor's New group… as well, under a menu

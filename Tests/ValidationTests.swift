@@ -76,6 +76,15 @@ nonisolated struct ValidationTests {
         #expect(HostEditorSheet.userExample(avoiding: ["deploy", "ubuntu", "admin"]) == "you")
     }
 
+    /// "web" sat in New Host's name over a list with three hosts tagged
+    /// web: the one example nothing checked against the list.
+    @Test("a host name's example is never a host or a tag in the list")
+    func hostNameExample() {
+        #expect(HostEditorSheet.nameExample(avoiding: []) == "web")
+        #expect(HostEditorSheet.nameExample(avoiding: ["web-us-1", " Web "]) == "mail")
+        #expect(HostEditorSheet.nameExample(avoiding: ["web", "mail", "files", "backup"]) == "server")
+    }
+
     /// New Group Inside Production offered "Production" for the name, right
     /// above "Inside: Production", where it read as the name already chosen.
     @Test("the group name's example is never a group in the list")

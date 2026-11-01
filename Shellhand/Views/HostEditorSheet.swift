@@ -280,7 +280,8 @@ struct HostEditorSheet: View {
             // above them would only name the thing you are already looking at.
             Section {
                 LabeledContent {
-                    TextField("", text: $host.name, prompt: Text("web"))
+                    TextField("", text: $host.name, prompt: Text(
+                        Self.nameExample(avoiding: store.snapshot.hosts.map(\.name) + store.allTags)))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
@@ -468,6 +469,14 @@ struct HostEditorSheet: View {
     nonisolated static func jumpExample(avoiding names: [String]) -> String {
         let taken = Set(names.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
         return ["bastion", "gateway", "jumpbox"].first { !taken.contains($0) } ?? "jumphost"
+    }
+
+    /// The name field's example, never a host's name or a tag the list
+    /// already has: "web" sat in New Host's name over a list with three
+    /// hosts tagged web, the one example nothing checked.
+    nonisolated static func nameExample(avoiding names: [String]) -> String {
+        let taken = Set(names.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
+        return ["web", "mail", "files", "backup"].first { !taken.contains($0) } ?? "server"
     }
 
     /// The user field's example — here and in the group editor — never a
