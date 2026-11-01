@@ -230,7 +230,7 @@ private struct PlacePane: View {
 
             HStack(spacing: 4) {
                 Button { Task { await place.parent() } } label: {
-                    Image(systemName: "arrow.up").foregroundStyle(iconStyle)
+                    Image(systemName: "arrow.up").foregroundStyle(iconColour)
                 }
                 .buttonStyle(.borderless)
                 // Finder's name for the move: this window says folder, and
@@ -256,7 +256,7 @@ private struct PlacePane: View {
                     name = ""
                     newFolder = true
                 } label: {
-                    Image(systemName: "folder.badge.plus").foregroundStyle(iconStyle)
+                    Image(systemName: "folder.badge.plus").foregroundStyle(iconColour)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("New Folder")
@@ -265,7 +265,7 @@ private struct PlacePane: View {
                 .disabled(place.listing.path.isEmpty)
 
                 Button { Task { await place.refresh() } } label: {
-                    Image(systemName: "arrow.clockwise").foregroundStyle(iconStyle)
+                    Image(systemName: "arrow.clockwise").foregroundStyle(iconColour)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Refresh")
@@ -277,12 +277,15 @@ private struct PlacePane: View {
         .padding(8)
     }
 
-    /// The header's icons at full weight while they can act, as the "…" menu
-    /// beside them is, and light while the side lists nothing: borderless,
-    /// they were drawn mid-grey when live, nearer greyed than live beside
-    /// the menu's black.
-    private var iconStyle: HierarchicalShapeStyle {
-        place.listing.path.isEmpty ? .tertiary : .primary
+    /// The header's icons in the colours AppKit draws a control's text in:
+    /// black while they can act, as the "…" menu beside them is, and its
+    /// grey while the side lists nothing. Borderless, they were drawn
+    /// mid-grey when live, nearer greyed than live beside the menu's black —
+    /// and a hierarchical style changed nothing, since `.primary` inside a
+    /// borderless button is the button's own grey, while `.tertiary` made
+    /// the greyed ones fainter than the greyed menu.
+    private var iconColour: SwiftUI.Color {
+        SwiftUI.Color(nsColor: place.listing.path.isEmpty ? .disabledControlTextColor : .controlTextColor)
     }
 
     private var table: some View {

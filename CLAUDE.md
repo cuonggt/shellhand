@@ -744,11 +744,18 @@ credentials, which is most of it.
   items" read as an empty folder, and the button said "Copy to Choose a
   host". Its path field greys with the buttons beside it, where Return in
   it went nowhere and said nothing, and so does its "…" menu, whose Show
-  Hidden Files had nothing to act on; live, the header's icons are drawn at
-  the menu's full weight, where borderless they came out mid-grey, nearer
-  greyed than live. **It draws no table**: the question or
-  the refusal stands alone on the table's ground, where it was laid over an
-  empty table whose stripes ran through it under a sortable header. A
+  Hidden Files had nothing to act on. The header's icons are drawn in
+  AppKit's control colours, black as the menu is while they can act and
+  its grey while they cannot (`controlTextColor`,
+  `disabledControlTextColor`): borderless they came out mid-grey, nearer
+  greyed than live, and a hierarchical style changed nothing — `.primary`
+  in a borderless button is the button's own grey, and `.tertiary` drew
+  the greyed ones fainter than the greyed menu. That fix was called done
+  from a crop: **measure a colour, never judge it by eye** — the icons were
+  128 before it and after, beside the menu's 37. **It draws no table**:
+  the question or the refusal stands alone on the table's ground, where it
+  was laid over an empty table whose stripes ran through it under a
+  sortable header. A
   side's selection is cleared on the side, since the table is not there to
   see the listing it comes back with.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
