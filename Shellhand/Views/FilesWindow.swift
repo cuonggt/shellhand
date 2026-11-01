@@ -485,9 +485,12 @@ private struct Unreached: View {
             Label(trouble.title, systemImage: SessionStatus.couldNotConnect.symbol)
                 .font(.headline)
                 .foregroundStyle(SwiftUI.Color.red)
+            // As tall as its lines, as the terminal card's: held to one,
+            // ssh's line lost its end.
             Text(said)
                 .font(.caption.monospaced())
                 .selectable(said)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))

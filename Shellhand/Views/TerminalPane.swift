@@ -454,11 +454,15 @@ private struct EndedCard: View {
                 .foregroundStyle(status.isFailure ? SwiftUI.Color.red : SwiftUI.Color.primary)
 
             // What ssh wrote to its own log, which -E keeps out of the
-            // terminal: the refusal, the wrong key, the timeout.
+            // terminal: the refusal, the wrong key, the timeout. As tall as
+            // its lines, as the sentence under it is: beside another tab at
+            // 1220pt it was held to one line, "port 2…", its "Connection
+            // refused" cut, while a narrower side wrapped it whole.
             if !said.isEmpty {
                 Text(said)
                     .font(.caption.monospaced())
                     .selectable(said)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
