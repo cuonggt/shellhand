@@ -230,7 +230,7 @@ private struct PlacePane: View {
 
             HStack(spacing: 4) {
                 Button { Task { await place.parent() } } label: {
-                    Image(systemName: "arrow.up")
+                    Image(systemName: "arrow.up").foregroundStyle(iconStyle)
                 }
                 .buttonStyle(.borderless)
                 // Finder's name for the move: this window says folder, and
@@ -256,7 +256,7 @@ private struct PlacePane: View {
                     name = ""
                     newFolder = true
                 } label: {
-                    Image(systemName: "folder.badge.plus")
+                    Image(systemName: "folder.badge.plus").foregroundStyle(iconStyle)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("New Folder")
@@ -265,7 +265,7 @@ private struct PlacePane: View {
                 .disabled(place.listing.path.isEmpty)
 
                 Button { Task { await place.refresh() } } label: {
-                    Image(systemName: "arrow.clockwise")
+                    Image(systemName: "arrow.clockwise").foregroundStyle(iconStyle)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Refresh")
@@ -275,6 +275,14 @@ private struct PlacePane: View {
             }
         }
         .padding(8)
+    }
+
+    /// The header's icons at full weight while they can act, as the "…" menu
+    /// beside them is, and light while the side lists nothing: borderless,
+    /// they were drawn mid-grey when live, nearer greyed than live beside
+    /// the menu's black.
+    private var iconStyle: HierarchicalShapeStyle {
+        place.listing.path.isEmpty ? .tertiary : .primary
     }
 
     private var table: some View {

@@ -737,7 +737,9 @@ credentials, which is most of it.
   items" read as an empty folder, and the button said "Copy to Choose a
   host". Its path field greys with the buttons beside it, where Return in
   it went nowhere and said nothing, and so does its "…" menu, whose Show
-  Hidden Files had nothing to act on. **It draws no table**: the question or
+  Hidden Files had nothing to act on; live, the header's icons are drawn at
+  the menu's full weight, where borderless they came out mid-grey, nearer
+  greyed than live. **It draws no table**: the question or
   the refusal stands alone on the table's ground, where it was laid over an
   empty table whose stripes ran through it under a sortable header. A
   side's selection is cleared on the side, since the table is not there to
