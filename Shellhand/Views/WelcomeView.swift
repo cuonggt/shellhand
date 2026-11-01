@@ -27,19 +27,19 @@ struct WelcomeView: View {
             VStack(spacing: 8) {
                 source(
                     .sshConfig, "doc.text",
-                    title: ImportSheet.Source.sshConfig.about,
+                    title: ImportSheet.Source.sshConfig.name,
                     // The import sheet's words, which it says of the file
                     // it looks at: three ways were two too many.
                     detail: ImportPlan.configSays(configCount, at: SSHConfigFile.pathInUse),
                     ready: (configCount ?? 0) > 0)
                 source(
                     .csv, "tablecells",
-                    title: "A CSV file",
+                    title: ImportSheet.Source.csv.name,
                     detail: ImportSheet.Source.csv.about,
                     ready: true)
                 source(
                     .yaml, "doc.plaintext",
-                    title: "A YAML file",
+                    title: ImportSheet.Source.yaml.name,
                     detail: ImportSheet.Source.yaml.about,
                     ready: true)
             }

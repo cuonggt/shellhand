@@ -77,16 +77,27 @@ struct ImportSheet: View {
             }
         }
 
-        /// What each is, in the same words here and on the welcome: the CSV
-        /// tab said "A sheet, or an export from another client." — inside a
-        /// sheet — where the welcome said a spreadsheet. The ssh config's
-        /// line on the welcome is what the file holds, which this tab says
-        /// under its field, so its heading is the welcome's name for it: it
-        /// said "The machines OpenSSH already knows about", which the welcome
-        /// never did.
-        var about: String {
+        /// What each is called, atop its tab as on the welcome's card for
+        /// it. The tabs were headed by one card's name and two cards' lines
+        /// — "Your SSH config" beside "From a spreadsheet, or another
+        /// client's export" — and the ssh config's tab said "The machines
+        /// OpenSSH already knows about", which the welcome never did.
+        var name: String {
             switch self {
             case .sshConfig: "Your SSH config"
+            case .csv: "A CSV file"
+            case .yaml: "A YAML file"
+            }
+        }
+
+        /// What each is, under its name, in the same words here and on the
+        /// welcome: the CSV tab said "A sheet, or an export from another
+        /// client." — inside a sheet — where the welcome said a spreadsheet.
+        /// None for the ssh config, whose line is what the file holds
+        /// (`ImportPlan.configSays`), said under its field.
+        var about: String {
+            switch self {
+            case .sshConfig: ""
             case .csv: "From a spreadsheet, or another client's export"
             case .yaml: "A list exported from Shellhand"
             }
@@ -124,7 +135,13 @@ struct ImportSheet: View {
             Divider()
             Form {
                 Section { sourceFields } header: {
-                    Text(source.about)
+                    Text(source.name)
+                } footer: {
+                    if !source.about.isEmpty {
+                        Text(source.about)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 // What a CSV's columns should be, beside the file it is about:
                 // it came after the group field, between them.

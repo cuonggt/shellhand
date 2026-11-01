@@ -1373,11 +1373,13 @@ credentials, which is most of it.
   its `~` expanded: the field's own example, typed, found no file — and the
   field is filled the way the line under it spells the path, "~/.ssh/config",
   where it held /Users/…/.ssh/config over "~/.ssh/config names 12". What
-  each source is reads the same on the welcome and atop its tab
-  (`ImportSheet.Source.about`): the CSV tab said "A sheet" — inside a
-  sheet — where the welcome said a spreadsheet, and the ssh config's tab
-  "The machines OpenSSH already knows about", where the welcome calls it
-  Your SSH config.
+  each source is called and what it is read the same on the welcome and on
+  its tab — the name atop the tab as atop its card, and its line under
+  (`ImportSheet.Source.name`, `.about`): the tabs were headed by one card's
+  name and two cards' lines, the CSV tab said "A sheet" — inside a sheet —
+  where the welcome said a spreadsheet, and the ssh config's tab "The
+  machines OpenSSH already knows about", where the welcome calls it Your
+  SSH config.
 - **The group typed into an import files only the hosts it adds**
   (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
   was filed, and one the file files goes where the file says. The group was
