@@ -169,7 +169,14 @@ struct ImportSheet: View {
             contentType: .yaml,
             defaultFilename: YAMLDocument.defaultFilename
         ) { result in
-            if case let .success(url) = result { note = "Exported to \(url.lastPathComponent)." }
+            switch result {
+            case let .success(url):
+                note = "Exported to \(url.lastPathComponent)."
+            // Said here, as File ▸ Export… says it over the window: a save
+            // the disk refused went without a word.
+            case let .failure(error):
+                if let failure = YAMLDocument.failure(error) { problem = failure }
+            }
         }
         .task {
             if configPath.isEmpty {
@@ -357,7 +364,9 @@ struct ImportSheet: View {
                     exporting = !exportText.isEmpty
                 }
             }
-            .disabled(busy)
+            // Greyed with nothing to export, as File ▸ Export… is: from the
+            // welcome it wrote a file holding nothing.
+            .disabled(busy || !store.canExport)
             Spacer()
             // Escape. Nothing has been brought in until `note` says so, and
             // until then leaving is cancelling.
@@ -508,6 +517,15 @@ struct YAMLDocument: FileDocument {
     /// What an export is called until somebody names it — one name for the
     /// import sheet's Export… and the File menu's, so the two cannot drift.
     static let defaultFilename = "shellhand-hosts"
+
+    /// What an export the disk refused says, in the sheet as over the window,
+    /// and nothing for Cancel, which is an answer rather than a failure. The
+    /// sheet's Export… dropped every refusal without a word.
+    nonisolated static func failure(_ error: Error) -> String? {
+        guard (error as? CocoaError)?.code != .userCancelled else { return nil }
+        return "The list could not be exported: \(error.localizedDescription)"
+    }
+
     var text: String
 
     init(text: String) { self.text = text }

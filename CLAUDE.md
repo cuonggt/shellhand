@@ -637,9 +637,11 @@ credentials, which is most of it.
 - **File ▸ Export…** writes the list the way the import sheet's Export… does,
   where it used to live alone — behind a sheet called Import. No key: ⇧⌘E,
   the usual one, is Edit Group's. `YAMLDocument.defaultFilename` names the
-  file once for both, and a save the disk refuses is said through the
-  window's alert (`HostStore.report`) rather than dropped; Cancel is not a
-  failure.
+  file once for both, and **both greys with nothing to export and say a save
+  the disk refuses** (`HostStore.canExport`, `YAMLDocument.failure`) — the
+  menu's through the window's alert (`HostStore.report`), the sheet's along
+  its foot; Cancel is not a failure. The sheet's wrote a file holding nothing
+  from the welcome, and dropped every refusal without a word.
 - **Help ▸ Report a Problem… opens `.github/ISSUE_TEMPLATE/problem.yml`**
   with its `version` and `macos` fields filled from the link, and carries
   nothing else: no host name goes into a URL. **Those ids are as permanent as

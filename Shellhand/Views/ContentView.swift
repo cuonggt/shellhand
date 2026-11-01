@@ -322,9 +322,8 @@ struct ContentView: View {
         ) { result in
             // Cancelling is an answer, not a failure; anything else the disk
             // refused is said rather than dropped.
-            if case let .failure(error) = result,
-               (error as? CocoaError)?.code != .userCancelled {
-                store.report("The list could not be exported: \(error.localizedDescription)")
+            if case let .failure(error) = result, let failure = YAMLDocument.failure(error) {
+                store.report(failure)
             }
         }
         // A constant binding cannot be dismissed: the alert came back the
@@ -608,7 +607,7 @@ struct ContentView: View {
                     exportingList = !exportText.isEmpty
                 }
             },
-            canExport: !store.snapshot.hosts.isEmpty || !store.snapshot.groups.isEmpty,
+            canExport: store.canExport,
             canNewTab: newTabOpening != nil)
     }
 

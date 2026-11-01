@@ -337,4 +337,13 @@ nonisolated struct PortableTests {
         #expect(second.result.unchanged == 2)
         #expect(try store.snapshot().hosts.count == 1)
     }
+
+    /// The import sheet's Export… dropped a save the disk refused without a
+    /// word, where File's said it; Cancel says nothing in either.
+    @Test("an export the disk refuses is said, and Cancel is not refused")
+    func exportFailure() {
+        #expect(YAMLDocument.failure(CocoaError(.userCancelled)) == nil)
+        let refused = YAMLDocument.failure(CocoaError(.fileWriteNoPermission))
+        #expect(refused?.hasPrefix("The list could not be exported: ") == true)
+    }
 }

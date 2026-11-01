@@ -44,6 +44,11 @@ final class HostStore {
     /// alert as its own errors — an export the disk would not take, say.
     func report(_ message: String) { lastError = message }
 
+    /// Whether there is a list to export: File ▸ Export… greys out without
+    /// one, and the import sheet's Export… with it, where it wrote a file
+    /// holding nothing.
+    var canExport: Bool { !snapshot.hosts.isEmpty || !snapshot.groups.isEmpty }
+
     func refresh() async {
         loading = true
         ignoringChanges = true
