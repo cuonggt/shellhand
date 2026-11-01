@@ -1174,7 +1174,9 @@ credentials, which is most of it.
   one above the other in a sheet stand in one column instead, one fixed
   modest width: the import's File took all there was after its short label
   while its group field sat 125pt off its own, and the group field keeps an
-  unseen twin of File's Choose… beside it to match.
+  unseen twin of File's Choose… beside it to match — on every tab, so it
+  stays put as the tab changes: on SSH Config's alone, it moved 88pt
+  sideways.
 - **The group editor's tabs divide what a group is from what happens on its
   hosts**, and its Advanced tab shows `•` when anything there is set, the
   palette included.

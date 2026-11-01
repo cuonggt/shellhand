@@ -149,10 +149,10 @@ struct ImportSheet: View {
                                     await look()
                                 }
                             // File's button, unseen, so the two fields stand in
-                            // one column: one left edge and one width.
-                            if source == .sshConfig {
-                                Button("Choose…") {}.hidden()
-                            }
+                            // one column: one left edge and one width — on every
+                            // tab, so the field stays put as the tab changes. On
+                            // SSH Config's alone, it moved 88pt sideways.
+                            Button("Choose…") {}.hidden()
                         }
                     }
                 } footer: {
