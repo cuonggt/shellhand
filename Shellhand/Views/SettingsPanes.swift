@@ -142,7 +142,7 @@ struct TerminalSettingsPane: View {
     /// Empty for SF Mono, which is also what `TerminalFont.preferred` reads
     /// when nothing is stored. Writing it is all that reaches open sessions.
     @AppStorage(TerminalFont.setting) private var fontFamily = ""
-    @AppStorage("terminalTheme") private var theme = Themes.systemName
+    @AppStorage(Themes.settingKey) private var theme = Themes.systemName
     /// False, which is also what `TerminalSession.prefersOptionAsMeta` reads
     /// when nothing is stored — so the switch and the terminals agree on a
     /// fresh install. Writing it is all that reaches the open sessions.

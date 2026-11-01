@@ -292,7 +292,7 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
 
     /// The palette Settings has chosen, or nil for SwiftTerm's own.
     static var preferredTheme: Palette? {
-        Themes.named(UserDefaults.standard.string(forKey: "terminalTheme") ?? Themes.systemName)
+        Themes.named(Themes.inSettings)
     }
 
     /// What this host's terminal is painted with: whatever the host, or the

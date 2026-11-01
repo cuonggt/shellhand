@@ -95,7 +95,7 @@ struct GroupInspector: View {
     private func colours(_ above: FromAbove) -> ValueRow {
         if !group.theme.isEmpty { return ValueRow("Colours", group.theme) }
         if !above.theme.isEmpty { return ValueRow("Colours", above.theme, from: above.themeFrom) }
-        return ValueRow("Colours", "As in Settings")
+        return ValueRow("Colours", Themes.inSettings, from: "Settings")
     }
 }
 

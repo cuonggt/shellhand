@@ -1048,7 +1048,10 @@ credentials, which is most of it.
   `—`. The caption says "from Production" in every editor: the host
   editor's said "Production" alone up to 0.1.5, which read as a value.
   Connect to's user says it under the row, which has no room beside it —
-  "user from Production" — where it said nothing at all. **An
+  "user from Production" — where it said nothing at all. An inherited
+  palette reads the same way, value first — "Gruvbox Dark from Production",
+  "System from Settings" (`Effective.inherited`) — where it said "From
+  Production — Gruvbox Dark", and the group inspector "As in Settings". **An
   example never names something in the list** (`HostEditorSheet
   .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
   Jump host, with bastion filed there, read as Production going through it,

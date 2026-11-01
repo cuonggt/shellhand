@@ -51,6 +51,15 @@ nonisolated enum Themes {
     /// left alone rather than replaced by a guess at what the system wants.
     static let systemName = "System"
 
+    /// Where Settings keeps the palette chosen there.
+    static let settingKey = "terminalTheme"
+
+    /// The palette chosen in Settings, by name: what a host comes up in when
+    /// nothing above it names one.
+    static var inSettings: String {
+        UserDefaults.standard.string(forKey: settingKey) ?? systemName
+    }
+
     private static let lock = NSLock()
     nonisolated(unsafe) private static var custom: [Palette] = []
 

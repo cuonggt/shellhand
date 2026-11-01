@@ -22,7 +22,7 @@ nonisolated struct ThemeInheritanceTests {
     ]
 
     /// The inherit row of a host with a palette of its own was named after
-    /// that same palette — "From above — Dracula" — since what inheriting
+    /// that same palette — "Dracula from above" — since what inheriting
     /// gives was read off a host that set one. It is read with its own left
     /// out.
     @Test("what inheriting gives is said without the host's own palette")
@@ -30,7 +30,7 @@ nonisolated struct ThemeInheritanceTests {
         let host = Host(id: "1", name: "web", groupId: "prod", theme: "Dracula")
         let asked = HostDetailView.inheriting(host)
         let out = resolver(hosts: [host], groups: groups).resolve(asked).effective
-        #expect(out.inheritedPalette == "From Production — Gruvbox Dark")
+        #expect(out.inheritedPalette == "Gruvbox Dark from Production")
         #expect(host.theme == "Dracula", "the host itself was changed")
     }
 

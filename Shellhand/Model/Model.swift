@@ -151,8 +151,17 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// "inherit" option with it, and two copies of a sentence drift — which
     /// this app has already watched happen with error handling.
     var inheritedPalette: String {
-        guard !theme.isEmpty else { return "From Settings" }
-        return themeFrom.isEmpty ? "From above — \(theme)" : "From \(themeFrom) — \(theme)"
+        guard !theme.isEmpty else { return Self.inherited(Themes.inSettings, from: "Settings") }
+        return Self.inherited(theme, from: themeFrom.isEmpty ? "above" : themeFrom)
+    }
+
+    /// An inherited palette as an inherit row names it: the palette, then
+    /// where it comes from — "Gruvbox Dark from Production", as "deploy from
+    /// Production" reads everywhere else. It read "From Production — Gruvbox
+    /// Dark", source first, and the group inspector "As in Settings" where
+    /// the editors said "From Settings".
+    static func inherited(_ palette: String, from source: String) -> String {
+        "\(palette) from \(source)"
     }
 
     /// What to show as the jump host, and what supplied it.
