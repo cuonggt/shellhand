@@ -551,8 +551,11 @@ credentials, which is most of it.
   the host window is not in front: `HostsWindow.front()` finds the window by
   its identifier instead. SFTP fronts a browser already open the same way,
   with `FilesWindowController.front()`, before asking `AppActions` to open one.
-  With nothing picked that window is titled Hosts, as the item and the
-  strip's tab call it, so the Window menu lists it so: it said Shellhand.
+  With the Hosts tab in front that window is titled Hosts, as the item and
+  the strip's tab call it, what is picked said under it ("db-01 ·
+  Production / US"), so the Window menu lists it so: it said Shellhand, and
+  then the host picked — "waiter" beneath the session on waiter, named the
+  same.
   → [Hosts and SFTP](docs/notes/window.md#hosts-and-sftp)
 - Two `.disabled` on one menu item **compose**, so both have to be true for it
   to be usable. "Delete Group…" carried one on `hasGroup` and a second on

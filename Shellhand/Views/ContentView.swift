@@ -427,27 +427,28 @@ struct ContentView: View {
     private var windowTitle: String {
         switch pane {
         case .hosts:
-            // With nothing picked, Hosts, as Shellhand ▸ Hosts and the
-            // strip's tab call this window: the Window menu, which lists it
-            // by this title, called it Shellhand beside them.
-            return selectedHost?.name ?? selectedGroup?.name ?? "Hosts"
+            // The tab in front, as a session's tab names the window: Hosts,
+            // as Shellhand ▸ Hosts and the strip call it, with what is
+            // picked said under it. The Window menu lists the window by this
+            // title: it called it Shellhand, and then by the host picked —
+            // "waiter" under the session on waiter, named the same.
+            return "Hosts"
         case let .session(id):
             // The tab's own name, numbered as it is, not the shell's title.
             return sessions.title(of: id) ?? "Shellhand"
         }
     }
 
-    /// Under it: how the session is doing, or where what is selected is
-    /// filed — a group's path for a host, the path above for a group.
+    /// Under it: how the session is doing, or what is picked in the list —
+    /// a host with where it is filed, a group by its path.
     private var windowSubtitle: String {
         switch pane {
         case .hosts:
-            if let host = selectedHost, let group = store.group(host.groupId) {
-                return store.path(of: group)
+            if let host = selectedHost {
+                guard let group = store.group(host.groupId) else { return host.name }
+                return "\(host.name) · \(store.path(of: group))"
             }
-            if let group = selectedGroup, let parent = store.group(group.parentId) {
-                return store.path(of: parent)
-            }
+            if let group = selectedGroup { return store.path(of: group) }
             return ""
         case let .session(id):
             guard let session = sessions.all.first(where: { $0.id == id }) else { return "" }
