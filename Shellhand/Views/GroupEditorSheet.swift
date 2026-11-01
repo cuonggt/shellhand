@@ -177,7 +177,10 @@ struct GroupEditorSheet: View {
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
                     example: HostEditorSheet.jumpExample(
                         avoiding: store.snapshot.hosts.map(\.name)),
-                    text: $group.proxyJump)
+                    text: $group.proxyJump,
+                    picking: store.snapshot.hosts.sorted {
+                        $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                    })
             }
         }
         .formStyle(.grouped)
@@ -269,17 +272,24 @@ struct GroupEditorSheet: View {
     /// nothing — a dash sat in the field reading like a value somebody had
     /// chosen. Where it came from is said beside the field rather than folded
     /// into that grey text, which is the shape the host editor settled on.
+    ///
+    /// A field that names one of your hosts — the jump host — is `picking`
+    /// them, and offers them as the host editor's does.
     @ViewBuilder
     private func row(
         _ title: String, value: String, from: String,
-        example: String, text: Binding<String>
+        example: String, text: Binding<String>, picking hosts: [Host]? = nil
     ) -> some View {
         LabeledContent(title) {
             HStack(spacing: 6) {
-                TextField("", text: text, prompt: Text(value.isEmpty ? example : value))
-                    .textFieldStyle(.roundedBorder)
-                    .labelsHidden()
-                    .multilineTextAlignment(.leading)
+                if let hosts {
+                    JumpHostField(text: text, prompt: value.isEmpty ? example : value, hosts: hosts)
+                } else {
+                    TextField("", text: text, prompt: Text(value.isEmpty ? example : value))
+                        .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                }
                 if text.wrappedValue.trimmingCharacters(in: .whitespaces).isEmpty, !from.isEmpty {
                     Text("from \(from)")
                         .font(.caption)

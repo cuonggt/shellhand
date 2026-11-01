@@ -427,27 +427,11 @@ struct HostEditorSheet: View {
     /// offered — but it stays a field, because `user@bastion.example.com` is
     /// something ssh understands and the list cannot.
     private var jumpField: some View {
-        HStack(spacing: 6) {
-            TextField("", text: $host.proxyJump,
-                      prompt: Text(shown(preview.effective.proxyJump, Self.jumpExample(
-                          avoiding: store.snapshot.hosts.map(\.name) + [host.name]))))
-                .textFieldStyle(.roundedBorder)
-                .labelsHidden()
-                .multilineTextAlignment(.leading)
-            Menu {
-                Button("None") { host.proxyJump = "" }
-                Divider()
-                ForEach(otherHosts) { other in
-                    Button(other.name) { host.proxyJump = other.name }
-                }
-            } label: {
-                Image(systemName: "list.bullet")
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .accessibilityLabel("One of your hosts")
-            .help("One of your hosts")
-        }
+        JumpHostField(
+            text: $host.proxyJump,
+            prompt: shown(preview.effective.proxyJump, Self.jumpExample(
+                avoiding: store.snapshot.hosts.map(\.name) + [host.name])),
+            hosts: otherHosts)
     }
 
     private var footer: some View {
