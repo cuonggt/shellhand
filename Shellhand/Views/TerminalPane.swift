@@ -473,8 +473,11 @@ private struct EndedCard: View {
             // Side by side where they fit, one above another where they do
             // not: beside another tab they were cut to "Recon…", "Edit H…".
             ViewThatFits(in: .horizontal) {
-                HStack { buttons }
-                VStack(alignment: .leading) { buttons }
+                HStack { buttons(stacked: false) }
+                // One above another at one width, the widest's: each at its
+                // own, they stood ragged, 76, 77 and 72pt beside another tab.
+                VStack(alignment: .leading) { buttons(stacked: true) }
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .controlSize(.small)
         }
@@ -485,17 +488,25 @@ private struct EndedCard: View {
     }
 
     @ViewBuilder
-    private var buttons: some View {
+    private func buttons(stacked: Bool) -> some View {
         if session.host != nil {
             if status.isFailure {
-                Button("Reconnect") { actions.reconnect(session) }
-                    .buttonStyle(.borderedProminent)
+                Button { actions.reconnect(session) } label: {
+                    Text("Reconnect").stackedButtonLabel(stacked)
+                }
+                .buttonStyle(.borderedProminent)
             } else {
-                Button("Reconnect") { actions.reconnect(session) }
+                Button { actions.reconnect(session) } label: {
+                    Text("Reconnect").stackedButtonLabel(stacked)
+                }
             }
         }
-        if let onEdit { Button("Edit Host…", action: onEdit) }
-        Button("Close Tab") { actions.close(session) }
+        if let onEdit {
+            Button(action: onEdit) { Text("Edit Host…").stackedButtonLabel(stacked) }
+        }
+        Button { actions.close(session) } label: {
+            Text("Close Tab").stackedButtonLabel(stacked)
+        }
     }
 
     private var said: String {
@@ -625,5 +636,14 @@ struct TerminalRepresentable: NSViewRepresentable {
 
     func updateNSView(_ nsView: FocusingTerminalView, context: Context) {
         nsView.takesKeyboardWhenShown = takesKeyboard
+    }
+}
+
+extension View {
+    /// A button's label taking its stack's width where the buttons stand one
+    /// above another, so they stand at one width — the widest's, the stack
+    /// held to it — rather than each at its own.
+    func stackedButtonLabel(_ stacked: Bool) -> some View {
+        frame(maxWidth: stacked ? .infinity : nil)
     }
 }

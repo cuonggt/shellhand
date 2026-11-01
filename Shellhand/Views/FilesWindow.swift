@@ -495,8 +495,10 @@ private struct Unreached: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             ViewThatFits(in: .horizontal) {
-                HStack { buttons }
-                VStack(alignment: .leading) { buttons }
+                HStack { buttons(stacked: false) }
+                // One above another at one width, as the terminal card's.
+                VStack(alignment: .leading) { buttons(stacked: true) }
+                    .fixedSize(horizontal: true, vertical: false)
             }
             // Small, as the terminal card's are: the one card drawn in two
             // windows had its buttons at two sizes.
@@ -512,13 +514,15 @@ private struct Unreached: View {
     /// card: a terminal tab where one can answer what SFTP cannot, and
     /// otherwise another go — then the host's editor, as the card has it.
     @ViewBuilder
-    private var buttons: some View {
+    private func buttons(stacked: Bool) -> some View {
         if trouble.offersTerminal && listed {
-            Button("Open in Terminal") { HostRequest.post(.terminal, for: host) }
-                .buttonStyle(.borderedProminent)
-            Button("Try Again", action: onTryAgain)
+            Button { HostRequest.post(.terminal, for: host) } label: {
+                Text("Open in Terminal").stackedButtonLabel(stacked)
+            }
+            .buttonStyle(.borderedProminent)
+            Button(action: onTryAgain) { Text("Try Again").stackedButtonLabel(stacked) }
         } else {
-            Button("Try Again", action: onTryAgain)
+            Button(action: onTryAgain) { Text("Try Again").stackedButtonLabel(stacked) }
                 .buttonStyle(.borderedProminent)
         }
         // As a terminal tab that could not connect offers it. Only Try Again
@@ -526,7 +530,9 @@ private struct Unreached: View {
         // reads the host from the list afresh (`FilePlace.tryAgain(with:)`),
         // so what is put right there is what it tries, under its new name.
         if listed {
-            Button("Edit Host…") { HostRequest.post(.editor, for: host) }
+            Button { HostRequest.post(.editor, for: host) } label: {
+                Text("Edit Host…").stackedButtonLabel(stacked)
+            }
         }
     }
 }

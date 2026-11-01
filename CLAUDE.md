@@ -1048,7 +1048,9 @@ credentials, which is most of it.
   there — read as output, a session still trying showed as connected.
   The cards hold at a side's width beside another tab: the connecting line
   breaks between its parts (`SessionStatus.connectingLines`) and an ending's
-  buttons stack, where they broke inside a port and cut to "Recon…".
+  buttons stack, where they broke inside a port and cut to "Recon…" — at one
+  width, the widest's (`stackedButtonLabel`, the stack held to its widest),
+  in SFTP's card too, where each stood at its own, 76, 77 and 72pt.
   → [blank, not empty](docs/notes/terminal.md#blank-not-empty)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a
