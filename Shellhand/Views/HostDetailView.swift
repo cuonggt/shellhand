@@ -93,7 +93,6 @@ struct HostDetailView: View {
     /// editor's preview line is — so the two can never disagree about what
     /// this host runs.
     @State private var preview = HostPreview()
-    @State private var message = ""
 
     var body: some View {
         ScrollView {
@@ -142,8 +141,11 @@ struct HostDetailView: View {
                 }
                 .font(.callout)
 
-                command
-                if !openHere.isEmpty { openNow }
+                WhatWillRun(preview: preview)
+                if !openHere.isEmpty {
+                    OpenNow(sessions: sessions, here: openHere, inFront: inFront,
+                            onShow: onShowSession)
+                }
 
                 Spacer(minLength: 0)
             }
@@ -153,7 +155,6 @@ struct HostDetailView: View {
         // `Host` is Hashable, so this re-runs for any change to it — a port
         // edited here, or a group above it changing what it passes down.
         .task(id: host) {
-            message = ""
             preview = await store.preview(of: Self.inheriting(host))
         }
     }
@@ -189,17 +190,27 @@ struct HostDetailView: View {
         }
     }
 
-    // MARK: what will run
+    // MARK: what each section is made of
 
-    /// The line ssh is actually given. It is the one place the whole of the
-    /// inheritance shows at once — the jump chain spelled out as a nested
-    /// `ProxyCommand`, every `-o` a group contributed, the port, the key —
-    /// and it is what you paste into a ticket when a connection misbehaves.
-    ///
-    /// Copy sits in the header rather than under the line, for the reason the
-    /// keys dialog learned: a long value pushes a button below the fold, and
-    /// taking this away with you is most of why you would look at it.
-    private var command: some View {
+    private var openHere: [TerminalSession] {
+        (sessions?.all ?? []).filter { $0.host?.id == host.id }
+    }
+}
+
+/// The line ssh is actually given — a listed host's, or a machine typed
+/// into ⌘K's. It is the one place the whole of the inheritance shows at
+/// once — the jump chain spelled out as a nested `ProxyCommand`, every `-o`
+/// a group contributed, the port, the key — and it is what you paste into a
+/// ticket when a connection misbehaves.
+///
+/// Copy sits in the header rather than under the line, for the reason the
+/// keys dialog learned: a long value pushes a button below the fold, and
+/// taking this away with you is most of why you would look at it.
+struct WhatWillRun: View {
+    let preview: HostPreview
+    @State private var message = ""
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("What will run").font(.headline)
@@ -221,21 +232,31 @@ struct HostDetailView: View {
                 .padding(8)
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
         }
+        .onChange(of: preview) { message = "" }
     }
+}
 
-    // MARK: already open
+/// The sessions already on a machine, each marked as the strip marks its
+/// tab, the one in front said rather than offered. Worth saying before you
+/// connect: with forty hosts and nine tabs, "am I already on this one?" is a
+/// question the list cannot answer and the tab strip only answers if you
+/// read every label.
+struct OpenNow: View {
+    /// For the names the strip gives the tabs.
+    let sessions: Sessions?
+    /// The sessions on this machine.
+    let here: [TerminalSession]
+    /// The session in front, which is said rather than offered.
+    let inFront: UUID?
+    let onShow: (UUID) -> Void
 
-    /// The sessions already on this machine. Worth saying before you connect:
-    /// with forty hosts and nine tabs, "am I already on this one?" is a
-    /// question the list cannot answer and the tab strip only answers if you
-    /// read every label.
-    private var openNow: some View {
+    var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             // Not counted: the rows count themselves, and "Open now (2)" sat
             // over a tab named "refuser (2)" as one more of its numbering.
             Text("Open now")
                 .font(.headline)
-            ForEach(openHere, id: \.id) { session in
+            ForEach(here, id: \.id) { session in
                 // The tab in front is said, not offered: its Show did nothing.
                 if session.id == inFront {
                     openRow(session, saying: "In front")
@@ -244,7 +265,7 @@ struct HostDetailView: View {
                             "\(title(of: session)), \(session.status.spoken), in front")
                 } else {
                     Button {
-                        onShowSession(session.id)
+                        onShow(session.id)
                     } label: {
                         openRow(session, saying: "Show")
                     }
@@ -271,12 +292,6 @@ struct HostDetailView: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
-    }
-
-    // MARK: what each section is made of
-
-    private var openHere: [TerminalSession] {
-        (sessions?.all ?? []).filter { $0.host?.id == host.id }
     }
 
     /// A session's name as the strip and the Window menu give it: two on

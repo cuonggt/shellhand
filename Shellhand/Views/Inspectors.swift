@@ -149,31 +149,67 @@ struct LocalShellInspector: View {
 /// A machine typed into ⌘K, which is in no list — and could not be put in
 /// one from anywhere, short of typing it all again into New Host.
 struct UnsavedHostInspector: View {
+    let store: HostStore
     let host: Host
+    /// What is open, for the tabs on this machine.
+    var sessions: Sessions?
+    /// The session in front, which Open now says rather than offers.
+    var inFront: UUID? = nil
+    var onShowSession: (UUID) -> Void = { _ in }
     let onSave: (Host) -> Void
 
+    /// What ssh is given, resolved as the session's own argv is.
+    @State private var preview = HostPreview()
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(destination).font(.title2).bold()
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Text("Typed into ⌘K · not in your list")
-                    .font(.callout).foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(destination).font(.title2).bold()
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Text("Typed into ⌘K · not in your list")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                Button("Save as Host…") { onSave(Self.savable(host)) }
+                    .buttonStyle(.borderedProminent)
+                // Written as a listed host's are: the address with its port, then
+                // the user. It gave the port a row of its own after the user.
+                Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
+                    ValueRow("Address", Self.addressLine(of: host))
+                    ValueRow("User", host.user)
+                }
+                .font(.callout)
+                // What a listed host's inspector says as well: with two tabs
+                // open on a machine typed in, this said neither, and its
+                // command could be read nowhere but Save as Host…'s sheet.
+                WhatWillRun(preview: preview)
+                if !openHere.isEmpty {
+                    OpenNow(sessions: sessions, here: openHere, inFront: inFront,
+                            onShow: onShowSession)
+                }
+                Spacer(minLength: 0)
             }
-            Button("Save as Host…") { onSave(Self.savable(host)) }
-                .buttonStyle(.borderedProminent)
-            // Written as a listed host's are: the address with its port, then
-            // the user. It gave the port a row of its own after the user.
-            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
-                ValueRow("Address", Self.addressLine(of: host))
-                ValueRow("User", host.user)
-            }
-            .font(.callout)
-            Spacer(minLength: 0)
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .task(id: host) {
+            preview = await store.preview(of: host)
+        }
+    }
+
+    /// Its tabs: the sessions on a machine typed the same way.
+    private var openHere: [TerminalSession] {
+        (sessions?.all ?? []).filter { Self.sameMachine($0.host, as: host) }
+    }
+
+    /// Whether a session's machine is this one typed in again: by what was
+    /// typed, never by the empty id, which every machine typed into ⌘K
+    /// shares. A listed host at the same address is not it, nor a local
+    /// shell, which has no host.
+    nonisolated static func sameMachine(_ other: Host?, as host: Host) -> Bool {
+        guard let other, other.id.isEmpty, host.id.isEmpty else { return false }
+        return other.addr == host.addr && other.port == host.port && other.user == host.user
     }
 
     /// The address with its port unless 22, spelled as a listed host's

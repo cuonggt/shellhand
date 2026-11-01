@@ -267,11 +267,16 @@ credentials, which is most of it.
   nowhere but the editor — and what is inside; a local shell; or a machine typed into
   ⌘K, with Save as Host…, its address written as a listed host's
   (`UnsavedHostInspector.addressLine`), port and all — it gave the port a row
-  of its own. It said "Nothing selected" for the last three, so a
-  ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
-  them. **A host's Open now marks each of its tabs as the strip does**
-  (`StatusMark`): every row wore one terminal icon, so a tab that never
-  connected was listed as open as a live one. The tab in front says In
+  of its own — and What will run and Open now as a listed host's has them
+  (`WhatWillRun`, `OpenNow`), its tabs those on the machine typed the same
+  way (`UnsavedHostInspector.sameMachine`), never matched by the empty id
+  every typed machine shares: with two tabs open on one, it said neither,
+  and its command was nowhere but Save as Host…'s sheet. It said "Nothing
+  selected" for the last three, so a ⌘K machine could not be saved from
+  anywhere. `Views/Inspectors.swift` draws them. **A host's Open now marks
+  each of its tabs as the strip does** (`StatusMark`): every row wore one
+  terminal icon, so a tab that never connected was listed as open as a live
+  one. The tab in front says In
   front, where its Show did nothing, and the heading counts nothing:
   "Open now (2)" sat over a tab named "refuser (2)".
 - **A destination has one spelling, `Host.destinationLine`**, which is

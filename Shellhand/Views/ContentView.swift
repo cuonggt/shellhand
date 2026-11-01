@@ -512,7 +512,11 @@ struct ContentView: View {
                 nothingSelected
             }
         case let .unsaved(host):
-            UnsavedHostInspector(host: host, onSave: { editing = $0 })
+            UnsavedHostInspector(
+                store: store, host: host, sessions: sessions,
+                inFront: frontSession?.id,
+                onShowSession: { pick(tab: .session($0)) },
+                onSave: { editing = $0 })
         case .localShell:
             LocalShellInspector()
         case .nothing:

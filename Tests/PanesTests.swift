@@ -275,6 +275,26 @@ nonisolated struct PanesTests {
         #expect(UnsavedHostInspector.addressLine(of: six) == "[2001:db8::5]:2222")
     }
 
+    /// Its Open now lists the tabs on the machine as typed: matched by the
+    /// empty id every typed machine shares, it would list them all.
+    @Test("a ⌘K machine's tabs are the ones typed the same way")
+    func sameTypedMachine() {
+        let typed = Shellhand.Host(name: "root@127.0.0.1:2", addr: "127.0.0.1", port: 2, user: "root")
+        #expect(UnsavedHostInspector.sameMachine(typed, as: typed))
+        var other = typed
+        other.port = 1
+        #expect(!UnsavedHostInspector.sameMachine(other, as: typed))
+        other = typed
+        other.user = "deploy"
+        #expect(!UnsavedHostInspector.sameMachine(other, as: typed))
+        // A listed host at the very address is a host of the list, not this.
+        var listed = typed
+        listed.id = "h1"
+        #expect(!UnsavedHostInspector.sameMachine(listed, as: typed))
+        // A local shell has no host.
+        #expect(!UnsavedHostInspector.sameMachine(nil, as: typed))
+    }
+
     @Test("a local shell, a ⌘K machine or a deleted host leaves the Host menu nothing")
     func subjectWithNothingListed() {
         let typed = Shellhand.Host(name: "root@10.0.1.5", addr: "10.0.1.5", user: "root")
