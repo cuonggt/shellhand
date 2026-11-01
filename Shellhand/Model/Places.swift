@@ -121,6 +121,17 @@ nonisolated enum Places {
         directory.hasSuffix("/") ? directory + name : directory + "/" + name
     }
 
+    /// Whether a name typed for a new folder — or, given `renaming`, as an
+    /// entry's new name — can be one: something once trimmed, one name
+    /// rather than a path, not `.` or `..`, and for a rename not the name it
+    /// has. Create and Rename are greyed for anything else; they took it,
+    /// closed the question and did nothing.
+    static func usableName(_ typed: String, renaming old: String? = nil) -> Bool {
+        let name = typed.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty, !name.contains("/"), name != ".", name != ".." else { return false }
+        return name != old
+    }
+
     /// A folder on this Mac written from `~` when it is in the home folder,
     /// for a line with no room for `/Users/someone` before every path.
     static func abbreviated(_ path: String, home: String) -> String {

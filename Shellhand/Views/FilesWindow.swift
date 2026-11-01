@@ -139,11 +139,15 @@ private struct PlacePane: View {
                 if let entry = renaming { Task { await place.rename(entry, to: name) } }
                 renaming = nil
             }
+            // Greyed for a name the rename would refuse, as the sidebar's
+            // tag rename is: it closed the question and did nothing.
+            .disabled(!Places.usableName(name, renaming: renaming?.name))
         }
         .alert("New folder", isPresented: $newFolder) {
             TextField("Name", text: $name)
             Button("Cancel", role: .cancel) {}
             Button("Create") { Task { await place.makeDirectory(named: name) } }
+                .disabled(!Places.usableName(name))
         }
     }
 

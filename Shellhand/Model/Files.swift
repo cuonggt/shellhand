@@ -142,7 +142,7 @@ final class FilePlace {
 
     func makeDirectory(named name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, let via else { return }
+        guard Places.usableName(name), let via else { return }
         do {
             try await Core.shared.makeDirectory(session: via, path: path(trimmed))
             await refresh()
@@ -153,8 +153,7 @@ final class FilePlace {
 
     func rename(_ entry: RemoteEntry, to name: String) async {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty, trimmed != entry.name, !trimmed.contains("/"),
-              let via else { return }
+        guard Places.usableName(name, renaming: entry.name), let via else { return }
         do {
             try await Core.shared.rename(
                 session: via, from: path(entry.name), to: path(trimmed))

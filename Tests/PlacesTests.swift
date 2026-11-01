@@ -45,6 +45,23 @@ nonisolated struct PlacesTests {
         #expect(Places.copyTitle(to: true, title: "This Mac") == "Copy to This Mac")
     }
 
+    /// Create and Rename took an empty name, closed the question and did
+    /// nothing; they are greyed for any name these refuse.
+    @Test("a new folder or a rename takes one usable name")
+    func usableNames() {
+        #expect(Places.usableName("logs"))
+        #expect(Places.usableName("  logs  "))
+        #expect(!Places.usableName(""))
+        #expect(!Places.usableName("   "))
+        #expect(!Places.usableName("a/b"))
+        #expect(!Places.usableName("."))
+        #expect(!Places.usableName(".."))
+        // A rename to the name it already has changes nothing.
+        #expect(!Places.usableName("notes.txt", renaming: "notes.txt"))
+        #expect(!Places.usableName(" notes.txt ", renaming: "notes.txt"))
+        #expect(Places.usableName("notes.md", renaming: "notes.txt"))
+    }
+
     // MARK: whether it is this Mac
 
     /// This matters beyond the label: `isLocal` decides whether a name clash
