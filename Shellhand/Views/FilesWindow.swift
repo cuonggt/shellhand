@@ -292,8 +292,10 @@ private struct PlacePane: View {
         // This Mac's path field, the window's first text field, where ↓,
         // Space and ⌫ edited the path rather than acting on a file.
         .task { if isActive { listFocused = true } }
-        // ⌫ asks first, through the same question as the menu's Delete.
-        .onDeleteCommand { if !selection.isEmpty { confirmingDelete = true } }
+        // ⌫ asks first, through the same question as the menu's Delete. Nil
+        // with nothing selected, which greys Edit ▸ Delete: always handed a
+        // closure, it stayed live and did nothing.
+        .onDeleteCommand(perform: selection.isEmpty ? nil : { confirmingDelete = true })
         // Space, as in Finder: a look at the file picked, on this Mac. A file
         // on a host would have to be fetched first.
         .onKeyPress(.space) {

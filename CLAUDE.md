@@ -461,7 +461,8 @@ credentials, which is most of it.
   Import… and Quick Connect… need the host window, Shellhand ▸ SFTP a host
   window or a browser to bring forward, and Reconnect a host — a local
   shell has none. With SFTP or Settings in front they were live and did
-  nothing.
+  nothing. In the SFTP window Edit ▸ Delete needs a file selected:
+  `onDeleteCommand` is handed nil without one.
 - **A menu is named for what its items act on, and that gates it**:
   **Host** needs a listed host — the session in front's, or else the one
   selected (`Panes.subject`, ⌘T's rule) — **Terminal** a session in front,
