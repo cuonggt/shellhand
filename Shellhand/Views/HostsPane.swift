@@ -155,6 +155,11 @@ struct HostsPane: View {
         // the screen. On a group it opens the group, which picking no longer
         // does.
         .onKeyPress(.return) { open(selection) }
+        // In line with the title over it, 24pt in, as the grid is: the inset
+        // list starts its headings and rows 16pt in, 8 left of "All Hosts".
+        // Padding, outside the list's own modifiers, since `contentMargins`
+        // does not reach a list's rows here.
+        .padding(.horizontal, 8)
     }
 
     /// What two clicks or ⏎ do: connect to a host, open a group.
