@@ -394,6 +394,23 @@ nonisolated struct PanesTests {
         #expect(Panes.tabTitleWidth(room: 0, tabs: 3) == 180)
     }
 
+    /// At the window's default size four tabs fill the strip, and the first
+    /// was shown sheared with nothing to say the strip scrolled.
+    @Test("the strip fades the edges it has tabs past")
+    func hiddenEdges() {
+        // Everything in sight: no fade.
+        #expect(Panes.hiddenEdges(offset: 0, shown: 403, content: 380) == .init())
+        // Scrolled along to the tab in front, the last: tabs before it.
+        #expect(Panes.hiddenEdges(offset: 49, shown: 403, content: 452)
+            == .init(leading: true, trailing: false))
+        // At the start of a full strip: tabs after it.
+        #expect(Panes.hiddenEdges(offset: 0, shown: 403, content: 452)
+            == .init(leading: false, trailing: true))
+        // In the middle: both.
+        #expect(Panes.hiddenEdges(offset: 20, shown: 403, content: 452)
+            == .init(leading: true, trailing: true))
+    }
+
     /// ⌘D closes the split while one is open, and its item said Show
     /// Beside all the same.
     @Test("⌘D's item says what it would do")

@@ -259,6 +259,21 @@ nonisolated enum Panes {
         return min(180, max(60, share))
     }
 
+    /// The strip's edges with tabs past them, which fade.
+    struct HiddenEdges: Equatable {
+        var leading = false
+        var trailing = false
+    }
+
+    /// Which edges of the strip have tabs past them, scrolled `offset` along
+    /// with `shown` of its `content` in sight. Those fade, so a tab cut there
+    /// reads as more beyond rather than broken: at the window's default size
+    /// four tabs fill the strip, and the first was shown sheared, its edge
+    /// square against Hosts, with nothing to say the strip scrolled.
+    static func hiddenEdges(offset: CGFloat, shown: CGFloat, content: CGFloat) -> HiddenEdges {
+        HiddenEdges(leading: offset > 0.5, trailing: offset + shown < content - 0.5)
+    }
+
     /// The least the middle column's content is given, whatever it shows —
     /// fixed, so that no selection moves the column. Left to its content it
     /// moved: picking a group raised it 34pt, so a window already at its

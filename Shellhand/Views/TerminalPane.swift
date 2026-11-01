@@ -23,6 +23,8 @@ struct SessionTabBar: View {
 
     /// How wide the session tabs' part of the strip is, which they share.
     @State private var room: CGFloat = 0
+    /// The strip's edges with tabs past them, which fade.
+    @State private var hidden = Panes.HiddenEdges()
 
     var body: some View {
         // Named as the Window menu names them, a second of one name with its
@@ -53,6 +55,18 @@ struct SessionTabBar: View {
                 }
                 .scrollIndicators(.never)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { room = $0 }
+                // An edge with tabs past it fades, so a tab cut there reads as
+                // more beyond rather than broken: at the window's default size
+                // four tabs fill the strip, and the first was shown sheared,
+                // square against Hosts, with nothing to say the strip scrolled.
+                .onScrollGeometryChange(for: Panes.HiddenEdges.self) { geometry in
+                    Panes.hiddenEdges(
+                        offset: geometry.contentOffset.x, shown: geometry.containerSize.width,
+                        content: geometry.contentSize.width)
+                } action: { _, now in
+                    hidden = now
+                }
+                .mask(StripFade(hidden: hidden))
                 // The tab in front is scrolled into view: a session opened with
                 // the strip full landed past its end, out of sight. A turn of
                 // the loop later, since a new tab is not laid out in the update
@@ -66,6 +80,21 @@ struct SessionTabBar: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(.bar)
+    }
+}
+
+/// The strip's mask: opaque, but for a fade at each edge with tabs past it.
+private struct StripFade: View {
+    let hidden: Panes.HiddenEdges
+
+    var body: some View {
+        HStack(spacing: 0) {
+            LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                .frame(width: hidden.leading ? 24 : 0)
+            SwiftUI.Color.black
+            LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
+                .frame(width: hidden.trailing ? 24 : 0)
+        }
     }
 }
 

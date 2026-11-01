@@ -551,8 +551,10 @@ credentials, which is most of it.
   180pt and cut in the middle; as the strip fills the tabs share its room
   down to 60 (`Panes.tabTitleWidth`) before it scrolls, and the Hosts tab
   stays outside the scrolling, where a full strip pushed it half off its
-  edge. The tab shown beside is outlined. **Don't move sessions back to the
-  sidebar**.
+  edge. An edge with tabs past it fades (`Panes.hiddenEdges`): at the
+  window's default size four tabs fill the strip, and the first was shown
+  sheared, square against Hosts, with nothing to say the strip scrolled. The
+  tab shown beside is outlined. **Don't move sessions back to the sidebar**.
   → [the strip](docs/notes/window.md#the-strip)
 - The strip is **not there at all when nothing is open**, list or no list
   (`Panes.showsTabs`): with nothing open it held one tab, the one you were
