@@ -727,7 +727,8 @@ credentials, which is most of it.
   weeks it left an `ssh` child per pane running until quit, while a comment
   beside it said the opposite.
   → [closing the window](docs/notes/sftp.md#closing-the-window)
-- **A side showing no listing counts nothing**, and the other side's Copy is
+- **A side showing no listing counts nothing** and draws no Copy of its own,
+  which kept its place greyed with nothing to choose; the other side's Copy is
   plain Copy while this one is pointed nowhere (`Places.copyTitle`): "0
   items" read as an empty folder, and the button said "Copy to Choose a
   host". Its path field greys with the buttons beside it, where Return in

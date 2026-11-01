@@ -380,6 +380,11 @@ private struct PlacePane: View {
             }
             .controlSize(.small)
             .disabled(chosen.isEmpty || other.listing.path.isEmpty)
+            // Not drawn under a side with nothing listed, which has nothing
+            // to choose and copy: it sat there greyed for good. Kept in its
+            // place, so the two sides' footers stand the same height.
+            .opacity(place.listing.path.isEmpty ? 0 : 1)
+            .accessibilityHidden(place.listing.path.isEmpty)
 
             Spacer()
             Text(count).font(.caption2).foregroundStyle(.secondary)
