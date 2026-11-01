@@ -21,6 +21,19 @@ nonisolated enum ImportPlan {
     static func mayImport(previewed: Asked?, asking: Asked, changes: Int, busy: Bool) -> Bool {
         !busy && changes > 0 && previewed == asking
     }
+
+    /// What the ssh config at `path` holds, in the same words wherever it is
+    /// said: the welcome said "No ~/.ssh/config here", and this sheet "No
+    /// file there yet." under its field with "There is no file at …" along
+    /// its foot at once — and a file naming no machine was said to be none.
+    static func configSays(_ count: Int?, at path: String) -> String {
+        let shown = NSString(string: path).abbreviatingWithTildeInPath
+        return switch count {
+        case nil: "No file at \(shown)"
+        case 0?: "\(shown) names no machines"
+        case let named?: "\(shown) names \(named) machine\(named == 1 ? "" : "s")"
+        }
+    }
 }
 
 /// Moving a host list in and out, through the same code the CLI uses: records
@@ -78,6 +91,8 @@ struct ImportSheet: View {
     @State private var source: Source = .sshConfig
     @State private var configPath = ""
     @State private var configCount: Int?
+    /// The file `configCount` is about, which the field may have moved on from.
+    @State private var configCounted = ""
     @State private var picked: URL?
     @State private var text = ""
     @State private var group = ""
@@ -182,8 +197,8 @@ struct ImportSheet: View {
             if configPath.isEmpty {
                 configPath = Core.shared.defaultSSHConfigPath()
             }
-            configCount = store.sshConfigHosts(path: configPath)
-            if source == .sshConfig, configCount != nil { await look() }
+            countConfig(at: configPath)
+            if source == .sshConfig, (configCount ?? 0) > 0 { await look() }
         }
     }
 
@@ -223,14 +238,11 @@ struct ImportSheet: View {
                 }
             }
             HStack {
-                if let configCount {
-                    Label("Names \(configCount) machine\(configCount == 1 ? "" : "s").",
-                          systemImage: "doc.text")
-                        .foregroundStyle(.secondary)
-                } else {
-                    Label("No file there yet.", systemImage: "questionmark.folder")
-                        .foregroundStyle(.secondary)
-                }
+                // The one place this sheet says what the file holds, in the
+                // welcome's words.
+                Label(ImportPlan.configSays(configCount, at: configCounted),
+                      systemImage: configCount == nil ? "questionmark.folder" : "doc.text")
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Button("Look") { Task { await look() } }
                     .disabled(busy || configPath.isEmpty)
@@ -409,7 +421,13 @@ struct ImportSheet: View {
         problem = nil
         picked = nil
         text = ""
-        if source == .sshConfig, configCount != nil { Task { await look() } }
+        if source == .sshConfig, (configCount ?? 0) > 0 { Task { await look() } }
+    }
+
+    private func countConfig(at path: String) {
+        configCount = store.sshConfigHosts(path: path)
+        // An empty field is counted as the config in use, and named so.
+        configCounted = path.isEmpty ? Core.shared.defaultSSHConfigPath() : path
     }
 
     /// Reads a dropped or chosen file once and previews it. Keeping the text
@@ -418,7 +436,7 @@ struct ImportSheet: View {
     private func take(_ url: URL) async {
         if source == .sshConfig {
             configPath = url.path
-            configCount = store.sshConfigHosts(path: configPath)
+            countConfig(at: configPath)
             await look()
             return
         }
@@ -447,13 +465,14 @@ struct ImportSheet: View {
     /// something no longer on screen and is let go.
     private func look(at asked: ImportPlan.Asked) async {
         if source == .sshConfig {
-            configCount = store.sshConfigHosts(path: asked.path)
-            // A missing file read "Nothing to do — everything in that file
-            // is already here".
-            guard configCount != nil else {
+            countConfig(at: asked.path)
+            // Nothing to preview, which the line under the field says: a
+            // missing file read "Nothing to do — everything in that file is
+            // already here", and then was said there and along the foot,
+            // two ways at once.
+            guard let named = configCount, named > 0 else {
                 preview = nil
                 previewed = nil
-                problem = "There is no file at \(asked.path)."
                 return
             }
         } else if asked.text.isEmpty {

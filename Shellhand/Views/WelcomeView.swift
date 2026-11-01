@@ -28,10 +28,10 @@ struct WelcomeView: View {
                 source(
                     .sshConfig, "doc.text",
                     title: "Your SSH config",
-                    detail: configCount.map {
-                        "~/.ssh/config names \($0) machine\($0 == 1 ? "" : "s")"
-                    } ?? "No ~/.ssh/config here — pick another file",
-                    ready: configCount != nil)
+                    // The import sheet's words, which it says of the file
+                    // it looks at: three ways were two too many.
+                    detail: ImportPlan.configSays(configCount, at: SSHConfigFile.pathInUse),
+                    ready: (configCount ?? 0) > 0)
                 source(
                     .csv, "tablecells",
                     title: "A CSV file",

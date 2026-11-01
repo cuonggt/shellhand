@@ -105,6 +105,17 @@ struct SSHConfigReachTests {
         }
     }
 
+    /// A config of `Host *` alone was counted as no file, so the welcome and
+    /// the import sheet said it was not there. A path of its own: other
+    /// suites write the run's.
+    @Test("a config naming no machine counts none, where no file counts nothing")
+    func namesNone() throws {
+        let path = TestScratch.directory("names-none") + "/config"
+        #expect(Core.shared.sshConfigHosts(path: path) == nil)
+        try "Host *\n  ServerAliveInterval 30\n".write(toFile: path, atomically: true, encoding: .utf8)
+        #expect(Core.shared.sshConfigHosts(path: path) == 0)
+    }
+
     // MARK: what the run's own ssh reads
 
     /// ssh reads `~/.ssh/config` by itself, whatever the app reads, so every

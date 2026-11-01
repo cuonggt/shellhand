@@ -30,6 +30,18 @@ nonisolated struct ImportPlanTests {
         }
     }
 
+    /// The welcome said "No ~/.ssh/config here", and the sheet "No file
+    /// there yet." under its field and "There is no file at …" along its
+    /// foot — and a file naming no machine was said to be no file at all.
+    @Test("a config is said one way: not there, naming none, or naming some")
+    func configWording() {
+        #expect(ImportPlan.configSays(nil, at: "~/.ssh/config") == "No file at ~/.ssh/config")
+        #expect(ImportPlan.configSays(0, at: "/etc/ssh/ssh_config")
+            == "/etc/ssh/ssh_config names no machines")
+        #expect(ImportPlan.configSays(1, at: "~/.ssh/config") == "~/.ssh/config names 1 machine")
+        #expect(ImportPlan.configSays(12, at: "~/.ssh/config") == "~/.ssh/config names 12 machines")
+    }
+
     /// It said "5 added" over a plan nothing had carried out.
     @Test("the plan says what it would do, not what it did")
     func planWording() {

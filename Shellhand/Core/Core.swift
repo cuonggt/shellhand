@@ -218,13 +218,13 @@ actor Core {
     nonisolated func defaultSSHConfigPath() -> String { SSHConfigFile.pathInUse }
 
     /// How many machines the ssh config names, for the window to offer on a
-    /// fresh install. Nil when there is no such file, which is its own answer:
-    /// there is nothing to offer.
+    /// fresh install. Nil when there is no such file and nought when it names
+    /// none, which are two answers: both were nil, so a config of `Host *`
+    /// alone was said not to be there.
     nonisolated func sshConfigHosts(path: String = "") -> Int? {
         let path = path.isEmpty ? SSHConfigFile.pathInUse : path
         guard FileManager.default.fileExists(atPath: path) else { return nil }
-        let named = SSHConfigFile.read(path: path).hosts.count
-        return named == 0 ? nil : named
+        return SSHConfigFile.read(path: path).hosts.count
     }
 
     // MARK: files

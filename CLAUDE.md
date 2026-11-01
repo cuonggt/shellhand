@@ -1225,7 +1225,11 @@ credentials, which is most of it.
   preview imported into one it had not shown, and a second press reported
   the first's count. A preview that comes back after the window has moved on
   is let go; the plan says what it would do (`MergeResult.plan`); a missing
-  file is said as one.
+  file is said as one. **What an ssh config holds is said one way**
+  (`ImportPlan.configSays`) — "No file at ~/.ssh/config", or what it names
+  — on the welcome and once in the sheet, under its field: the three said
+  it three ways, two of them at once, and a file naming no machine
+  (`Core.sshConfigHosts` gives nought, not nil) was said to be no file.
 - **The group typed into an import files only the hosts it adds**
   (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
   was filed, and one the file files goes where the file says. The group was
