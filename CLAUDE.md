@@ -235,7 +235,10 @@ credentials, which is most of it.
   groups" was said of four — and the sidebar heads the tree Groups, as the
   pane does, where Hosts beside Ungrouped read as the groups' name. The
   sidebar's All Hosts row and the pane's breadcrumb (`Tree.lineage`) lead
-  back to the whole list, which nothing did once a group was open. The search
+  back to the whole list, which nothing did once a group was open; All Hosts
+  says you are there by its weight, not a band, which was the grey of a
+  selection without the keyboard, so a host picked made two rows read as
+  chosen. The search
   text and the chosen tags belong to the window, and the pane narrows to the
   sidebar's own matches (`SidebarRows.matches`) and says so: they narrowed
   the sidebar alone, beside a pane still listing everything.

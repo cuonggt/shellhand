@@ -151,7 +151,11 @@ struct SidebarView: View {
                 Image(systemName: "square.stack.3d.up")
                     .foregroundStyle(.tint)
                     .accessibilityHidden(true)
+                // Where you are by its weight, not a band: the band was the
+                // grey the list draws behind a selection it does not have the
+                // keyboard for, so with a host picked two rows read as chosen.
                 Text("All Hosts")
+                    .fontWeight(browsingAll ? .semibold : .regular)
                 Spacer()
                 Text("\(store.snapshot.hosts.count)")
                     .font(.caption)
@@ -160,9 +164,6 @@ struct SidebarView: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .contentShape(Rectangle())
-            .background(
-                browsingAll ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear),
-                in: RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 10)
