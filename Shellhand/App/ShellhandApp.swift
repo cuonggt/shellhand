@@ -35,9 +35,6 @@ struct ShellhandApp: App {
         .defaultSize(width: 1100, height: 720)
         .commands {
             ShellhandCommands(storePath: options.db, configPath: config.path)
-            // View ▸ Show Sidebar on ⌃⌘S, the system's own: View had the
-            // inspector's item and none for the sidebar beside it.
-            SidebarCommands()
         }
     }
 }

@@ -478,13 +478,13 @@ credentials, which is most of it.
   not say bigger than what, and these size the terminal and nothing else.
 - **View names the inspector and the sidebar, and says what each would
   do**: Show or Hide Inspector on ⌥⌘I (`Panes.inspectorTitle`, the toolbar
-  button's tooltip too), greyed with no host window in front, and Show or
-  Hide Sidebar on ⌃⌘S, the system's own `SidebarCommands`. It said Toggle
-  Host Details — a host over a group as well, Toggle beside ⌘D's Show
-  Beside — and had nothing for the sidebar. **Photograph the sidebar's item,
-  don't read it**: the open menu says Hide Sidebar with the sidebar up, while
-  System Events reads Show Sidebar however it stands, menu open or not.
-  Whether VoiceOver hears the same is unchecked.
+  button's tooltip too), and Show or Hide Sidebar on ⌃⌘S
+  (`Panes.sidebarTitle`), both greyed with no host window in front. It said
+  Toggle Host Details — a host over a group as well, Toggle beside ⌘D's Show
+  Beside — and had nothing for the sidebar. **The sidebar's item is the
+  app's own, not `SidebarCommands`**: the system's drew Hide Sidebar with
+  the sidebar out, while accessibility read it as Show Sidebar however it
+  stood, menu open or shut. A title the app sets is read as drawn.
 - **The toolbar is placed by what each item acts on**, like the menus:
   Quick Connect, New Host and SFTP over the sidebar, and the inspector toggle
   alone at the trailing edge. Keep `paneToolbar` even with one item, since

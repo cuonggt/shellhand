@@ -58,6 +58,12 @@ nonisolated enum Panes {
         showing ? "Hide Inspector" : "Show Inspector"
     }
 
+    /// ⌃⌘S's item, named the same way. The system's own drew this too, while
+    /// accessibility read Show Sidebar however the sidebar stood.
+    static func sidebarTitle(shown: Bool) -> String {
+        shown ? "Hide Sidebar" : "Show Sidebar"
+    }
+
     /// Whether ⌘D is worth offering: not while the hosts are in front, and
     /// not with a single session, because there would be nothing to put
     /// beside it.

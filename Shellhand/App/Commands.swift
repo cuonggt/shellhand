@@ -74,6 +74,7 @@ struct AppActions {
     var smallerText: () -> Void = {}
     var actualSize: () -> Void = {}
     var toggleInspector: () -> Void = {}
+    var toggleSidebar: () -> Void = {}
 
     /// The sessions open, for the Window menu.
     ///
@@ -109,6 +110,8 @@ struct AppActions {
     var besideOpen = false
     /// Whether the inspector is up, which ⌥⌘I would close.
     var inspectorShown = false
+    /// Whether the sidebar is out, which ⌃⌘S would put away.
+    var sidebarShown = false
     /// Whether the strip holds more than the hosts, so stepping goes anywhere.
     var canStepTabs = false
     /// File ▸ Export…: the list as YAML, the way the import sheet's Export…
@@ -379,6 +382,19 @@ struct ShellhandCommands: Commands {
                 actions?.toggleInspector()
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
+            .disabled(actions == nil)
+        }
+
+        // In place of the system's own, `SidebarCommands`, whose item drew
+        // Hide Sidebar with the sidebar out while accessibility read it as
+        // Show Sidebar either way, menu open or shut. A title set here is
+        // read as drawn, as the inspector's is. Greyed with no host window
+        // in front: Settings holds its sidebar out.
+        CommandGroup(replacing: .sidebar) {
+            Button(Panes.sidebarTitle(shown: actions?.sidebarShown ?? false)) {
+                actions?.toggleSidebar()
+            }
+            .keyboardShortcut("s", modifiers: [.command, .control])
             .disabled(actions == nil)
         }
 

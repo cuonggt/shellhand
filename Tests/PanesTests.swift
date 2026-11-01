@@ -409,6 +409,14 @@ nonisolated struct PanesTests {
         #expect(Panes.inspectorTitle(showing: false) == "Show Inspector")
     }
 
+    /// The system's own item drew this, and was read as Show Sidebar
+    /// either way.
+    @Test("⌃⌘S's item says what it would do")
+    func sidebarTitle() {
+        #expect(Panes.sidebarTitle(shown: true) == "Hide Sidebar")
+        #expect(Panes.sidebarTitle(shown: false) == "Show Sidebar")
+    }
+
     // MARK: side by side
 
     /// Out of the width there is, never more: Show Beside widened the window

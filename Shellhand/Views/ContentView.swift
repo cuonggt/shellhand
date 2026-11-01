@@ -585,6 +585,7 @@ struct ContentView: View {
             smallerText: { frontSession?.changeFontSize(by: -1) },
             actualSize: { frontSession?.resetFontSize() },
             toggleInspector: { showingInspector.toggle() },
+            toggleSidebar: { columns = columns == .detailOnly ? .all : .detailOnly },
             openSessions: zip(sessions.all, sessions.titles)
                 .map { SessionItem(id: $0.id, title: $1) },
             showSession: show(session:),
@@ -599,6 +600,7 @@ struct ContentView: View {
             canSplit: Panes.canSplit(front: pane, open: openTabs),
             besideOpen: beside != nil,
             inspectorShown: showingInspector,
+            sidebarShown: columns != .detailOnly,
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
             exportList: {
                 Task {
