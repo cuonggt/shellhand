@@ -75,6 +75,15 @@ struct SessionTabBar: View {
                     guard case let .session(id) = now else { return }
                     DispatchQueue.main.async { withAnimation { strip.scrollTo(id) } }
                 }
+                // And again once the tabs' widths settle. A tab opened with the
+                // strip nearly full shares the room out anew, every title down
+                // to its least, and the scroll above, measured against the
+                // widths before, stopped short: the new tab's × out of sight,
+                // now and then, in the build before the fade as well as after.
+                .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.width } action: { _, _ in
+                    guard case let .session(id) = pane else { return }
+                    strip.scrollTo(id)
+                }
             }
         }
         .padding(.horizontal, 10)

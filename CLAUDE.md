@@ -629,7 +629,11 @@ credentials, which is most of it.
   new session in the old one's place in the strip, and `Panes.replacing` in
   front or beside — where it closed the tab and opened another at the end.
   The tab in front scrolls into view, which a new one past a full strip did
-  not.
+  not — **and again once the tabs' widths settle**: a tab opened with the
+  strip nearly full shares the room out anew, and the scroll measured against
+  the widths before stopped short, the new tab's × out of sight. At the
+  default size with a fourth tab, four trials in four, before and after the
+  strip's fade alike; with the second scroll, none in four.
 - **File ▸ Export…** writes the list the way the import sheet's Export… does,
   where it used to live alone — behind a sheet called Import. No key: ⇧⌘E,
   the usual one, is Edit Group's. `YAMLDocument.defaultFilename` names the
