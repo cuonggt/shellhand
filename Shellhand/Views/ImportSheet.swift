@@ -77,11 +77,14 @@ struct ImportSheet: View {
             }
         }
 
+        /// What each is, in the same words here and on the welcome: the CSV
+        /// tab said "A sheet, or an export from another client." — inside a
+        /// sheet — where the welcome said a spreadsheet.
         var about: String {
             switch self {
-            case .sshConfig: "The machines OpenSSH already knows about."
-            case .csv: "A sheet, or an export from another client."
-            case .yaml: "A list exported from Shellhand."
+            case .sshConfig: "The machines OpenSSH already knows about"
+            case .csv: "From a spreadsheet, or another client's export"
+            case .yaml: "A list exported from Shellhand"
             }
         }
     }

@@ -1235,7 +1235,10 @@ credentials, which is most of it.
   it three ways, two of them at once, and a file naming no machine
   (`Core.sshConfigHosts` gives nought, not nil) was said to be no file. A
   path typed there is settled before it is read (`SSHConfigFile.settled`),
-  its `~` expanded: the field's own example, typed, found no file.
+  its `~` expanded: the field's own example, typed, found no file. What
+  each source is reads the same on the welcome and atop its tab
+  (`ImportSheet.Source.about`): the CSV tab said "A sheet" — inside a
+  sheet — where the welcome said a spreadsheet.
 - **The group typed into an import files only the hosts it adds**
   (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
   was filed, and one the file files goes where the file says. The group was

@@ -35,12 +35,12 @@ struct WelcomeView: View {
                 source(
                     .csv, "tablecells",
                     title: "A CSV file",
-                    detail: "From a spreadsheet, or another client's export",
+                    detail: ImportSheet.Source.csv.about,
                     ready: true)
                 source(
                     .yaml, "doc.plaintext",
                     title: "A YAML file",
-                    detail: "A list exported from Shellhand",
+                    detail: ImportSheet.Source.yaml.about,
                     ready: true)
             }
             .frame(maxWidth: 380)
