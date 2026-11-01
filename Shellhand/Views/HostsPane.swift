@@ -372,10 +372,11 @@ struct HostsPane: View {
                 shown: hosts.count, of: store.snapshot.hosts.count, search: search, tags: tags)
         }
         guard let group else {
+            // The whole list, its groups counted as its hosts are, every one:
+            // it said "12 hosts, 2 groups" of a list holding four.
             var said = Browsing.counted(hosts.count)
-            if !groups.isEmpty {
-                said += groups.count == 1 ? ", 1 group" : ", \(groups.count) groups"
-            }
+            let all = store.snapshot.groups.count
+            if all > 0 { said += all == 1 ? ", 1 group" : ", \(all) groups" }
             return said
         }
         return Browsing.summary(

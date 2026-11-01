@@ -41,11 +41,12 @@ nonisolated enum SidebarRows {
         }
 
         var out: [SidebarRow] = []
-        // A title over the whole list, but only where there is a list: a
-        // header above nothing is worse than no header, and the empty case
-        // already has its own panel.
-        if !tree.snapshot.hosts.isEmpty || !tree.snapshot.groups.isEmpty {
-            out.append(SidebarRow(id: "label:hosts", kind: .header("Hosts"), depth: 0))
+        // The groups' heading, where there are groups, as the pane heads the
+        // same rows: it said Hosts, a peer of Ungrouped below it, so it read
+        // as the name of Production and Staging. A header above nothing is
+        // worse than no header, and the empty case has its own panel.
+        if !tree.snapshot.groups.isEmpty {
+            out.append(SidebarRow(id: "label:groups", kind: .header("Groups"), depth: 0))
         }
         walk(tree: tree, under: "", depth: 0, seen: [], collapsed: collapsed, into: &out)
 

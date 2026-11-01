@@ -37,7 +37,7 @@ nonisolated struct SidebarRowsTests {
     @Test("groups come before hosts at every level, each indented one further")
     func order() {
         #expect(shape() == [
-            "0:label:hosts",
+            "0:label:groups",
             "0:group:prod",
             "1:group:eu",
             "2:host:h2",
@@ -51,7 +51,7 @@ nonisolated struct SidebarRowsTests {
     @Test("a folded group keeps its own row and loses everything beneath it")
     func folded() {
         #expect(shape(collapsed: ["prod"]) == [
-            "0:label:hosts",
+            "0:label:groups",
             "0:group:prod",
             "0:group:stg",
             "0:label:ungrouped",
@@ -62,7 +62,7 @@ nonisolated struct SidebarRowsTests {
     @Test("folding one level down leaves the level above intact")
     func foldedInner() {
         #expect(shape(collapsed: ["eu"]) == [
-            "0:label:hosts",
+            "0:label:groups",
             "0:group:prod",
             "1:group:eu",
             "1:host:h1",
@@ -91,6 +91,16 @@ nonisolated struct SidebarRowsTests {
         #expect(!rows.contains("label:ungrouped"))
     }
 
+    /// The groups' heading heads groups, as the pane's does: it said Hosts,
+    /// a peer of Ungrouped, so it read as the name of the groups beneath it.
+    @Test("the Groups heading appears only where there are groups")
+    func groupsLabel() {
+        #expect(shape().first == "0:label:groups")
+        let loose = Tree(Snapshot(groups: [], hosts: [Host(id: "h1", name: "web")]))
+        #expect(SidebarRows.build(tree: loose, collapsed: [], matching: nil).map(\.id)
+            == ["label:ungrouped", "host:h1"])
+    }
+
     /// A header above nothing is worse than no header, and the empty case has
     /// its own panel.
     @Test("an empty list has no header over it")
@@ -110,7 +120,7 @@ nonisolated struct SidebarRowsTests {
         // Reachable from no root, so nothing is drawn — and crucially it
         // returns at all.
         #expect(SidebarRows.build(tree: looped, collapsed: [], matching: nil).map(\.id)
-            == ["label:hosts"])
+            == ["label:groups"])
     }
 
     // MARK: searching

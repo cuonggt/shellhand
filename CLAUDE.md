@@ -231,6 +231,9 @@ credentials, which is most of it.
   → [the host pane](docs/notes/window.md#the-host-pane)
 - **The pane tells the truth about the list.** A group counts everything
   beneath it (`Browsing.summary`): "Production · 1 host" held seven. The
+  whole list counts every group as it counts every host — "12 hosts, 2
+  groups" was said of four — and the sidebar heads the tree Groups, as the
+  pane does, where Hosts beside Ungrouped read as the groups' name. The
   sidebar's All Hosts row and the pane's breadcrumb (`Tree.lineage`) lead
   back to the whole list, which nothing did once a group was open. The search
   text and the chosen tags belong to the window, and the pane narrows to the
