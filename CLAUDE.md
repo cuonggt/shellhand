@@ -658,7 +658,9 @@ credentials, which is most of it.
   host". Its path field greys with the buttons beside it, where Return in
   it went nowhere and said nothing.
 - A `FilePlace` that has not been pointed anywhere is **not this Mac** — it is
-  a question (`chosen` is false) and says "Choose a host". Without that state
+  a question (`chosen` is false) and says "Choose a host", its header and
+  its empty side alike (the side said "Pick a host"); and the window says
+  folder, never directory. Without that state
   an unpointed pane reads as "This Mac" with an empty listing, which looks
   like an empty home directory. `chosen` is set **before** the connecting
   starts, so a host that refuses leaves the pane showing what went wrong

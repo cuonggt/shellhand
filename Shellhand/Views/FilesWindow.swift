@@ -143,7 +143,7 @@ private struct PlacePane: View {
             // tag rename is: it closed the question and did nothing.
             .disabled(!Places.usableName(name, renaming: renaming?.name))
         }
-        .alert("New folder", isPresented: $newFolder) {
+        .alert("New Folder", isPresented: $newFolder) {
             TextField("Name", text: $name)
             Button("Cancel", role: .cancel) {}
             Button("Create") { Task { await place.makeDirectory(named: name) } }
@@ -215,8 +215,10 @@ private struct PlacePane: View {
                     Image(systemName: "arrow.up")
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Up one directory")
-                .help("Up one directory")
+                // Finder's name for the move: this window says folder, and
+                // "Up one directory" sat beside its New Folder.
+                .accessibilityLabel("Enclosing Folder")
+                .help("Enclosing Folder")
                 .disabled(place.listing.path.isEmpty)
 
                 // Typing a path beats walking to it, which is the whole of
@@ -339,11 +341,12 @@ private struct PlacePane: View {
         } else {
             // Only the far side is ever unpointed — this Mac is always the
             // near one — so this asks for a host rather than for "a place",
-            // which is what its own header above it says too.
+            // in the header's own words: it said "Pick a host" under a header
+            // saying "Choose a host".
             ContentUnavailableView {
-                Label("Pick a host", systemImage: "server.rack")
+                Label("Choose a host", systemImage: "server.rack")
             } description: {
-                Text("Choose one above to see its files beside your own.")
+                Text("Use the menu above, and its files show here beside your own.")
             }
         }
     }
