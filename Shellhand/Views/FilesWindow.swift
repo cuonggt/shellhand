@@ -222,6 +222,10 @@ private struct PlacePane: View {
                 .accessibilityLabel("More actions")
                 .menuStyle(.borderlessButton)
                 .fixedSize()
+                // Greyed with the row below it while there is no listing:
+                // Show Hidden Files had nothing to show or hide, beside an
+                // arrow, a path and two buttons all grey.
+                .disabled(place.listing.path.isEmpty)
             }
 
             HStack(spacing: 4) {
