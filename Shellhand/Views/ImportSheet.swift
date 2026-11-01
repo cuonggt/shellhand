@@ -144,9 +144,10 @@ struct ImportSheet: View {
                     // ssh config names no groups, so nothing in it moves a
                     // host; a CSV or YAML file can, and a host it names one for
                     // goes there, in your list already or not. It said hosts
-                    // already in your list stayed, whatever the file said.
+                    // already in your list stayed, whatever the file said —
+                    // and "already in it", under "this group", read as the group.
                     Text(source == .sshConfig
-                         ? "Hosts new to your list go into this group. Hosts already in it stay where they are."
+                         ? "Hosts new to your list go into this group. Hosts already in your list stay where they are."
                          : "Hosts new to your list go into this group, unless the file names one for them. "
                            + "A host the file names a group for goes into that group, even one already in your list.")
                         .font(.caption)

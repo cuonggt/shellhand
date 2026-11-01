@@ -1249,7 +1249,8 @@ credentials, which is most of it.
   importing an ssh config again with a group typed moved hosts filed in
   Production into it, under a field that said "Put new hosts in". A CSV's
   guide to its columns comes before that field, under the file it is about,
-  where the field stood between them.
+  where the field stood between them; and the caption under it says "already
+  in your list", where "already in it", after "this group", read as the group.
 - **Read YAML through `Core/YAMLDocuments.swift`**, never
   `try load_all(…).compactMap { $0 }`: Yams's sequence keeps a scan error in
   its `error` and simply ends, so that expression reads a broken file as no
