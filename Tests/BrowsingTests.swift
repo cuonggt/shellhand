@@ -187,4 +187,18 @@ nonisolated struct BrowsingTests {
         #expect(Browsing.rowNeeds(loose, .everything) == Browsing.rowNeeds(loose, .withoutGroup))
         #expect(Browsing.rowShape(width: 1000, rows: []) == .everything)
     }
+
+    /// The grid inside its padding is about 453pt wide at the window's
+    /// default 1100×720, and 573 at the README's 1220×798. Cards of 230
+    /// needed 470 for two, so the default size had one column of wide cards.
+    @Test("two cards across at the window's default size, where there was one")
+    func cardColumns() {
+        #expect(Browsing.cardColumns(width: 453) == 2)
+        #expect(Browsing.cardColumns(width: 573) == 2)
+        // Two fit exactly, and a point less is one.
+        #expect(Browsing.cardColumns(width: 430) == 2)
+        #expect(Browsing.cardColumns(width: 429) == 1)
+        #expect(Browsing.cardColumns(width: 650) == 3)
+        #expect(Browsing.cardColumns(width: 0) == 1)
+    }
 }

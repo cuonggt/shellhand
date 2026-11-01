@@ -225,9 +225,7 @@ struct HostsPane: View {
     private var gridWidth: some View {
         GeometryReader { proxy in
             Color.clear.onChange(of: proxy.size.width, initial: true) { _, width in
-                // The arithmetic `.adaptive` does: as many cards of the
-                // minimum width as fit, counting the gap between them.
-                columns = max(1, Int((width + 10) / (230 + 10)))
+                columns = Browsing.cardColumns(width: width)
             }
         }
     }
@@ -327,8 +325,9 @@ struct HostsPane: View {
     /// beside a single column.
     private var cards: [GridItem] {
         columns == 1
-            ? [GridItem(.flexible(), spacing: 10, alignment: .topLeading)]
-            : [GridItem(.adaptive(minimum: 230, maximum: 340), spacing: 10, alignment: .topLeading)]
+            ? [GridItem(.flexible(), spacing: Browsing.cardGap, alignment: .topLeading)]
+            : [GridItem(.adaptive(minimum: Browsing.cardMinimum, maximum: 340),
+                        spacing: Browsing.cardGap, alignment: .topLeading)]
     }
 
     /// The way back, which there was none of: once a group was open, nothing

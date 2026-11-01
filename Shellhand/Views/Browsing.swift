@@ -148,4 +148,18 @@ nonisolated enum Browsing {
         RowShape.allCases.first { shape in rows.allSatisfy { rowNeeds($0, shape) <= width } }
             ?? .narrowName
     }
+
+    /// A grid card at its narrowest, and the gap between two: room for a
+    /// name, a destination and a couple of tags a line each. At 230 two
+    /// cards needed 470pt, and the pane at the window's default size has
+    /// about 453, so the grid there was one column of wide cards with their
+    /// words in the left quarter.
+    static let cardMinimum: CGFloat = 210
+    static let cardGap: CGFloat = 10
+
+    /// How many cards `.adaptive` puts across `width`: as many of the
+    /// narrowest as fit, counting the gaps between them.
+    static func cardColumns(width: CGFloat) -> Int {
+        max(1, Int((width + cardGap) / (cardMinimum + cardGap)))
+    }
 }
