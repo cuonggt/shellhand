@@ -1008,7 +1008,11 @@ credentials, which is most of it.
 - A label that is only a placeholder **disappears exactly when it is needed**.
   Two bare fields side by side in a row said which was which until both were
   filled, and then nothing did. Every field gets a label beside it, in the
-  same `LabeledContent` + `.roundedBorder` row the rest of the app uses.
+  same `LabeledContent` + `.roundedBorder` row the rest of the app uses, and
+  **asks for a modest width and takes what there is** (`idealWidth` with
+  `maxWidth: .infinity`): a grouped form puts the label above a field that
+  wants more than the room beside it, and a field wants its text's width —
+  the import's File, holding a long path, sat under its label.
 - **The group editor's tabs divide what a group is from what happens on its
   hosts**, and its Advanced tab shows `•` when anything there is set, the
   palette included.
@@ -1135,7 +1139,9 @@ credentials, which is most of it.
   was filed, and one the file files goes where the file says. The group was
   given to every loose host before the merge could tell new from old, so
   importing an ssh config again with a group typed moved hosts filed in
-  Production into it, under a field that said "Put new hosts in".
+  Production into it, under a field that said "Put new hosts in". A CSV's
+  guide to its columns comes before that field, under the file it is about,
+  where the field stood between them.
 - **Read YAML through `Core/YAMLDocuments.swift`**, never
   `try load_all(…).compactMap { $0 }`: Yams's sequence keeps a scan error in
   its `error` and simply ends, so that expression reads a broken file as no

@@ -100,6 +100,9 @@ struct ImportSheet: View {
                 Section { sourceFields } header: {
                     Text(source.about)
                 }
+                // What a CSV's columns should be, beside the file it is about:
+                // it came after the group field, between them.
+                if source == .csv { sample }
                 Section {
                     // A field beside its label, as every other in the app: a
                     // bare one in a grouped form sits right-aligned against
@@ -131,7 +134,6 @@ struct ImportSheet: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                if source == .csv { sample }
                 if let problem { trouble(problem) }
                 if let preview {
                     if previewed != asking {
@@ -200,10 +202,16 @@ struct ImportSheet: View {
                     TextField("", text: $configPath, prompt: Text("~/.ssh/config"))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
+                        .multilineTextAlignment(.leading)
                         // Return looks at the file typed. Import would not
                         // run here anyway: it is off until what is on screen
                         // has been previewed.
                         .onSubmit { Task { await look() } }
+                        // Asking for a modest width and taking what there is:
+                        // asking for the whole path's, the field put the form
+                        // in two lines, "File" above it, where every other
+                        // field has its label beside it.
+                        .frame(idealWidth: 220, maxWidth: .infinity)
                     Button("Choose…") { choosing = true }
                 }
             }
