@@ -231,7 +231,9 @@ struct HostDetailView: View {
     /// read every label.
     private var openNow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(openHere.count == 1 ? "Open now" : "Open now (\(openHere.count))")
+            // Not counted: the rows count themselves, and "Open now (2)" sat
+            // over a tab named "refuser (2)" as one more of its numbering.
+            Text("Open now")
                 .font(.headline)
             ForEach(openHere, id: \.id) { session in
                 // The tab in front is said, not offered: its Show did nothing.
