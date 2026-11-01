@@ -188,6 +188,28 @@ nonisolated struct BrowsingTests {
         #expect(Browsing.rowShape(width: 1000, rows: []) == .everything)
     }
 
+    /// Held at 240 for every list, the name column stood mostly empty at
+    /// the window's default size — "staging-web" is about 76pt — while
+    /// every row lost its tags for want of the room it held.
+    @Test("the name column is as wide as the list's widest name, within bounds")
+    func nameColumn() {
+        let names: [CGFloat] = [40, 76]
+        let rows = names.map {
+            Browsing.RowWidths(destination: 120, group: 60, tags: [22, 22], name: $0)
+        }
+        #expect(Browsing.nameColumn(rows: rows) == Browsing.nameLeast)
+        #expect(Browsing.nameColumn(rows: [Browsing.RowWidths(destination: 1, name: 180)]) == 180)
+        #expect(Browsing.nameColumn(rows: [Browsing.RowWidths(destination: 1, name: 400)])
+            == Browsing.nameMost)
+        // The pane at the window's default size, about 468pt: everything,
+        // tags too, beside names that short.
+        #expect(Browsing.rowShape(width: 468, rows: rows) == .everything)
+        // The narrow shape narrower still, never wider than the list's column.
+        #expect(Browsing.RowShape.narrowName.nameWidth(in: 120) == 120)
+        #expect(Browsing.RowShape.narrowName.nameWidth(in: 240) == Browsing.nameNarrow)
+        #expect(Browsing.RowShape.everything.nameWidth(in: 150) == 150)
+    }
+
     /// The grid inside its padding is about 453pt wide at the window's
     /// default 1100×720, and 573 at the README's 1220×798. Cards of 230
     /// needed 470 for two, so the default size had one column of wide cards.

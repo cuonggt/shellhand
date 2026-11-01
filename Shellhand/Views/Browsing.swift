@@ -105,7 +105,11 @@ nonisolated enum Browsing {
 
         static func < (a: RowShape, b: RowShape) -> Bool { a.rawValue < b.rawValue }
 
-        var nameWidth: CGFloat { self == .narrowName ? 160 : 240 }
+        /// The name's column in a list whose `column` is `nameColumn`: the
+        /// narrow shape's narrower still, never wider than the list's own.
+        func nameWidth(in column: CGFloat) -> CGFloat {
+            self == .narrowName ? min(column, Browsing.nameNarrow) : column
+        }
         var showsGroup: Bool { self <= .withoutTags }
         var showsTags: Bool { self == .everything }
         /// The next down, for a row that the list's shape still does not hold.
@@ -118,6 +122,23 @@ nonisolated enum Browsing {
         var destination: CGFloat
         var group: CGFloat = 0
         var tags: [CGFloat] = []
+        /// Its name, as wide as the column at its widest unless measured.
+        var name: CGFloat = Browsing.nameMost
+    }
+
+    /// The name column at its narrowest, at its widest, and in the narrow
+    /// shape: as wide as the list's widest name between the first two.
+    static let nameLeast: CGFloat = 120
+    static let nameMost: CGFloat = 240
+    static let nameNarrow: CGFloat = 160
+
+    /// A list's name column: its widest name, from `nameLeast` to `nameMost`,
+    /// so every row's destination still starts at one edge. Held at 240 for
+    /// every list, it stood mostly empty at the window's default size —
+    /// "staging-web" is about 76pt — while every row lost its tags for want
+    /// of the room it held.
+    static func nameColumn(rows: [RowWidths]) -> CGFloat {
+        min(nameMost, max(nameLeast, rows.map(\.name).max() ?? 0))
     }
 
     /// What a row holds besides its text: the OS mark, the gap between its
@@ -128,9 +149,10 @@ nonisolated enum Browsing {
     static let rowGap: CGFloat = 12
     static let chipPadding: CGFloat = 6
 
-    /// How wide a row has to be to hold `row` in `shape`.
-    static func rowNeeds(_ row: RowWidths, _ shape: RowShape) -> CGFloat {
-        var needs = rowMark + rowSpacing + shape.nameWidth + rowSpacing + row.destination
+    /// How wide a row has to be to hold `row` in `shape`, its list's name
+    /// column `column` wide.
+    static func rowNeeds(_ row: RowWidths, _ shape: RowShape, column: CGFloat = nameMost) -> CGFloat {
+        var needs = rowMark + rowSpacing + shape.nameWidth(in: column) + rowSpacing + row.destination
             + rowSpacing + rowGap
         if shape.showsGroup, row.group > 0 { needs += rowSpacing + row.group }
         if shape.showsTags {
@@ -145,8 +167,10 @@ nonisolated enum Browsing {
     /// tag, lost it, and the staging rows lost their group beside rows that
     /// kept theirs.
     static func rowShape(width: CGFloat, rows: [RowWidths]) -> RowShape {
-        RowShape.allCases.first { shape in rows.allSatisfy { rowNeeds($0, shape) <= width } }
-            ?? .narrowName
+        let column = nameColumn(rows: rows)
+        return RowShape.allCases.first { shape in
+            rows.allSatisfy { rowNeeds($0, shape, column: column) <= width }
+        } ?? .narrowName
     }
 
     /// A grid card at its narrowest, and the gap between two: room for a

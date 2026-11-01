@@ -100,9 +100,12 @@ struct HostsPane: View {
     private var rows: some View {
         let hosts = self.hosts
         // One shape for every row, from all of them, scrolled into sight or
-        // not; before the rows are measured, the most a row can hold.
+        // not; before the rows are measured, the most a row can hold. And
+        // one name column, as wide as the widest name (`Browsing.nameColumn`).
+        let widths = hosts.map(measured)
+        let column = Browsing.nameColumn(rows: widths)
         let shape = rowWidth > 0
-            ? Browsing.rowShape(width: rowWidth, rows: hosts.map(measured))
+            ? Browsing.rowShape(width: rowWidth, rows: widths)
             : .everything
         return List(selection: picked) {
             if !groups.isEmpty {
@@ -118,7 +121,7 @@ struct HostsPane: View {
             if !hosts.isEmpty {
                 Section("Hosts") {
                     ForEach(hosts) { host in
-                        row(for: host, shape: shape)
+                        row(for: host, shape: shape, column: column)
                             .tag(Selection.host(host.id))
                             // **No double-click to connect here**, and
                             // the reason is worth the loss: a two-tap gesture
@@ -404,12 +407,12 @@ struct HostsPane: View {
     /// hyphenated and destinations were cut to "d…2"; and left to choose each
     /// for itself, the rows of one list showed different columns. The shapes
     /// after it are there for a row the measuring got a point wrong.
-    private func row(for host: Host, shape: Browsing.RowShape) -> some View {
+    private func row(for host: Host, shape: Browsing.RowShape, column: CGFloat) -> some View {
         ViewThatFits(in: .horizontal) {
-            line(for: host, shape)
-            line(for: host, shape.fallback)
-            line(for: host, shape.fallback.fallback)
-            line(for: host, .narrowName)
+            line(for: host, shape, column: column)
+            line(for: host, shape.fallback, column: column)
+            line(for: host, shape.fallback.fallback, column: column)
+            line(for: host, .narrowName, column: column)
         }
         .padding(.vertical, 2)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -431,17 +434,19 @@ struct HostsPane: View {
         return Browsing.RowWidths(
             destination: width(destination(of: host), body),
             group: folder.map { width($0.name, caption) } ?? 0,
-            tags: host.tags.map { width($0, caption) })
+            tags: host.tags.map { width($0, caption) },
+            name: width(host.name, body))
     }
 
-    private func line(for host: Host, _ shape: Browsing.RowShape) -> some View {
+    private func line(for host: Host, _ shape: Browsing.RowShape, column: CGFloat) -> some View {
         HStack(spacing: Browsing.rowSpacing) {
             HostIcon(os: host.os, named: host.osLabel, size: Browsing.rowMark)
             // A set width, not a minimum: with a minimum the destination
             // starts wherever the name happens to end, so the second
-            // column is ragged down the page and cannot be scanned.
+            // column is ragged down the page and cannot be scanned. The
+            // list's widest name sets it, not a constant.
             Text(host.name)
-                .frame(width: shape.nameWidth, alignment: .leading)
+                .frame(width: shape.nameWidth(in: column), alignment: .leading)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Text(destination(of: host))

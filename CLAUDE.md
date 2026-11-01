@@ -245,7 +245,10 @@ credentials, which is most of it.
   (`Browsing.rowShape`, from every row's text measured in the row's own
   fonts, with `ViewThatFits` below it for a row measured a point wrong):
   each row chose for itself, and at the window's default size one host kept
-  its tag beside the next, with the same tag, losing it. **A card is 210pt
+  its tag beside the next, with the same tag, losing it. **The name column
+  is as wide as the list's widest name**, 120 to 240 (`Browsing.nameColumn`):
+  held at 240, it stood mostly empty at the default size, "staging-web"
+  about 76pt of it, while every row lost its tags. **A card is 210pt
   at its narrowest** (`Browsing.cardColumns`), so the grid holds two at the
   window's default size: at 230 two needed 470pt of the pane's 453, and the
   grid there was one column of wide cards, their words in the left quarter.
