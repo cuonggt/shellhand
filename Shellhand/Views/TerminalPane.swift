@@ -30,6 +30,8 @@ struct SessionTabBar: View {
         // Named as the Window menu names them, a second of one name with its
         // number: two tabs on one host read "refuser" twice.
         let titles = sessions.titles
+        // Each name measured, so the strip's room goes where it is needed.
+        let widths = Panes.tabTitleWidths(room: room, needs: titles.map(Self.measured))
         HStack(spacing: Panes.tabSpacing) {
             // The way back to the list, outside the scrolling: with the strip
             // full, a new tab scrolled into view pushed Hosts half off the
@@ -43,7 +45,7 @@ struct SessionTabBar: View {
                             TabButton(
                                 session: session,
                                 title: titles[index],
-                                titleWidth: Panes.tabTitleWidth(room: room, tabs: titles.count),
+                                titleWidth: widths[index],
                                 selected: pane == .session(session.id),
                                 beside: beside == .session(session.id),
                                 hasOthers: sessions.all.count > 1,
@@ -89,6 +91,13 @@ struct SessionTabBar: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(.bar)
+    }
+
+    /// A tab's name as its tab draws it, in the body font.
+    private static func measured(_ title: String) -> CGFloat {
+        (title as NSString).size(withAttributes: [
+            .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+        ]).width.rounded(.up)
     }
 }
 
@@ -220,9 +229,10 @@ private struct TabButton: View {
             }
         }
         .buttonStyle(.plain)
-        // The whole of what the shell sent, for the times the label had to
-        // cut it: a truncated name should always be readable somewhere.
-        .help(session.title)
+        // The tab's name whole, for the times the strip had to cut it, and
+        // what the shell sent where that says more (`Panes.tabHelp`): a
+        // truncated name should always be readable somewhere.
+        .help(Panes.tabHelp(title: title, sent: session.title))
         // Its state in words as well as its name: a colour says nothing to
         // VoiceOver, and the symbol only as much as its shape.
         .accessibilityLabel("\(title), \(session.status.spoken)\(beside ? ", shown beside" : "")")

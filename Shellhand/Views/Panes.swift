@@ -262,14 +262,42 @@ nonisolated enum Panes {
     /// Between two tabs in the strip.
     static let tabSpacing: CGFloat = 4
 
-    /// How wide a session tab's title may be, in a strip `room` wide holding
-    /// `tabs` session tabs: 180 where they all fit at that, and otherwise
-    /// their share of the room, down to 60 — past which the strip scrolls.
-    /// Held at 180 each, a full strip scrolled the Hosts tab half away.
-    static func tabTitleWidth(room: CGFloat, tabs: Int) -> CGFloat {
-        guard tabs > 0, room > 0 else { return 180 }
-        let share = (room - tabSpacing * CGFloat(tabs - 1)) / CGFloat(tabs) - tabChrome
-        return min(180, max(60, share))
+    /// A session tab's title at its widest, and at its narrowest before the
+    /// strip scrolls.
+    static let tabTitleMost: CGFloat = 180
+    static let tabTitleLeast: CGFloat = 60
+
+    /// How wide each session tab's title may be, in a strip `room` wide,
+    /// given what each title needs (`needs`, measured): a short name gives
+    /// what it does not use to a long one, each up to 180, and where even so
+    /// they do not fit the rest share what is left, down to 60 — past which
+    /// the strip scrolls. An even share cut "This Mac — ~" to "This…c — ~"
+    /// with 65pt of the strip empty beside it; held at 180 each, a full
+    /// strip scrolled the Hosts tab half away.
+    static func tabTitleWidths(room: CGFloat, needs: [CGFloat]) -> [CGFloat] {
+        var widths = needs.map { min($0, tabTitleMost) }
+        guard room > 0 else { return needs.map { _ in tabTitleMost } }
+        var left = room - tabSpacing * CGFloat(max(0, needs.count - 1))
+            - tabChrome * CGFloat(needs.count)
+        var open = needs.indices.sorted { needs[$0] < needs[$1] }
+        while let first = open.first {
+            let share = left / CGFloat(open.count)
+            guard widths[first] > share else {
+                left -= widths[first]
+                open.removeFirst()
+                continue
+            }
+            for index in open { widths[index] = min(tabTitleMost, max(tabTitleLeast, share)) }
+            break
+        }
+        return widths
+    }
+
+    /// A session tab's tooltip: its name whole, which the strip may have cut,
+    /// and under it what the shell itself sent where that says more. It was
+    /// the shell's alone — "refuser" for the tab named "refuser (2)".
+    static func tabHelp(title: String, sent: String) -> String {
+        sent.isEmpty || title.contains(sent) ? title : "\(title)\n\(sent)"
     }
 
     /// The strip's edges with tabs past them, which fade.

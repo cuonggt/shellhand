@@ -410,17 +410,35 @@ nonisolated struct PanesTests {
     // MARK: the strip
 
     /// Held at 180 each, a full strip scrolled and pushed the Hosts tab half
-    /// off its edge; the tabs share the room first, and scroll only past 60.
-    @Test("a full strip's tabs share its room before it scrolls")
+    /// off its edge; shared evenly, a long name was cut beside short ones
+    /// with room to spare. The tabs share by need, and scroll only past 60.
+    @Test("a full strip's tabs share its room by what each needs")
     func tabTitleWidths() {
-        #expect(Panes.tabTitleWidth(room: 1000, tabs: 2) == 180)
-        // Four in 600: each a quarter of the room, less its gap and its own
-        // mark and ×.
-        #expect(Panes.tabTitleWidth(room: 600, tabs: 4)
-            == (600 - Panes.tabSpacing * 3) / 4 - Panes.tabChrome)
-        #expect(Panes.tabTitleWidth(room: 300, tabs: 6) == 60)
+        // Room for every name whole: each its own.
+        #expect(Panes.tabTitleWidths(room: 1000, needs: [40, 300]) == [40, 180])
+        // waiter, refuser, This Mac — ~ and refuser (2) in a strip where an
+        // even share was 76 each: the short ones give the long one its 85.
+        let tight: CGFloat = 4 * (76 + Panes.tabChrome) + 3 * Panes.tabSpacing
+        #expect(Panes.tabTitleWidths(room: tight, needs: [40, 48, 85, 70]) == [40, 48, 85, 70])
+        // Where even so they do not fit, the long ones share what is left.
+        let short: CGFloat = 4 * (40 + Panes.tabChrome) + 3 * Panes.tabSpacing
+        #expect(Panes.tabTitleWidths(room: short, needs: [30, 90, 90, 90])
+            == [30, 60, 60, 60])
+        let some: CGFloat = 3 * (100 + Panes.tabChrome) + 2 * Panes.tabSpacing
+        #expect(Panes.tabTitleWidths(room: some, needs: [50, 200, 200]) == [50, 125, 125])
         // Before the strip has been measured, as they always were.
-        #expect(Panes.tabTitleWidth(room: 0, tabs: 3) == 180)
+        #expect(Panes.tabTitleWidths(room: 0, needs: [10, 20]) == [180, 180])
+        #expect(Panes.tabTitleWidths(room: 500, needs: []).isEmpty)
+    }
+
+    /// The tooltip was the shell's own title alone: "refuser" for the tab
+    /// named "refuser (2)", and nothing of the name the strip had cut.
+    @Test("a tab's tooltip is its whole name, and the shell's where it says more")
+    func tabHelp() {
+        #expect(Panes.tabHelp(title: "refuser (2)", sent: "refuser") == "refuser (2)")
+        #expect(Panes.tabHelp(title: "This Mac — ~", sent: "me@mac:~")
+            == "This Mac — ~\nme@mac:~")
+        #expect(Panes.tabHelp(title: "web", sent: "") == "web")
     }
 
     /// At the window's default size four tabs fill the strip, and the first

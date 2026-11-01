@@ -597,7 +597,11 @@ credentials, which is most of it.
   "cuonggt@Cuongs-MacBook-Pro:~" over a tab saying "Local — ~", and
   "refuser" over "refuser (2)" — capped at
   180pt and cut in the middle; as the strip fills the tabs share its room
-  down to 60 (`Panes.tabTitleWidth`) before it scrolls, and the Hosts tab
+  by what each name needs, short names giving their spare to long ones,
+  down to 60 (`Panes.tabTitleWidths`) before it scrolls — shared evenly,
+  "This Mac — ~" was cut to "This…c — ~" with 65pt of the strip empty —
+  and a tab's tooltip is its name whole (`Panes.tabHelp`), where it was
+  the shell's own title alone; and the Hosts tab
   stays outside the scrolling, where a full strip pushed it half off its
   edge. An edge with tabs past it fades (`Panes.hiddenEdges`): at the
   window's default size four tabs fill the strip, and the first was shown
