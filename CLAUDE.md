@@ -476,6 +476,12 @@ credentials, which is most of it.
   → [menus](docs/notes/window.md#menus)
 - Text size sits in **Terminal**, not View: "Bigger Text" in a View menu does
   not say bigger than what, and these size the terminal and nothing else.
+- **View names the inspector and the sidebar, and says what each would
+  do**: Show or Hide Inspector on ⌥⌘I (`Panes.inspectorTitle`, the toolbar
+  button's tooltip too), greyed with no host window in front, and Show or
+  Hide Sidebar on ⌃⌘S, the system's own `SidebarCommands`. It said Toggle
+  Host Details — a host over a group as well, Toggle beside ⌘D's Show
+  Beside — and had nothing for the sidebar.
 - **The toolbar is placed by what each item acts on**, like the menus:
   Quick Connect, New Host and SFTP over the sidebar, and the inspector toggle
   alone at the trailing edge. Keep `paneToolbar` even with one item, since

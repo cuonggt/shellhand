@@ -50,6 +50,14 @@ nonisolated enum Panes {
         besideOpen ? "Hide Beside" : "Show Beside"
     }
 
+    /// ⌥⌘I's item and the toolbar button's, named for what they would do and
+    /// for what the inspector is: it read Toggle Host Details over a group, a
+    /// local shell and a machine typed into ⌘K as well as a host, and Toggle
+    /// beside ⌘D's Show Beside.
+    static func inspectorTitle(showing: Bool) -> String {
+        showing ? "Hide Inspector" : "Show Inspector"
+    }
+
     /// Whether ⌘D is worth offering: not while the hosts are in front, and
     /// not with a single session, because there would be nothing to put
     /// beside it.

@@ -107,6 +107,8 @@ struct AppActions {
     var canSplit = false
     /// Whether a tab is shown beside the one in front, which ⌘D would close.
     var besideOpen = false
+    /// Whether the inspector is up, which ⌥⌘I would close.
+    var inspectorShown = false
     /// Whether the strip holds more than the hosts, so stepping goes anywhere.
     var canStepTabs = false
     /// File ▸ Export…: the list as YAML, the way the import sheet's Export…
@@ -370,9 +372,14 @@ struct ShellhandCommands: Commands {
                 .disabled(!(actions?.hasSession ?? false))
         }
 
+        // Named as ⌘D's item is, for what it would do, and greyed with no
+        // host window in front, where it did nothing.
         CommandGroup(after: .toolbar) {
-            Button("Toggle Host Details") { actions?.toggleInspector() }
-                .keyboardShortcut("i", modifiers: [.command, .option])
+            Button(Panes.inspectorTitle(showing: actions?.inspectorShown ?? false)) {
+                actions?.toggleInspector()
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+            .disabled(actions == nil)
         }
 
         // Replacing the system's own "Shellhand Help", which only said help

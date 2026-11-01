@@ -402,6 +402,13 @@ nonisolated struct PanesTests {
         #expect(Panes.splitTitle(besideOpen: true) == "Hide Beside")
     }
 
+    /// It said Toggle Host Details, over a group as over a host.
+    @Test("⌥⌘I's item names the inspector, and says what it would do")
+    func inspectorTitle() {
+        #expect(Panes.inspectorTitle(showing: true) == "Hide Inspector")
+        #expect(Panes.inspectorTitle(showing: false) == "Show Inspector")
+    }
+
     // MARK: side by side
 
     /// Out of the width there is, never more: Show Beside widened the window

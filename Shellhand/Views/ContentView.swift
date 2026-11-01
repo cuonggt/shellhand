@@ -405,12 +405,14 @@ struct ContentView: View {
     @ToolbarContentBuilder
     private var paneToolbar: some ToolbarContent {
         ToolbarItemGroup(placement: .primaryAction) {
+            // The inspector, as View names it: "Host Details" said host over
+            // a group, a local shell and a machine typed into ⌘K too.
             Button {
                 showingInspector.toggle()
             } label: {
-                Label("Host Details", systemImage: "sidebar.right")
+                Label("Inspector", systemImage: "sidebar.right")
             }
-            .help("Show what this host connects with (⌥⌘I)")
+            .help("\(Panes.inspectorTitle(showing: showingInspector)) (⌥⌘I)")
         }
     }
 
@@ -596,6 +598,7 @@ struct ContentView: View {
             canReconnect: frontSession?.host != nil,
             canSplit: Panes.canSplit(front: pane, open: openTabs),
             besideOpen: beside != nil,
+            inspectorShown: showingInspector,
             canStepTabs: Panes.stepping(by: 1, from: pane, sessions: openTabs) != nil,
             exportList: {
                 Task {
