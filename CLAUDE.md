@@ -1010,11 +1010,14 @@ credentials, which is most of it.
   → [the group editor](docs/notes/window.md#the-group-editor)
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
-  a Delete in its footer, which costs the form 23pt. The host editor is
-  736 General / 640 Advanced — room for the command's six lines at its foot
-  and one line more, a problem or a rename note, and for the inherited
-  user's caption under Connect to — and the group editor 570 / 555. The
-  earlier 500/490 and 600/480 were measured against **new**
+  a Delete in its footer, which costs the form 23pt. The host editor's
+  General needs 736 and its Advanced 640 — room for the command's six lines
+  at its foot and one line more, a problem or a rename note, and for the
+  inherited user's caption under Connect to — and the group editor's 570 /
+  555. **Each editor is drawn at its taller tab's height on both tabs**: a
+  sheet is centred on its window, so one that changed height with the tab
+  moved the tab control under the pointer, 7pt in the group editor and 27
+  in the host editor. The earlier 500/490 and 600/480 were measured against **new**
   records and scrolled on every tab but one as soon as a real host or group
   was opened in them; 650/570 was 41pt short on both tabs once the command
   was drawn a line an argument.

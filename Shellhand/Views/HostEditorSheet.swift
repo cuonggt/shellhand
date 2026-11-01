@@ -95,7 +95,7 @@ struct HostEditorSheet: View {
     }
 
     /// What it gets, over the window it opens over.
-    private var height: CGFloat { SheetHeight.fitted(wanted, in: room.height) }
+    private var height: CGFloat { SheetHeight.fitted(736, in: room.height) }
 
     /// The lines along the foot above the command, each taking room the form
     /// could otherwise spare it.
@@ -124,9 +124,12 @@ struct HostEditorSheet: View {
             Divider()
             footer
         }
-        // Height by tab rather than one that suits neither: General carries
-        // nine rows and Advanced four, so a single height leaves one of them
-        // two thirds empty — which is the thing this rebuild set out to fix.
+        // Measured by tab — General carries nine rows and Advanced four —
+        // but drawn at the taller tab's height on both: a sheet is centred
+        // on its window, so one that changed height with the tab moved the
+        // tab control under the pointer, 27pt over a tall window. What each
+        // tab was measured to need still says how much of the command its
+        // foot shows (`wanted`).
         //
         // Measured on screen, and sized for **editing** rather than for new:
         // an editor opened on a host has a Delete in the footer, which costs

@@ -78,8 +78,11 @@ struct GroupEditorSheet: View {
         // Both measured on screen in the end: editing a group gives the
         // form 421 and 406pt with no scroll bar, against a new one's 396 and
         // 381. The 23pt an edit costs is the Delete its footer gains.
-        .frame(width: DialogSize.medium,
-               height: SheetHeight.fitted(tab == .general ? 570 : 555, in: room.height))
+        //
+        // General's 570 on both tabs, where Advanced was 555: a sheet is
+        // centred on its window, so the tab control moved 7pt under the
+        // pointer each time the tab changed.
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(570, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible
