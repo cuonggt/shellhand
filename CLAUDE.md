@@ -340,7 +340,11 @@ credentials, which is most of it.
   name is black when set there and grey when inherited, since a grouped
   form greys whatever it is handed: a group's own Gruvbox Dark read as
   grey as one from Production. Its arrows sit in a round bezel, as a menu's
-  do beside it, where bare and grey they read as another kind of control;
+  do beside it, where bare and grey they read as another kind of control —
+  drawn as the menu's is, measured off it: its fill `secondarySystemFill`,
+  its arrows black, 12.5pt after the words and 3.5pt in from the row's end,
+  where `.quaternary`, arrows a grouped form greyed and an 8pt gap made a
+  near copy whose circle stood 3.5pt right of the menu's under it;
   and its words drop under the swatch and its arrows where they would not
   keep their lines beside them: the bezel took 12pt from the inspector's
   column, and "Gruvbox Dark from Production" went down a word to a line.

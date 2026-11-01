@@ -278,12 +278,19 @@ struct PaletteChoice: View {
 
     /// In a round bezel, as a menu draws its own arrows — Font's in
     /// Settings, Agent forwarding's in the editors: bare and grey, the
-    /// swatch's read as another kind of control beside them.
+    /// swatch's read as another kind of control beside them. And drawn as
+    /// that bezel is, measured off it: its fill, where `.quaternary` was a
+    /// shade darker; its arrows black, where a grouped form greyed them;
+    /// 12.5pt after the words, where they sat 8pt after; and 3.5pt in from
+    /// the row's end, where the circle stood 3.5pt right of the menu's.
     private var arrows: some View {
         Image(systemName: "chevron.up.chevron.down")
-            .font(.system(size: 9, weight: .bold))
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.primary)
             .frame(width: 20, height: 20)
-            .background(.quaternary, in: Circle())
+            .background(SwiftUI.Color(nsColor: .secondarySystemFill), in: Circle())
+            .padding(.leading, 4.5)
+            .padding(.trailing, 3.5)
     }
 
     /// The palette's name, and where it comes from beside it or under it.
