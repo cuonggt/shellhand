@@ -378,6 +378,22 @@ nonisolated struct PanesTests {
         #expect(Panes.menuTitles([]).isEmpty)
     }
 
+    // MARK: the strip
+
+    /// Held at 180 each, a full strip scrolled and pushed the Hosts tab half
+    /// off its edge; the tabs share the room first, and scroll only past 60.
+    @Test("a full strip's tabs share its room before it scrolls")
+    func tabTitleWidths() {
+        #expect(Panes.tabTitleWidth(room: 1000, tabs: 2) == 180)
+        // Four in 600: each a quarter of the room, less its gap and its own
+        // mark and ×.
+        #expect(Panes.tabTitleWidth(room: 600, tabs: 4)
+            == (600 - Panes.tabSpacing * 3) / 4 - Panes.tabChrome)
+        #expect(Panes.tabTitleWidth(room: 300, tabs: 6) == 60)
+        // Before the strip has been measured, as they always were.
+        #expect(Panes.tabTitleWidth(room: 0, tabs: 3) == 180)
+    }
+
     /// ⌘D closes the split while one is open, and its item said Show
     /// Beside all the same.
     @Test("⌘D's item says what it would do")

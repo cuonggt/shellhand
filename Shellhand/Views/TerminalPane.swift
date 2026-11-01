@@ -13,41 +13,58 @@ import SwiftUI
 struct SessionTabBar: View {
     let sessions: Sessions
     let pane: PaneTab
+    /// The tab shown beside the one in front, which its tab says.
+    let beside: PaneTab?
     let onPick: (PaneTab) -> Void
     /// A tab's × and its own menu, handed back to the window rather than
     /// acted on here — so the × asks first exactly as ⌘W does, where it used
     /// to close a live session on the spot.
     let actions: TabActions
 
+    /// How wide the session tabs' part of the strip is, which they share.
+    @State private var room: CGFloat = 0
+
     var body: some View {
-        ScrollViewReader { strip in
-            ScrollView(.horizontal) {
-                HStack(spacing: 4) {
-                    FixedTab(title: "Hosts", icon: "list.bullet",
-                             selected: pane == .hosts) { onPick(.hosts) }
-                    ForEach(sessions.all) { session in
-                        TabButton(
-                            session: session,
-                            selected: pane == .session(session.id),
-                            hasOthers: sessions.all.count > 1,
-                            actions: actions,
-                            onShow: { onPick(.session(session.id)) })
-                        .id(session.id)
+        // Named as the Window menu names them, a second of one name with its
+        // number: two tabs on one host read "refuser" twice.
+        let titles = sessions.titles
+        HStack(spacing: Panes.tabSpacing) {
+            // The way back to the list, outside the scrolling: with the strip
+            // full, a new tab scrolled into view pushed Hosts half off the
+            // strip's edge.
+            FixedTab(title: "Hosts", icon: "list.bullet",
+                     selected: pane == .hosts) { onPick(.hosts) }
+            ScrollViewReader { strip in
+                ScrollView(.horizontal) {
+                    HStack(spacing: Panes.tabSpacing) {
+                        ForEach(Array(sessions.all.enumerated()), id: \.element.id) { index, session in
+                            TabButton(
+                                session: session,
+                                title: titles[index],
+                                titleWidth: Panes.tabTitleWidth(room: room, tabs: titles.count),
+                                selected: pane == .session(session.id),
+                                beside: beside == .session(session.id),
+                                hasOthers: sessions.all.count > 1,
+                                actions: actions,
+                                onShow: { onPick(.session(session.id)) })
+                            .id(session.id)
+                        }
                     }
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-            }
-            .scrollIndicators(.never)
-            // The tab in front is scrolled into view: a session opened with
-            // the strip full landed past its end, out of sight. A turn of the
-            // loop later, since a new tab is not laid out in the update that
-            // adds it.
-            .onChange(of: pane) { _, now in
-                guard case let .session(id) = now else { return }
-                DispatchQueue.main.async { withAnimation { strip.scrollTo(id) } }
+                .scrollIndicators(.never)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { room = $0 }
+                // The tab in front is scrolled into view: a session opened with
+                // the strip full landed past its end, out of sight. A turn of
+                // the loop later, since a new tab is not laid out in the update
+                // that adds it.
+                .onChange(of: pane) { _, now in
+                    guard case let .session(id) = now else { return }
+                    DispatchQueue.main.async { withAnimation { strip.scrollTo(id) } }
+                }
             }
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
         .background(.bar)
     }
 }
@@ -106,7 +123,13 @@ struct TabActions {
 
 private struct TabButton: View {
     let session: TerminalSession
+    /// Its name in the strip, told apart from another of the same name.
+    let title: String
+    /// The most its name may take, the strip's room shared among the tabs.
+    let titleWidth: CGFloat
     let selected: Bool
+    /// Shown beside the tab in front, in a split.
+    let beside: Bool
     /// Whether there is another tab for Close Other Tabs to close.
     let hasOthers: Bool
     let actions: TabActions
@@ -122,10 +145,10 @@ private struct TabButton: View {
                 // what the shell sent — and capped, because the tail can be
                 // long too. Truncating in the middle keeps both the ends
                 // that say which session this is: `prod-api-ch…/current`.
-                Text(Sessions.shortTitle(of: session))
+                Text(title)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                    .frame(maxWidth: 180)
+                    .frame(maxWidth: titleWidth)
                     .fixedSize(horizontal: false, vertical: true)
                 // A question in a tab behind this one was a yellow dot, and
                 // the far end gives up on it after a couple of minutes.
@@ -143,12 +166,20 @@ private struct TabButton: View {
                 .buttonStyle(.plain)
                 // Which tab, not just "close": a strip of them all reading
                 // "close this tab" says nothing about which one you are on.
-                .accessibilityLabel("Close \(Sessions.shortTitle(of: session))")
+                .accessibilityLabel("Close \(title)")
                 .help("Close this tab")
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(background, in: RoundedRectangle(cornerRadius: 6))
+            // Outlined while shown beside the tab in front, so a split says
+            // which tab is on which side: it read like any tab behind.
+            .overlay {
+                if beside {
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(SwiftUI.Color.accentColor.opacity(0.6), lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(.plain)
         // The whole of what the shell sent, for the times the label had to
@@ -156,7 +187,7 @@ private struct TabButton: View {
         .help(session.title)
         // Its state in words as well as its name: a colour says nothing to
         // VoiceOver, and the symbol only as much as its shape.
-        .accessibilityLabel("\(Sessions.shortTitle(of: session)), \(session.status.spoken)")
+        .accessibilityLabel("\(title), \(session.status.spoken)\(beside ? ", shown beside" : "")")
         // Reconnecting and closing go through the same questions ⌘R and ⌘W
         // put; Duplicate is ⌘T for this tab rather than the one in front.
         .contextMenu {

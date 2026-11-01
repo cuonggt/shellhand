@@ -228,6 +228,23 @@ nonisolated enum Panes {
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 
+    /// Room a session tab takes besides its title — its status mark, its ×,
+    /// the gaps between them and its padding.
+    static let tabChrome: CGFloat = 50
+
+    /// Between two tabs in the strip.
+    static let tabSpacing: CGFloat = 4
+
+    /// How wide a session tab's title may be, in a strip `room` wide holding
+    /// `tabs` session tabs: 180 where they all fit at that, and otherwise
+    /// their share of the room, down to 60 — past which the strip scrolls.
+    /// Held at 180 each, a full strip scrolled the Hosts tab half away.
+    static func tabTitleWidth(room: CGFloat, tabs: Int) -> CGFloat {
+        guard tabs > 0, room > 0 else { return 180 }
+        let share = (room - tabSpacing * CGFloat(tabs - 1)) / CGFloat(tabs) - tabChrome
+        return min(180, max(60, share))
+    }
+
     /// The least the middle column's content is given, whatever it shows —
     /// fixed, so that no selection moves the column. Left to its content it
     /// moved: picking a group raised it 34pt, so a window already at its

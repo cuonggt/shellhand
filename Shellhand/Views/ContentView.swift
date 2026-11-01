@@ -574,9 +574,8 @@ struct ContentView: View {
             smallerText: { frontSession?.changeFontSize(by: -1) },
             actualSize: { frontSession?.resetFontSize() },
             toggleInspector: { showingInspector.toggle() },
-            openSessions: zip(
-                sessions.all, Panes.menuTitles(sessions.all.map { Sessions.shortTitle(of: $0) })
-            ).map { SessionItem(id: $0.id, title: $1) },
+            openSessions: zip(sessions.all, sessions.titles)
+                .map { SessionItem(id: $0.id, title: $1) },
             showSession: show(session:),
             nextTab: { step(by: 1) },
             previousTab: { step(by: -1) },
@@ -909,8 +908,8 @@ struct DetailView: View {
             // hosts tab is there to come back to whenever there is somewhere
             // else to be.
             if Panes.showsTabs(sessions: sessions.all.count) {
-                SessionTabBar(sessions: sessions, pane: pane, onPick: onPickTab,
-                              actions: tabActions)
+                SessionTabBar(sessions: sessions, pane: pane, beside: beside,
+                              onPick: onPickTab, actions: tabActions)
                 Divider()
             }
             // The welcome stands in for the **hosts tab** on a fresh install,

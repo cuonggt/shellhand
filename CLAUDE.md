@@ -532,9 +532,14 @@ credentials, which is most of it.
   while the job reported success.
   → [opened once](docs/notes/sftp.md#opened-once)
 - **Sessions are a strip of tabs across the terminal**, at the user's word, and
-  the sidebar is the host list alone. A tab shows `Sessions.shortTitle`, capped
-  at 180pt and cut in the middle; if the strip fills, shorten it further —
-  **don't move sessions back to the sidebar**.
+  the sidebar is the host list alone. A tab shows its name from
+  `Sessions.titles` — `Sessions.shortTitle`, a second of one name numbered
+  as the Window menu and the inspector's Open now number it — capped at
+  180pt and cut in the middle; as the strip fills the tabs share its room
+  down to 60 (`Panes.tabTitleWidth`) before it scrolls, and the Hosts tab
+  stays outside the scrolling, where a full strip pushed it half off its
+  edge. The tab shown beside is outlined. **Don't move sessions back to the
+  sidebar**.
   → [the strip](docs/notes/window.md#the-strip)
 - The strip is **not there at all when nothing is open**, list or no list
   (`Panes.showsTabs`): with nothing open it held one tab, the one you were

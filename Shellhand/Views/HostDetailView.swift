@@ -221,7 +221,7 @@ struct HostDetailView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "terminal")
-                        Text(Sessions.shortTitle(of: session))
+                        Text(title(of: session))
                             .lineLimit(1)
                             .truncationMode(.middle)
                         Spacer()
@@ -233,7 +233,7 @@ struct HostDetailView: View {
                     .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Show the session on \(Sessions.shortTitle(of: session))")
+                .accessibilityLabel("Show the session \(title(of: session))")
             }
         }
     }
@@ -242,6 +242,14 @@ struct HostDetailView: View {
 
     private var openHere: [TerminalSession] {
         (sessions?.all ?? []).filter { $0.host?.id == host.id }
+    }
+
+    /// A session's name as the strip and the Window menu give it: two on
+    /// this host read "refuser" twice here.
+    private func title(of session: TerminalSession) -> String {
+        guard let sessions, let at = sessions.all.firstIndex(where: { $0.id == session.id })
+        else { return Sessions.shortTitle(of: session) }
+        return sessions.titles[at]
     }
 }
 

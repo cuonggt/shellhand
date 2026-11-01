@@ -525,6 +525,12 @@ final class Sessions {
         shortTitle(host: session.host?.name, title: session.title)
     }
 
+    /// Every session's short title in the order of `all`, a second of one
+    /// name told apart by its number — "refuser", "refuser (2)" — so the
+    /// Window menu, the strip and the inspector's Open now name them alike.
+    /// The strip and Open now said "refuser" twice.
+    var titles: [String] { Panes.menuTitles(all.map { Self.shortTitle(of: $0) }) }
+
     /// The rule itself, over the only two things it reads.
     ///
     /// Separate from the overload above so that checking it costs nothing: a
