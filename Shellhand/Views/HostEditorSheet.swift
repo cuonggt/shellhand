@@ -33,6 +33,10 @@ struct HostEditorSheet: View {
     @State private var tab: Tab = .general
     /// How tall the command along the bottom is, whole.
     @State private var commandHeight: CGFloat = 0
+    /// What the command's box may have on each tab, read off the form as
+    /// drawn (`commandCap(room:)`); until a tab's form is laid out, the
+    /// estimate stands in.
+    @State private var formRoom: [Tab: CGFloat] = [:]
     @FocusState private var focus: Field?
     @Environment(\.dismiss) private var dismiss
 
@@ -82,6 +86,16 @@ struct HostEditorSheet: View {
         return max(leastCommand, commandRoom - max(0, wanted - height - spare))
     }
 
+    /// The same, read off the sheet as drawn: `room` is the box's height and
+    /// whatever the form above it leaves unused, together — which stays put
+    /// as the box grows or shrinks, since the form gives or takes the same.
+    /// The estimate guesses the form's spare from db-01's General, which
+    /// carries a caption under Connect to that a host typed into ⌘K does
+    /// not: Save as Host… cut a three-line command under 58pt of empty form.
+    nonisolated static func commandCap(room: CGFloat) -> CGFloat {
+        min(commandRoom, max(leastCommand, room))
+    }
+
     /// The box's inset around the command, and one of its lines with the gap
     /// to the next: six lines inside the inset are `commandRoom`'s 116.
     nonisolated static let commandInset: CGFloat = 8
@@ -100,6 +114,24 @@ struct HostEditorSheet: View {
 
     /// What each tab was measured to need; see the frame for how.
     private var wanted: CGFloat { tab == .general ? 736 : 640 }
+
+    /// How much of the command the foot shows: from the form as drawn once
+    /// this tab's has been laid out, and the estimate until then.
+    private var commandCap: CGFloat {
+        if let room = formRoom[tab] { return Self.commandCap(room: room) }
+        return Self.commandCap(wanted: wanted, height: height, lines: footLines)
+    }
+
+    /// Whether the foot shows the command: once there is an address to put
+    /// in it, since `ssh ''` for an empty form says nothing anyone needs.
+    private var showsCommand: Bool {
+        !preview.argv.isEmpty && !host.addr.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// The command's box as this layout draws it, from the state alone.
+    private var boxShown: CGFloat {
+        showsCommand ? Self.commandShown(commandHeight, cap: commandCap) : 0
+    }
 
     /// Where the user this host logs in as comes from while its own field is
     /// empty: nil when it says one itself, or nothing above gives one.
@@ -136,6 +168,14 @@ struct HostEditorSheet: View {
                 case .general: general
                 case .advanced: advanced
                 }
+            }
+            // What the form leaves unused, with the box as this layout drew
+            // it: the room the command may have (`commandCap(room:)`).
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.containerSize.height - geometry.contentInsets.top
+                    - geometry.contentInsets.bottom - geometry.contentSize.height
+            } action: { _, unused in
+                formRoom[tab] = boxShown + unused
             }
             Divider()
             footer
@@ -471,8 +511,7 @@ struct HostEditorSheet: View {
             // argument a line, as the inspector draws it, in a box as tall as
             // the command up to `commandCap` and scrolled past that: the
             // quoted line, cut to two, hid a jump chain's middle in `'"'"'`.
-            if !preview.argv.isEmpty,
-               !host.addr.trimmingCharacters(in: .whitespaces).isEmpty {
+            if showsCommand {
                 ScrollView {
                     CommandLines(preview: preview)
                         .padding(Self.commandInset)
@@ -480,8 +519,7 @@ struct HostEditorSheet: View {
                             commandHeight = $0
                         }
                 }
-                .frame(height: Self.commandShown(commandHeight, cap: Self.commandCap(
-                    wanted: wanted, height: height, lines: footLines)))
+                .frame(height: boxShown)
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }
 

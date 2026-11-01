@@ -71,4 +71,18 @@ nonisolated struct SheetHeightTests {
             #expect(into >= 4 && into <= 9, "a cap of \(cap) shows \(into) of a line")
         }
     }
+
+    /// Read off the form as drawn, the box takes what the form leaves, up to
+    /// six lines and never under one. Guessed from db-01's General, Save as
+    /// Host… cut a three-line command under 58pt of empty form.
+    @Test("the command's box takes what the form as drawn leaves it")
+    func commandTakesWhatIsLeft() {
+        #expect(HostEditorSheet.commandCap(room: 108) == 108)
+        #expect(HostEditorSheet.commandCap(room: 400) == HostEditorSheet.commandRoom)
+        #expect(HostEditorSheet.commandCap(room: 10) == HostEditorSheet.leastCommand)
+        // Save as Host…'s three lines, whole in its 50pt of box and 58 of form.
+        let three = 2 * HostEditorSheet.commandInset + 3 * HostEditorSheet.commandLine
+        #expect(HostEditorSheet.commandShown(three, cap: HostEditorSheet.commandCap(room: 50 + 58))
+            == three)
+    }
 }

@@ -1135,7 +1135,11 @@ credentials, which is most of it.
   in the host editor the command's box first, so the form keeps its room —
   but only what the form cannot spare (`commandCap`, with the lines along
   the foot taking that spare): giving up all of it left the box two lines and
-  a half under 55pt of empty form. At 720, 0.1.7's host editor hung below
+  a half under 55pt of empty form. What it can spare is read off the form as
+  drawn (`commandCap(room:)`: its scroll area less its content, with the
+  box), the estimate standing in until it is laid out — guessed from db-01's
+  General, Save as Host… cut a three-line command under 58pt of empty form.
+  At 720, 0.1.7's host editor hung below
   the window at its default
   1100×720, where every check had run at the README's 1220×798. **Check a
   sheet at the window's default size as well.**
