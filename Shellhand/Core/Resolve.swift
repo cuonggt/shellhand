@@ -107,6 +107,16 @@ nonisolated struct FromAbove: Sendable, Equatable {
     /// and not the same as one of them saying no.
     var forwardAgent: Bool?
     var forwardAgentFrom = ""
+    /// Every group's ssh options above, nearest first. They add up, where
+    /// the nearest of every other setting stands in for the rest: the
+    /// resolver gathers them all, and ssh keeps the first value it is given.
+    var sshOptions: [Options] = []
+
+    /// One group's ssh options, and whose they are.
+    nonisolated struct Options: Sendable, Equatable {
+        var lines: [String]
+        var from: String
+    }
 
     init() {}
 
@@ -150,6 +160,9 @@ nonisolated struct FromAbove: Sendable, Equatable {
             if forwardAgent == nil, let says = parent.forwardAgent {
                 forwardAgent = says
                 forwardAgentFrom = parent.name
+            }
+            if !parent.sshOptions.isEmpty {
+                sshOptions.append(Options(lines: parent.sshOptions, from: parent.name))
             }
             id = parent.parentId
         }

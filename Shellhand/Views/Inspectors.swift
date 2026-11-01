@@ -47,6 +47,7 @@ struct GroupInspector: View {
                            from: above.proxyJumpFrom)
                     agent(above)
                     colours(above)
+                    options(above)
                 }
                 .font(.callout)
 
@@ -100,6 +101,25 @@ struct GroupInspector: View {
         if !group.theme.isEmpty { return ValueRow("Colours", group.theme) }
         if !above.theme.isEmpty { return ValueRow("Colours", above.theme, from: above.themeFrom) }
         return ValueRow("Colours", Themes.inSettings, from: "Settings")
+    }
+
+    /// Its own ssh options, then each group's above with whose they are,
+    /// one a line: they add up rather than the nearest standing in for the
+    /// rest. The inspector left them out, so a group's options showed
+    /// nowhere but its editor.
+    @ViewBuilder
+    private func options(_ above: FromAbove) -> some View {
+        let own = group.sshOptions.isEmpty
+            ? [] : [FromAbove.Options(lines: group.sshOptions, from: "")]
+        let all = own + above.sshOptions
+        if all.isEmpty {
+            ValueRow("ssh options", "")
+        } else {
+            ForEach(Array(all.enumerated()), id: \.offset) { index, set in
+                ValueRow(index == 0 ? "ssh options" : "",
+                         set.lines.joined(separator: "\n"), from: set.from)
+            }
+        }
     }
 }
 

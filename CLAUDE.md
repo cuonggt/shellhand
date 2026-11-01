@@ -248,7 +248,9 @@ credentials, which is most of it.
   its tag beside the next, with the same tag, losing it.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
-  (`FromAbove`) and what is inside; a local shell; or a machine typed into
+  (`FromAbove`) — its ssh options too, and every group's above with whose
+  they are, since they add up (`FromAbove.sshOptions`), where they showed
+  nowhere but the editor — and what is inside; a local shell; or a machine typed into
   ⌘K, with Save as Host…. It said "Nothing selected" for the last three, so a
   ⌘K machine could not be saved from anywhere. `Views/Inspectors.swift` draws
   them. **A host's Open now marks each of its tabs as the strip does**

@@ -253,6 +253,26 @@ nonisolated struct FromAboveTests {
         #expect(Effective.agent(false, from: "").from.isEmpty)
     }
 
+    /// The group inspector said nothing of them: where every other setting
+    /// is the nearest group's, the resolver gathers every group's ssh
+    /// options, so each group above is listed with its own.
+    @Test("ssh options add up, nearest first, each with whose they are")
+    func options() {
+        var set = groups
+        set[0].sshOptions = ["ServerAliveInterval=30"]
+        set[1].sshOptions = ["Compression=yes", "ServerAliveInterval=10"]
+        #expect(FromAbove(of: set[2], among: set).sshOptions == [
+            .init(lines: ["Compression=yes", "ServerAliveInterval=10"], from: "EU"),
+            .init(lines: ["ServerAliveInterval=30"], from: "Production"),
+        ])
+        // EU's own are what it sets, not what it takes.
+        #expect(FromAbove(of: set[1], among: set).sshOptions == [
+            .init(lines: ["ServerAliveInterval=30"], from: "Production"),
+        ])
+        // Groups that set none add nothing.
+        #expect(FromAbove(of: groups[2], among: groups).sshOptions.isEmpty)
+    }
+
     @Test("a group that does not exist yet still takes what its parent gives")
     func newOne() {
         let fresh = Group(name: "Berlin", parentId: "e")
