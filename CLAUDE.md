@@ -536,7 +536,10 @@ credentials, which is most of it.
   `hasHost`, which meant deleting a group needed a host selected as well.
 - **New Group… lives in File and says where it will land** — "New Group Inside
   Production…" — because it reads the selection; an item that quietly does two
-  things has earned a longer label.
+  things has earned a longer label. **Inside is where a group sits**, there,
+  in a row's menu and in the group editor's row; what a group holds is its
+  Contents in the inspector and its Groups in the pane, where both said
+  Inside, beside the editor's row meaning the opposite.
   → [New Group](docs/notes/window.md#new-group)
 - **A menu on a row acts on that row**, handed it rather than reading the
   selection: a group's New Host… is `newHostIn` that group, while ⌘N in File

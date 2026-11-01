@@ -106,7 +106,10 @@ struct HostsPane: View {
             : .everything
         return List(selection: picked) {
             if !groups.isEmpty {
-                Section(group == nil ? "Groups" : "Inside") {
+                // Groups inside a group as at the top. Inside is where a group
+                // sits — its editor's row — and said of a group's children
+                // here it meant the opposite.
+                Section("Groups") {
                     ForEach(groups) { folder in
                         row(for: folder).tag(Selection.group(folder.id))
                     }
@@ -174,7 +177,7 @@ struct HostsPane: View {
             VStack(alignment: .leading, spacing: 18) {
                 if !groups.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(group == nil ? "Groups" : "Inside").font(.headline)
+                        Text("Groups").font(.headline)
                         LazyVGrid(columns: cards, alignment: .leading, spacing: 10) {
                             ForEach(groups) { folder in
                                 card(for: folder)

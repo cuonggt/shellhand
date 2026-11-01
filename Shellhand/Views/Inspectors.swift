@@ -51,7 +51,10 @@ struct GroupInspector: View {
                 .font(.callout)
 
                 if !inside.isEmpty || !store.tree.hosts(in: group.id).isEmpty {
-                    Text("Inside").font(.headline)
+                    // What the group holds. Inside is where a group sits — its
+                    // editor's row, New Group Inside Production… — and this
+                    // heading said it of its children, beside that very row.
+                    Text("Contents").font(.headline)
                     Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
                         ForEach(inside) { child in
                             ValueRow(child.name,
