@@ -67,6 +67,15 @@ nonisolated struct ValidationTests {
             among: existing) == nil)
     }
 
+    /// "deploy", Production's user, sat grey in a field that inherits
+    /// nothing, as if it came from somewhere.
+    @Test("the user field's example is never a user the list logs in as")
+    func userExample() {
+        #expect(HostEditorSheet.userExample(avoiding: ["", "pi"]) == "deploy")
+        #expect(HostEditorSheet.userExample(avoiding: [" Deploy ", "ci"]) == "ubuntu")
+        #expect(HostEditorSheet.userExample(avoiding: ["deploy", "ubuntu", "admin"]) == "you")
+    }
+
     /// New Group Inside Production offered "Production" for the name, right
     /// above "Inside: Production", where it read as the name already chosen.
     @Test("the group name's example is never a group in the list")

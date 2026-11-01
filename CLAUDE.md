@@ -1215,10 +1215,13 @@ credentials, which is most of it.
   (`FromAbove(of: host)`), not off what it resolves to, which has its own
   choice in it. **An
   example never names something in the list** (`HostEditorSheet
-  .jumpExample`, `GroupEditorSheet.nameExample`): "bastion" in Production's
-  Jump host, with bastion filed there, read as Production going through it,
-  and "Production" over "Inside: Production" as the name already chosen —
-  in the host editor's New group… as well, under a menu listing Production.
+  .jumpExample`, `.userExample`, `GroupEditorSheet.nameExample`): "bastion"
+  in Production's Jump host, with bastion filed there, read as Production
+  going through it, and "Production" over "Inside: Production" as the name
+  already chosen — in the host editor's New group… as well, under a menu
+  listing Production; "deploy", Production's user, sat grey in a user field
+  inheriting nothing. The tag field asks "add a tag", empty or not, where
+  "web, eu" named two tags in use in the comma form it turns into tokens.
 - **One setting has one name** wherever it is shown: Jump host and Agent
   forwarding, in both editors and the inspectors, and Colours in Settings as
   well. The host editor called the first two Through and Agent up to 0.1.5,

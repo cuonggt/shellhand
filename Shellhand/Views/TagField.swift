@@ -22,9 +22,10 @@ struct TagField: View {
                 ForEach(tags, id: \.self) { tag in
                     TagToken(tag: tag) { remove(tag) }
                 }
-                TextField(
-                    "", text: $typing,
-                    prompt: Text(tags.isEmpty ? "web, eu" : "add a tag"))
+                // The same words with tags or without: "web, eu" named two
+                // tags the list already holds, in the comma form the field
+                // turns into tokens.
+                TextField("", text: $typing, prompt: Text("add a tag"))
                     .textFieldStyle(.plain)
                     // A grouped form's rows right-align their fields, and
                     // that reaches in here: "add a tag" floated off the last

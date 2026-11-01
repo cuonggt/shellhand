@@ -395,7 +395,8 @@ struct HostEditorSheet: View {
     /// rows said the same thing and left you to infer they belonged together.
     private var destination: some View {
         HStack(spacing: 4) {
-            TextField("", text: $host.user, prompt: Text(shown(preview.effective.user, "deploy")))
+            TextField("", text: $host.user, prompt: Text(shown(
+                preview.effective.user, Self.userExample(avoiding: usersInList))))
                 .frame(width: 92)
             Text("@").foregroundStyle(.secondary)
             TextField("", text: $host.addr, prompt: Text("10.0.0.1"))
@@ -467,6 +468,19 @@ struct HostEditorSheet: View {
     nonisolated static func jumpExample(avoiding names: [String]) -> String {
         let taken = Set(names.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
         return ["bastion", "gateway", "jumpbox"].first { !taken.contains($0) } ?? "jumphost"
+    }
+
+    /// The user field's example — here and in the group editor — never a
+    /// user the list already logs in as: "deploy", Production's, sat grey in
+    /// a field that inherits nothing, as if it came from somewhere.
+    nonisolated static func userExample(avoiding users: [String]) -> String {
+        let taken = Set(users.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
+        return ["deploy", "ubuntu", "admin"].first { !taken.contains($0) } ?? "you"
+    }
+
+    /// Every user the list names, hosts' and groups', for `userExample`.
+    private var usersInList: [String] {
+        store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)
     }
 
     /// Whether what is wrong is the ssh options, which live on the other tab.

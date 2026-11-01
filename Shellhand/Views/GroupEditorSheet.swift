@@ -171,7 +171,9 @@ struct GroupEditorSheet: View {
 
             Section("Passed down, unless something beneath says otherwise") {
                 row("User", value: above.user, from: above.userFrom,
-                    example: "deploy", text: $group.user)
+                    example: HostEditorSheet.userExample(
+                        avoiding: store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)),
+                    text: $group.user)
                 row("Key", value: above.identity, from: above.identityFrom,
                     example: "~/.ssh/id_ed25519", text: $group.identity)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
