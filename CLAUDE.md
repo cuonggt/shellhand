@@ -756,8 +756,9 @@ credentials, which is most of it.
   Both reach the host window as a `HostRequest`, which one window takes. **It
   is drawn as the terminal's card for the same refusal**: the headline red
   with its mark, ssh's line boxed and first, the way on leading and
-  prominent. It was plain, the line unboxed after the advice and the retry
-  last, so one failure looked like two things in two windows.
+  prominent, its buttons small as the terminal's are. It was plain, the line
+  unboxed after the advice and the retry last, so one failure looked like
+  two things in two windows; then its buttons were the regular size.
 - **A transfer says which way it goes and where it lands**
   (`TransferQueue.route`): labels the engine's reports do not carry, which
   `Transfer.labelled` keeps across them. A failed one is retried in its own

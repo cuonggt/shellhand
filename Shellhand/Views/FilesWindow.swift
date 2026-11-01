@@ -484,6 +484,9 @@ private struct Unreached: View {
                 HStack { buttons }
                 VStack(alignment: .leading) { buttons }
             }
+            // Small, as the terminal card's are: the one card drawn in two
+            // windows had its buttons at two sizes.
+            .controlSize(.small)
         }
         .padding(14)
         .frame(maxWidth: 460, alignment: .leading)
