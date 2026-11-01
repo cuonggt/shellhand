@@ -1079,6 +1079,13 @@ credentials, which is most of it.
   the window at its default
   1100×720, where every check had run at the README's 1220×798. **Check a
   sheet at the window's default size as well.**
+- **A list or a command cut short ends partway down a row, never on its
+  edge** (`PalettePicker.height`, `HostEditorSheet.commandShown`): macOS
+  shows no scroll bar until something scrolls, so a scroll area that ends on
+  a row's edge says it holds nothing more. Settings' picker showed five
+  palettes of six and nothing of the sixth, and the host editor at the
+  window's default size three lines of the command that read as all of it,
+  the ProxyCommand and the destination out of sight beneath.
 - **Whether a form fits is its own scroll area** — the sheet's direct child,
   not a recursive search — where no scroll bar means it fits, and a thumb's
   size gives the missing height in one pass.

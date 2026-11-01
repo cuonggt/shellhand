@@ -82,6 +82,22 @@ struct HostEditorSheet: View {
         return max(leastCommand, commandRoom - max(0, wanted - height - spare))
     }
 
+    /// The box's inset around the command, and one of its lines with the gap
+    /// to the next: six lines inside the inset are `commandRoom`'s 116.
+    nonisolated static let commandInset: CGFloat = 8
+    nonisolated static let commandLine: CGFloat = 17
+
+    /// How tall the command's box is under `cap`: the command whole where it
+    /// fits, and otherwise ending partway down a line, so the line cut off
+    /// says there is more. Cut on a line's edge, the editor at the window's
+    /// default size showed three lines that read as the whole command, the
+    /// jump host's ProxyCommand and the destination out of sight beneath.
+    nonisolated static func commandShown(_ content: CGFloat, cap: CGFloat) -> CGFloat {
+        guard content > cap else { return content }
+        let whole = ((cap - commandInset - 4) / commandLine).rounded(.down)
+        return min(cap, commandInset + commandLine * whole + 8)
+    }
+
     /// What each tab was measured to need; see the frame for how.
     private var wanted: CGFloat { tab == .general ? 736 : 640 }
 
@@ -470,12 +486,12 @@ struct HostEditorSheet: View {
                !host.addr.trimmingCharacters(in: .whitespaces).isEmpty {
                 ScrollView {
                     CommandLines(preview: preview)
-                        .padding(8)
+                        .padding(Self.commandInset)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                             commandHeight = $0
                         }
                 }
-                .frame(height: min(commandHeight, Self.commandCap(
+                .frame(height: Self.commandShown(commandHeight, cap: Self.commandCap(
                     wanted: wanted, height: height, lines: footLines)))
                 .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
             }

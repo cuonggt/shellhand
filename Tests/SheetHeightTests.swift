@@ -50,4 +50,25 @@ nonisolated struct SheetHeightTests {
         // With room enough, a line along the foot changes nothing.
         #expect(HostEditorSheet.commandCap(wanted: 736, height: 736, lines: 2) == room)
     }
+
+    /// Cut on a line's edge, the editor at the window's default size showed
+    /// three lines that read as the whole command.
+    @Test("a command cut short ends partway down a line, and one that fits is whole")
+    func cutPartway() {
+        let inset = HostEditorSheet.commandInset
+        let line = HostEditorSheet.commandLine
+        // Two lines in a box that holds three: whole.
+        #expect(HostEditorSheet.commandShown(48, cap: 56) == 48)
+        // The window's default, 84 short: two lines and half the third.
+        let atDefault = HostEditorSheet.commandCap(wanted: 736, height: 652)
+        #expect(HostEditorSheet.commandShown(140, cap: atDefault) == inset + 2 * line + 8)
+        // However the cap falls, what is shown stops inside a line, some of
+        // it in sight, and never past the cap.
+        for cap in stride(from: HostEditorSheet.leastCommand, through: HostEditorSheet.commandRoom, by: 1) {
+            let shown = HostEditorSheet.commandShown(400, cap: cap)
+            #expect(shown <= cap)
+            let into = (shown - inset).truncatingRemainder(dividingBy: line)
+            #expect(into >= 4 && into <= 9, "a cap of \(cap) shows \(into) of a line")
+        }
+    }
 }

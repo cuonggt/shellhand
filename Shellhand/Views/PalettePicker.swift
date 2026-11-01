@@ -124,16 +124,19 @@ struct PalettePicker: View {
 
     /// How tall the picker is for `rows` rows over a window with this much
     /// room below its toolbar: tall enough for every row where that fits,
-    /// and otherwise the room less a margin, the palettes scrolling in what
-    /// is left — never under 240. Settings opens 500 tall and goes down to
-    /// 420, and a 460 sheet hung its Done below the window's edge. It was
-    /// 460 wherever there was room, tall enough for the palettes that ship
-    /// but not for the inherit row above them, which pushed the last one
-    /// out of sight.
+    /// and otherwise within the room less a margin, the palettes scrolling in
+    /// what is left — never under 240 — and ending partway down a row, so
+    /// the one cut off says the list goes on. Settings opens 500 tall and
+    /// goes down to 420, and a 460 sheet hung its Done below the window's
+    /// edge. It was 460 wherever there was room, tall enough for the palettes
+    /// that ship but not for the inherit row above them, which pushed the
+    /// last one out of sight; and cut on a row's edge, Settings showed five
+    /// palettes of six with nothing to say there was a sixth.
     nonisolated static func height(rows: Int, in room: CGFloat?) -> CGFloat {
         let needed = chrome + rowHeight * CGFloat(rows)
-        guard let room else { return needed }
-        return max(240, min(needed, room - 40))
+        guard let room, needed > room - 40 else { return needed }
+        let whole = ((room - 40 - chrome) / rowHeight - 0.5).rounded(.down)
+        return max(240, chrome + rowHeight * (whole + 0.5))
     }
 
     var body: some View {

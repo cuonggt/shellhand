@@ -226,9 +226,24 @@ nonisolated struct PalettePickerHeightTests {
         // held to 460, the last palette was out of sight in a window of 668.
         #expect(PalettePicker.height(rows: 7, in: nil) == seven)
         #expect(PalettePicker.height(rows: 7, in: 700) == seven)
-        // Settings at its default: the room below its toolbar, less a margin.
-        #expect(PalettePicker.height(rows: 6, in: 420) == 380)
+        // Settings at its default: within the room below its toolbar, less a
+        // margin — four palettes and half the fifth.
+        #expect(PalettePicker.height(rows: 6, in: 420) == PalettePicker.chrome + 4.5 * PalettePicker.rowHeight)
         // However little room, never so short that nothing fits in it.
         #expect(PalettePicker.height(rows: 7, in: 100) == 240)
+    }
+
+    /// Cut on a row's edge, Settings showed five palettes of six and nothing
+    /// to say there was a sixth.
+    @Test("a list cut short ends partway down a row, never on its edge")
+    func cutPartway() {
+        for room in stride(from: 300.0, through: 560.0, by: 1.0) {
+            let height = PalettePicker.height(rows: 7, in: room)
+            let shown = (height - PalettePicker.chrome) / PalettePicker.rowHeight
+            guard shown < 7 else { continue }
+            #expect(height <= max(240, room - 40))
+            let into = shown - shown.rounded(.down)
+            #expect(into > 0.25 && into < 0.75, "at \(room) it shows \(shown) rows")
+        }
     }
 }
