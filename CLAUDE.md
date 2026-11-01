@@ -763,7 +763,9 @@ credentials, which is most of it.
   which kept its place greyed with nothing to choose; the other side's Copy is
   plain Copy while this one is pointed nowhere (`Places.copyTitle`): "0
   items" read as an empty folder, and the button said "Copy to Choose a
-  host". Its path field greys with the buttons beside it, where Return in
+  host". A file double-clicked or Returned on across from it beeps, as a key
+  with nothing to do does, where it did nothing and said nothing. Its path
+  field greys with the buttons beside it, where Return in
   it went nowhere and said nothing, and so does its "…" menu, whose Show
   Hidden Files had nothing to act on. The header's icons are drawn in
   AppKit's control colours, black as the menu is while they can act and

@@ -439,11 +439,17 @@ private struct PlacePane: View {
         }
     }
 
-    /// Double-click: into a directory, or across to the other pane.
+    /// Double-click: into a directory, or across to the other pane — and a
+    /// beep where the other side has nowhere to put it, pointed nowhere,
+    /// connecting or refused: it did nothing and said nothing.
     private func open(_ names: Set<String>) {
         let picked = entries.filter { names.contains($0.name) }
         if picked.count == 1, let entry = picked.first, entry.isDir {
             Task { await place.go(to: place.path(entry.name)) }
+            return
+        }
+        guard other.via != nil else {
+            NSSound.beep()
             return
         }
         Task { await files.copy(picked, from: place, to: other) }
