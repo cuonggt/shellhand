@@ -63,6 +63,10 @@ struct HostsPane: View {
     /// margin, so all three start on one edge.
     static let inset: CGFloat = 16
 
+    /// The inset list's own margin above its first heading, measured, which
+    /// the grid starts at too.
+    static let listTop: CGFloat = 6.5
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Pinned rather than scrolling away with the rows: it carries the
@@ -212,6 +216,9 @@ struct HostsPane: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background { gridWidth }
             .padding(.horizontal, Self.inset)
+            // Where the inset list puts its first heading, so it stays put as
+            // the layout changes: it rose 6.5pt into the grid.
+            .padding(.top, Self.listTop)
             .padding(.bottom, 24)
         }
         // A `LazyVGrid` has no selection and no keyboard of its own, so both

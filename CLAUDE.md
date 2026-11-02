@@ -270,6 +270,9 @@ credentials, which is most of it.
   in from the pane's edges with it — `contentMargins` does not reach a
   list's rows here. The list/grid switch stands at its own width on the
   edge they end on, where in a frame of 84 it stood 16pt short of them.
+  The grid starts where the inset list puts its first heading
+  (`HostsPane.listTop`), so it stays put as the layout changes, where it
+  rose 6.5pt into the grid.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose
