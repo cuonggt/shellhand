@@ -359,10 +359,17 @@ struct TerminalPane: View {
                 // in front, so without this nothing tells it to swap the view
                 // underneath, and every tab showed the first session.
                 .id(session.id)
-                // In the middle while nothing has run, since there is nothing
-                // under it to read; once something has, in a band across the
-                // top, so the session's last output stays in sight.
-                .overlay(alignment: session.status.isBeforeAnything ? .center : .top) { said }
+                // About the middle while nothing has run, since there is
+                // nothing under it to read, its top kept where it is as one
+                // card gives way to another; once something has, in a band
+                // across the top, so the session's last output stays in sight.
+                .overlay(alignment: .top) {
+                    if session.status.isBeforeAnything {
+                        CardPlacement { said }
+                    } else {
+                        said
+                    }
+                }
         }
         // A host key question is a decision, so dismissing the sheet any other
         // way answers no rather than letting the session hang on a prompt
@@ -425,6 +432,55 @@ enum Card {
     /// terminal, darker than the card's headline and ssh's line, 20 against
     /// 44 and 41.
     static let secondary = SwiftUI.Color(nsColor: .secondaryLabelColor)
+
+    /// How far above the middle of a pane with nothing on it a card's top
+    /// stands: about half the refusal's height, so the card that stays sits
+    /// about in the middle. Nonisolated, as `CardPlacement` reads it from a
+    /// layout's own calls.
+    nonisolated static let rise: CGFloat = 80
+
+    /// The slot a headline's icon stands in, as wide as the spinner and every
+    /// mark are laid out in a headline.
+    static let mark: CGFloat = 16
+}
+
+/// A card over a pane with nothing on it, its top a set way above the middle
+/// rather than the card centred: centred, a card that gave way to a taller
+/// or shorter one moved, a refusal's top 28pt above the connecting card's it
+/// replaced, 154pt tall against 98. Higher only where the card would
+/// otherwise run past the foot.
+struct CardPlacement: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let across = ProposedViewSize(width: bounds.width, height: nil)
+        for card in subviews {
+            let height = card.sizeThatFits(across).height
+            let top = max(bounds.minY, min(bounds.midY - Card.rise, bounds.maxY - height))
+            card.place(at: CGPoint(x: bounds.midX, y: top), anchor: .top, proposal: across)
+        }
+    }
+}
+
+/// A card's headline, its icon in a slot of one width: in its own, the words
+/// started 24 after a circle, 24.5 after the spinner and 25.5 after the
+/// triangle, and moved as one card gave way to the next.
+struct CardHeadline: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Label {
+            configuration.title
+        } icon: {
+            configuration.icon.frame(width: Card.mark)
+        }
+        // Its own style, or it would be drawn in this one again.
+        .labelStyle(.titleAndIcon)
+    }
+}
+
+extension LabelStyle where Self == CardHeadline {
+    static var cardHeadline: CardHeadline { CardHeadline() }
 }
 
 /// Where a connection is going and how long it has been at it, over a
@@ -444,6 +500,7 @@ private struct ConnectingCard: View {
             } icon: {
                 ProgressView().controlSize(.small)
             }
+            .labelStyle(.cardHeadline)
             .font(.headline)
             TimelineView(.periodic(from: session.startedAt ?? .now, by: 1)) { context in
                 let seconds = Int(context.date.timeIntervalSince(session.startedAt ?? context.date))
@@ -503,6 +560,7 @@ private struct EndedCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(status.headline(for: session.host?.name), systemImage: status.symbol)
+                .labelStyle(.cardHeadline)
                 .font(.headline)
                 .foregroundStyle(status.isFailure ? SwiftUI.Color.red : SwiftUI.Color.primary)
 

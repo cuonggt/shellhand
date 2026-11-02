@@ -1165,7 +1165,13 @@ credentials, which is most of it.
   refusal (`cardChrome`: 480 at most, left-aligned, 14pt in and 12 out) —
   so one state's card gives way to the next in place: the connecting card
   was 440 wide, centred, in 20pt margins, and jumped as it failed, and
-  SFTP's was 460 in 24.
+  SFTP's was 460 in 24. In place to the point: over a pane with nothing on
+  it a card's top stands a set way above the middle (`CardPlacement`,
+  `Card.rise`), where centred, a refusal's top stood 28pt above the
+  connecting card's it replaced, 154pt tall against 98; and a headline's
+  icon stands in a slot of one width (`.cardHeadline`), where the words
+  started 24 after a circle, 24.5 after the spinner and 25.5 after the
+  triangle.
   → [blank, not empty](docs/notes/terminal.md#blank-not-empty)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a

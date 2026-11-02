@@ -499,6 +499,7 @@ private struct Unreached: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(trouble.title, systemImage: SessionStatus.couldNotConnect.symbol)
+                .labelStyle(.cardHeadline)
                 .font(.headline)
                 .foregroundStyle(SwiftUI.Color.red)
             // As tall as its lines, as the terminal card's: held to one,
