@@ -512,14 +512,22 @@ struct HostsPane: View {
             }
         } label: {
             VStack(alignment: .leading, spacing: 5) {
-                Image(systemName: "folder").font(.title3).foregroundStyle(.tint)
+                // In a host card's mark's slot, as the list's rows have it:
+                // at its own 16.5pt in .title3 it stood 2pt right of the
+                // marks in the column under it.
+                Image(systemName: "folder")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundStyle(.tint)
+                    .frame(width: 22, height: 22)
                 Text(folder.name).lineLimit(1).truncationMode(.middle)
                 Text(counted(folder)).font(.caption).foregroundStyle(.secondary)
             }
             .padding(12)
-            // A set height so a card with tags does not stand taller than one
-            // without and leave the row ragged.
-            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+            // As tall as what it holds, 12 above and below as a host card:
+            // held to 96, it stood 13.5pt over its folder and 30 under its
+            // count. Every card in a row of groups is the same.
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .background(skin(for: .group(folder.id)), in: RoundedRectangle(cornerRadius: 8))
             .overlay(ring(for: .group(folder.id)))
         }

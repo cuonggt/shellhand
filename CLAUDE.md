@@ -273,7 +273,10 @@ credentials, which is most of it.
   child, before it or after — the tags were handed next to none, and every
   card read "US … …" for a walk, since the drive that proved the heights
   looked at nothing else. **Look at what a fix draws, not only the number
-  it was for.**
+  it was for.** A group card's folder stands in a host card's mark's slot,
+  22pt, and the card is as tall as what it holds: at its own 16.5pt the
+  folder stood 2pt right of the marks, and held to 96 the card stood 13.5pt
+  over its folder and 30 under its count.
   Its sections are named as the list's are, small, grey and semibold, where
   they were bold headlines over the list's grey ones. The title, the list
   and the grid share one left edge, the inset list's own 16pt
