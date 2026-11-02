@@ -1190,7 +1190,12 @@ credentials, which is most of it.
   SFTP's was 460 in 24. In place to the point: over a pane with nothing on
   it a card's top stands a set way above the middle (`CardPlacement`,
   `Card.rise`), where centred, a refusal's top stood 28pt above the
-  connecting card's it replaced, 154pt tall against 98; and a headline's
+  connecting card's it replaced, 154pt tall against 98 — rising from there
+  only as far as keeps its centre within `Card.sink`, 24pt, of the middle:
+  held to its place, a refusal beside another tab, 292pt tall with its
+  buttons stacked, stood with its centre 78pt under the middle, and centred
+  whenever it stood taller than twice the way up, the full-width refusal
+  moved 9pt, 154pt tall but 178 with its margins; and a headline's
   icon stands in a slot of one width (`.cardHeadline`), where the words
   started 24 after a circle, 24.5 after the spinner and 25.5 after the
   triangle.

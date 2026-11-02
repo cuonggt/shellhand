@@ -447,6 +447,11 @@ enum Card {
     /// layout's own calls.
     nonisolated static let rise: CGFloat = 80
 
+    /// The most a card's centre stands below that middle before the card
+    /// rises: every card at a pane's full width keeps one top, and a taller
+    /// one beside another tab hangs no lower than this.
+    nonisolated static let sink: CGFloat = 24
+
     /// The slot a headline's icon stands in, as wide as the spinner and every
     /// mark are laid out in a headline.
     static let mark: CGFloat = 16
@@ -455,8 +460,13 @@ enum Card {
 /// A card over a pane with nothing on it, its top a set way above the middle
 /// rather than the card centred: centred, a card that gave way to a taller
 /// or shorter one moved, a refusal's top 28pt above the connecting card's it
-/// replaced, 154pt tall against 98. Higher only where the card would
-/// otherwise run past the foot.
+/// replaced, 154pt tall against 98. It rises from there only as far as
+/// keeps its centre no more than `Card.sink` below the middle: held to its
+/// place, a refusal beside another tab, its buttons stacked and 292pt tall,
+/// stood with its centre 78pt under the middle, 246.5pt of terminal above it
+/// and 90 below; and a card taller than twice the way up, centred instead,
+/// moved the full-width refusal 9pt — 154pt tall, but 178 with its margins.
+/// Higher still only where the card would otherwise run past the foot.
 struct CardPlacement: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         proposal.replacingUnspecifiedDimensions()
@@ -466,7 +476,8 @@ struct CardPlacement: Layout {
         let across = ProposedViewSize(width: bounds.width, height: nil)
         for card in subviews {
             let height = card.sizeThatFits(across).height
-            let top = max(bounds.minY, min(bounds.midY - Card.rise, bounds.maxY - height))
+            let top = max(bounds.minY, min(
+                bounds.midY - Card.rise, bounds.midY - height / 2 + Card.sink, bounds.maxY - height))
             card.place(at: CGPoint(x: bounds.midX, y: top), anchor: .top, proposal: across)
         }
     }
