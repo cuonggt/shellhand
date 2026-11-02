@@ -853,7 +853,10 @@ credentials, which is most of it.
   with its mark, ssh's line boxed and first, the way on leading and
   prominent, its buttons small as the terminal's are. It was plain, the line
   unboxed after the advice and the retry last, so one failure looked like
-  two things in two windows; then its buttons were the regular size.
+  two things in two windows; then its buttons were the regular size. This
+  Mac's own failure, with nothing listed, says "Couldn't open this folder",
+  as a host's says "Couldn't connect to web", where it kept the "Cannot show
+  this" the card replaced.
 - **A transfer says which way it goes and where it lands**
   (`TransferQueue.route`): labels the engine's reports do not carry, which
   `Transfer.labelled` keeps across them. A failed one is retried in its own

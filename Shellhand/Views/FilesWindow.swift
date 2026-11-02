@@ -379,7 +379,9 @@ private struct PlacePane: View {
             }
         } else if let failure = place.failure {
             ContentUnavailableView {
-                Label("Cannot show this", systemImage: "exclamationmark.triangle")
+                // As a host's refusal says it, "Couldn't connect to web",
+                // where this kept the "Cannot show this" the card replaced.
+                Label("Couldn't open this folder", systemImage: "exclamationmark.triangle")
             } description: {
                 Text(failure)
             }
