@@ -614,7 +614,7 @@ showing, and on a host whose command passes six lines. **The walk's list is
 empty.**
 
 **0.2.0 is the second walk's release**, published at `1a18cca` and live on
-release, feed and cask. It carries 156 commits, which is why it is a
+release, feed, cask and tap. It carries 156 commits, which is why it is a
 minor rather than a patch. Two of them are things a user could have hit: at
 the window's narrowest, picking a group in the sidebar aborted 0.1.7 and
 everything before it, and at the default window size 0.1.7's host editor hung
@@ -635,8 +635,11 @@ DMG hashed as it streamed to `00efdc3e`; the release notes compared as JSON,
 identical but for a trailing newline; `appcast.xml` and the cask compared on
 `main` through the API against `git rev-parse HEAD:<path>`, both matching;
 every enclosure in the feed fetched, 302 then 200 at the length the appcast
-claims; and the feed read at the address a shipped build asks for, offering
-0.2.0 first. Both notarizations went through the first time, and
+claims; the feed read at the address a shipped build asks for, offering 0.2.0
+first; and the tap's cask read through the API rather than the CDN, the same
+blob as this repository's and naming the DMG's digest, with `brew info`
+resolving it to 0.2.0 beside its own install record of 0.0.1 — which is
+`auto_updates` doing its job, not a discrepancy to fix. Both notarizations went through the first time, and
 `generate_appcast` printed seventeen "failed to move" warnings while moving
 two files. The DMG came out 245KB larger than 0.1.7's, +1.69%, against 3,236
 lines added and 806 removed across 42 files with six new views, doubled by a
