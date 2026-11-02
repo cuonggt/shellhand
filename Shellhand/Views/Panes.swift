@@ -252,6 +252,21 @@ nonisolated enum Panes {
         }
     }
 
+    /// A told-apart title as a tab cuts it: the name, which gives way in its
+    /// middle, and the number after it, " (2)", which never does. Cut as one,
+    /// "root@127.0.0.1:2 (2)" read "root…(2)", its port gone and the space
+    /// with it. A title ending in no number is all name.
+    static func tabTitleParts(_ title: String) -> (name: String, number: String) {
+        guard title.hasSuffix(")"), let open = title.range(of: " (", options: .backwards) else {
+            return (title, "")
+        }
+        let digits = title[open.upperBound..<title.index(before: title.endIndex)]
+        guard !digits.isEmpty, digits.allSatisfy(\.isASCII), digits.allSatisfy(\.isNumber) else {
+            return (title, "")
+        }
+        return (String(title[..<open.lowerBound]), String(title[open.lowerBound...]))
+    }
+
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 

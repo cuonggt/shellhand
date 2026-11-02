@@ -427,6 +427,24 @@ nonisolated struct PanesTests {
         #expect(Panes.menuTitles([]).isEmpty)
     }
 
+    /// A tab cut its whole title in the middle, and "root@127.0.0.1:2 (2)"
+    /// read "root…(2)": the port went, and the space before the number.
+    @Test("a tab's number stands apart from the name it cuts")
+    func tabTitleParts() {
+        #expect(Panes.tabTitleParts("root@127.0.0.1:2 (2)") == ("root@127.0.0.1:2", " (2)"))
+        #expect(Panes.tabTitleParts("This Mac — ~ (12)") == ("This Mac — ~", " (12)"))
+        #expect(Panes.tabTitleParts("refuser") == ("refuser", ""))
+        // Brackets that hold no number are the name's own.
+        #expect(Panes.tabTitleParts("web (eu)") == ("web (eu)", ""))
+        #expect(Panes.tabTitleParts("web ()") == ("web ()", ""))
+        #expect(Panes.tabTitleParts("(2)") == ("(2)", ""))
+        // Whatever the parts, they make the title again.
+        for title in Panes.menuTitles(["db (2)", "db", "db", "x"]) {
+            let parts = Panes.tabTitleParts(title)
+            #expect(parts.name + parts.number == title)
+        }
+    }
+
     // MARK: the strip
 
     /// Held at 180 each, a full strip scrolled and pushed the Hosts tab half

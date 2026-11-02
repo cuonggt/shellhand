@@ -673,7 +673,9 @@ credentials, which is most of it.
   the inspector and SFTP call it; the title bar showed the shell's own title,
   "cuonggt@Cuongs-MacBook-Pro:~" over a tab saying "Local — ~", and
   "refuser" over "refuser (2)" — capped at
-  180pt and cut in the middle; as the strip fills the tabs share its room
+  180pt and cut in the middle, the name only: a number stays whole after
+  it (`Panes.tabTitleParts`), where cut as one at a tab's least, 60pt,
+  "root@127.0.0.1:2 (2)" read "root…(2)"; as the strip fills the tabs share its room
   by what each name needs, short names giving their spare to long ones,
   down to 60 (`Panes.tabTitleWidths`) before it scrolls — shared evenly,
   "This Mac — ~" was cut to "This…c — ~" with 65pt of the strip empty —

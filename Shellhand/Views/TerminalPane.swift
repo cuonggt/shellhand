@@ -205,11 +205,19 @@ private struct TabButton: View {
                 // what the shell sent — and capped, because the tail can be
                 // long too. Truncating in the middle keeps both the ends
                 // that say which session this is: `prod-api-ch…/current`.
-                Text(title)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: titleWidth)
-                    .fixedSize(horizontal: false, vertical: true)
+                // The number of a second of one name stays whole after it,
+                // where cut as one "root@127.0.0.1:2 (2)" read "root…(2)".
+                let parts = Panes.tabTitleParts(title)
+                HStack(spacing: 0) {
+                    Text(parts.name)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Text(parts.number)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                .frame(maxWidth: titleWidth)
+                .fixedSize(horizontal: false, vertical: true)
                 // A question in a tab behind this one was a yellow dot, and
                 // the far end gives up on it after a couple of minutes.
                 if session.status == .needsAnswer {
