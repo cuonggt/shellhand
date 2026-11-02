@@ -33,10 +33,13 @@ struct GroupInspector: View {
                 }
                 // Side by side when the inspector is wide enough, one above
                 // the other when not: at its usual width the second was cut
-                // to "New Group Insid…".
+                // to "New Group Insid…". One above the other at one width,
+                // the widest's, as a card's buttons stand: each at its own,
+                // they stood 133 and 142pt across.
                 ViewThatFits(in: .horizontal) {
-                    HStack { newHost; newGroup }
-                    VStack(alignment: .leading) { newHost; newGroup }
+                    HStack { newHost(stacked: false); newGroup(stacked: false) }
+                    VStack(alignment: .leading) { newHost(stacked: true); newGroup(stacked: true) }
+                        .fixedSize(horizontal: true, vertical: false)
                 }
 
                 Text("Passed down to everything inside").font(.headline)
@@ -79,8 +82,13 @@ struct GroupInspector: View {
         }
     }
 
-    private var newHost: some View { Button("New Host Inside…") { onNewHostIn(group) } }
-    private var newGroup: some View { Button("New Group Inside…") { onNewGroupIn(group) } }
+    private func newHost(stacked: Bool) -> some View {
+        Button { onNewHostIn(group) } label: { Text("New Host Inside…").stackedButtonLabel(stacked) }
+    }
+
+    private func newGroup(stacked: Bool) -> some View {
+        Button { onNewGroupIn(group) } label: { Text("New Group Inside…").stackedButtonLabel(stacked) }
+    }
 
     private var subtitle: String {
         let path = store.path(of: group)
