@@ -210,12 +210,8 @@ struct GroupEditorSheet: View {
                         onChoose: { group.theme = $0 })
                 }
                 LabeledContent("Agent forwarding") {
-                    Picker("", selection: $group.forwardAgent) {
-                        Text(inheritedAgent(above)).tag(Bool?.none)
-                        Text("Carried to these hosts").tag(Bool?.some(true))
-                        Text("Not carried").tag(Bool?.some(false))
-                    }
-                    .labelsHidden()
+                    AgentChoice(choice: $group.forwardAgent, inherited: inheritedAgent(above),
+                                carried: "Carried to these hosts")
                 }
             }
 

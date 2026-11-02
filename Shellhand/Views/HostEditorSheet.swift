@@ -375,12 +375,8 @@ struct HostEditorSheet: View {
                         onChoose: { host.theme = $0 })
                 }
                 LabeledContent("Agent forwarding") {
-                    Picker("", selection: $host.forwardAgent) {
-                        Text(inheritedAgent).tag(Bool?.none)
-                        Text("Carried to this host").tag(Bool?.some(true))
-                        Text("Not carried").tag(Bool?.some(false))
-                    }
-                    .labelsHidden()
+                    AgentChoice(choice: $host.forwardAgent, inherited: inheritedAgent,
+                                carried: "Carried to this host")
                 }
             }
 

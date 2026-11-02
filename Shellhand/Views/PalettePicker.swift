@@ -208,6 +208,26 @@ struct PalettePicker: View {
 /// chooses one does it. The inspector had this, and the host editor, the
 /// group editor and Settings offered a menu of names — in the one choice
 /// that is about what something looks like.
+/// A menu's arrows in a round bezel, as a pop-up menu draws its own — Font's
+/// in Settings — for the controls that draw a menu's value themselves
+/// (`PaletteChoice`, `AgentChoice`): bare and grey, the swatch's read as
+/// another kind of control beside a menu. And drawn as that bezel is,
+/// measured off it: its fill, where `.quaternary` was a shade darker; its
+/// arrows black, where a grouped form greyed them; 12.5pt after the words,
+/// where they sat 8pt after; and 3.5pt in from the row's end, where the
+/// circle stood 3.5pt right of the menu's.
+struct MenuArrows: View {
+    var body: some View {
+        Image(systemName: "chevron.up.chevron.down")
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.primary)
+            .frame(width: 20, height: 20)
+            .background(SwiftUI.Color(nsColor: .secondarySystemFill), in: Circle())
+            .padding(.leading, 4.5)
+            .padding(.trailing, 3.5)
+    }
+}
+
 struct PaletteChoice: View {
     /// A palette's name, or empty for whatever is inherited.
     let chosen: String
@@ -289,22 +309,7 @@ struct PaletteChoice: View {
         TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
     }
 
-    /// In a round bezel, as a menu draws its own arrows — Font's in
-    /// Settings, Agent forwarding's in the editors: bare and grey, the
-    /// swatch's read as another kind of control beside them. And drawn as
-    /// that bezel is, measured off it: its fill, where `.quaternary` was a
-    /// shade darker; its arrows black, where a grouped form greyed them;
-    /// 12.5pt after the words, where they sat 8pt after; and 3.5pt in from
-    /// the row's end, where the circle stood 3.5pt right of the menu's.
-    private var arrows: some View {
-        Image(systemName: "chevron.up.chevron.down")
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(.primary)
-            .frame(width: 20, height: 20)
-            .background(SwiftUI.Color(nsColor: .secondarySystemFill), in: Circle())
-            .padding(.leading, 4.5)
-            .padding(.trailing, 3.5)
-    }
+    private var arrows: some View { MenuArrows() }
 
     /// The palette's name, and where it comes from beside it or under it.
     @ViewBuilder

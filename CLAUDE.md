@@ -1415,7 +1415,11 @@ credentials, which is most of it.
   default" where nothing says (`Effective.agent`) — in both editors and both
   inspectors, where it read "From Production — carried", "Not carried
   (nothing says)" beside the group inspector's "—", and the host inspector
-  had no row for it. A host's inherit rows are read off its groups
+  had no row for it. In the editors it is drawn as the palette's row is
+  (`AgentChoice`, its arrows `MenuArrows`), what the groups above give in
+  grey: as a menu's own value, "Not carried by default" stood black under
+  "Gruvbox Dark from Production" in grey, though the host set neither.
+  A host's inherit rows are read off its groups
   (`FromAbove(of: host)`), not off what it resolves to, which has its own
   choice in it. **An
   example never names something in the list** (`HostEditorSheet

@@ -14,6 +14,7 @@
 		06DD0C0471C7F9A3191B0985 /* os-linuxmint.svg in Resources */ = {isa = PBXBuildFile; fileRef = 49BC279AFCFA63C605FB8A27 /* os-linuxmint.svg */; };
 		084D40AADA050EB640B6689A /* os-opensuse.svg in Resources */ = {isa = PBXBuildFile; fileRef = 125F3BD4AF266D4EF8B03523 /* os-opensuse.svg */; };
 		08BB898DE5F756AF7F9E6DE5 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7CDBA13103F885C1CB1E8B27 /* README.md */; };
+		093D9D0B7F2A98126F9DE06D /* AgentChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BCC349CD7DD0722E99B21C1 /* AgentChoice.swift */; };
 		094D15CB16BD9D082CDB479B /* SideBySide.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8875931BB3C9ACBF903F3F5 /* SideBySide.swift */; };
 		09C95B906A367ECF575444AE /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 84B8116AD7A03666013C2119 /* SwiftTerm */; };
 		0AA4EAF57EC939A59E0A3E5D /* SSHConfigReachTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A550ED4559E11D150C6B861 /* SSHConfigReachTests.swift */; };
@@ -227,6 +228,7 @@
 		38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowsingTests.swift; sourceTree = "<group>"; };
 		39D18DD8741A587BF79749A4 /* os-kali.svg */ = {isa = PBXFileReference; path = "os-kali.svg"; sourceTree = "<group>"; };
 		3B79AFFE8A661B7E00AB94A2 /* ControlIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlIcon.swift; sourceTree = "<group>"; };
+		3BCC349CD7DD0722E99B21C1 /* AgentChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentChoice.swift; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
 		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
@@ -586,6 +588,7 @@
 		B2A07969D56F6DC3027A2308 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3BCC349CD7DD0722E99B21C1 /* AgentChoice.swift */,
 				709897B4D50481E64978D1C7 /* Browsing.swift */,
 				9C254730119CB66E5B4582AD /* Closing.swift */,
 				ACB8354500537C9135313FCA /* CommandLines.swift */,
@@ -830,6 +833,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				093D9D0B7F2A98126F9DE06D /* AgentChoice.swift in Sources */,
 				9EE9F8D48B36608375A43183 /* Browsing.swift in Sources */,
 				04759EB87D4A08C1FE7B7F68 /* CSVHosts.swift in Sources */,
 				AA8438BD92FFC71D2378A1E1 /* Closing.swift in Sources */,
