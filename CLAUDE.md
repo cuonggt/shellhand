@@ -321,7 +321,9 @@ credentials, which is most of it.
   that it is bundled: don't exclude it. Where there is no mark, the plain
   server is fitted into a mark's slot: drawn at the slot's size in points,
   it inked 18.5pt across a row's 16 and 25.5 across a card's 22, past a
-  mark's edges on both sides.
+  mark's edges on both sides. Settings' sentence about the asking holds
+  /etc/os-release whole, a word joiner after each slash and a hyphen that
+  does not break: "/" ended one line and "etc/os-release" began the next.
   → [the OS marks](docs/notes/os-marks.md#the-os-marks)
 - **The SFTP conversation is checked against `ScriptedSFTP`**, a server
   written in Swift in this process and reached through

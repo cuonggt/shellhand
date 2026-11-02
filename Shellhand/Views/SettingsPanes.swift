@@ -67,10 +67,13 @@ struct GeneralSettingsPane: View {
                 Toggle(isOn: $asksHosts) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Ask each host what system it runs")
+                        // The path held whole, a word joiner after each slash and
+                        // a hyphen that does not break: "/" ended one line and
+                        // "etc/os-release" began the next.
                         Text("Once a day, when you connect, Shellhand logs in a second time, "
-                            + "without a prompt, to read /etc/os-release and draw the system's "
-                            + "mark. Turn this off if a second login would set off an alert. "
-                            + "Marks already learned stay.")
+                            + "without a prompt, to read /\u{2060}etc/\u{2060}os\u{2011}release "
+                            + "and draw the system's mark. Turn this off if a second login would "
+                            + "set off an alert. Marks already learned stay.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
