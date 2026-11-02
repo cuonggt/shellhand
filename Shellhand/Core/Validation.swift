@@ -6,6 +6,11 @@ import Foundation
 /// the data and not about the dialog: a name that two hosts share breaks the
 /// export, the import and the jump host field whoever typed it.
 nonisolated enum Validation {
+    /// The sentence every deletion question ends on, its spaces ones a line
+    /// is not broken at, so it stands whole: "Delete EU?" broke before its
+    /// last word and left "undone." alone on a line.
+    static let cannotBeUndone = "This\u{00A0}cannot\u{00A0}be\u{00A0}undone."
+
     /// `others` is the rest of the list — the host being edited is skipped by
     /// its own id, so saving it under the name it already has is not a clash
     /// with itself.
@@ -54,9 +59,9 @@ nonisolated enum Validation {
     ) -> String {
         let name = host.name.trimmingCharacters(in: .whitespaces)
         guard let through = goingThrough(host, named: name, hosts: hosts, groups: groups)
-        else { return "This cannot be undone." }
+        else { return cannotBeUndone }
         return "\(name) is the jump host for \(through.who). Without it, ssh "
-            + "is left to find a machine called \(name) by itself. This cannot be undone."
+            + "is left to find a machine called \(name) by itself. \(cannotBeUndone)"
     }
 
     /// What renaming a host takes with it: every other host's and group's
@@ -179,7 +184,7 @@ nonisolated enum Validation {
         let own = hosts.count(where: { $0.groupId == group.id })
         let reached = hosts.count(where: { beneath.contains($0.groupId) })
         let inside = groups.count(where: { $0.parentId == group.id })
-        guard own + inside > 0 else { return "Nothing is filed under it. This cannot be undone." }
+        guard own + inside > 0 else { return "Nothing is filed under it. \(cannotBeUndone)" }
 
         var moves: [String] = []
         switch own {
@@ -223,7 +228,7 @@ nonisolated enum Validation {
         }
         // Closed as every other deletion question is: "Delete EU?" alone
         // left it out.
-        return said + " Nothing is deleted but the group itself. This cannot be undone."
+        return said + " Nothing is deleted but the group itself. \(cannotBeUndone)"
     }
 
     /// The groups that could hold this one: everything except itself and

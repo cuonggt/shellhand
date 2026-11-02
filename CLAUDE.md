@@ -1071,7 +1071,9 @@ credentials, which is most of it.
   above, or with none, the hosts to Ungrouped and the groups each "a group
   of its own", Inside's words — where "the top of the list" named both and
   the hosts land at its foot. It ends as every deletion question does, "This
-  cannot be undone.", which it alone left out.
+  cannot be undone.", which it alone left out — held whole, its spaces ones a
+  line is not broken at (`Validation.cannotBeUndone`), where it broke before
+  its last word and left "undone." alone on a line.
 - **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
   matched as the resolver matches a jump: a host counts if its jump field
   names it or a group above it does (`effective`), and the groups that name

@@ -103,7 +103,7 @@ nonisolated enum Places {
         return DeleteQuestion(
             title: "Delete \(what)?",
             message: (one ? "It is deleted" : "They are deleted")
-                + " on \(place). This cannot be undone.",
+                + " on \(place). \(Validation.cannotBeUndone)",
             confirm: "Delete")
     }
 

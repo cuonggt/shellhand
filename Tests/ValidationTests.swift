@@ -154,9 +154,18 @@ nonisolated struct GroupParentTests {
 nonisolated struct DeletionWarningTests {
     private let host = Host(id: "h", name: "web", addr: "10.0.0.1")
 
+    /// The sentence every deletion question ends on stands whole: "Delete
+    /// EU?" broke before its last word and left "undone." alone on a line.
+    @Test("the sentence a deletion question ends on is never broken")
+    func cannotBeUndoneHoldsTogether() {
+        let spoken = String(Validation.cannotBeUndone.map { $0 == "\u{00A0}" ? " " : $0 })
+        #expect(spoken == "This cannot be undone.")
+        #expect(!Validation.cannotBeUndone.contains(" "))
+    }
+
     @Test("a host with no rules says only that it cannot be undone")
     func noRules() {
-        #expect(Validation.deletionWarning(for: host) == "This cannot be undone.")
+        #expect(Validation.deletionWarning(for: host) == Validation.cannotBeUndone)
     }
 
     /// Their jump field names it, and once it is gone ssh is left to find a
@@ -174,10 +183,10 @@ nonisolated struct DeletionWarningTests {
         let said = Validation.deletionWarning(for: bastion, hosts: hosts, groups: groups)
         #expect(said.hasPrefix("bastion is the jump host for 2 hosts and the group Production."))
         #expect(said.contains("find a machine called bastion by itself"))
-        #expect(said.hasSuffix("This cannot be undone."))
+        #expect(said.hasSuffix(Validation.cannotBeUndone))
         // One that nothing goes through is as before.
         #expect(Validation.deletionWarning(for: hosts[3], hosts: hosts, groups: groups)
-            == "This cannot be undone.")
+            == Validation.cannotBeUndone)
     }
 
     /// A group's jump host is every host's beneath it that names none of its
@@ -224,7 +233,7 @@ nonisolated struct DeletionWarningTests {
         let said = Validation.deletionWarning(
             for: Group(id: "x", name: "Empty"), groups: [Group(id: "x", name: "Empty")],
             hosts: [])
-        #expect(said == "Nothing is filed under it. This cannot be undone.")
+        #expect(said == "Nothing is filed under it. " + Validation.cannotBeUndone)
     }
 
     /// What moves is what the store moves: the host filed in it, and the
@@ -236,7 +245,7 @@ nonisolated struct DeletionWarningTests {
             for: groups[0], groups: groups, hosts: hosts)
         #expect(said == "Its one host moves to Ungrouped, and the group inside it becomes a "
             + "group of its own, with its 2 hosts. Nothing is deleted but the group itself. "
-            + "This cannot be undone.")
+            + Validation.cannotBeUndone)
         // Nothing filed in it directly, only a group inside.
         let onlyInside = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: Array(hosts.dropFirst()))
@@ -279,7 +288,7 @@ nonisolated struct DeletionWarningTests {
             for: production, groups: [production, groups[1]], hosts: hosts)
         #expect(said.contains("The user, the key and the palette it gives those 3 hosts go with it."))
         // And closes as every deletion question does, which "Delete EU?" did not.
-        #expect(said.hasSuffix("Nothing is deleted but the group itself. This cannot be undone."))
+        #expect(said.hasSuffix("Nothing is deleted but the group itself. " + Validation.cannotBeUndone))
         var nordOnly = Group(id: "p", name: "Production")
         nordOnly.theme = "Nord"
         let one = Validation.deletionWarning(

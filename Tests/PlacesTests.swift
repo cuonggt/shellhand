@@ -193,10 +193,10 @@ nonisolated struct PlacesTests {
     func deletingThere() {
         let one = Places.deleteQuestion(["logs"], local: false, on: "web")
         #expect(one.title == "Delete “logs”?")
-        #expect(one.message == "It is deleted on web. This cannot be undone.")
+        #expect(one.message == "It is deleted on web. " + Validation.cannotBeUndone)
         #expect(one.confirm == "Delete")
         let two = Places.deleteQuestion(["a", "b"], local: false, on: "web")
-        #expect(two.message == "They are deleted on web. This cannot be undone.")
+        #expect(two.message == "They are deleted on web. " + Validation.cannotBeUndone)
     }
 
     /// ⇧⌘N acts on whichever side last had the keyboard, and the question
