@@ -92,7 +92,7 @@ from a guess at what Apple might say next.
 
 ## Every release
 
-**0.0.1 through 0.0.12, and then 0.1.0 through 0.1.7, are out**, each
+**0.0.1 through 0.0.12, then 0.1.0 through 0.1.7, and 0.2.0, are out**, each
 tagged at the commit its DMG was built from, with the appcast on `main` and
 the cask in `cuonggt/homebrew-tap` — whose clone on this Mac is Homebrew's
 own, under `/opt/homebrew/Library/Taps`; see 0.0.12 for what it needs before
@@ -612,6 +612,39 @@ foot then overran them by 19, where 650/570 had held one line there. So it
 is 720/640, checked with nothing scrolling as opened, with a problem
 showing, and on a host whose command passes six lines. **The walk's list is
 empty.**
+
+**0.2.0 is the second walk's release**, published at `1a18cca` and live on
+release, feed and cask. It carries 156 commits, which is why it is a
+minor rather than a patch. Two of them are things a user could have hit: at
+the window's narrowest, picking a group in the sidebar aborted 0.1.7 and
+everything before it, and at the default window size 0.1.7's host editor hung
+below the bottom edge with Save under it. The rest is the host list under a
+narrow pane, the tab strip sharing its room by what each name needs, the
+inspector describing a machine typed into ⌘K and a local shell — it said
+"Nothing selected" for both, so a ⌘K machine could not be saved from anywhere
+— SFTP's refusal drawn as the terminal's card for the same failure, the
+controls that stood live and did nothing, one name per setting wherever it is
+shown, and a long tail of alignment. The suite went 759 → 806; `window-check`
+passed, the narrowest-window probe included, which crashed 0.1.7 three times
+in three; and CI passed on GitHub's Mac at `cd0be27` — the tagged commit's
+code with the feed and cask on top, the run for `1a18cca` itself cancelled by
+that push.
+Verified the way 0.1.7 was, the tag fetched first, and everything passed: the
+tag, the release's target and the bump commit all resolve to `1a18cca`; the
+DMG hashed as it streamed to `00efdc3e`; the release notes compared as JSON,
+identical but for a trailing newline; `appcast.xml` and the cask compared on
+`main` through the API against `git rev-parse HEAD:<path>`, both matching;
+every enclosure in the feed fetched, 302 then 200 at the length the appcast
+claims; and the feed read at the address a shipped build asks for, offering
+0.2.0 first. Both notarizations went through the first time, and
+`generate_appcast` printed seventeen "failed to move" warnings while moving
+two files. The DMG came out 245KB larger than 0.1.7's, +1.69%, against 3,236
+lines added and 806 removed across 42 files with six new views, doubled by a
+universal binary — proportionate, so there was nothing to compare file by
+file.
+**The published notes say "Two walks through the whole window after 0.1.7"
+where it was the second walk**, the first having been after 0.1.4 and emptied
+by 0.1.7. The appcast's copy is signed, so it was left as it stands.
 
 ## The icon bundle
 
