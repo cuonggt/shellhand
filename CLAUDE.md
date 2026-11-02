@@ -268,7 +268,8 @@ credentials, which is most of it.
   (`HostsPane.inset`): at 24 the list stood 8pt left of All Hosts, and
   padding the list in to meet it took the rule under its first heading 8pt
   in from the pane's edges with it — `contentMargins` does not reach a
-  list's rows here.
+  list's rows here. The list/grid switch stands at its own width on the
+  edge they end on, where in a frame of 84 it stood 16pt short of them.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose

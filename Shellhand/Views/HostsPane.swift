@@ -335,7 +335,9 @@ struct HostsPane: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 84)
+            // At its own width, its right edge on the pane's: in a frame of
+            // 84 it was centred, 16pt short of the rows and cards below it.
+            .fixedSize()
             .help("Show as a list or a grid")
         }
     }
