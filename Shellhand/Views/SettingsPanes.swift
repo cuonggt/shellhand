@@ -297,21 +297,33 @@ struct PathRow: View {
     /// `LabeledContent` wrapped the long one onto a second line and left the
     /// short one on the first, so two rows of the same kind did not match.
     var body: some View {
+        let there = FileManager.default.fileExists(atPath: path)
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
-                Text(shown)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    // From the front: the end is the file, which is the part
-                    // that says which of the two this is.
-                    .truncationMode(.head)
-                    .lineLimit(1)
-                    .textSelection(.enabled)
-                    .help(path)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    // Said as an ssh config that is not there is said: a
+                    // settings file nobody had made showed its path as one
+                    // would be, beside a greyed Reveal in Finder that said
+                    // nothing of why.
+                    if !there {
+                        Text("No file at")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize()
+                    }
+                    Text(shown)
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
+                        // From the front: the end is the file, which is the
+                        // part that says which of the two this is.
+                        .truncationMode(.head)
+                        .lineLimit(1)
+                        .textSelection(.enabled)
+                        .help(path)
+                }
             }
             Spacer(minLength: 4)
-            let there = FileManager.default.fileExists(atPath: path)
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
             } label: {

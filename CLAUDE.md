@@ -1511,7 +1511,10 @@ credentials, which is most of it.
   File writes `Config.template` — every setting explained and commented out,
   its example held by a test to parsing — and never over a file already
   there. It was sent to as "ssh options", "Settings" and "your settings
-  file", and nothing made it.
+  file", and nothing made it. Where it is not there yet Settings says so,
+  "No file at" before its path, as the import says an ssh config that is
+  not: its path showed as one would be, beside a greyed Reveal in Finder
+  that said nothing of why.
 - **Swift reads CRLF as ONE `Character`.** `"\r\n"` is a single grapheme
   cluster, so a parser that matches `"\r"` and looks ahead for the `"\n"`
   matches neither: the lookahead eats the next value and the row never ends.
