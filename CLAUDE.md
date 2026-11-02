@@ -756,7 +756,11 @@ credentials, which is most of it.
   the disk refuses** (`HostStore.canExport`, `YAMLDocument.failure`) — the
   menu's through the window's alert (`HostStore.report`), the sheet's along
   its foot; Cancel is not a failure. The sheet's wrote a file holding nothing
-  from the welcome, and dropped every refusal without a word.
+  from the welcome, and dropped every refusal without a word. Both offer
+  the Documents folder (`YAMLDocument.exportFolder`, a run's own folder
+  under test), each from a view of its own so the folder reaches no other
+  panel: the save panel opened wherever a panel last chose — ~/.ssh, after
+  the ssh config's Choose….
 - **Help ▸ Report a Problem… opens `.github/ISSUE_TEMPLATE/problem.yml`**
   with its `version` and `macos` fields filled from the link, and carries
   nothing else: no host name goes into a URL. **Those ids are as permanent as

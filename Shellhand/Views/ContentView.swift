@@ -316,17 +316,23 @@ struct ContentView: View {
         .sheet(item: $importing) { source in
             ImportSheet(store: store, start: source, room: sheetRoom)
         }
-        .fileExporter(
-            isPresented: $exportingList,
-            document: YAMLDocument(text: exportText),
-            contentType: .yaml,
-            defaultFilename: YAMLDocument.defaultFilename
-        ) { result in
-            // Cancelling is an answer, not a failure; anything else the disk
-            // refused is said rather than dropped.
-            if case let .failure(error) = result, let failure = YAMLDocument.failure(error) {
-                store.report(failure)
-            }
+        // The export's own view, so its folder (`YAMLDocument.exportFolder`)
+        // reaches no other panel, the import sheet's Choose… among them.
+        .background {
+            SwiftUI.Color.clear
+                .fileExporter(
+                    isPresented: $exportingList,
+                    document: YAMLDocument(text: exportText),
+                    contentType: .yaml,
+                    defaultFilename: YAMLDocument.defaultFilename
+                ) { result in
+                    // Cancelling is an answer, not a failure; anything else the
+                    // disk refused is said rather than dropped.
+                    if case let .failure(error) = result, let failure = YAMLDocument.failure(error) {
+                        store.report(failure)
+                    }
+                }
+                .fileDialogDefaultDirectory(YAMLDocument.exportFolder)
         }
         // A constant binding cannot be dismissed: the alert came back the
         // moment it was closed, because nothing ever cleared the error.

@@ -215,20 +215,26 @@ struct ImportSheet: View {
             guard case let .success(url) = result else { return }
             Task { await take(url) }
         }
-        .fileExporter(
-            isPresented: $exporting,
-            document: YAMLDocument(text: exportText),
-            contentType: .yaml,
-            defaultFilename: YAMLDocument.defaultFilename
-        ) { result in
-            switch result {
-            case let .success(url):
-                note = "Exported to \(url.lastPathComponent)."
-            // Said here, as File ▸ Export… says it over the window: a save
-            // the disk refused went without a word.
-            case let .failure(error):
-                if let failure = YAMLDocument.failure(error) { problem = failure }
-            }
+        // The export's own view, so its folder reaches no other panel: the
+        // Choose… beside it keeps opening where it was last left.
+        .background {
+            SwiftUI.Color.clear
+                .fileExporter(
+                    isPresented: $exporting,
+                    document: YAMLDocument(text: exportText),
+                    contentType: .yaml,
+                    defaultFilename: YAMLDocument.defaultFilename
+                ) { result in
+                    switch result {
+                    case let .success(url):
+                        note = "Exported to \(url.lastPathComponent)."
+                    // Said here, as File ▸ Export… says it over the window: a
+                    // save the disk refused went without a word.
+                    case let .failure(error):
+                        if let failure = YAMLDocument.failure(error) { problem = failure }
+                    }
+                }
+                .fileDialogDefaultDirectory(YAMLDocument.exportFolder)
         }
         .task {
             // Spelled as the line under it spells it, and as its own example
@@ -578,6 +584,15 @@ struct YAMLDocument: FileDocument {
     /// What an export is called until somebody names it — one name for the
     /// import sheet's Export… and the File menu's, so the two cannot drift.
     static let defaultFilename = "shellhand-hosts"
+
+    /// Where an export is offered to go: the Documents folder. The save panel
+    /// otherwise opened in the folder last chosen in any panel — ~/.ssh,
+    /// after the ssh config's Choose…. A run under test is given its own
+    /// folder, never its user's.
+    static var exportFolder: URL {
+        TestRun.active ? URL(fileURLWithPath: TestRun.home)
+            : FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
 
     /// What an export the disk refused says, in the sheet as over the window,
     /// and nothing for Cancel, which is an answer rather than a failure. The
