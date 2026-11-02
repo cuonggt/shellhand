@@ -52,6 +52,7 @@ final class FilePlace {
     // The rules themselves are in `Places`, where they can be asked without
     // opening a session to find out the answer.
     var isLocal: Bool { Places.isLocal(chosen: chosen, onAHost: host != nil) }
+    var canGoUp: Bool { Places.goesUp(from: listing.path, to: listing.parent) }
     var title: String { Places.title(chosen: chosen, host: host?.name) }
     /// The folder this side is showing, as a sentence names it: from `~` on
     /// this Mac, as a transfer's heading writes it, and whole on a host.
@@ -137,7 +138,7 @@ final class FilePlace {
     func refresh() async { await go(to: listing.path) }
 
     func parent() async {
-        guard !listing.parent.isEmpty, listing.parent != listing.path else { return }
+        guard canGoUp else { return }
         await go(to: listing.parent)
     }
 

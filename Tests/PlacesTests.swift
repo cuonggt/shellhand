@@ -73,6 +73,17 @@ nonisolated struct PlacesTests {
         #expect(Places.isLocal(chosen: true, onAHost: true) == false)
     }
 
+    /// At "/" the folder above is "/" itself: ↑ stood live there and did
+    /// nothing.
+    @Test("a side goes up only where there is a folder above")
+    func goesUp() {
+        #expect(Places.goesUp(from: "/Users/you", to: "/Users"))
+        #expect(Places.goesUp(from: "/Users", to: "/"))
+        #expect(!Places.goesUp(from: "/", to: "/"))
+        // Nothing listed yet: a side asking for a host, or refused.
+        #expect(!Places.goesUp(from: "", to: ""))
+    }
+
     @Test("a pane pointed nowhere is not local either")
     func unpointedIsNotLocal() {
         #expect(Places.isLocal(chosen: false, onAHost: false) == false)

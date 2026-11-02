@@ -27,6 +27,13 @@ nonisolated enum Places {
         chosen ? "Copy to \(title)" : "Copy"
     }
 
+    /// Whether a side can go up a folder: there is one above the one it
+    /// shows. At "/" the folder above is "/" itself, and ↑ stood black and
+    /// live and did nothing; with nothing listed there is none.
+    static func goesUp(from path: String, to parent: String) -> Bool {
+        !parent.isEmpty && parent != path
+    }
+
     /// Whether this side is this Mac.
     ///
     /// Carries more than it looks: it is what decides whether a name clash is

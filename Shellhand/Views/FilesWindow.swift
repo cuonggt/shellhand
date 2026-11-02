@@ -230,14 +230,16 @@ private struct PlacePane: View {
 
             HStack(spacing: 4) {
                 Button { Task { await place.parent() } } label: {
-                    Image(systemName: "arrow.up").foregroundStyle(iconColour)
+                    Image(systemName: "arrow.up").foregroundStyle(iconColour(place.canGoUp))
                 }
                 .buttonStyle(.borderless)
                 // Finder's name for the move: this window says folder, and
                 // "Up one directory" sat beside its New Folder.
                 .accessibilityLabel("Enclosing Folder")
                 .help("Enclosing Folder")
-                .disabled(place.listing.path.isEmpty)
+                // Greyed with no folder above as well as with nothing
+                // listed: at "/" it stood live and did nothing.
+                .disabled(!place.canGoUp)
 
                 // Typing a path beats walking to it, which is the whole of
                 // what this field is for. Enter goes there.
@@ -256,7 +258,7 @@ private struct PlacePane: View {
                     name = ""
                     newFolder = true
                 } label: {
-                    Image(systemName: "folder.badge.plus").foregroundStyle(iconColour)
+                    Image(systemName: "folder.badge.plus").foregroundStyle(iconColour(listed))
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("New Folder")
@@ -265,7 +267,7 @@ private struct PlacePane: View {
                 .disabled(place.listing.path.isEmpty)
 
                 Button { Task { await place.refresh() } } label: {
-                    Image(systemName: "arrow.clockwise").foregroundStyle(iconColour)
+                    Image(systemName: "arrow.clockwise").foregroundStyle(iconColour(listed))
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Refresh")
@@ -284,9 +286,12 @@ private struct PlacePane: View {
     /// and a hierarchical style changed nothing, since `.primary` inside a
     /// borderless button is the button's own grey, while `.tertiary` made
     /// the greyed ones fainter than the greyed menu.
-    private var iconColour: SwiftUI.Color {
-        SwiftUI.Color(nsColor: place.listing.path.isEmpty ? .disabledControlTextColor : .controlTextColor)
+    private func iconColour(_ live: Bool) -> SwiftUI.Color {
+        SwiftUI.Color(nsColor: live ? .controlTextColor : .disabledControlTextColor)
     }
+
+    /// Whether this side lists anything, which New Folder and Refresh need.
+    private var listed: Bool { !place.listing.path.isEmpty }
 
     private var table: some View {
         Table(entries, selection: $selection, sortOrder: $sortOrder) {
