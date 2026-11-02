@@ -32,9 +32,17 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         shared?.showWindow(nil)
     }
 
+    /// As tall as its tallest pane, General, which runs 736pt down with its
+    /// last section and wants the form's 20 under it, and a fraction more: at
+    /// 756 it still scrolled, by under a point. At 500, General's last
+    /// section and Terminal's Keyboard sat wholly below the edge, each pane
+    /// ending on a whole section with room under it, which said there was
+    /// nothing more: macOS shows no scroll bar until something scrolls.
+    private static let opening = CGSize(width: 700, height: 757)
+
     private init(storePath: String, configPath: String) {
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: CGSize(width: 700, height: 500)),
+            contentRect: NSRect(origin: .zero, size: Self.opening),
             styleMask: [.titled, .closable, .resizable, .miniaturizable,
                         // The one that matters: without it there is no glass.
                         .fullSizeContentView],
@@ -58,7 +66,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         // they were undone by it — Settings opened at its minimum, 620×472,
         // every time, re-centred, and no resize stuck — so every frame saved
         // under the old name is that minimum, and it is let go.
-        window.setContentSize(NSSize(width: 700, height: 500))
+        window.setContentSize(Self.opening)
         window.center()
         UserDefaults.standard.removeObject(forKey: "NSWindow Frame SettingsWindow")
         window.setFrameAutosaveName("SettingsFrame")
