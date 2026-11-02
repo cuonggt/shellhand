@@ -256,6 +256,11 @@ private struct PlacePane: View {
                     // listing — a side asking which host, or refused: Return
                     // there went nowhere and said nothing.
                     .disabled(place.listing.path.isEmpty)
+                    // And looks it: greyed, a field draws as a live one, its
+                    // border 235 and its placeholder 128 as any empty field's,
+                    // beside buttons greyed to 192. At half, its placeholder
+                    // is theirs.
+                    .opacity(place.listing.path.isEmpty ? 0.5 : 1)
                     .onSubmit { Task { await place.go(to: typedPath) } }
                     .onChange(of: place.listing.path) { _, now in typedPath = now }
                     .onAppear { typedPath = place.listing.path }

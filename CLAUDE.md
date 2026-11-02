@@ -824,8 +824,10 @@ credentials, which is most of it.
   greys where there is no folder above (`Places.goesUp`) — at "/" it stood
   live and did nothing. Its path field greys with the buttons beside it,
   where Return in
-  it went nowhere and said nothing, and so does its "…" menu, whose Show
-  Hidden Files had nothing to act on. The header's icons are drawn in
+  it went nowhere and said nothing — and looks it, at half: greyed, a field
+  draws as a live one, its border 235 and its placeholder the 128 of any
+  empty field, where at half the placeholder is 191 beside their 192 — and
+  so does its "…" menu, whose Show Hidden Files had nothing to act on. The header's icons are drawn in
   AppKit's control colours, black as the menu is while they can act and
   its grey while they cannot (`.controlIcon`: `controlTextColor`,
   `disabledControlTextColor`), as Settings' Reveal in Finder is, which was
