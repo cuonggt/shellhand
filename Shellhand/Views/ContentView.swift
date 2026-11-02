@@ -518,7 +518,9 @@ struct ContentView: View {
                 onShowSession: { pick(tab: .session($0)) },
                 onSave: { editing = $0 })
         case .localShell:
-            LocalShellInspector()
+            LocalShellInspector(
+                sessions: sessions, inFront: frontSession?.id,
+                onShowSession: { pick(tab: .session($0)) })
         case .nothing:
             nothingSelected
         }

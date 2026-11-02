@@ -150,24 +150,44 @@ struct GroupInspector: View {
 
 /// A terminal on this Mac rather than on a host.
 struct LocalShellInspector: View {
+    /// What is open, for the shells on this Mac.
+    var sessions: Sessions?
+    /// The session in front, which Open now says rather than offers.
+    var inFront: UUID? = nil
+    var onShowSession: (UUID) -> Void = { _ in }
+
     /// What `TerminalSession` starts a local shell with.
     private var shell: String { ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh" }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("This Mac").font(.title2).bold()
-                Text("A local shell").font(.callout).foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("This Mac").font(.title2).bold()
+                    Text("A local shell").font(.callout).foregroundStyle(.secondary)
+                }
+                Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
+                    ValueRow("Shell", shell)
+                    ValueRow("Starts in", "Your home folder")
+                }
+                .font(.callout)
+                // Its shells, as a host's inspector lists that host's tabs:
+                // with two open, nothing here said which was in front or
+                // offered the other.
+                if !openHere.isEmpty {
+                    OpenNow(sessions: sessions, here: openHere, inFront: inFront,
+                            onShow: onShowSession)
+                }
+                Spacer(minLength: 0)
             }
-            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
-                ValueRow("Shell", shell)
-                ValueRow("Starts in", "Your home folder")
-            }
-            .font(.callout)
-            Spacer(minLength: 0)
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The shells on this Mac: the sessions on no host.
+    private var openHere: [TerminalSession] {
+        (sessions?.all ?? []).filter { $0.host == nil }
     }
 }
 

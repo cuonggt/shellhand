@@ -273,7 +273,9 @@ credentials, which is most of it.
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose
   they are, since they add up (`FromAbove.sshOptions`), where they showed
-  nowhere but the editor — and what is inside; a local shell; or a machine typed into
+  nowhere but the editor — and what is inside; a local shell, with Open now
+  listing the shells on this Mac, where it said neither which was in front
+  nor offered the other; or a machine typed into
   ⌘K, with Save as Host…, its address written as a listed host's
   (`UnsavedHostInspector.addressLine`), port and all — it gave the port a row
   of its own — and What will run and Open now as a listed host's has them
