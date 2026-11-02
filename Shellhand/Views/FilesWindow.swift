@@ -508,7 +508,7 @@ private struct Unreached: View {
             if !trouble.advice.isEmpty {
                 Text(trouble.advice)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Card.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             ViewThatFits(in: .horizontal) {

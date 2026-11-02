@@ -401,6 +401,16 @@ struct TerminalPane: View {
     }
 }
 
+/// What every card over a terminal, and SFTP's over a side it cannot list,
+/// is drawn with.
+enum Card {
+    /// The secondary words — where a connection is going, what a refusal
+    /// means — in the secondary label colour as itself. As `.secondary`, the
+    /// material under them drew them vibrant: over a black terminal, darker
+    /// than the card's headline and ssh's line, 20 against 44 and 41.
+    static let secondary = SwiftUI.Color(nsColor: .secondaryLabelColor)
+}
+
 /// Where a connection is going and how long it has been at it, over a
 /// terminal that has nothing on it yet: connecting used to be a blank screen
 /// that looked the same as one that had hung.
@@ -428,7 +438,7 @@ private struct ConnectingCard: View {
                     }
                 }
                 .font(.callout.monospaced())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Card.secondary)
                 .multilineTextAlignment(.center)
             }
             // ⌘. is the Terminal menu's, where the keys live.
@@ -484,7 +494,7 @@ private struct EndedCard: View {
             if !meaning.isEmpty {
                 Text(meaning)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Card.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
