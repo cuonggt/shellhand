@@ -1102,6 +1102,11 @@ credentials, which is most of it.
   secondary words are the secondary label colour as itself
   (`Card.secondary`): as `.secondary`, the card's material drew them
   vibrant, over a black terminal darker than the headline, 20 against 44.
+  **All three cards are one shape** — connecting, ended, and SFTP's
+  refusal (`cardChrome`: 480 at most, left-aligned, 14pt in and 12 out) —
+  so one state's card gives way to the next in place: the connecting card
+  was 440 wide, centred, in 20pt margins, and jumped as it failed, and
+  SFTP's was 460 in 24.
   → [blank, not empty](docs/notes/terminal.md#blank-not-empty)
 - **The scrollback is 10,000 lines, and the screen is read only around
   connecting**: `SessionProgress.watches` says yes while connecting, while a

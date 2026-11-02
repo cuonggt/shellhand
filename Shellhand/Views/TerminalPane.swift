@@ -404,6 +404,10 @@ struct TerminalPane: View {
 /// What every card over a terminal, and SFTP's over a side it cannot list,
 /// is drawn with.
 enum Card {
+    /// The most a card stands across over a terminal with nothing on it, or
+    /// a side with nothing to list.
+    static let width: CGFloat = 480
+
     /// The secondary words — where a connection is going, what a refusal
     /// means — in the secondary label colour as itself. As `.secondary`, the
     /// material under them drew them vibrant: over a black terminal, darker
@@ -418,10 +422,17 @@ private struct ConnectingCard: View {
     let session: TerminalSession
 
     var body: some View {
-        VStack(spacing: 10) {
-            ProgressView().controlSize(.small)
-            Text(SessionStatus.connecting.headline(for: session.host?.name))
-                .font(.headline)
+        // Laid out as the ended card that takes its place is, the spinner
+        // where that one's mark is: centred, 440 wide in 20pt margins, the
+        // card jumped to another shape as the connection failed, and beside
+        // another tab its line lost the room it needed.
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text(SessionStatus.connecting.headline(for: session.host?.name))
+            } icon: {
+                ProgressView().controlSize(.small)
+            }
+            .font(.headline)
             TimelineView(.periodic(from: session.startedAt ?? .now, by: 1)) { context in
                 let seconds = Int(context.date.timeIntervalSince(session.startedAt ?? context.date))
                 // On one line where it fits, and a part to a line where it
@@ -429,7 +440,7 @@ private struct ConnectingCard: View {
                 ViewThatFits(in: .horizontal) {
                     Text(SessionStatus.connectingLine(
                         destination: destination, through: session.route.through, seconds: seconds))
-                    VStack(spacing: 2) {
+                    VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(SessionStatus.connectingLines(
                             destination: destination, through: session.route.through,
                             seconds: seconds).enumerated()), id: \.offset) { _, part in
@@ -439,16 +450,12 @@ private struct ConnectingCard: View {
                 }
                 .font(.callout.monospaced())
                 .foregroundStyle(Card.secondary)
-                .multilineTextAlignment(.center)
             }
             // ⌘. is the Terminal menu's, where the keys live.
             Button("Stop Connecting") { session.stopConnecting() }
                 .controlSize(.small)
         }
-        .padding(20)
-        .frame(maxWidth: 440)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .padding(20)
+        .cardChrome()
     }
 
     /// `Host.destinationLine`, unless the name already is it: a machine typed
@@ -509,10 +516,7 @@ private struct EndedCard: View {
             }
             .controlSize(.small)
         }
-        .padding(14)
-        .frame(maxWidth: status.isBeforeAnything ? 480 : .infinity, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .padding(12)
+        .cardChrome(maxWidth: status.isBeforeAnything ? Card.width : .infinity)
     }
 
     @ViewBuilder
@@ -668,6 +672,16 @@ struct TerminalRepresentable: NSViewRepresentable {
 }
 
 extension View {
+    /// A card's ground and margins, one for every card: the connecting card
+    /// was 440 wide in 20pt margins and gave way to an ended card 480 wide in
+    /// 14 and 12, and SFTP's was 460 in 24.
+    func cardChrome(maxWidth: CGFloat = Card.width) -> some View {
+        padding(14)
+            .frame(maxWidth: maxWidth, alignment: .leading)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .padding(12)
+    }
+
     /// A button's label taking its stack's width where the buttons stand one
     /// above another, so they stand at one width — the widest's, the stack
     /// held to it — rather than each at its own.

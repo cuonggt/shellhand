@@ -521,10 +521,8 @@ private struct Unreached: View {
             // windows had its buttons at two sizes.
             .controlSize(.small)
         }
-        .padding(14)
-        .frame(maxWidth: 460, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .padding(24)
+        // The terminal card's shape, where it was 460 wide in 24pt margins.
+        .cardChrome()
     }
 
     /// The way on first and prominent, as Reconnect leads the terminal's
