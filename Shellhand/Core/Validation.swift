@@ -221,7 +221,9 @@ nonisolated enum Validation {
             said += " \(listed.prefix(1).uppercased() + listed.dropFirst()) it gives \(whom) "
                 + (gives.count == 1 ? "goes" : "go") + " with it."
         }
-        return said + " Nothing is deleted but the group itself."
+        // Closed as every other deletion question is: "Delete EU?" alone
+        // left it out.
+        return said + " Nothing is deleted but the group itself. This cannot be undone."
     }
 
     /// The groups that could hold this one: everything except itself and

@@ -235,7 +235,8 @@ nonisolated struct DeletionWarningTests {
         let said = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: hosts)
         #expect(said == "Its one host moves to Ungrouped, and the group inside it becomes a "
-            + "group of its own, with its 2 hosts. Nothing is deleted but the group itself.")
+            + "group of its own, with its 2 hosts. Nothing is deleted but the group itself. "
+            + "This cannot be undone.")
         // Nothing filed in it directly, only a group inside.
         let onlyInside = Validation.deletionWarning(
             for: groups[0], groups: groups, hosts: Array(hosts.dropFirst()))
@@ -277,6 +278,8 @@ nonisolated struct DeletionWarningTests {
         let said = Validation.deletionWarning(
             for: production, groups: [production, groups[1]], hosts: hosts)
         #expect(said.contains("The user, the key and the palette it gives those 3 hosts go with it."))
+        // And closes as every deletion question does, which "Delete EU?" did not.
+        #expect(said.hasSuffix("Nothing is deleted but the group itself. This cannot be undone."))
         var nordOnly = Group(id: "p", name: "Production")
         nordOnly.theme = "Nord"
         let one = Validation.deletionWarning(

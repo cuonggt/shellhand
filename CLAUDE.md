@@ -1051,7 +1051,8 @@ credentials, which is most of it.
   land is named as the sidebar and the editors name it — into the group
   above, or with none, the hosts to Ungrouped and the groups each "a group
   of its own", Inside's words — where "the top of the list" named both and
-  the hosts land at its foot.
+  the hosts land at its foot. It ends as every deletion question does, "This
+  cannot be undone.", which it alone left out.
 - **Deleting a host says what jumps through it** (`Validation.deletionWarning`),
   matched as the resolver matches a jump: a host counts if its jump field
   names it or a group above it does (`effective`), and the groups that name
