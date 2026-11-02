@@ -1363,7 +1363,11 @@ credentials, which is most of it.
   editor's said "Production" alone up to 0.1.5, which read as a value. Its
   row is set on the field's baseline (`.firstTextBaseline`), which is where
   the form sets the label: centred, the row's baseline was the caption's,
-  and the label stood 1.5pt above the field's words.
+  and the label stood 1.5pt above the field's words. The captions stand in
+  one column, as wide as the widest an editor shows (`FromCaption`), so
+  what stands before them ends at one edge: each at its own width, the jump
+  host's field ended 2.5pt short of the key's above it — "from Production"
+  against its menu and "from US" — near enough a line to read as a slip.
   Connect to's user says it under the row, which has no room beside it —
   "user from Production" — where it said nothing at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",

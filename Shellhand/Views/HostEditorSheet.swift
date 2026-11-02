@@ -431,18 +431,30 @@ struct HostEditorSheet: View {
             // the label stood 1.5pt above the field's words.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 content()
-                if set.trimmingCharacters(in: .whitespaces).isEmpty,
-                   !from.isEmpty, from != "itself" {
+                if let from = Self.shownFrom(from, set: set) {
                     // "from Production", as the group editor and the
                     // inspector say it: the name alone read as a value.
-                    Text("from \(from)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .help("Inherited from \(from). Type here to set it on this host.")
+                    FromCaption(from: from, among: shownFroms,
+                                help: "Inherited from \(from). Type here to set it on this host.")
                 }
             }
         }
+    }
+
+    /// Where a row's value comes from, said beside it only while this host
+    /// sets nothing there itself.
+    private static func shownFrom(_ from: String, set: String) -> String? {
+        set.trimmingCharacters(in: .whitespaces).isEmpty && !from.isEmpty && from != "itself"
+            ? from : nil
+    }
+
+    /// What the captions beside the fields say, every row's, for the column
+    /// they stand in.
+    private var shownFroms: [String] {
+        [
+            Self.shownFrom(preview.effective.identityFrom, set: host.identity),
+            Self.shownFrom(preview.effective.proxyJumpFrom, set: host.proxyJump),
+        ].compactMap { $0 }
     }
 
     /// A label for something that has to be filled in.

@@ -301,16 +301,30 @@ struct GroupEditorSheet: View {
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
                 }
-                if text.wrappedValue.trimmingCharacters(in: .whitespaces).isEmpty, !from.isEmpty {
-                    Text("from \(from)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .help("Inherited from \(from). Type here to set it "
-                            + "for everything under this group.")
+                if let from = Self.shownFrom(from, set: text.wrappedValue) {
+                    FromCaption(from: from, among: shownFroms,
+                                help: "Inherited from \(from). Type here to set it "
+                                    + "for everything under this group.")
                 }
             }
         }
+    }
+
+    /// Where a row's value comes from, said beside it only while this group
+    /// sets nothing there itself.
+    private static func shownFrom(_ from: String, set: String) -> String? {
+        set.trimmingCharacters(in: .whitespaces).isEmpty && !from.isEmpty ? from : nil
+    }
+
+    /// What the captions beside the fields say, every row's, for the column
+    /// they stand in.
+    private var shownFroms: [String] {
+        let above = FromAbove(of: group, among: store.snapshot.groups)
+        return [
+            Self.shownFrom(above.userFrom, set: group.user),
+            Self.shownFrom(above.identityFrom, set: group.identity),
+            Self.shownFrom(above.proxyJumpFrom, set: group.proxyJump),
+        ].compactMap { $0 }
     }
 
     /// A label for something that has to be filled in.
