@@ -363,6 +363,9 @@ credentials, which is most of it.
   and its words drop under the swatch and its arrows where they would not
   keep their lines beside them: the bezel took 12pt from the inspector's
   column, and "Gruvbox Dark from Production" went down a word to a line.
+  Its words' baseline is said, a line centred on the swatch having it
+  `centreToBaseline` below the centre, so a form sets the row's label on
+  it: "Colours" stood 1.5pt above "System".
   `PalettePicker` draws each as a `TerminalMiniature` in its own colours,
   applies a choice at once and stays open, so two can be compared on the
   terminal behind. It is as tall as its rows need, where the window it

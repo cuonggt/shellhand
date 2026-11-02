@@ -264,6 +264,13 @@ struct PaletteChoice: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        // Its words' baseline said, for a form's row to set its label on:
+        // a line centred on the swatch has it this far below the centre. The
+        // form lined "Colours" up 1.5pt above "System" without it. Stacked,
+        // in the inspector, the row lines up by top instead.
+        .alignmentGuide(.firstTextBaseline) { d in
+            parts == nil ? d[VerticalAlignment.center] + Self.centreToBaseline : d[.firstTextBaseline]
+        }
         .accessibilityLabel("Colours: \(title)")
         .sheet(item: $choosing) { opening in
             PalettePicker(
@@ -271,6 +278,12 @@ struct PaletteChoice: View {
                 onChoose: onChoose, height: opening.height)
         }
     }
+
+    /// How far below a line's centre its baseline is, in the body font.
+    private static let centreToBaseline: CGFloat = {
+        let font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        return (font.ascender + font.descender) / 2
+    }()
 
     private var swatch: some View {
         TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
