@@ -1139,7 +1139,10 @@ credentials, which is most of it.
   in SFTP's card too, where each stood at its own, 76, 77 and 72pt — and
   ssh's line is as tall as its lines in both, as the sentence under it is:
   beside another tab at 1220pt it was held to one, "port 2…", its
-  "Connection refused" cut, while a narrower side wrapped it whole. Their
+  "Connection refused" cut, while a narrower side wrapped it whole. Whether
+  the connecting line takes one row is asked once, at the longest it will
+  be (`SessionStatus.longestWait`, "59 min 59 s"): asked each second, a
+  line of one row at 9 s took three at 10, and the card jumped. Their
   secondary words are the secondary label colour as itself
   (`Card.secondary`): as `.secondary`, the card's material drew them
   vibrant, over a black terminal darker than the headline, 20 against 44.

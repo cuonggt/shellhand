@@ -139,6 +139,12 @@ nonisolated enum SessionStatus: Equatable, Sendable {
         return way.isEmpty ? time : "\(way) · \(time)"
     }
 
+    /// The longest a connecting line is laid out for, "59 min 59 s", so its
+    /// card takes one shape for the whole wait: measured afresh each second,
+    /// a line that held at 9 s broke into three at 10, and the card jumped
+    /// as it grew. ssh gives up on a connection long before an hour.
+    static let longestWait = 59 * 60 + 59
+
     /// The same a part to a line, for a card too narrow to hold it on one:
     /// broken between its parts rather than wherever the width ran out,
     /// which beside another tab was inside the port.

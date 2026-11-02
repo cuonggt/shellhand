@@ -436,10 +436,20 @@ private struct ConnectingCard: View {
             TimelineView(.periodic(from: session.startedAt ?? .now, by: 1)) { context in
                 let seconds = Int(context.date.timeIntervalSince(session.startedAt ?? context.date))
                 // On one line where it fits, and a part to a line where it
-                // does not: beside another tab it broke inside the port.
+                // does not: beside another tab it broke inside the port. It
+                // is asked to fit at the longest it will be, so the choice
+                // holds while the seconds count: asked each second, one line
+                // at 9 s broke into three at 10, and the card jumped.
                 ViewThatFits(in: .horizontal) {
                     Text(SessionStatus.connectingLine(
-                        destination: destination, through: session.route.through, seconds: seconds))
+                        destination: destination, through: session.route.through,
+                        seconds: SessionStatus.longestWait))
+                        .hidden()
+                        .overlay(alignment: .leading) {
+                            Text(SessionStatus.connectingLine(
+                                destination: destination, through: session.route.through,
+                                seconds: seconds))
+                        }
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(SessionStatus.connectingLines(
                             destination: destination, through: session.route.through,

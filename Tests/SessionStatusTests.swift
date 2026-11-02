@@ -118,6 +118,19 @@ nonisolated struct SessionStatusTests {
         #expect(SessionStatus.connectingLine(destination: "", through: "", seconds: 0) == "0 s")
     }
 
+    /// The card is laid out once, at the longest wait, in a monospaced font,
+    /// so no time before it may be longer — or the line outgrows its room.
+    @Test("no wait before the longest is said in more characters")
+    func longestWait() {
+        let longest = SessionStatus.connectingLine(
+            destination: "", through: "", seconds: SessionStatus.longestWait)
+        #expect(longest == "59 min 59 s")
+        let longer = (0...SessionStatus.longestWait).filter {
+            SessionStatus.connectingLine(destination: "", through: "", seconds: $0).count > longest.count
+        }
+        #expect(longer.isEmpty, "said longer: \(longer.prefix(3))")
+    }
+
     /// Beside another tab the one line broke wherever the width ran out —
     /// "root@127.0.0.1:6189" over "1 · 3 s".
     @Test("too narrow for one line, connecting breaks between its parts")
