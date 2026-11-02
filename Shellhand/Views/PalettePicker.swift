@@ -288,12 +288,13 @@ struct PaletteChoice: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        // Its words' baseline said, for a form's row to set its label on:
-        // a line centred on the swatch has it this far below the centre. The
-        // form lined "Colours" up 1.5pt above "System" without it. Stacked,
-        // in the inspector, the row lines up by top instead.
+        // A baseline said, for a row to set its label on: the one a line
+        // centred on the swatch has, in every layout. The form lined
+        // "Colours" up 1.5pt above "System" without it; and the inspector,
+        // its words under the swatch, lined the row up by top, "Colours"
+        // riding 3pt high against the swatch.
         .alignmentGuide(.firstTextBaseline) { d in
-            parts == nil ? d[VerticalAlignment.center] + Self.centreToBaseline : d[.firstTextBaseline]
+            d[.top] + Self.swatchSize.height / 2 + Self.centreToBaseline
         }
         .accessibilityLabel("Colours: \(title)")
         .sheet(item: $choosing) { opening in
@@ -309,8 +310,10 @@ struct PaletteChoice: View {
         return (font.ascender + font.descender) / 2
     }()
 
+    private static let swatchSize = CGSize(width: 34, height: 21)
+
     private var swatch: some View {
-        TerminalMiniature(palette: shown, size: CGSize(width: 34, height: 21))
+        TerminalMiniature(palette: shown, size: Self.swatchSize)
     }
 
     private var arrows: some View { MenuArrows() }

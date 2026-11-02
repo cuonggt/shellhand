@@ -118,7 +118,8 @@ struct GroupInspector: View {
     /// `Sessions.repaint(from:)`.
     private func colours(_ above: FromAbove) -> some View {
         let parts = above.paletteParts
-        return GridRow(alignment: .top) {
+        // On the swatch's line, as the editors set it.
+        return GridRow(alignment: .firstTextBaseline) {
             Text("Colours")
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)

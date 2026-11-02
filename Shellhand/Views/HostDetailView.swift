@@ -42,7 +42,8 @@ struct HostDetailView: View {
     /// in grey beside or under it. The sentence wrapped to "Gruvbox Dark /
     /// from / Production" in full-size type, the label centred against it.
     @ViewBuilder private var colours: some View {
-        GridRow(alignment: .top) {
+        // On the swatch's line, as the editors set it.
+        GridRow(alignment: .firstTextBaseline) {
             Text("Colours")
                 .foregroundStyle(.secondary)
                 .gridColumnAlignment(.trailing)
