@@ -533,7 +533,9 @@ struct GroupRow: View {
             .accessibilityLabel(expanded ? "Collapse \(group.name)" : "Expand \(group.name)")
 
             Label {
-                HStack(spacing: 6) {
+                // On the name's baseline: centred, the smaller words stood
+                // 1pt above it.
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(group.name)
                     if !group.user.isEmpty {
                         Text(group.user)

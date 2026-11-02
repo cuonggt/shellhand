@@ -934,7 +934,9 @@ credentials, which is most of it.
   → [scenes](docs/notes/window.md#scenes)
 - **The sidebar's `List` holds one `ForEach` over one flat array of rows**,
   tree and search alike, built and tested in `Views/SidebarRows.swift`; two
-  shapes in one list drew stale rows over new ones.
+  shapes in one list drew stale rows over new ones. A group's row sets its
+  user on its name's baseline, where centred the smaller words stood 1pt
+  above it.
   → [the sidebar's rows](docs/notes/window.md#the-sidebars-rows)
 - Anything automated waits for **its own copy** of the app. `pgrep Shellhand`
   matches every copy, including one the user has open.
