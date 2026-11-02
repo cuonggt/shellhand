@@ -417,6 +417,50 @@ struct FilesTests {
         #expect(place.opens == 1, "opens=\(place.opens)")
     }
 
+    /// What that guard must not turn away: a side **re-pointed** while it is
+    /// still connecting. It took the second call for a second open of the
+    /// first host, so the side named the host it was pointed at and opened
+    /// nothing — no listing and no refusal — while the first open's arrival
+    /// was closed as no longer wanted. Two opens, then, and the second
+    /// host's refusal on the side; in either order the tasks run.
+    @Test("a pane re-pointed while connecting opens where it points now")
+    func repointedWhileConnecting() async throws {
+        let (db, first) = try await refusingHost()
+        let store = HostStore(dbPath: db)
+        await store.refresh()
+        let second = try #require(
+            await store.save(AppHost(name: "elsewhere", addr: "127.0.0.1", port: 1)))
+        let place = FilePlace(db: db, home: scratchHome())
+
+        let one = Task { await place.use(first) }
+        let two = Task { await place.use(second) }
+        await one.value
+        await two.value
+
+        #expect(place.opens == 2, "opens=\(place.opens)")
+        #expect(place.failure != nil, "the side names a host it never opened")
+        #expect(!place.connecting)
+    }
+
+    /// The window closed while a side is connecting wants nothing the open
+    /// brings back: a session arriving after was kept, its `ssh` child alive
+    /// with no window until the app quit. A refusal stands in for it here,
+    /// arriving the same way and needing no server.
+    @Test("closing the window while a side connects keeps nothing it brings")
+    func closingWhileConnecting() async throws {
+        let (db, host) = try await refusingHost()
+        let model = FilesModel(db: db, home: scratchHome())
+
+        let opening = Task { await model.right.use(host) }
+        let closing = Task { model.close() }
+        await opening.value
+        await closing.value
+
+        #expect(model.right.opens == 1)
+        #expect(model.right.failure == nil, "what the open brought back was kept")
+        #expect(!model.right.connecting)
+    }
+
     /// The other side of that guard, and worth its own test: it must not turn
     /// away a **retry**. A host that refused leaves nothing listed, so pointing
     /// the pane at it again is a fresh attempt rather than a re-entry — which

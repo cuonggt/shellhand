@@ -641,7 +641,14 @@ credentials, which is most of it.
   → [a row's menu](docs/notes/window.md#a-rows-menu)
 - **A file session is opened once per pane**, behind a flag set before the
   first await; two opens together once sent a download to the wrong folder
-  while the job reported success.
+  while the job reported success. **Once per place**: the flag names the
+  host being opened (`FilePlace.opening`), so a side re-pointed while it
+  connects opens where it points now, at once, and what the first open
+  brings back is closed on arrival (`departures`) — the flag turned the
+  second call away as a second open of the first, and the side named the
+  host it was pointed at over nothing, neither a listing nor a refusal.
+  Closing the window lets go the same way (`FilePlace.letGo`): a session
+  arriving after it had closed was kept, its `ssh` child alive until quit.
   → [opened once](docs/notes/sftp.md#opened-once)
 - **Sessions are a strip of tabs across the terminal**, at the user's word, and
   the sidebar is the host list alone. A tab shows its name from

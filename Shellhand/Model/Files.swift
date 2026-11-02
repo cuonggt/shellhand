@@ -23,7 +23,14 @@ final class FilePlace {
     /// this, an unpointed pane reads as "This Mac" with an empty listing,
     /// which looks like an empty home directory.
     private(set) var chosen = false
-    private var opening = false
+    /// The host an open is under way for, while this side still wants it.
+    private var opening: String?
+    /// How many times this side has let go of where it was — pointed
+    /// somewhere else, or its window closed. An open that finds this has
+    /// moved on since it started was for a place the side has left: what it
+    /// brings back is closed, not listed, and the open of where the side is
+    /// now never waits on it.
+    private var departures = 0
     /// How many times a session has actually been opened.
     ///
     /// The guard on `opening` is the only thing stopping two calls in flight
@@ -70,10 +77,16 @@ final class FilePlace {
     /// with it: a pane showing one machine has no use for another's.
     func use(_ host: Host?) async {
         guard host?.id != self.host?.id || listing.path.isEmpty || !chosen else { return }
+        // This very host is opening already, and that open will list it.
+        if let host, opening == host.id { return }
         // Set before the connecting starts, so a host that refuses leaves the
         // pane saying what went wrong rather than going back to a question.
         chosen = true
-        closeSession()
+        // The session goes, and so does an open still under way, which is for
+        // where this side was: turned away instead, the host it is pointed
+        // at now was never opened, and the side named it over nothing,
+        // neither a listing nor a refusal.
+        letGo()
         // What the last place held goes now, not when the next one answers.
         // Left up, it could be acted on with no session behind it — and no
         // session is this Mac, so a Delete removed the same path here while
@@ -85,20 +98,22 @@ final class FilePlace {
             await go(to: home)
             return
         }
-        guard !opening else { return }
-        opening = true
+        let pointed = departures
+        opening = host.id
         opens += 1
         connecting = true
         defer {
-            opening = false
-            connecting = false
+            if departures == pointed {
+                opening = nil
+                connecting = false
+            }
         }
         do {
             let opened = try await Core.shared.openSFTP(db: db, hostID: host.id)
             // Pointed somewhere else while this was connecting: what it opened
             // is not what the pane names, so it goes rather than being listed
             // under the other host's name.
-            guard self.host?.id == host.id else {
+            guard departures == pointed else {
                 if let id = opened["id"] { Task { await Core.shared.closeSFTP(id: id) } }
                 return
             }
@@ -107,9 +122,20 @@ final class FilePlace {
         } catch {
             // The host stays named: the pane is still pointed at it, and says
             // why it shows nothing, rather than calling itself this Mac.
-            guard self.host?.id == host.id else { return }
+            guard departures == pointed else { return }
             failure = error.localizedDescription
         }
+    }
+
+    /// Wants nothing an open still under way brings back, which closes it
+    /// on arrival: the side has been pointed elsewhere, or its window has
+    /// closed — where a session that arrived after was kept, its `ssh`
+    /// child running on with no window to show it until the app quit.
+    func letGo() {
+        departures += 1
+        opening = nil
+        connecting = false
+        closeSession()
     }
 
     func go(to path: String) async {
@@ -591,8 +617,8 @@ final class FilesModel {
     /// and here there is no view left to set it.
     func close() {
         answer(nil)
-        left.closeSession()
-        right.closeSession()
+        left.letGo()
+        right.letGo()
     }
 }
 
