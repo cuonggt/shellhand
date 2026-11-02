@@ -313,8 +313,9 @@ struct ImportSheet: View {
             } else {
                 Text("Drop a \(source.title) file here").font(.callout)
             }
+            // The size File's Choose… is: small here, the one button stood
+            // 20pt tall on two tabs and 24 on the third.
             Button(picked == nil ? "Choose…" : "Choose another…") { choosing = true }
-                .controlSize(.small)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)

@@ -1249,7 +1249,8 @@ credentials, which is most of it.
   while its group field sat 125pt off its own, and the group field keeps an
   unseen twin of File's Choose… beside it to match — on every tab, so it
   stays put as the tab changes: on SSH Config's alone, it moved 88pt
-  sideways.
+  sideways. Its Choose… is one size wherever it stands, the drop area's as
+  File's, where it was small on two tabs.
 - **The group editor's tabs divide what a group is from what happens on its
   hosts**, and its Advanced tab shows `•` when anything there is set, the
   palette included.
