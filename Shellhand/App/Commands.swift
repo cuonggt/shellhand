@@ -165,110 +165,16 @@ struct ShellhandCommands: Commands {
         return inside.isEmpty ? "New Group…" : "New Group Inside \(inside)…"
     }
 
+    /// **A `Commands` body takes ten at most on CI's Xcode 26**, whose
+    /// `CommandsBuilder` stops at ten where Xcode 27's back-deploys one
+    /// taking any number — so a body of eleven, then twelve, built here and
+    /// failed every run on the runner from c76121f on, "extra arguments at
+    /// positions #11, #12 in call". Each menu made of more than one group
+    /// gathers them in a property of its own, which leaves room.
     var body: some Commands {
-        // The app menu: looking for an update, then the two things this app
-        // shows, all above Settings.
-        //
-        // **Hosts does not go through `AppActions`.** That is a focused scene
-        // value, so it is nil whenever the host window is not the front one —
-        // which is exactly when "bring the host list forward" is wanted, and
-        // the item would be greyed out at the only moment it has a job.
-        // `HostsWindow.front()` asks AppKit directly instead.
-        //
-        // SFTP does go through it, because opening the window needs the
-        // store the host window holds — so with Settings in front and no
-        // browser open to bring forward, it greys out rather than doing
-        // nothing. Bring the host list forward and it works.
-        CommandGroup(after: .appInfo) {
-            Divider()
-            // Straight under About, where every Mac app keeps it. Like Hosts
-            // and SFTP it needs nothing selected, so it is not gated on the
-            // sidebar — only on whether Sparkle can look at all, which a
-            // Debug build never can, so this greys out while developing
-            // rather than looking live and doing nothing.
-            Button("Check for Updates\u{2026}") { Updates.shared.check() }
-                .disabled(!Updates.shared.canCheck)
-            Divider()
-            Button("Hosts") {
-                HostsWindow.front()
-                actions?.showHosts()
-            }
-            // Fronting a browser that already exists needs no store, so it
-            // works from the SFTP window itself where `AppActions` is nil.
-            // Only making a new one has to go through the host window.
-            Button("SFTP") {
-                if !FilesWindowController.front() { actions?.openFiles() }
-            }
-            .keyboardShortcut("b", modifiers: .command)
-            .disabled(actions == nil && !FilesWindowController.isOpen)
-        }
+        appMenu
 
-        // Settings is a window of this app's own making, not a `Settings`
-        // scene — the scene cannot be given the style mask the glass chrome
-        // needs. Replacing `.appSettings` keeps the item where every Mac app
-        // has it, and carries ⌘, which the scene used to give for free.
-        CommandGroup(replacing: .appSettings) {
-            Button("Settings\u{2026}") {
-                SettingsWindowController.show(
-                    storePath: storePath, configPath: configPath)
-            }
-            .keyboardShortcut(",", modifiers: .command)
-        }
-
-        // Replacing .newItem puts these where New and Open live in every
-        // other Mac app, rather than adding a menu nobody looks in. Each
-        // needs the host window, so with SFTP or Settings in front they grey
-        // out: they were live there and did nothing.
-        CommandGroup(replacing: .newItem) {
-            Button("New Tab") { actions?.newTab() }
-                .keyboardShortcut("t", modifiers: .command)
-                .disabled(!(actions?.canNewTab ?? false))
-            Button("New Local Shell") { actions?.newLocalShell() }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
-                .disabled(actions == nil)
-            Divider()
-            Button("New Host…") { actions?.newHost() }
-                .keyboardShortcut("n", modifiers: .command)
-                .disabled(actions == nil)
-            // With SFTP in front, ⇧⌘N is its New Folder, and this says so:
-            // it was New Group…, greyed, on the very key. With the ellipsis
-            // New Group… has, as it asks a name before anything is made.
-            if let sftp {
-                Button("New Folder…") { sftp.askNewFolder() }
-                    .keyboardShortcut("n", modifiers: [.command, .shift])
-                    .disabled(sftp.active.listing.path.isEmpty)
-            } else {
-                Button(newGroupTitle) { actions?.newGroup() }
-                    .keyboardShortcut("n", modifiers: [.command, .shift])
-                    .disabled(actions == nil)
-            }
-            Button("Import…") { actions?.openImport() }
-                .keyboardShortcut("i", modifiers: [.command, .shift])
-                .disabled(actions == nil)
-            // No key: ⇧⌘E, the usual one, is Edit Group's here.
-            Button("Export…") { actions?.exportList() }
-                .disabled(!(actions?.canExport ?? false))
-        }
-
-        // With the host window in front, ⌘W closes the tab in front and
-        // nothing else. With another window in front — SFTP, Settings — it
-        // closes that window, as everywhere on a Mac: before, this item took
-        // ⌘W there while disabled, and no window of this app but the host
-        // window could be closed from the keyboard.
-        //
-        // **It stands in place of the system's own Close and Close All**,
-        // which sit on ⌘W too. With two items on one key, SwiftUI picks the
-        // one that gets it, and it changed its mind: Close Tab held ⌘W until
-        // its title began to change in 0.1.3, then the system's Close did,
-        // and ⌘W closed the whole window. With nothing else on ⌘W, nothing
-        // is left to pick between. `window-check.sh` checks who holds it.
-        CommandGroup(replacing: .saveItem) {
-            Button(actions == nil ? "Close Window" : "Close Tab") {
-                if let actions { actions.closeTab() } else { NSApp.keyWindow?.performClose(nil) }
-            }
-            .keyboardShortcut("w", modifiers: .command)
-            .disabled(!(actions?.hasSession ?? true))
-        }
+        fileMenu
 
         // Three menus where there was one. "Host" had grown to nineteen items
         // covering connecting, editing, deleting, copying, four unrelated
@@ -389,6 +295,127 @@ struct ShellhandCommands: Commands {
                 .disabled(!(actions?.hasSession ?? false))
         }
 
+        viewMenu
+
+        // Replacing the system's own "Shellhand Help", which only said help
+        // was not available. Needs nothing selected, like the app menu's.
+        CommandGroup(replacing: .help) {
+            Button("Shellhand Help") { NSWorkspace.shared.open(Help.readme) }
+            Button("Report a Problem…") { NSWorkspace.shared.open(Help.reportFromHere) }
+        }
+    }
+
+    /// The app menu: looking for an update, then the two things this app
+    /// shows, all above Settings.
+    @CommandsBuilder private var appMenu: some Commands {
+        // **Hosts does not go through `AppActions`.** That is a focused scene
+        // value, so it is nil whenever the host window is not the front one —
+        // which is exactly when "bring the host list forward" is wanted, and
+        // the item would be greyed out at the only moment it has a job.
+        // `HostsWindow.front()` asks AppKit directly instead.
+        //
+        // SFTP does go through it, because opening the window needs the
+        // store the host window holds — so with Settings in front and no
+        // browser open to bring forward, it greys out rather than doing
+        // nothing. Bring the host list forward and it works.
+        CommandGroup(after: .appInfo) {
+            Divider()
+            // Straight under About, where every Mac app keeps it. Like Hosts
+            // and SFTP it needs nothing selected, so it is not gated on the
+            // sidebar — only on whether Sparkle can look at all, which a
+            // Debug build never can, so this greys out while developing
+            // rather than looking live and doing nothing.
+            Button("Check for Updates\u{2026}") { Updates.shared.check() }
+                .disabled(!Updates.shared.canCheck)
+            Divider()
+            Button("Hosts") {
+                HostsWindow.front()
+                actions?.showHosts()
+            }
+            // Fronting a browser that already exists needs no store, so it
+            // works from the SFTP window itself where `AppActions` is nil.
+            // Only making a new one has to go through the host window.
+            Button("SFTP") {
+                if !FilesWindowController.front() { actions?.openFiles() }
+            }
+            .keyboardShortcut("b", modifiers: .command)
+            .disabled(actions == nil && !FilesWindowController.isOpen)
+        }
+
+        // Settings is a window of this app's own making, not a `Settings`
+        // scene — the scene cannot be given the style mask the glass chrome
+        // needs. Replacing `.appSettings` keeps the item where every Mac app
+        // has it, and carries ⌘, which the scene used to give for free.
+        CommandGroup(replacing: .appSettings) {
+            Button("Settings\u{2026}") {
+                SettingsWindowController.show(
+                    storePath: storePath, configPath: configPath)
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        }
+    }
+
+    /// File: what is made new, imported and exported, and what ⌘W closes.
+    @CommandsBuilder private var fileMenu: some Commands {
+        // Replacing .newItem puts these where New and Open live in every
+        // other Mac app, rather than adding a menu nobody looks in. Each
+        // needs the host window, so with SFTP or Settings in front they grey
+        // out: they were live there and did nothing.
+        CommandGroup(replacing: .newItem) {
+            Button("New Tab") { actions?.newTab() }
+                .keyboardShortcut("t", modifiers: .command)
+                .disabled(!(actions?.canNewTab ?? false))
+            Button("New Local Shell") { actions?.newLocalShell() }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+                .disabled(actions == nil)
+            Divider()
+            Button("New Host…") { actions?.newHost() }
+                .keyboardShortcut("n", modifiers: .command)
+                .disabled(actions == nil)
+            // With SFTP in front, ⇧⌘N is its New Folder, and this says so:
+            // it was New Group…, greyed, on the very key. With the ellipsis
+            // New Group… has, as it asks a name before anything is made.
+            if let sftp {
+                Button("New Folder…") { sftp.askNewFolder() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .disabled(sftp.active.listing.path.isEmpty)
+            } else {
+                Button(newGroupTitle) { actions?.newGroup() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .disabled(actions == nil)
+            }
+            Button("Import…") { actions?.openImport() }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
+                .disabled(actions == nil)
+            // No key: ⇧⌘E, the usual one, is Edit Group's here.
+            Button("Export…") { actions?.exportList() }
+                .disabled(!(actions?.canExport ?? false))
+        }
+
+        // With the host window in front, ⌘W closes the tab in front and
+        // nothing else. With another window in front — SFTP, Settings — it
+        // closes that window, as everywhere on a Mac: before, this item took
+        // ⌘W there while disabled, and no window of this app but the host
+        // window could be closed from the keyboard.
+        //
+        // **It stands in place of the system's own Close and Close All**,
+        // which sit on ⌘W too. With two items on one key, SwiftUI picks the
+        // one that gets it, and it changed its mind: Close Tab held ⌘W until
+        // its title began to change in 0.1.3, then the system's Close did,
+        // and ⌘W closed the whole window. With nothing else on ⌘W, nothing
+        // is left to pick between. `window-check.sh` checks who holds it.
+        CommandGroup(replacing: .saveItem) {
+            Button(actions == nil ? "Close Window" : "Close Tab") {
+                if let actions { actions.closeTab() } else { NSApp.keyWindow?.performClose(nil) }
+            }
+            .keyboardShortcut("w", modifiers: .command)
+            .disabled(!(actions?.hasSession ?? true))
+        }
+    }
+
+    /// View: SFTP's Refresh while it is in front, and the inspector's and
+    /// the sidebar's items.
+    @CommandsBuilder private var viewMenu: some Commands {
         // With SFTP in front, its Refresh, as File's New Folder is. Its ⌘R
         // stays the side's own button's, and Reconnect gives the key up
         // meanwhile, where the bar named ⌘R a greyed Reconnect: no key is
@@ -427,13 +454,6 @@ struct ShellhandCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.command, .control])
             .disabled(actions == nil)
-        }
-
-        // Replacing the system's own "Shellhand Help", which only said help
-        // was not available. Needs nothing selected, like the app menu's.
-        CommandGroup(replacing: .help) {
-            Button("Shellhand Help") { NSWorkspace.shared.open(Help.readme) }
-            Button("Report a Problem…") { NSWorkspace.shared.open(Help.reportFromHere) }
         }
     }
 }

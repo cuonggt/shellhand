@@ -90,6 +90,13 @@ docs, the site or Markdown. It signs ad hoc —
 README's line for anyone without the Developer ID — and fails a run in which
 the result bundle counts nothing passed. The runner's Xcode is older than the
 one releases are built with, so read a red run as possibly the toolchain's.
+**A result builder there can take fewer children than here**: Xcode 27's
+SDK back-deploys a `CommandsBuilder.buildBlock` taking any number, where the
+runner's Xcode 26 stops at ten, so the menus' `body` grew to eleven groups,
+then twelve, built here, and failed every run on CI for a day — 27 pushes
+from c76121f, "extra arguments at positions #11, #12 in call". Each menu
+made of more than one group gathers them in a `@CommandsBuilder` property
+of its own, which leaves the body room.
 **Don't run that ad-hoc build on this Mac under the app's own bundle id**:
 macOS re-records the Desktop, Documents and Downloads grants against the
 ad-hoc signature, and the signed app — the installed one too — is asked again.
