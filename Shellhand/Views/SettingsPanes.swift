@@ -153,6 +153,41 @@ struct TerminalSettingsPane: View {
 
     var body: some View {
         Form {
+            // No header: the row is Colours, the setting's one name in the
+            // editors and the inspectors too — "System from Settings" sent
+            // you here to a row called Palette — and a header over it would
+            // say the same word twice. And first, where a pane's first group
+            // often goes headless: after Text, it read as Text's, 14pt under
+            // it where headed groups stand 61.5pt apart.
+            Section {
+                // Chosen by looking at it, as everywhere a palette is; with
+                // no row for inheriting, since this is what everything else
+                // inherits.
+                LabeledContent("Colours") {
+                    PaletteChoice(
+                        chosen: theme, inherited: nil, inheritedPalette: nil,
+                        onChoose: { theme = $0 })
+                }
+                .onChange(of: theme) { _, _ in
+                    NotificationCenter.default.post(name: .shellhandThemeChanged, object: nil)
+                }
+                // The same miniature the host picker shows, at a size you
+                // can look at. It was a chart of all sixteen ANSI colours,
+                // which answers "what is in this palette" — a fair question,
+                // and not the one anybody is asking here. What you want to
+                // know when choosing is what a terminal will look like.
+                TerminalMiniature(palette: Themes.named(theme),
+                                  size: CGSize(width: 160, height: 100))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                // Not "under themes", the settings file's key, read here as a
+                // word nobody had been told.
+                Text(Themes.named(theme) == nil
+                    ? "The terminal's own colours. More palettes can be added in your settings file."
+                    : "Open terminals repaint as soon as you choose. Going back to System takes a new one.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Text") {
                 Picker("Font", selection: $fontFamily) {
                     Text(TerminalFont.systemName).tag("")
@@ -196,39 +231,6 @@ struct TerminalSettingsPane: View {
                 // "change", and read as "⌘-change".
                 Text("Sessions take the font as soon as you choose. New ones start at this size; "
                     + "resize the one in front with ⌘+ and ⌘-.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            // No header: the row is Colours, the setting's one name in the
-            // editors and the inspectors too — "System from Settings" sent
-            // you here to a row called Palette — and a header over it would
-            // say the same word twice.
-            Section {
-                // Chosen by looking at it, as everywhere a palette is; with
-                // no row for inheriting, since this is what everything else
-                // inherits.
-                LabeledContent("Colours") {
-                    PaletteChoice(
-                        chosen: theme, inherited: nil, inheritedPalette: nil,
-                        onChoose: { theme = $0 })
-                }
-                .onChange(of: theme) { _, _ in
-                    NotificationCenter.default.post(name: .shellhandThemeChanged, object: nil)
-                }
-                // The same miniature the host picker shows, at a size you
-                // can look at. It was a chart of all sixteen ANSI colours,
-                // which answers "what is in this palette" — a fair question,
-                // and not the one anybody is asking here. What you want to
-                // know when choosing is what a terminal will look like.
-                TerminalMiniature(palette: Themes.named(theme),
-                                  size: CGSize(width: 160, height: 100))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                // Not "under themes", the settings file's key, read here as a
-                // word nobody had been told.
-                Text(Themes.named(theme) == nil
-                    ? "The terminal's own colours. More palettes can be added in your settings file."
-                    : "Open terminals repaint as soon as you choose. Going back to System takes a new one.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

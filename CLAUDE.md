@@ -432,7 +432,10 @@ credentials, which is most of it.
   there to show, from about 19pt. Its caption ends on the keys, "with ⌘+ and
   ⌘-", where "⌘-" ended a line above "change" and read as "⌘-change"; and
   Colours' says palettes are added in the settings file, not "under themes",
-  its key. → [the font](docs/notes/terminal.md#the-font)
+  its key. The pane starts with Colours, headless — its row is Colours, and
+  a header would say it twice — where after Text it read as Text's, 14pt
+  under it where headed groups stand 61.5pt apart.
+  → [the font](docs/notes/terminal.md#the-font)
 - **Clear Scrollback is ⌥⌘K**, and ⌘K stays Quick Connect's. It shrinks
   the history to nothing and back through `changeScrollback` — never by
   feeding `ESC [3J`, which acts on the buffer in front only and could land
