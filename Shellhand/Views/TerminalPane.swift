@@ -95,7 +95,13 @@ struct SessionTabBar: View {
                 // to its least, and the scroll above, measured against the
                 // widths before, stopped short: the new tab's × out of sight,
                 // now and then, in the build before the fade as well as after.
-                .onScrollGeometryChange(for: CGFloat.self) { $0.contentSize.width } action: { _, _ in
+                // And whenever the strip's own width changes: a window narrowed
+                // with every title at its least changes no tab's width, and the
+                // tab in front, the fifth at 1106pt, stood wholly past the
+                // strip's edge.
+                .onScrollGeometryChange(for: [CGFloat].self) {
+                    [$0.contentSize.width, $0.containerSize.width]
+                } action: { _, _ in
                     guard case let .session(id) = pane else { return }
                     strip.scrollTo(id)
                 }
