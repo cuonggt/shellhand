@@ -408,10 +408,22 @@ enum Card {
     /// a side with nothing to list.
     static let width: CGFloat = 480
 
+    /// What a card is drawn on: the window's own ground, opaque, so its words
+    /// read as they do anywhere else in the window. A material let the
+    /// terminal through, and over a black one came out mid-grey, 147, the red
+    /// headline about 1.3:1 against it and the secondary words 2.9:1.
+    static let ground = SwiftUI.Color(nsColor: .windowBackgroundColor)
+
+    /// A hairline round it, so a card still reads as one on a ground the
+    /// same as its own: on SFTP's white side, the card went and only its
+    /// words stood, where the material had drawn it 237 on 255.
+    static let edge = SwiftUI.Color(nsColor: .separatorColor)
+
     /// The secondary words — where a connection is going, what a refusal
     /// means — in the secondary label colour as itself. As `.secondary`, the
-    /// material under them drew them vibrant: over a black terminal, darker
-    /// than the card's headline and ssh's line, 20 against 44 and 41.
+    /// material the card was drawn on then drew them vibrant: over a black
+    /// terminal, darker than the card's headline and ssh's line, 20 against
+    /// 44 and 41.
     static let secondary = SwiftUI.Color(nsColor: .secondaryLabelColor)
 }
 
@@ -688,7 +700,8 @@ extension View {
     func cardChrome(maxWidth: CGFloat = Card.width) -> some View {
         padding(14)
             .frame(maxWidth: maxWidth, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .background(Card.ground, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Card.edge))
             .padding(12)
     }
 

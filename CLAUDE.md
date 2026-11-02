@@ -1142,10 +1142,17 @@ credentials, which is most of it.
   "Connection refused" cut, while a narrower side wrapped it whole. Whether
   the connecting line takes one row is asked once, at the longest it will
   be (`SessionStatus.longestWait`, "59 min 59 s"): asked each second, a
-  line of one row at 9 s took three at 10, and the card jumped. Their
-  secondary words are the secondary label colour as itself
-  (`Card.secondary`): as `.secondary`, the card's material drew them
-  vibrant, over a black terminal darker than the headline, 20 against 44.
+  line of one row at 9 s took three at 10, and the card jumped. **A card
+  is drawn on the window's own ground, opaque, with a hairline round it**
+  (`Card.ground`, `Card.edge`): a material let the terminal through, and
+  over a black one came out mid-grey, 147, the red headline about 1.3:1
+  on it and the secondary words 2.9:1, where on the window's ground they
+  are 3.7 and 3.9, as anywhere else in the window, and the headline 14.9;
+  and without the hairline, a card on SFTP's white side was white on
+  white, its words standing alone. Their secondary words are the
+  secondary label colour as itself (`Card.secondary`): as `.secondary`,
+  the material drew them vibrant, over a black terminal darker than the
+  headline, 20 against 44.
   **All three cards are one shape** — connecting, ended, and SFTP's
   refusal (`cardChrome`: 480 at most, left-aligned, 14pt in and 12 out) —
   so one state's card gives way to the next in place: the connecting card
