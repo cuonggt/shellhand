@@ -276,6 +276,94 @@ nonisolated enum Panes {
         return address.isEmpty ? nil : String(address)
     }
 
+    /// The spellings a tab may draw its name in, longest first: the name
+    /// whole; a machine typed into ⌘K without its user; the machine's
+    /// address or name without whole parts from between its dots
+    /// (`tabTitlePartCuts`), where the shell is on it still after it; and
+    /// then cut in its middle by characters (`middleCuts`), never beside a
+    /// dot. Cut in its middle anywhere, "127.0.0.1:2" read "127….1:2", the
+    /// cut beside a dot — four in a row.
+    static func tabTitleCuts(_ name: String, typed: Bool) -> [String] {
+        // The machine, and where the shell is on it, as
+        // `Sessions.shortTitle` writes them: "web — ~/app".
+        let place = name.range(of: " — ")?.lowerBound ?? name.endIndex
+        let machine = String(name[..<place]), rest = String(name[place...])
+        let address = (typed ? tabTitleWithoutUser(machine) : nil) ?? machine
+        var cuts = [name, address + rest]
+        cuts += tabTitlePartCuts(address).map { $0 + rest }
+        cuts += middleCuts(address + rest)
+        var seen = Set<String>()
+        return cuts.filter { seen.insert($0).inserted }
+    }
+
+    /// A tab's spellings (`tabTitleCuts`) with what each measures by
+    /// `width`, its number after it — only those narrower than every one
+    /// before them, since the tab draws the first that fits: one that put
+    /// "…" in place of narrower letters is no narrower, and would never be
+    /// drawn in the room the strip gave it for its width. The spelling and
+    /// the number are measured apart, as the tab draws them side by side:
+    /// measured as one, "…1:2 (2)" was given 49pt where its two parts,
+    /// 27.6 and 21.1, each drawn to the half point, took 49.5, and the tab
+    /// drew "1…2 (2)".
+    static func tabTitleSteps(_ cuts: [String], number: String,
+                              width: (String) -> CGFloat) -> (cuts: [String], widths: [CGFloat]) {
+        let after = number.isEmpty ? 0 : width(number)
+        var steps: (cuts: [String], widths: [CGFloat]) = ([], [])
+        for cut in cuts {
+            let measured = width(cut) + after
+            guard measured < steps.widths.last ?? .infinity else { continue }
+            steps.cuts.append(cut)
+            steps.widths.append(measured)
+        }
+        return steps
+    }
+
+    /// A machine's address or name without whole parts from between its
+    /// dots, one more each time from its middle, its two ends as near one
+    /// length as they go — "127…0.1:2", "127…1:2" — and at last one part
+    /// alone: an IPv4 address's last, with its port, as the part that tells
+    /// machines on one network apart, and a name's first, "db-01…". Nothing
+    /// for a name with no part to spare, or with a space in it.
+    static func tabTitlePartCuts(_ machine: String) -> [String] {
+        let parts = machine.split(separator: ".", omittingEmptySubsequences: false).map(String.init)
+        guard parts.count > 1, !parts.contains(where: \.isEmpty),
+              !machine.contains(where: \.isWhitespace) else { return [] }
+        func joined(_ range: Range<Int>) -> String { parts[range].joined(separator: ".") }
+        // How far apart the two ends' lengths stand, `kept` parts kept and
+        // `head` of them before the cut.
+        func uneven(_ head: Int, _ kept: Int) -> Int {
+            abs(joined(0..<head).count - joined(parts.count - kept + head..<parts.count).count)
+        }
+        var cuts: [String] = []
+        for kept in stride(from: parts.count - 1, through: 2, by: -1) {
+            // Ties go to the end, which an address's port is on.
+            let head = (1..<kept).min { uneven($0, kept) < uneven($1, kept) } ?? 1
+            cuts.append(joined(0..<head) + "…" + joined(parts.count - kept + head..<parts.count))
+        }
+        let numbered = parts.count == 4 && parts.indices.allSatisfy { index in
+            let number = index == 3 ? parts[index].prefix { $0 != ":" } : parts[index][...]
+            return !number.isEmpty && number.allSatisfy { $0.isASCII && $0.isNumber }
+        }
+        cuts.append(numbered ? "…" + parts[3] : parts[0] + "…")
+        return cuts
+    }
+
+    /// `text` cut in its middle by characters, longest first, its two ends
+    /// as near one length as they go — a dot or a space beside the cut going
+    /// with it, so that none stands beside "…", as SwiftUI's own cut leaves
+    /// no space there: "This…c — ~".
+    static func middleCuts(_ text: String) -> [String] {
+        let characters = Array(text)
+        let dropped = { (character: Character) in character == "." || character.isWhitespace }
+        return stride(from: characters.count - 2, through: 1, by: -1).map { kept in
+            var head = characters[..<((kept + 1) / 2)]
+            var tail = characters[(characters.count - kept / 2)...]
+            while let last = head.last, dropped(last) { head.removeLast() }
+            while let first = tail.first, dropped(first) { tail.removeFirst() }
+            return String(head) + "…" + String(tail)
+        }
+    }
+
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 
@@ -310,7 +398,16 @@ nonisolated enum Panes {
     /// strip scrolled the Hosts tab half away. `extras` is what a tab draws
     /// past its chrome — a Needs you badge, with its gap — which comes out of
     /// the room before it is shared.
-    static func tabTitleWidths(room: CGFloat, needs: [CGFloat], extras: [CGFloat] = []) -> [CGFloat] {
+    ///
+    /// `cuts` is what each title measures in each spelling its tab may draw
+    /// (`tabTitleSteps`), widest first: a tab cut short takes only the widest
+    /// within what it was given, and what that leaves goes a step at a time
+    /// to whichever tab it lets draw a wider one, the cheapest step first.
+    /// Given its share whole, a name cut at its dots or without its user
+    /// stood with the rest of it empty before its ×: 19.5pt after
+    /// "127.0.0.1:2" at 1220pt, and 14 after "db-01…" at 1106.
+    static func tabTitleWidths(room: CGFloat, needs: [CGFloat], extras: [CGFloat] = [],
+                               cuts: [[CGFloat]] = []) -> [CGFloat] {
         var widths = needs.map { min($0, tabTitleMost) }
         guard room > 0 else { return needs.map { _ in tabTitleMost } }
         var left = room - tabSpacing * CGFloat(max(0, needs.count - 1))
@@ -325,6 +422,20 @@ nonisolated enum Panes {
             }
             for index in open { widths[index] = min(tabTitleMost, max(tabTitleLeast, share)) }
             break
+        }
+        guard cuts.count == needs.count else { return widths }
+        var spare: CGFloat = 0
+        for index in widths.indices where widths[index] < needs[index] {
+            guard let drawn = cuts[index].first(where: { $0 <= widths[index] }) else { continue }
+            spare += widths[index] - drawn
+            widths[index] = drawn
+        }
+        while let step = widths.indices.compactMap({ index -> (index: Int, to: CGFloat)? in
+            cuts[index].last { $0 > widths[index] && $0 <= tabTitleMost }.map { (index, $0) }
+        }).min(by: { $0.to - widths[$0.index] < $1.to - widths[$1.index] }),
+              step.to - widths[step.index] <= spare {
+            spare -= step.to - widths[step.index]
+            widths[step.index] = step.to
         }
         return widths
     }

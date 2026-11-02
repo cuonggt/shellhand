@@ -30,11 +30,20 @@ struct SessionTabBar: View {
         // Named as the Window menu names them, a second of one name with its
         // number: two tabs on one host read "refuser" twice.
         let titles = sessions.titles
-        // Each name measured, so the strip's room goes where it is needed,
-        // and a Needs you badge counted where one is drawn.
+        // Each name measured, whole and in every spelling its tab may draw,
+        // so the strip's room goes where it is needed and a name cut short
+        // takes only what it draws; and a Needs you badge counted where one
+        // is drawn.
+        let steps = zip(sessions.all, titles).map { session, title in
+            let parts = Panes.tabTitleParts(title)
+            return Panes.tabTitleSteps(
+                Panes.tabTitleCuts(parts.name, typed: session.host?.id.isEmpty == true),
+                number: parts.number, width: Self.measured)
+        }
         let widths = Panes.tabTitleWidths(
-            room: room, needs: titles.map(Self.measured),
-            extras: sessions.all.map { $0.status == .needsAnswer ? Panes.tabGap + TabButton.badgeWidth : 0 })
+            room: room, needs: steps.map { $0.widths.first ?? 0 },
+            extras: sessions.all.map { $0.status == .needsAnswer ? Panes.tabGap + TabButton.badgeWidth : 0 },
+            cuts: steps.map { $0.widths })
         HStack(spacing: Panes.tabSpacing) {
             // The way back to the list, outside the scrolling: with the strip
             // full, a new tab scrolled into view pushed Hosts half off the
@@ -48,6 +57,7 @@ struct SessionTabBar: View {
                             TabButton(
                                 session: session,
                                 title: titles[index],
+                                cuts: steps[index].cuts,
                                 titleWidth: widths[index],
                                 selected: pane == .session(session.id),
                                 beside: beside == .session(session.id),
@@ -175,6 +185,9 @@ private struct TabButton: View {
     let session: TerminalSession
     /// Its name in the strip, told apart from another of the same name.
     let title: String
+    /// The spellings its name may be drawn in, widest first, the number of
+    /// a second of one name left out (`Panes.tabTitleSteps`).
+    let cuts: [String]
     /// The most its name may take, the strip's room shared among the tabs.
     let titleWidth: CGFloat
     let selected: Bool
@@ -207,21 +220,21 @@ private struct TabButton: View {
                 // that say which session this is: `prod-api-ch…/current`.
                 // The number of a second of one name stays whole after it,
                 // where cut as one "root@127.0.0.1:2 (2)" read "root…(2)".
-                // A machine typed into ⌘K gives up its user before its
-                // address: cut in the middle, "root@127.0.0.1:2" read
-                // "root@….0.1:2", four dots in a row.
-                let parts = Panes.tabTitleParts(title)
-                let address = session.host?.id.isEmpty == true
-                    ? Panes.tabTitleWithoutUser(parts.name) : nil
+                // The name is drawn in the first of its spellings that fits
+                // (`Panes.tabTitleCuts`): a machine typed into ⌘K gives up
+                // its user before its address, and an address whole parts
+                // from between its dots — cut in the middle anywhere,
+                // "root@127.0.0.1:2" read "root@….0.1:2", and without its
+                // user "127….1:2", four dots in a row.
                 HStack(spacing: 0) {
                     ViewThatFits(in: .horizontal) {
-                        Text(parts.name)
-                            .lineLimit(1)
-                        Text(address ?? parts.name)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        ForEach(Array(cuts.enumerated()), id: \.offset) { _, cut in
+                            Text(cut)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
                     }
-                    Text(parts.number)
+                    Text(Panes.tabTitleParts(title).number)
                         .lineLimit(1)
                         .fixedSize()
                 }

@@ -692,21 +692,26 @@ credentials, which is most of it.
   "refuser" over "refuser (2)" — capped at
   180pt and cut in the middle, the name only: a number stays whole after
   it (`Panes.tabTitleParts`), where cut as one at a tab's least, 60pt,
-  "root@127.0.0.1:2 (2)" read "root…(2)"; a machine typed into ⌘K gives
-  up its user before its address (`Panes.tabTitleWithoutUser`), where
-  "root@127.0.0.1:2" read "root@….0.1:2" — an address cut at a tab's least
-  can still fall beside a dot; and a name cut short starts from its mark,
+  "root@127.0.0.1:2 (2)" read "root…(2)"; the name is drawn in the first
+  of its spellings that fits (`Panes.tabTitleCuts`) — a machine typed into
+  ⌘K without its user, then an address or a host's name without whole
+  parts from between its dots, and never cut beside one: cut in the middle
+  anywhere, "root@127.0.0.1:2" read "root@….0.1:2", and without its user
+  "127….1:2", four dots in a row; and a name cut short starts from its mark,
   where centred in what it was given the gap after the mark ran 7.5, 10.5
   or 11.5pt; as the strip fills the tabs share its room
   by what each name needs, short names giving their spare to long ones,
   down to 60 (`Panes.tabTitleWidths`) before it scrolls — shared evenly,
   "This Mac — ~" was cut to "This…c — ~" with 65pt of the strip empty —
-  and what a tab takes besides its name is counted from the parts it is
-  drawn with (`Panes.tabChrome`, its × at a width of its own), a Needs you
-  badge included: a round 50 was 3pt short a tab, and four tabs scrolled
-  at 1220pt with every name above 60, the first under its fade;
-  and a tab's tooltip is its name whole (`Panes.tabHelp`), where it was
-  the shell's own title alone; and the Hosts tab
+  and a name cut short takes only what its spelling draws, the rest of its
+  share going to whichever tab it lets draw more (`Panes.tabTitleSteps`):
+  given its share whole, "127.0.0.1:2" stood 19.5pt short of its ×, and
+  "db-01…" 14; and what a tab takes besides its name is counted from the
+  parts it is drawn with (`Panes.tabChrome`, its × at a width of its own),
+  a Needs you badge included: a round 50 was 3pt short a tab, and four
+  tabs scrolled at 1220pt with every name above 60, the first under its
+  fade; and a tab's tooltip is its name whole (`Panes.tabHelp`), where it
+  was the shell's own title alone; and the Hosts tab
   stays outside the scrolling, where a full strip pushed it half off its
   edge. An edge with tabs past it fades (`Panes.hiddenEdges`): at the
   window's default size four tabs fill the strip, and the first was shown

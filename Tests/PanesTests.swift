@@ -439,6 +439,61 @@ nonisolated struct PanesTests {
         #expect(Panes.tabTitleWithoutUser("root@") == nil)
     }
 
+    /// Without its user, cut in its middle anywhere, a typed machine's
+    /// address still read "127….1:2", the cut beside a dot, four in a row.
+    /// An address gives up whole parts from between its dots, and no cut
+    /// stands beside one.
+    @Test("a tab's name is cut at its dots, never beside one")
+    func tabTitleCuts() {
+        #expect(Array(Panes.tabTitleCuts("root@127.0.0.1:2", typed: true).prefix(5))
+            == ["root@127.0.0.1:2", "127.0.0.1:2", "127…0.1:2", "127…1:2", "…1:2"])
+        // Where the shell is on it stays after the address.
+        #expect(Array(Panes.tabTitleCuts("root@10.0.1.23 — ~", typed: true).prefix(5))
+            == ["root@10.0.1.23 — ~", "10.0.1.23 — ~", "10…1.23 — ~", "10…23 — ~", "…23 — ~"])
+        // A host's name keeps what it is called, and its first part to the last.
+        #expect(Array(Panes.tabTitleCuts("db-01.us.example.com", typed: false).prefix(4))
+            == ["db-01.us.example.com", "db-01.us…com", "db-01…com", "db-01…"])
+        #expect(Panes.tabTitlePartCuts("example.com") == ["example…"])
+        #expect(Panes.tabTitlePartCuts("192.168.100.200:2222")
+            == ["192.168…200:2222", "192…200:2222", "…200:2222"])
+        // No part to spare, or a space in it: nothing is dropped whole.
+        #expect(Panes.tabTitlePartCuts("localhost").isEmpty)
+        #expect(Panes.tabTitlePartCuts("v1.2 build box").isEmpty)
+        #expect(Panes.tabTitlePartCuts("a..b").isEmpty)
+        // A name with no dot is cut in its middle, as SwiftUI cut it, with
+        // no space beside "…".
+        #expect(Array(Panes.tabTitleCuts("This Mac — ~", typed: false).prefix(3))
+            == ["This Mac — ~", "This…c — ~", "This…— ~"])
+        #expect(Array(Panes.tabTitleCuts("refuser", typed: false).prefix(2)) == ["refuser", "ref…er"])
+        // However far it goes, each cut is new and none stands beside a dot.
+        for name in ["root@127.0.0.1:2", "deploy@192.168.100.200:2222 — ~/site.github.io",
+                     "example.com", "a..b", ".hidden", "v1.2 build box — ~", "This Mac — ~"] {
+            let cuts = Panes.tabTitleCuts(name, typed: true)
+            #expect(cuts.first == name)
+            #expect(Set(cuts).count == cuts.count)
+            for cut in cuts.dropFirst() {
+                #expect(!cut.contains(".…") && !cut.contains("…."), "\(cut)")
+                #expect(!cut.contains(" …") && !cut.contains("… "), "\(cut)")
+            }
+        }
+    }
+
+    /// A tab draws the first of its spellings that fits, so one no narrower
+    /// than a spelling before it would never be drawn, and the room the strip
+    /// gave it for its width would stand empty.
+    @Test("a tab's spellings each draw narrower than the one before")
+    func tabTitleSteps() {
+        let steps = Panes.tabTitleSteps(["127.0.0.1:2", "127…0.1:2", "12…:2", "127…1:2"],
+                                        number: " (2)") { CGFloat($0.count) }
+        #expect(steps.cuts == ["127.0.0.1:2", "127…0.1:2", "12…:2"])
+        #expect(steps.widths == [15, 13, 9])
+        // The spelling and its number are measured apart, as they are drawn,
+        // each to what it takes on its own: measured as one, "…1:2 (2)" was
+        // given half a point less than its two parts drew.
+        #expect(Panes.tabTitleSteps(["…1:2"], number: " (2)") { CGFloat($0.count) + 0.5 }.widths
+            == [9])
+    }
+
     @Test("a tab's number stands apart from the name it cuts")
     func tabTitleParts() {
         #expect(Panes.tabTitleParts("root@127.0.0.1:2 (2)") == ("root@127.0.0.1:2", " (2)"))
@@ -483,6 +538,26 @@ nonisolated struct PanesTests {
         // Before the strip has been measured, as they always were.
         #expect(Panes.tabTitleWidths(room: 0, needs: [10, 20]) == [180, 180])
         #expect(Panes.tabTitleWidths(room: 500, needs: []).isEmpty)
+    }
+
+    /// Given its share whole, a name cut at its dots or without its user
+    /// stood with the rest of it empty before its ×: 19.5pt after
+    /// "127.0.0.1:2", while "db-01…com" beside it was cut short of
+    /// "db-01.us…com".
+    @Test("a tab cut short takes what it draws, and the rest goes where it shows more")
+    func tabTitleWidthsByCuts() {
+        // Given 80 each, the typed machine draws "127.0.0.1:2" in 62 and
+        // db-01 "db-01…com" in 72; what they leave takes db-01 to 93.
+        let two: CGFloat = 2 * (80 + Panes.tabChrome) + Panes.tabSpacing
+        #expect(Panes.tabTitleWidths(room: two, needs: [106, 125],
+                                     cuts: [[106, 62, 57, 45], [125, 93, 72, 48]]) == [62, 93])
+        // Past 180 a name takes the widest spelling within it.
+        #expect(Panes.tabTitleWidths(room: 1000, needs: [250], cuts: [[250, 170, 120]]) == [170])
+        // With no spelling within its share it keeps the share, for SwiftUI
+        // to cut; and a name whole is left alone.
+        #expect(Panes.tabTitleWidths(room: 100 + Panes.tabChrome, needs: [200], cuts: [[200, 150]])
+            == [100])
+        #expect(Panes.tabTitleWidths(room: 1000, needs: [40, 50], cuts: [[40, 20], [50]]) == [40, 50])
     }
 
     /// The tooltip was the shell's own title alone: "refuser" for the tab
