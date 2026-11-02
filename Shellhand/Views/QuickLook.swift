@@ -7,6 +7,11 @@ import QuickLookUI
 /// everywhere else — and it costs nothing to offer once a file has been
 /// fetched. The panel has to be asked for from an app that is active, or it
 /// opens behind whatever is in front.
+///
+/// **The panel is asked for, not taken**: the window it is opened from
+/// accepts control of it (`FilesWindowController`), and is handed it with
+/// `take(_:)`. Setting its data source from here, in control or not, is
+/// what its header says never to do.
 @MainActor
 final class QuickLook: NSObject, QLPreviewPanelDataSource {
     static let shared = QuickLook()
@@ -18,9 +23,22 @@ final class QuickLook: NSObject, QLPreviewPanelDataSource {
         self.url = url
         guard let panel = QLPreviewPanel.shared() else { return }
         NSApp.activate()
+        if panel.isVisible {
+            panel.reloadData()
+        } else {
+            panel.makeKeyAndOrderFront(nil)
+        }
+    }
+
+    /// The panel handed over by the window in control of it.
+    func take(_ panel: QLPreviewPanel) {
         panel.dataSource = self
         panel.reloadData()
-        panel.makeKeyAndOrderFront(nil)
+    }
+
+    /// The panel taken back, by a window that is no longer in control.
+    func handBack(_ panel: QLPreviewPanel) {
+        if panel.dataSource === self { panel.dataSource = nil }
     }
 
     nonisolated func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {

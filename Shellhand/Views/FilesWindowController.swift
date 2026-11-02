@@ -1,4 +1,5 @@
 import AppKit
+import QuickLookUI
 import SwiftUI
 
 /// The window the SFTP browser lives in. **One at a time.**
@@ -148,5 +149,23 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
         }
         answered = false
         return true
+    }
+
+    // MARK: Quick Look
+
+    // The shared panel is this window's while it is key: the panel finds its
+    // controller up the responder chain, where this controller sits behind
+    // its window, and hands over its data source only to the one it found.
+    // It was set from outside, which the panel's header says never to do
+    // while not in control of it.
+
+    nonisolated override func acceptsPreviewPanelControl(_ panel: QLPreviewPanel!) -> Bool { true }
+
+    nonisolated override func beginPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        MainActor.assumeIsolated { QuickLook.shared.take(panel) }
+    }
+
+    nonisolated override func endPreviewPanelControl(_ panel: QLPreviewPanel!) {
+        MainActor.assumeIsolated { QuickLook.shared.handBack(panel) }
     }
 }
