@@ -236,7 +236,7 @@ private struct PlacePane: View {
 
             HStack(spacing: 4) {
                 Button { Task { await place.parent() } } label: {
-                    Image(systemName: "arrow.up").foregroundStyle(iconColour(place.canGoUp))
+                    Image(systemName: "arrow.up").foregroundStyle(.controlIcon(place.canGoUp))
                 }
                 .buttonStyle(.borderless)
                 // Finder's name for the move: this window says folder, and
@@ -264,7 +264,7 @@ private struct PlacePane: View {
                     name = ""
                     newFolder = true
                 } label: {
-                    Image(systemName: "folder.badge.plus").foregroundStyle(iconColour(listed))
+                    Image(systemName: "folder.badge.plus").foregroundStyle(.controlIcon(listed))
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("New Folder")
@@ -273,7 +273,7 @@ private struct PlacePane: View {
                 .disabled(place.listing.path.isEmpty)
 
                 Button { Task { await place.refresh() } } label: {
-                    Image(systemName: "arrow.clockwise").foregroundStyle(iconColour(listed))
+                    Image(systemName: "arrow.clockwise").foregroundStyle(.controlIcon(listed))
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Refresh")
@@ -283,17 +283,6 @@ private struct PlacePane: View {
             }
         }
         .padding(8)
-    }
-
-    /// The header's icons in the colours AppKit draws a control's text in:
-    /// black while they can act, as the "…" menu beside them is, and its
-    /// grey while the side lists nothing. Borderless, they were drawn
-    /// mid-grey when live, nearer greyed than live beside the menu's black —
-    /// and a hierarchical style changed nothing, since `.primary` inside a
-    /// borderless button is the button's own grey, while `.tertiary` made
-    /// the greyed ones fainter than the greyed menu.
-    private func iconColour(_ live: Bool) -> SwiftUI.Color {
-        SwiftUI.Color(nsColor: live ? .controlTextColor : .disabledControlTextColor)
     }
 
     /// Whether this side lists anything, which New Folder and Refresh need.

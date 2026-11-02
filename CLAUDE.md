@@ -827,8 +827,9 @@ credentials, which is most of it.
   it went nowhere and said nothing, and so does its "…" menu, whose Show
   Hidden Files had nothing to act on. The header's icons are drawn in
   AppKit's control colours, black as the menu is while they can act and
-  its grey while they cannot (`controlTextColor`,
-  `disabledControlTextColor`): borderless they came out mid-grey, nearer
+  its grey while they cannot (`.controlIcon`: `controlTextColor`,
+  `disabledControlTextColor`), as Settings' Reveal in Finder is, which was
+  124 beside its black switches: borderless they came out mid-grey, nearer
   greyed than live, and a hierarchical style changed nothing — `.primary`
   in a borderless button is the button's own grey, and `.tertiary` drew
   the greyed ones fainter than the greyed menu. That fix was called done

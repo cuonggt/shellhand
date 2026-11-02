@@ -308,15 +308,16 @@ struct PathRow: View {
                     .help(path)
             }
             Spacer(minLength: 4)
+            let there = FileManager.default.fileExists(atPath: path)
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
             } label: {
-                Image(systemName: "arrow.up.forward.app")
+                Image(systemName: "arrow.up.forward.app").foregroundStyle(.controlIcon(there))
             }
             .buttonStyle(.borderless)
             .accessibilityLabel("Reveal \(label) in Finder")
             .help("Reveal in Finder")
-            .disabled(!FileManager.default.fileExists(atPath: path))
+            .disabled(!there)
         }
     }
 
