@@ -293,13 +293,19 @@ struct GroupEditorSheet: View {
             // On the field's baseline, as the host editor's rows are: centred,
             // the label stood 1.5pt above the field's words.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                if let hosts {
-                    JumpHostField(text: text, prompt: value.isEmpty ? example : value, hosts: hosts)
-                } else {
-                    TextField("", text: text, prompt: Text(value.isEmpty ? example : value))
-                        .textFieldStyle(.roundedBorder)
-                        .labelsHidden()
-                        .multilineTextAlignment(.leading)
+                // The field and the jump host's menu, or the menu's room, so
+                // every field in these rows ends at one edge.
+                HStack(spacing: 6) {
+                    if let hosts {
+                        JumpHostField(text: text, prompt: value.isEmpty ? example : value)
+                        JumpHostMenu(text: text, hosts: hosts)
+                    } else {
+                        TextField("", text: text, prompt: Text(value.isEmpty ? example : value))
+                            .textFieldStyle(.roundedBorder)
+                            .labelsHidden()
+                            .multilineTextAlignment(.leading)
+                        JumpHostMenu.room
+                    }
                 }
                 if let from = Self.shownFrom(from, set: text.wrappedValue) {
                     FromCaption(from: from, among: shownFroms,

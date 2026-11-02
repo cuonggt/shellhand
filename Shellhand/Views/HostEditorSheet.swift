@@ -316,7 +316,8 @@ struct HostEditorSheet: View {
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
                 }
-                row("Jump host", from: preview.effective.proxyJumpFrom, set: host.proxyJump) {
+                row("Jump host", from: preview.effective.proxyJumpFrom, set: host.proxyJump,
+                    picking: $host.proxyJump) {
                     jumpField
                 }
             }
@@ -422,7 +423,7 @@ struct HostEditorSheet: View {
     /// placeholder nobody reads.
     @ViewBuilder
     private func row(
-        _ title: String, from: String, set: String,
+        _ title: String, from: String, set: String, picking jump: Binding<String>? = nil,
         @ViewBuilder content: () -> some View
     ) -> some View {
         LabeledContent(title) {
@@ -430,7 +431,16 @@ struct HostEditorSheet: View {
             // label: centred, the stack's baseline was the caption's, and
             // the label stood 1.5pt above the field's words.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                content()
+                // The field and the jump host's menu, or the menu's room, so
+                // every field in these rows ends at one edge.
+                HStack(spacing: 6) {
+                    content()
+                    if let jump {
+                        JumpHostMenu(text: jump, hosts: otherHosts)
+                    } else {
+                        JumpHostMenu.room
+                    }
+                }
                 if let from = Self.shownFrom(from, set: set) {
                     // "from Production", as the group editor and the
                     // inspector say it: the name alone read as a value.
@@ -540,8 +550,7 @@ struct HostEditorSheet: View {
         JumpHostField(
             text: $host.proxyJump,
             prompt: shown(preview.effective.proxyJump, Self.jumpExample(
-                avoiding: store.snapshot.hosts.map(\.name) + [host.name])),
-            hosts: otherHosts)
+                avoiding: store.snapshot.hosts.map(\.name) + [host.name])))
     }
 
     private var footer: some View {

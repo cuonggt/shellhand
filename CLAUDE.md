@@ -1384,10 +1384,14 @@ credentials, which is most of it.
   row is set on the field's baseline (`.firstTextBaseline`), which is where
   the form sets the label: centred, the row's baseline was the caption's,
   and the label stood 1.5pt above the field's words. The captions stand in
-  one column, as wide as the widest an editor shows (`FromCaption`), so
-  what stands before them ends at one edge: each at its own width, the jump
-  host's field ended 2.5pt short of the key's above it — "from Production"
-  against its menu and "from US" — near enough a line to read as a slip.
+  one column, as wide as the widest an editor shows (`FromCaption`), and
+  every such row keeps the jump host's menu's room beside its field
+  (`JumpHostMenu.room`), so the fields end at one edge: each caption at its
+  own width, the jump host's field ended 2.5pt short of the key's above it —
+  "from Production" against its menu and "from US" — near enough a line to
+  read as a slip; and with the captions lined up and not the fields, the
+  menu's arrow ended 7pt short of the key's border, a borderless menu
+  padding its glyph.
   Connect to's user says it under the row, which has no room beside it —
   "user from Production" — where it said nothing at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",
@@ -1419,9 +1423,10 @@ credentials, which is most of it.
   well. The host editor called the first two Through and Agent up to 0.1.5,
   and Settings the last Palette, under a header saying Colours, where an
   inspector's "System from Settings" sent you. **The jump host is typed or
-  picked from your hosts in both editors** (`JumpHostField`): the group
-  editor's was a field alone, though a group needs the menu as much as a
-  host — EU and US send all six of their hosts through bastion.
+  picked from your hosts in both editors** (`JumpHostField`,
+  `JumpHostMenu`): the group editor's was a field alone, though a group
+  needs the menu as much as a host — EU and US send all six of their hosts
+  through bastion.
   → [where a value comes from](docs/notes/window.md#where-a-value-comes-from)
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their
