@@ -59,13 +59,22 @@ struct HostsPane: View {
     /// the shape they all take (`Browsing.rowShape`).
     @State private var rowWidth: CGFloat = 0
 
+    /// How far the pane's title and grid stand in: the inset list's own
+    /// margin, so all three start on one edge.
+    static let inset: CGFloat = 16
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Pinned rather than scrolling away with the rows: it carries the
             // layout picker and says which place this is, and both are wanted
             // while you are part-way down a long list.
+            // 16pt in, where the inset list starts its headings and rows, so
+            // the title, the list and the grid share one left edge. At 24 the
+            // list stood 8pt left of "All Hosts", and padding the list in to
+            // meet it took the rule under its first heading 8pt in from the
+            // pane's edges with it.
             header
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Self.inset)
                 .padding(.top, 24)
                 .padding(.bottom, 14)
 
@@ -155,11 +164,6 @@ struct HostsPane: View {
         // the screen. On a group it opens the group, which picking no longer
         // does.
         .onKeyPress(.return) { open(selection) }
-        // In line with the title over it, 24pt in, as the grid is: the inset
-        // list starts its headings and rows 16pt in, 8 left of "All Hosts".
-        // Padding, outside the list's own modifiers, since `contentMargins`
-        // does not reach a list's rows here.
-        .padding(.horizontal, 8)
     }
 
     /// What two clicks or ⏎ do: connect to a host, open a group.
@@ -207,7 +211,7 @@ struct HostsPane: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .background { gridWidth }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Self.inset)
             .padding(.bottom, 24)
         }
         // A `LazyVGrid` has no selection and no keyboard of its own, so both
@@ -237,7 +241,7 @@ struct HostsPane: View {
 
     /// The width the grids are actually given, measured **inside** the frame
     /// and **outside** the padding, which is exactly the width `.adaptive`
-    /// divides up. Asking the `ScrollView` instead would be 48pt too wide and
+    /// divides up. Asking the `ScrollView` instead would be 32pt too wide and
     /// would put the column count one out at some sizes.
     private var gridWidth: some View {
         GeometryReader { proxy in
