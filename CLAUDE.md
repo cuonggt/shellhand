@@ -715,7 +715,9 @@ credentials, which is most of it.
   install runs hidden behind it. Only the welcome says there are no hosts:
   the sidebar says where they will go and the inspector what it will
   describe, where the sidebar said "No hosts yet" too and the inspector
-  asked for a host to be picked from an empty list.
+  asked for a host to be picked from an empty list. The sidebar's has a
+  line under it as the inspector's has, so the two stand level, where a
+  title alone sat 30pt below the inspector's.
   → [the welcome](docs/notes/window.md#the-welcome)
 - The **Window menu lists the sessions too**, with ⌘1 to ⌘9 for the first
   nine. That came in with the column and stays without it: a keyboard way to

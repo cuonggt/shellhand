@@ -126,8 +126,12 @@ struct SidebarView: View {
                 // welcome, and two panels both saying "no hosts yet" with
                 // their own buttons read as a stutter — so it says where the
                 // hosts will be, where it said "No hosts yet" all the same.
+                // A line under it as the inspector's has, so the two stand
+                // level: a title alone sat 30pt below the inspector's.
                 ContentUnavailableView {
                     Label("Your hosts go here", systemImage: "tray")
+                } description: {
+                    Text("A host you add is listed here, under its group.")
                 }
             } else if filtering && found.isEmpty {
                 noMatches
