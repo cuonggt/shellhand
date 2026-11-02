@@ -1416,7 +1416,9 @@ credentials, which is most of it.
   name and two cards' lines, the CSV tab said "A sheet" — inside a sheet —
   where the welcome said a spreadsheet, and the ssh config's tab "The
   machines OpenSSH already knows about", where the welcome calls it Your
-  SSH config.
+  SSH config. The file is spelled "SSH config" wherever the app names it —
+  the tab, its heading and the inspector's "from your SSH config" — where
+  it read SSH Config, SSH config and ssh config.
 - **The group typed into an import files only the hosts it adds**
   (`Portable.merge(newHostsIn:)`): a host already in the list stays where it
   was filed, and one the file files goes where the file says. The group was

@@ -266,7 +266,7 @@ struct SSHConfigReachTests {
 
         e.configProxy = "bastion.example"
         #expect(e.jumpHost.value == "bastion.example")
-        #expect(e.jumpHost.from == "your ssh config")
+        #expect(e.jumpHost.from == "your SSH config")
 
         e.proxyJump = "chosen.example"
         e.proxyJumpFrom = "Production"

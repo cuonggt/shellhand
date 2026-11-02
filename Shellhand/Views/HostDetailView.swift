@@ -101,7 +101,7 @@ struct HostDetailView: View {
 
                 if let alias = host.effective.aliasElsewhere {
                     Label {
-                        Text("Your ssh config has a Host \(alias.name) going to \(alias.addr):\(alias.port), "
+                        Text("Your SSH config has a Host \(alias.name) going to \(alias.addr):\(alias.port), "
                             + "so what is written there is not this host's.")
                     } icon: {
                         Image(systemName: "exclamationmark.triangle")
@@ -134,7 +134,7 @@ struct HostDetailView: View {
                     // would be a row of noise rather than an answer.
                     if !host.effective.configProxyCommand.isEmpty {
                         ValueRow("Proxy command", host.effective.configProxyCommand,
-                                 from: "your ssh config")
+                                 from: "your SSH config")
                     }
                     agent
                     colours

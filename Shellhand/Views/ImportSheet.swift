@@ -63,7 +63,7 @@ struct ImportSheet: View {
 
         var title: String {
             switch self {
-            case .sshConfig: "SSH Config"
+            case .sshConfig: "SSH config"
             case .csv: "CSV"
             case .yaml: "YAML"
             }

@@ -202,7 +202,7 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// the view, and this app's dialogs do not answer to `click at`.
     var jumpHost: (value: String, from: String) {
         proxyJump.isEmpty && !configProxy.isEmpty
-            ? (configProxy, "your ssh config")
+            ? (configProxy, "your SSH config")
             : (proxyJump, proxyJumpFrom)
     }
 }
