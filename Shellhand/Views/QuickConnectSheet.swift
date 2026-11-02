@@ -28,11 +28,18 @@ struct QuickConnectSheet: View {
             // fifty matches do not fit, and an arrow key that moves a
             // highlight out of view is worse than one that does nothing.
             ScrollViewReader { reader in
-                List(rows, selection: $highlighted) { row in
-                    line(row)
+                // The highlight drawn here rather than as the list's own
+                // selection, which is greyed while the keyboard is in the
+                // field above — where it always is: the row Return takes
+                // stood in grey, as a list does that is not in use.
+                List(rows) { row in
+                    let lit = row.id == highlighted
+                    line(row, lit: lit)
+                        .foregroundStyle(lit ? AnyShapeStyle(Self.litWords) : AnyShapeStyle(.primary))
                         .contentShape(Rectangle())
-                        .tag(row.id)
                         .onTapGesture { connect(row) }
+                        .listRowBackground(lit ? Self.lit : nil)
+                        .accessibilityAddTraits(lit ? .isSelected : [])
                 }
                 .listStyle(.inset)
                 .onChange(of: highlighted) { _, now in
@@ -59,6 +66,15 @@ struct QuickConnectSheet: View {
         .onExitCommand { dismiss() }
     }
 
+    /// The highlighted row's ground and words: a list's own selection where
+    /// the list is in use, the inset list's shape in the accent.
+    private static var lit: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(SwiftUI.Color(nsColor: .selectedContentBackgroundColor))
+            .padding(.horizontal, 10)
+    }
+    private static let litWords = SwiftUI.Color(nsColor: .alternateSelectedControlTextColor)
+
     /// What the list is showing. The ranking lives in `QuickConnect`, where
     /// it can be checked without a window and without a host list that
     /// connects to real machines — and so does where the typed row goes.
@@ -67,7 +83,7 @@ struct QuickConnectSheet: View {
     }
 
     @ViewBuilder
-    private func line(_ row: QuickConnect.Row) -> some View {
+    private func line(_ row: QuickConnect.Row, lit: Bool) -> some View {
         switch row {
         case let .saved(host):
             HStack {
@@ -75,11 +91,11 @@ struct QuickConnectSheet: View {
                     Text(host.name)
                     Text(host.destinationLine)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(secondary(lit))
                 }
                 Spacer()
                 if let group = store.group(host.groupId) {
-                    Text(store.path(of: group)).font(.caption2).foregroundStyle(.secondary)
+                    Text(store.path(of: group)).font(.caption2).foregroundStyle(secondary(lit))
                 }
             }
         case let .typed(destination):
@@ -87,10 +103,17 @@ struct QuickConnectSheet: View {
                 Text("Connect to \(destination.spelled)")
                 Text(QuickConnect.typedCaption(among: store.snapshot.hosts, for: text))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(secondary(lit))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// A row's lesser words: grey, and on the highlight as the rest are, as a
+    /// list in use draws every word of its chosen row — as `.secondary` there
+    /// they came out a pale blue, 2.5:1 against the accent.
+    private func secondary(_ lit: Bool) -> AnyShapeStyle {
+        lit ? AnyShapeStyle(Self.litWords) : AnyShapeStyle(.secondary)
     }
 
     private var first: QuickConnect.Row? {

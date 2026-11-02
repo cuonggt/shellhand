@@ -1246,6 +1246,11 @@ credentials, which is most of it.
   that grid: ⌘K, type, return, the shape Spotlight has, where a footer would
   be noise. What a palette does owe you is a way out, and with no button bound
   to `.cancelAction` nothing answers Escape — `onExitCommand` is what does.
+  Its highlighted row is drawn by hand, in the accent with every word in the
+  selection's text colour, as a list in use draws its chosen row: as the
+  list's own selection it was grey, a list not in use, since the keyboard
+  stays in the field, and its lesser words as `.secondary` on the accent
+  came out a pale blue, 2.5:1.
 - **⌘K's typed row says what it is**: "Not in your list", or — where a saved
   host is that very machine — "As typed, without web's settings"
   (`QuickConnect.typedCaption`). It said "Not in your list" under the host
