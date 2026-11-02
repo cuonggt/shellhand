@@ -429,6 +429,16 @@ nonisolated struct PanesTests {
 
     /// A tab cut its whole title in the middle, and "root@127.0.0.1:2 (2)"
     /// read "root…(2)": the port went, and the space before the number.
+    /// A typed machine's tab cut in the middle read "root@….0.1:2", four
+    /// dots in a row; it gives up its user first.
+    @Test("a typed machine's tab drops its user before its address")
+    func tabTitleWithoutUser() {
+        #expect(Panes.tabTitleWithoutUser("root@127.0.0.1:2") == "127.0.0.1:2")
+        #expect(Panes.tabTitleWithoutUser("deploy@[::1]:2222") == "[::1]:2222")
+        #expect(Panes.tabTitleWithoutUser("web.example.com") == nil)
+        #expect(Panes.tabTitleWithoutUser("root@") == nil)
+    }
+
     @Test("a tab's number stands apart from the name it cuts")
     func tabTitleParts() {
         #expect(Panes.tabTitleParts("root@127.0.0.1:2 (2)") == ("root@127.0.0.1:2", " (2)"))

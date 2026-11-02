@@ -207,16 +207,28 @@ private struct TabButton: View {
                 // that say which session this is: `prod-api-ch…/current`.
                 // The number of a second of one name stays whole after it,
                 // where cut as one "root@127.0.0.1:2 (2)" read "root…(2)".
+                // A machine typed into ⌘K gives up its user before its
+                // address: cut in the middle, "root@127.0.0.1:2" read
+                // "root@….0.1:2", four dots in a row.
                 let parts = Panes.tabTitleParts(title)
+                let address = session.host?.id.isEmpty == true
+                    ? Panes.tabTitleWithoutUser(parts.name) : nil
                 HStack(spacing: 0) {
-                    Text(parts.name)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                    ViewThatFits(in: .horizontal) {
+                        Text(parts.name)
+                            .lineLimit(1)
+                        Text(address ?? parts.name)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
                     Text(parts.number)
                         .lineLimit(1)
                         .fixedSize()
                 }
-                .frame(maxWidth: titleWidth)
+                // From the mark, where a name cut short stands: centred in
+                // what it was given, the gap after the mark ran 7.5, 10.5 or
+                // 11.5pt as the cut fell.
+                .frame(maxWidth: titleWidth, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
                 // A question in a tab behind this one was a yellow dot, and
                 // the far end gives up on it after a couple of minutes.

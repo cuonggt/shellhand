@@ -267,6 +267,15 @@ nonisolated enum Panes {
         return (String(title[..<open.lowerBound]), String(title[open.lowerBound...]))
     }
 
+    /// A typed machine's name without its user, for a tab with no room for
+    /// both: "root@127.0.0.1:2" cut in the middle read "root@….0.1:2". Nil
+    /// where there is no user to drop.
+    static func tabTitleWithoutUser(_ name: String) -> String? {
+        guard let at = name.firstIndex(of: "@") else { return nil }
+        let address = name[name.index(after: at)...]
+        return address.isEmpty ? nil : String(address)
+    }
+
     /// Narrower than this a side beside another stops being worth reading.
     static let besideMinimum: CGFloat = 320
 
