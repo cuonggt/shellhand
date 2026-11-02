@@ -273,7 +273,8 @@ credentials, which is most of it.
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose
   they are, since they add up (`FromAbove.sshOptions`), where they showed
-  nowhere but the editor — and what is inside; a local shell, with Open now
+  nowhere but the editor — and what is inside, in one grid with it, where
+  two put its values 41.5pt left of the rest; a local shell, with Open now
   listing the shells on this Mac, where it said neither which was in front
   nor offered the other; or a machine typed into
   ⌘K, with Save as Host…, its address written as a listed host's

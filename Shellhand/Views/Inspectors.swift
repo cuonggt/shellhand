@@ -40,6 +40,9 @@ struct GroupInspector: View {
                 }
 
                 Text("Passed down to everything inside").font(.headline)
+                // One grid for both sections, so their values stand in one
+                // column: two, each sizing its own labels, put Contents'
+                // values 41.5pt left of what is passed down.
                 Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
                     passed("User", own: group.user, above: above.user, from: above.userFrom)
                     passed("Key", own: group.identity, above: above.identity, from: above.identityFrom)
@@ -48,15 +51,18 @@ struct GroupInspector: View {
                     agent(above)
                     colours(above)
                     options(above)
-                }
-                .font(.callout)
 
-                if !inside.isEmpty || !store.tree.hosts(in: group.id).isEmpty {
-                    // What the group holds. Inside is where a group sits — its
-                    // editor's row, New Group Inside Production… — and this
-                    // heading said it of its children, beside that very row.
-                    Text("Contents").font(.headline)
-                    Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
+                    if !inside.isEmpty || !store.tree.hosts(in: group.id).isEmpty {
+                        // What the group holds. Inside is where a group sits —
+                        // its editor's row, New Group Inside Production… — and
+                        // this heading said it of its children, beside that
+                        // very row.
+                        GridRow {
+                            Text("Contents").font(.headline)
+                                .padding(.top, 9)
+                                .gridCellColumns(2)
+                                .gridCellAnchor(.leading)
+                        }
                         ForEach(inside) { child in
                             ValueRow(child.name,
                                      Browsing.counted(store.tree.hostsBeneath(child.id).count))
@@ -64,8 +70,8 @@ struct GroupInspector: View {
                         let here = store.tree.hosts(in: group.id).count
                         if here > 0 { ValueRow("Filed here", Browsing.counted(here)) }
                     }
-                    .font(.callout)
                 }
+                .font(.callout)
                 Spacer(minLength: 0)
             }
             .padding(24)
