@@ -1419,14 +1419,16 @@ credentials, which is most of it.
   (`FromAbove(of: host)`), not off what it resolves to, which has its own
   choice in it. **An
   example never names something in the list** (`HostEditorSheet
-  .jumpExample`, `.userExample`, `.nameExample`, `GroupEditorSheet
-  .nameExample`) — New Host's name "web" was a tag three hosts carried, the
-  one example nothing checked: "bastion"
+  .jumpExample`, `.userExample`, `.keyExample`, `.nameExample`,
+  `GroupEditorSheet.nameExample`) — New Host's name "web" was a tag three
+  hosts carried, the one example nothing checked: "bastion"
   in Production's Jump host, with bastion filed there, read as Production
   going through it, and "Production" over "Inside: Production" as the name
   already chosen — in the host editor's New group… as well, under a menu
   listing Production; "deploy", Production's user, sat grey in a user field
-  inheriting nothing. The tag field asks "add a tag", empty or not, where
+  inheriting nothing, and "~/.ssh/id_ed25519", Production's key, in a new
+  host's key field — a key compared as a path, tilde expanded and `.pub`
+  dropped (`settledKey`). The tag field asks "add a tag", empty or not, where
   "web, eu" named two tags in use in the comma form it turns into tokens.
 - **One setting has one name** wherever it is shown: Jump host and Agent
   forwarding, in both editors and the inspectors, and Colours in Settings as

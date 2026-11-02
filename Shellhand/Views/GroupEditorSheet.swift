@@ -182,7 +182,9 @@ struct GroupEditorSheet: View {
                         avoiding: store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)),
                     text: $group.user)
                 row("Key", value: above.identity, from: above.identityFrom,
-                    example: "~/.ssh/id_ed25519", text: $group.identity)
+                    example: HostEditorSheet.keyExample(
+                        avoiding: store.snapshot.hosts.map(\.identity) + store.snapshot.groups.map(\.identity)),
+                    text: $group.identity)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
                     example: HostEditorSheet.jumpExample(
                         avoiding: store.snapshot.hosts.map(\.name)),

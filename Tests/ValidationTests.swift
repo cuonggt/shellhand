@@ -67,6 +67,21 @@ nonisolated struct ValidationTests {
             among: existing) == nil)
     }
 
+    /// New Host's key read "~/.ssh/id_ed25519" in grey over a list whose
+    /// Production logs in with exactly that, as if it were inherited. A key
+    /// is the same key however the list spelled it.
+    @Test("the key field's example is no key the list uses, however spelled")
+    func keyExample() {
+        #expect(HostEditorSheet.keyExample(avoiding: []) == "~/.ssh/id_ed25519")
+        #expect(HostEditorSheet.keyExample(avoiding: ["~/.ssh/id_ed25519"]) == "~/.ssh/id_ecdsa")
+        #expect(HostEditorSheet.keyExample(avoiding: ["~/.ssh/id_ed25519.pub", " ~/.ssh/id_ecdsa "])
+            == "~/.ssh/id_rsa")
+        #expect(HostEditorSheet.keyExample(avoiding: [HostEditorSheet.settledKey("~/.ssh/id_ed25519")])
+            == "~/.ssh/id_ecdsa")
+        #expect(HostEditorSheet.keyExample(avoiding: ["~/.ssh/id_ed25519", "~/.ssh/id_ecdsa", "~/.ssh/id_rsa"])
+            == "~/.ssh/key")
+    }
+
     /// "deploy", Production's user, sat grey in a field that inherits
     /// nothing, as if it came from somewhere.
     @Test("the user field's example is never a user the list logs in as")

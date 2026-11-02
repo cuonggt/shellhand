@@ -311,7 +311,8 @@ struct HostEditorSheet: View {
             Section("Connect with") {
                 row("Key", from: preview.effective.identityFrom, set: host.identity) {
                     TextField("", text: $host.identity,
-                              prompt: Text(shown(preview.effective.identity, "~/.ssh/id_ed25519")))
+                              prompt: Text(shown(preview.effective.identity,
+                                                 Self.keyExample(avoiding: keysInList))))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
@@ -510,6 +511,33 @@ struct HostEditorSheet: View {
     nonisolated static func userExample(avoiding users: [String]) -> String {
         let taken = Set(users.map { $0.trimmingCharacters(in: .whitespaces).lowercased() })
         return ["deploy", "ubuntu", "admin"].first { !taken.contains($0) } ?? "you"
+    }
+
+    /// The key field's example — here and in the group editor — never a key
+    /// the list already logs in with, however it was spelled: "~/.ssh/
+    /// id_ed25519", Production's, sat grey in a new host's field that
+    /// inherited nothing, as if it came from somewhere. A path is settled
+    /// before it is compared, tilde expanded and `.pub` dropped.
+    nonisolated static func keyExample(avoiding keys: [String]) -> String {
+        let taken = Set(keys.map(settledKey))
+        return ["~/.ssh/id_ed25519", "~/.ssh/id_ecdsa", "~/.ssh/id_rsa"]
+            .first { !taken.contains(settledKey($0)) } ?? "~/.ssh/key"
+    }
+
+    /// A key path as it is meant, for comparing: tilde expanded, `.pub`
+    /// dropped, spaces trimmed.
+    nonisolated static func settledKey(_ path: String) -> String {
+        var settled = path.trimmingCharacters(in: .whitespaces)
+        if settled == "~" || settled.hasPrefix("~/") {
+            settled = NSHomeDirectory() + settled.dropFirst()
+        }
+        if settled.hasSuffix(".pub") { settled.removeLast(4) }
+        return settled
+    }
+
+    /// Every key the list names, hosts' and groups', for `keyExample`.
+    private var keysInList: [String] {
+        store.snapshot.hosts.map(\.identity) + store.snapshot.groups.map(\.identity)
     }
 
     /// Every user the list names, hosts' and groups', for `userExample`.
