@@ -290,7 +290,9 @@ struct GroupEditorSheet: View {
         example: String, text: Binding<String>, picking hosts: [Host]? = nil
     ) -> some View {
         LabeledContent(title) {
-            HStack(spacing: 6) {
+            // On the field's baseline, as the host editor's rows are: centred,
+            // the label stood 1.5pt above the field's words.
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 if let hosts {
                     JumpHostField(text: text, prompt: value.isEmpty ? example : value, hosts: hosts)
                 } else {

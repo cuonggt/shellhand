@@ -426,7 +426,10 @@ struct HostEditorSheet: View {
         @ViewBuilder content: () -> some View
     ) -> some View {
         LabeledContent(title) {
-            HStack(spacing: 6) {
+            // On the field's baseline, which is where the form sets the
+            // label: centred, the stack's baseline was the caption's, and
+            // the label stood 1.5pt above the field's words.
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
                 content()
                 if set.trimmingCharacters(in: .whitespaces).isEmpty,
                    !from.isEmpty, from != "itself" {

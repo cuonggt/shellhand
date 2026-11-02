@@ -1343,7 +1343,10 @@ credentials, which is most of it.
 - **Where an inherited value comes from is a caption beside the field**, not
   part of the placeholder, which is the inherited value or an example — never
   `—`. The caption says "from Production" in every editor: the host
-  editor's said "Production" alone up to 0.1.5, which read as a value.
+  editor's said "Production" alone up to 0.1.5, which read as a value. Its
+  row is set on the field's baseline (`.firstTextBaseline`), which is where
+  the form sets the label: centred, the row's baseline was the caption's,
+  and the label stood 1.5pt above the field's words.
   Connect to's user says it under the row, which has no room beside it —
   "user from Production" — where it said nothing at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",
