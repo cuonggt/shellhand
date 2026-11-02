@@ -1123,7 +1123,13 @@ credentials, which is most of it.
   indented for a selection it will never have, and the inset left so little
   width that the build number fell off the end of "Version 0.0.1 (1)".
 - Settings is a **window**, like Files, so the three dialog widths below do
-  not apply to it. It opens at 700×500 and will not go below 620×420.
+  not apply to it. It opens at 700×500 and will not go below 620×420 — made
+  in the order the SFTP window's is: the hosting controller, then the size,
+  then the autosave name, `SettingsFrame`. Before the controller they were
+  undone by it: Settings opened at its minimum, 620×472, re-centred every
+  time, no resize stuck, and General's last section and Terminal's Keyboard
+  sat wholly below its edge. The old name's frames, all that minimum, are
+  removed.
 - **A stepper's number sits beside its arrows**, as Size's sits beside its
   slider — a `LabeledContent` around both, the stepper's label hidden.
   Written as the stepper's label, `Stepper { LabeledContent(…) }`, SFTP's

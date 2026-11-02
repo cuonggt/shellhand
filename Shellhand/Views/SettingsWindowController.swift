@@ -45,15 +45,23 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.title = "Settings"
         window.toolbarStyle = .automatic
         window.isMovableByWindowBackground = true
-        window.setFrameAutosaveName("SettingsWindow")
         window.minSize = NSSize(width: 620, height: 420)
         // A window made in code is released when it closes, which would leave
         // this controller holding a freed one. The controller owns it instead.
         window.isReleasedWhenClosed = false
-        window.center()
         window.delegate = self
         window.contentViewController = NSHostingController(
             rootView: SettingsRootView(storePath: storePath, configPath: configPath))
+        // These three in this order, as the SFTP window's: a hosting
+        // controller sizes its window to the view's minimum, and setting the
+        // autosave name applies a saved frame at once. Before the controller
+        // they were undone by it — Settings opened at its minimum, 620×472,
+        // every time, re-centred, and no resize stuck — so every frame saved
+        // under the old name is that minimum, and it is let go.
+        window.setContentSize(NSSize(width: 700, height: 500))
+        window.center()
+        UserDefaults.standard.removeObject(forKey: "NSWindow Frame SettingsWindow")
+        window.setFrameAutosaveName("SettingsFrame")
         titleWatch = window.observe(\.title) { [weak self] _, _ in
             Task { @MainActor in self?.listInWindowMenu() }
         }
