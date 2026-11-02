@@ -315,11 +315,14 @@ private struct PlacePane: View {
                 Text(entry.isDir ? "—" : entry.size.formatted(.byteCount(style: .file)))
                     .foregroundStyle(.secondary)
             }
-            .width(min: 70, ideal: 80)
+            // Held to what they hold, so the room left goes to Name: with no
+            // most, the spare was shared, Size taking 154pt for "6 bytes"
+            // beside a Name of 172.
+            .width(min: 70, ideal: 80, max: 100)
             TableColumn("Modified", value: \.modTime) { entry in
                 Text(entry.modTime).foregroundStyle(.secondary)
             }
-            .width(min: 110, ideal: 130)
+            .width(min: 110, ideal: 130, max: 150)
         }
         .contextMenu(forSelectionType: String.self) { names in
             menu(for: names)

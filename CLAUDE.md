@@ -774,6 +774,9 @@ credentials, which is most of it.
   than showing this Mac a second time, which told you nothing and made you
   choose anyway. Either side can be re-pointed from its own menu, so
   host-to-host copying is intact; it is just not what opening SFTP means.
+- **A side's Name column takes the table's spare room**: Size and Modified
+  are held to what they hold, 100 and 150 at most, where with no most they
+  shared it — Size 154pt for "6 bytes" beside a Name of 172.
 - **SFTP is a window, and one at a time**: asking again brings it forward and
   re-points it through `FilesModel.show(host)`. It has flipped between tab and
   window four times — **don't flip it a fifth on reasoning alone**.
