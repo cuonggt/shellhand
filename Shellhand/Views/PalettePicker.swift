@@ -119,8 +119,12 @@ struct PalettePicker: View {
     /// A palette's row: its swatch's 48, the row's padding and the gap.
     nonisolated static let rowHeight: CGFloat = 64
 
-    /// The rest of the sheet: the list's padding, the divider and Done.
-    nonisolated static let chrome: CGFloat = 73
+    /// The rest of the sheet: the list's padding less its last row's gap,
+    /// 22, the divider, 1, and Done's bar, 52 — a button 24pt tall on macOS
+    /// 26 with 14 above and below it. Counted as 48, the list stood 3pt
+    /// short of its rows and scrolled: 10pt under the last palette against
+    /// 11.5 over the first.
+    nonisolated static let chrome: CGFloat = 75
 
     /// How tall the picker is for `rows` rows over a window with this much
     /// room below its toolbar: tall enough for every row where that fits,
