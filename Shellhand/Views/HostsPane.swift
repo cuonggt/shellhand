@@ -534,16 +534,24 @@ struct HostsPane: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                HStack(spacing: 4) {
-                    if group == nil, let folder = store.group(host.groupId) {
-                        Text(folder.name).font(.caption2).foregroundStyle(.secondary)
-                    }
-                    ForEach(host.tags, id: \.self) { tag in
-                        Text(tag)
-                            .font(.caption2)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(.quaternary, in: Capsule())
+                // A line whether or not anything is on it, as tall as a
+                // tag: a host with no group shown and no tags lost the line,
+                // and its card stood 13pt shorter than a tagged one beside
+                // it — the minimum height below held only the short cards,
+                // 96 against 109.
+                ZStack(alignment: .leading) {
+                    Text(" ").font(.caption2).padding(.vertical, 1).hidden()
+                    HStack(spacing: 4) {
+                        if group == nil, let folder = store.group(host.groupId) {
+                            Text(folder.name).font(.caption2).foregroundStyle(.secondary)
+                        }
+                        ForEach(host.tags, id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption2)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(.quaternary, in: Capsule())
+                        }
                     }
                 }
                 .lineLimit(1)
