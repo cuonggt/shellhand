@@ -296,13 +296,15 @@ struct GroupEditorSheet: View {
                 HStack(spacing: 6) {
                     if let hosts {
                         JumpHostField(text: text, prompt: value.isEmpty ? example : value)
-                        JumpHostMenu(text: text, hosts: hosts)
+                        FieldMenu.room.overlay(alignment: .trailing) {
+                            JumpHostMenu(text: text, hosts: hosts)
+                        }
                     } else {
                         TextField("", text: text, prompt: Text(value.isEmpty ? example : value))
                             .textFieldStyle(.roundedBorder)
                             .labelsHidden()
                             .multilineTextAlignment(.leading)
-                        JumpHostMenu.room
+                        FieldMenu.room
                     }
                 }
                 if let from = Self.shownFrom(from, set: text.wrappedValue) {

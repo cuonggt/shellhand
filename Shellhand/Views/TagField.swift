@@ -59,34 +59,47 @@ struct TagField: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 5)
-            .padding(.vertical, 3)
+            // A system field's frame, 24pt for the typing field's 22, and
+            // its border 1pt outside the frame, as macOS 26 draws a rounded
+            // field's: drawn inside, at 3pt of padding, the box stood 1pt in
+            // from the fields above it at the left and 2pt taller.
+            .padding(.vertical, 1)
             .background(
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(Color(nsColor: .textBackgroundColor)))
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(nsColor: .textBackgroundColor))
+                    .padding(-1))
             .overlay(
-                RoundedRectangle(cornerRadius: 5)
-                    .strokeBorder(Color(nsColor: .separatorColor)))
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(Color(nsColor: .separatorColor))
+                    .padding(-1))
 
-            Menu {
-                if known.isEmpty { Text("No tags yet") }
-                ForEach(known, id: \.self) { tag in
-                    let on = tags.contains { $0.caseInsensitiveCompare(tag) == .orderedSame }
-                    Button {
-                        text = Tags.text(on
-                            ? tags.filter { $0.caseInsensitiveCompare(tag) != .orderedSame }
-                            : tags + [tag])
-                    } label: {
-                        Label(tag, systemImage: on ? "checkmark" : "tag")
-                    }
-                }
-            } label: {
-                Image(systemName: "tag")
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .accessibilityLabel("Tags already in use")
-            .help("Tags already in use")
+            // In the room every field's menu stands in (`FieldMenu.room`), so
+            // the box ends where the fields above it end: on its own, the
+            // wider, it left the box 2pt short of them.
+            FieldMenu.room.overlay(alignment: .trailing) { tagMenu }
         }
+    }
+
+    private var tagMenu: some View {
+        Menu {
+            if known.isEmpty { Text("No tags yet") }
+            ForEach(known, id: \.self) { tag in
+                let on = tags.contains { $0.caseInsensitiveCompare(tag) == .orderedSame }
+                Button {
+                    text = Tags.text(on
+                        ? tags.filter { $0.caseInsensitiveCompare(tag) != .orderedSame }
+                        : tags + [tag])
+                } label: {
+                    Label(tag, systemImage: on ? "checkmark" : "tag")
+                }
+            }
+        } label: {
+            Image(systemName: "tag")
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .accessibilityLabel("Tags already in use")
+        .help("Tags already in use")
     }
 
     /// Takes whatever has been typed and makes tags of it.

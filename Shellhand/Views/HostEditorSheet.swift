@@ -433,9 +433,11 @@ struct HostEditorSheet: View {
                 HStack(spacing: 6) {
                     content()
                     if let jump {
-                        JumpHostMenu(text: jump, hosts: otherHosts)
+                        FieldMenu.room.overlay(alignment: .trailing) {
+                            JumpHostMenu(text: jump, hosts: otherHosts)
+                        }
                     } else {
-                        JumpHostMenu.room
+                        FieldMenu.room
                     }
                 }
                 if let from = Self.shownFrom(from, set: set) {

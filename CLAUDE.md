@@ -1410,7 +1410,7 @@ credentials, which is most of it.
   and the label stood 1.5pt above the field's words. The captions stand in
   one column, as wide as the widest an editor shows (`FromCaption`), and
   every such row keeps the jump host's menu's room beside its field
-  (`JumpHostMenu.room`), so the fields end at one edge: each caption at its
+  (`FieldMenu.room`), so the fields end at one edge: each caption at its
   own width, the jump host's field ended 2.5pt short of the key's above it —
   "from Production" against its menu and "from US" — near enough a line to
   read as a slip; and with the captions lined up and not the fields, the
@@ -1461,9 +1461,13 @@ credentials, which is most of it.
 - Tags are **tokens you can take off**, not a line of commas, and the value
   underneath is still the comma form so nothing below the view knows. Their
   field is drawn with a border like every other, because a row that is a field
-  and does not look like one reads as decoration. **Its first line's baseline
-  is the row's** (`FlowLayout`'s `explicitAlignment`), the typing field's
-  said by hand where AppKit puts a borderless field's
+  and does not look like one reads as decoration — drawn as macOS 26 draws a
+  rounded field, a 24pt frame with its border 1pt outside it, and ending
+  where the fields above it end, its menu in the room every field's menu
+  stands in (`FieldMenu.room`): drawn inside its frame at 3pt of padding,
+  it stood 1pt in at the left, 2pt short at the right and 2pt taller. **Its
+  first line's baseline is the row's** (`FlowLayout`'s `explicitAlignment`),
+  the typing field's said by hand where AppKit puts a borderless field's
   (`TagField.fieldBaseline`): asked from inside a custom layout, a text field
   answered 8pt down a 22pt field, above its words at 13, and "Tags" stood
   5pt above "add a tag" — with a token first, it lined up. An offscreen form

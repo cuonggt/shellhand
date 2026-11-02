@@ -5,10 +5,10 @@ import SwiftUI
 /// host does: EU and US send all six of their hosts through bastion.
 ///
 /// The field and its menu (`JumpHostMenu`) are apart, so that the rows beside
-/// the jump host's keep the menu's room where it stands, and every field in
-/// them ends at one edge. Drawn as one, the jump host's field ended a menu
-/// short of the key's above it, and the menu's arrow 7pt short of the key's
-/// border, a borderless menu padding its glyph.
+/// the jump host's keep the menu's room where it stands (`FieldMenu.room`),
+/// and every field in them ends at one edge. Drawn as one, the jump host's
+/// field ended a menu short of the key's above it, and the menu's arrow 7pt
+/// short of the key's border, a borderless menu padding its glyph.
 struct JumpHostField: View {
     @Binding var text: String
     /// The inherited value or an example, never `—`.
@@ -43,9 +43,20 @@ struct JumpHostMenu: View {
         .accessibilityLabel("One of your hosts")
         .help("One of your hosts")
     }
+}
 
-    /// The menu's room, unseen, in a row beside the jump host's.
+/// The room the editors' field menus stand in at the ends of their rows —
+/// the jump host's and the tags' — as wide as the wider, unseen, so that
+/// every field before one, or before its room, ends at one edge. Each at its
+/// own width, the Tags box ended 2pt short of the jump host's field.
+enum FieldMenu {
     static var room: some View {
-        JumpHostMenu(text: .constant(""), hosts: []).hidden()
+        ZStack {
+            JumpHostMenu(text: .constant(""), hosts: [])
+            Menu {} label: { Image(systemName: "tag") }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+        }
+        .hidden()
     }
 }
