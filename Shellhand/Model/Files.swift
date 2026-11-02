@@ -210,6 +210,9 @@ final class FilesModel {
     /// The side the window's keys act on: the one whose list was last used.
     /// ⌘R and ⇧⌘N are its own buttons', so there is no asking which side.
     var active: FilePlace
+    /// New Folder asked for from the menu bar, for the side in front to put
+    /// its question: a count, so asking again is a change too.
+    private(set) var newFolderAsks = 0
     private(set) var transfers: [Transfer] = []
     /// What is being asked about before anything is carried, if anything.
     /// The view draws it; `answer` settles it.
@@ -222,6 +225,8 @@ final class FilesModel {
     /// be started again: the engine keeps no paths once a job has ended, and
     /// a relay between two hosts is two jobs with a file in the middle.
     private var recipes: [String: Recipe] = [:]
+
+    func askNewFolder() { newFolderAsks += 1 }
 
     init(db: String, home: String = FileManager.default.homeDirectoryForCurrentUser.path) {
         self.db = db

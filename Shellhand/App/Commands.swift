@@ -157,6 +157,9 @@ struct ShellhandCommands: Commands {
     /// the sidebar means the new one goes inside it, and nothing selected
     /// means the top of the list. Without this the only way to find out was
     /// to open the editor and read its parent picker.
+    /// The SFTP window's model while it is in front (`FilesInFront`).
+    private var sftp: FilesModel? { FilesInFront.shared.model }
+
     private var newGroupTitle: String {
         let inside = actions?.groupInside ?? ""
         return inside.isEmpty ? "New Group…" : "New Group Inside \(inside)…"
@@ -227,9 +230,17 @@ struct ShellhandCommands: Commands {
             Button("New Host…") { actions?.newHost() }
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(actions == nil)
-            Button(newGroupTitle) { actions?.newGroup() }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-                .disabled(actions == nil)
+            // With SFTP in front, ⇧⌘N is its New Folder, and this says so:
+            // it was New Group…, greyed, on the very key.
+            if let sftp {
+                Button("New Folder") { sftp.askNewFolder() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .disabled(sftp.active.listing.path.isEmpty)
+            } else {
+                Button(newGroupTitle) { actions?.newGroup() }
+                    .keyboardShortcut("n", modifiers: [.command, .shift])
+                    .disabled(actions == nil)
+            }
             Button("Import…") { actions?.openImport() }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
                 .disabled(actions == nil)
@@ -298,7 +309,9 @@ struct ShellhandCommands: Commands {
         // about something else.
         CommandMenu("Terminal") {
             Button("Reconnect") { actions?.reconnect() }
-                .keyboardShortcut("r", modifiers: .command)
+                // Not ⌘R while SFTP is in front, where the key is its Refresh
+                // button's: the bar named it a greyed Reconnect there.
+                .keyboardShortcut(sftp == nil ? KeyboardShortcut("r", modifiers: .command) : nil)
                 .disabled(!(actions?.canReconnect ?? false))
             // ⌘., the Mac's key for giving up on something under way, and
             // only while a connection is. Disabled, it still takes the key —
@@ -383,6 +396,17 @@ struct ShellhandCommands: Commands {
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
             .disabled(actions == nil)
+            // With SFTP in front, its Refresh, as File's New Folder is. Its
+            // ⌘R stays the side's own button's, and Reconnect gives the key
+            // up meanwhile, where the bar named ⌘R a greyed Reconnect: no key
+            // is drawn here, since SwiftUI draws none on an item that gains
+            // one after the menu is made — measured, put in with ⌘R or here
+            // always and handed ⌘R, this showed none — and here always with
+            // ⌘R, it would take the key from Reconnect, greyed or not.
+            if let sftp {
+                Button("Refresh") { Task { await sftp.active.refresh() } }
+                    .disabled(sftp.active.listing.path.isEmpty)
+            }
         }
 
         // In place of the system's own, `SidebarCommands`, whose item drew

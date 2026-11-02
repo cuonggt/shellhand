@@ -20,6 +20,17 @@ import SwiftUI
 /// and the first scene in `body` is the one macOS opens at launch, so a
 /// second needs suppressing or it comes up instead of the host list. A
 /// controller is asked directly, and a menu item can ask it.
+/// The SFTP window's model while that window is key, for the menus: ⇧⌘N and
+/// ⌘R are its active side's New Folder and Refresh there, the side's own
+/// buttons taking the keys before any menu, and the menu bar named them
+/// New Group… and Reconnect, greyed.
+@Observable
+@MainActor
+final class FilesInFront {
+    static let shared = FilesInFront()
+    var model: FilesModel?
+}
+
 @MainActor
 final class FilesWindowController: NSWindowController, NSWindowDelegate {
     /// The one open, if any. Held because a controller nothing refers to is
@@ -131,6 +142,15 @@ final class FilesWindowController: NSWindowController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         files.close()
         Self.shared = nil
+        if FilesInFront.shared.model === files { FilesInFront.shared.model = nil }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        FilesInFront.shared.model = files
+    }
+
+    func windowDidResignKey(_ notification: Notification) {
+        if FilesInFront.shared.model === files { FilesInFront.shared.model = nil }
     }
 
     /// Asks before closing stops transfers, by `Closing`'s rule and the way

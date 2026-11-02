@@ -155,6 +155,12 @@ private struct PlacePane: View {
             // tag rename is: it closed the question and did nothing.
             .disabled(!Places.usableName(name, renaming: renaming?.name))
         }
+        // New Folder from the menu bar, on the side the window's keys act on.
+        .onChange(of: files.newFolderAsks) { _, _ in
+            guard isActive, !place.listing.path.isEmpty else { return }
+            name = ""
+            newFolder = true
+        }
         .alert("New Folder", isPresented: $newFolder) {
             TextField("Name", text: $name)
             Button("Cancel", role: .cancel) {}

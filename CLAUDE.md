@@ -520,7 +520,14 @@ credentials, which is most of it.
   a later menu never fires — measured, two menus and ⌘R. A window's own
   controls see a key before the menus, so the SFTP window's ⌘R and ⇧⌘N are
   its active pane's buttons (`FilesModel.active`), and ⌘W with no host window
-  in front is Close Window, where it did nothing.
+  in front is Close Window, where it did nothing. With SFTP in front the bar
+  names them, by `FilesInFront`, its model while its window is key: File's
+  ⇧⌘N item is New Folder, asking the side in front
+  (`FilesModel.askNewFolder`), View has Refresh, and Reconnect gives ⌘R up —
+  they were New Group… and Reconnect, greyed, on the very keys. Refresh draws
+  no key: **SwiftUI draws none on an item that gains one after the menu is
+  made** — measured, put in with ⌘R, or there always and handed ⌘R — while
+  New Folder keeps ⇧⌘N by taking New Group's place, whose key never changes.
 - **A menu item that would do nothing is greyed out**: File's New items,
   Import… and Quick Connect… need the host window, Shellhand ▸ SFTP a host
   window or a browser to bring forward, and Reconnect a host — a local
