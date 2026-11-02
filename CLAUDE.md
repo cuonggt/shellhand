@@ -261,7 +261,12 @@ credentials, which is most of it.
   A host card keeps its line of group and tags whether or not anything is
   on it, so a row's cards stand one height: one with neither stood 13pt
   shorter than a tagged one beside it, under a minimum that held only the
-  short ones.
+  short ones. The line is laid over a blank one as wide as the card, which
+  hands it the card's width: in a ZStack beside the blank — any second
+  child, before it or after — the tags were handed next to none, and every
+  card read "US … …" for a walk, since the drive that proved the heights
+  looked at nothing else. **Look at what a fix draws, not only the number
+  it was for.**
   Its sections are named as the list's are, small, grey and semibold, where
   they were bold headlines over the list's grey ones. The title, the list
   and the grid share one left edge, the inset list's own 16pt

@@ -551,23 +551,27 @@ struct HostsPane: View {
                 // tag: a host with no group shown and no tags lost the line,
                 // and its card stood 13pt shorter than a tagged one beside
                 // it — the minimum height below held only the short cards,
-                // 96 against 109.
-                ZStack(alignment: .leading) {
-                    Text(" ").font(.caption2).padding(.vertical, 1).hidden()
-                    HStack(spacing: 4) {
-                        if group == nil, let folder = store.group(host.groupId) {
-                            Text(folder.name).font(.caption2).foregroundStyle(.secondary)
+                // 96 against 109. What is on it is laid over a blank line
+                // as wide as the card, which hands it the card's width: in
+                // a ZStack beside the blank, each tag was handed next to
+                // none and read "…".
+                Text(" ").font(.caption2).padding(.vertical, 1).hidden()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(alignment: .leading) {
+                        HStack(spacing: 4) {
+                            if group == nil, let folder = store.group(host.groupId) {
+                                Text(folder.name).font(.caption2).foregroundStyle(.secondary)
+                            }
+                            ForEach(host.tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption2)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1)
+                                    .background(.quaternary, in: Capsule())
+                            }
                         }
-                        ForEach(host.tags, id: \.self) { tag in
-                            Text(tag)
-                                .font(.caption2)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(.quaternary, in: Capsule())
-                        }
+                        .lineLimit(1)
                     }
-                }
-                .lineLimit(1)
             }
             .padding(12)
             .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
