@@ -358,12 +358,22 @@ struct ValueRow: View {
         self.from = from
     }
 
+    /// The longest label an inspector draws, "Agent forwarding", in the
+    /// callout every inspector's grid is drawn in: the least its labels
+    /// stand across, so the values start in one place whatever the tab in
+    /// front is about. Each grid at its own longest, a local shell's and a
+    /// machine typed into ⌘K's stood left of a host's and a group's.
+    static let labelColumn = ("Agent forwarding" as NSString).size(withAttributes: [
+        .font: NSFont.preferredFont(forTextStyle: .callout),
+    ]).width.rounded(.up)
+
     var body: some View {
         // The label against the value's first line, not halfway down a value
         // with its caption under it.
         GridRow(alignment: .top) {
             Text(label)
                 .foregroundStyle(.secondary)
+                .frame(minWidth: Self.labelColumn, alignment: .trailing)
                 .gridColumnAlignment(.trailing)
             // Beside the value while both fit, under it when they do not:
             // squeezed onto one line, a key path and its caption both wrapped

@@ -301,7 +301,11 @@ credentials, which is most of it.
   terminal icon, so a tab that never connected was listed as open as a live
   one. The tab in front says In
   front, where its Show did nothing, and the heading counts nothing:
-  "Open now (2)" sat over a tab named "refuser (2)".
+  "Open now (2)" sat over a tab named "refuser (2)". **Its values start in
+  one place whatever is in front**: every label stands at least as wide as
+  the longest any inspector draws, "Agent forwarding"
+  (`ValueRow.labelColumn`), where each grid at its own longest put a local
+  shell's values 50.5pt left of a host's.
 - **A destination has one spelling, `Host.destinationLine`**, which is
   `QuickConnect.Destination.spelled`: the sidebar, the pane, the inspector,
   ⌘K and the window's subtitle wrote it five ways. An inherited value says
