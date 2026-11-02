@@ -231,9 +231,10 @@ struct ShellhandCommands: Commands {
                 .keyboardShortcut("n", modifiers: .command)
                 .disabled(actions == nil)
             // With SFTP in front, ⇧⌘N is its New Folder, and this says so:
-            // it was New Group…, greyed, on the very key.
+            // it was New Group…, greyed, on the very key. With the ellipsis
+            // New Group… has, as it asks a name before anything is made.
             if let sftp {
-                Button("New Folder") { sftp.askNewFolder() }
+                Button("New Folder…") { sftp.askNewFolder() }
                     .keyboardShortcut("n", modifiers: [.command, .shift])
                     .disabled(sftp.active.listing.path.isEmpty)
             } else {

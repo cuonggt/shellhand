@@ -534,9 +534,11 @@ credentials, which is most of it.
   its active pane's buttons (`FilesModel.active`), and ⌘W with no host window
   in front is Close Window, where it did nothing. With SFTP in front the bar
   names them, by `FilesInFront`, its model while its window is key: File's
-  ⇧⌘N item is New Folder, asking the side in front
+  ⇧⌘N item is New Folder…, asking the side in front
   (`FilesModel.askNewFolder`), View has Refresh, and Reconnect gives ⌘R up —
-  they were New Group… and Reconnect, greyed, on the very keys. Refresh draws
+  they were New Group… and Reconnect, greyed, on the very keys. New Folder…
+  has New Group…'s ellipsis, as it too asks a name before anything is made,
+  where it had none. Refresh draws
   no key: **SwiftUI draws none on an item that gains one after the menu is
   made** — measured, put in with ⌘R, or there always and handed ⌘R — while
   New Folder keeps ⇧⌘N by taking New Group's place, whose key never changes.
