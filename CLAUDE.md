@@ -538,7 +538,9 @@ credentials, which is most of it.
   in front is Close Window, where it did nothing. With SFTP in front the bar
   names them, by `FilesInFront`, its model while its window is key: File's
   ⇧⌘N item is New Folder…, asking the side in front
-  (`FilesModel.askNewFolder`), View has Refresh, and Reconnect gives ⌘R up —
+  (`FilesModel.askNewFolder`), View has Refresh — at its head, a divider
+  under it, as it acts on what a side lists, where it stood undivided
+  between Show Inspector and Show Sidebar — and Reconnect gives ⌘R up —
   they were New Group… and Reconnect, greyed, on the very keys. New Folder…
   has New Group…'s ellipsis, as it too asks a name before anything is made,
   where it had none. Refresh draws

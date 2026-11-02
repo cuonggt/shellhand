@@ -389,6 +389,23 @@ struct ShellhandCommands: Commands {
                 .disabled(!(actions?.hasSession ?? false))
         }
 
+        // With SFTP in front, its Refresh, as File's New Folder is. Its ⌘R
+        // stays the side's own button's, and Reconnect gives the key up
+        // meanwhile, where the bar named ⌘R a greyed Reconnect: no key is
+        // drawn here, since SwiftUI draws none on an item that gains one
+        // after the menu is made — measured, put in with ⌘R or here always
+        // and handed ⌘R, this showed none — and here always with ⌘R, it
+        // would take the key from Reconnect, greyed or not. Set apart at the
+        // head of the menu, as it acts on what a side lists, not on the
+        // window: it stood undivided between Show Inspector and Show Sidebar.
+        CommandGroup(before: .toolbar) {
+            if let sftp {
+                Button("Refresh") { Task { await sftp.active.refresh() } }
+                    .disabled(sftp.active.listing.path.isEmpty)
+                Divider()
+            }
+        }
+
         // Named as ⌘D's item is, for what it would do, and greyed with no
         // host window in front, where it did nothing.
         CommandGroup(after: .toolbar) {
@@ -397,17 +414,6 @@ struct ShellhandCommands: Commands {
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
             .disabled(actions == nil)
-            // With SFTP in front, its Refresh, as File's New Folder is. Its
-            // ⌘R stays the side's own button's, and Reconnect gives the key
-            // up meanwhile, where the bar named ⌘R a greyed Reconnect: no key
-            // is drawn here, since SwiftUI draws none on an item that gains
-            // one after the menu is made — measured, put in with ⌘R or here
-            // always and handed ⌘R, this showed none — and here always with
-            // ⌘R, it would take the key from Reconnect, greyed or not.
-            if let sftp {
-                Button("Refresh") { Task { await sftp.active.refresh() } }
-                    .disabled(sftp.active.listing.path.isEmpty)
-            }
         }
 
         // In place of the system's own, `SidebarCommands`, whose item drew
