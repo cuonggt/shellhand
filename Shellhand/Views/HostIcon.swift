@@ -62,9 +62,12 @@ struct HostIcon: View {
             //
             // So the two do not weigh the same, and that is accepted: a
             // filled mark beside line art always reads heavier. What they do
-            // share is the slot and the size.
+            // share is the slot, and the glyph is fitted into it: drawn at the
+            // slot's size in points it inked 18.5pt across a row's 16 and
+            // 25.5 across a card's 22, past a mark's edges on both sides.
             Image(systemName: "server.rack")
-                .font(.system(size: size))
+                .resizable()
+                .scaledToFit()
                 .foregroundStyle(.tint)
                 .frame(width: size, height: size)
         }
