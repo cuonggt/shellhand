@@ -277,7 +277,9 @@ credentials, which is most of it.
   edge they end on, where in a frame of 84 it stood 16pt short of them.
   The grid starts where the inset list puts its first heading
   (`HostsPane.listTop`), so it stays put as the layout changes, where it
-  rose 6.5pt into the grid.
+  rose 6.5pt into the grid. A group's row draws its folder in a host's
+  mark's slot, so the names start together: at its own 17.5pt, a group's
+  name stood 1.5pt right of the hosts' under it.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
   (`FromAbove`) — its ssh options too, and every group's above with whose

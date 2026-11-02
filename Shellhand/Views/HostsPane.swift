@@ -408,8 +408,15 @@ struct HostsPane: View {
     /// selection, so a button inside one would take the click the selection
     /// needs and paint a background over the highlight.
     private func row(for folder: Group) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "folder").foregroundStyle(.tint)
+        HStack(spacing: Browsing.rowSpacing) {
+            // In a host's mark's slot, as the plain server is, so the names
+            // start together: at its own width, 17.5, a group's name stood
+            // 1.5pt right of the hosts' under it.
+            Image(systemName: "folder")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(.tint)
+                .frame(width: Browsing.rowMark, height: Browsing.rowMark)
             Text(folder.name)
             Spacer(minLength: 12)
             Text(counted(folder)).font(.caption).foregroundStyle(.secondary)
