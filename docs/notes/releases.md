@@ -649,6 +649,41 @@ file.
 where it was the second walk**, the first having been after 0.1.4 and emptied
 by 0.1.7. The appcast's copy is signed, so it was left as it stands.
 
+## The walks
+
+**A walk is a drive over the whole window on a scratch copy, read by somebody
+other than whoever built it.** Drives on a copy built apart in `build/walk`,
+photographed, with every static text and every menu item dumped beside the
+photographs and the borrowed preferences given back byte for byte; reviewers
+read a drive each; and every finding ranked was checked against its
+photograph, its menu dump or the code before it counted. That is what found
+⌘W closing the whole window in 0.1.3 and 0.1.4, a session reading as connected
+while ssh was still trying, and — the walk after 0.1.7 — the app aborting on
+the first group picked at its narrowest, which had shipped in every release.
+
+**It is capped at one per release, because left alone it feeds itself.** The
+walk after 0.1.7 ran into 0.2.0 as 156 commits over two days. One was the
+crash. One was the host editor hanging below the window at its default size
+with Save under it. The rest ran down to a grid card's folder 2pt right of the
+marks, a sidebar group's user 1pt above its name's baseline, and a greyed
+placeholder reading 128 where the buttons beside it read 192 — each one real,
+each one measured, and not one of them a thing anybody would have reported. A
+walk that keeps looking keeps finding, because the measuring is finer than the
+drawing.
+
+**So the threshold is what the app says or lets you do, and whatever is
+visible without measuring.** A control that stands live and does nothing, a
+word that is wrong, text cut so that it loses the thing it was there to show
+— "Connection refused" gone from a refusal, `{} []` gone from the font sample
+— a sheet hanging below the window's edge, a crash: those are fixed. A finding
+whose whole statement is a number of points is **named in the release record
+and left there**, which is what "Still open from the walk" and "What the walk
+still has" already were. The record is the list; there is no second one to
+keep.
+
+A walk opens after a release and closes with the next one. Nothing says it has
+to find nothing before a release goes out.
+
 ## The icon bundle
 
 The app icon is an **Icon Composer bundle**, not an appiconset:

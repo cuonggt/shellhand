@@ -418,6 +418,19 @@ credentials, which is most of it.
   holds is that `window-check.sh` cannot run beside another copy; address a
   copy by its `unix id`, never its name.
   → [a copy beside the run](docs/notes/testing.md#a-copy-beside-the-run)
+- **One walk per release, and the walk's list is the release record.** A walk
+  is drives over the whole window on a scratch copy, photographed, with every
+  menu and static text dumped beside them and each finding checked against its
+  evidence before it counts: the one after 0.1.4 found ⌘W closing the window,
+  the one after 0.1.7 found the app aborting at its narrowest. **Fix what
+  changes what the app says or lets you do, and what is visible without
+  measuring; name the rest in the release record and leave it.** 0.2.0 carried
+  156 commits because every finding became one, down to a folder 2pt right of a
+  mark and a greyed placeholder reading 128 against 192 — two days of commits
+  for one crash, and the next walk would find as many again. **A walk opens
+  after a release and closes with the next one**; it is not a loop to run until
+  it finds nothing.
+  → [the walks](docs/notes/releases.md#the-walks)
 - **The terminal's text is inset 8pt and its background still runs edge to
   edge**: `padding`, a `frame` filling the pane at `.topLeading`, and a
   `background` in `TerminalSession.background`, taken from the palette —
