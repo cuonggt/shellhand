@@ -132,6 +132,7 @@ credentials, which is most of it.
   checks: `icon.py` is where the mark's geometry lives, so it is the only way
   to change the icon at all.
 - `scripts/release.sh` — the whole of a release, from `xcodebuild` to the cask.
+- `scripts/readme-picture.sh` — the README's picture, seeded, driven and taken.
 - `Casks/shellhand.rb` — the Homebrew cask, copied into the tap on release.
 - `appcast.xml` — the update feed, served from `main`. Generated, never
   hand-edited.
@@ -1798,9 +1799,17 @@ mounted beside the last one and compared file by file before it goes out. Don't 
 trigger Check for Updates from here.
 → [every release](docs/notes/releases.md#every-release)
 
-**The README's picture** is taken from a scratch copy on a host list of its
-own, with ssh's config kept out by `XCTestSessionIdentifier`, the window sized
-to 1220×798 points and photographed alone with `screencapture -l`.
+**The README's picture is `scripts/readme-picture.sh`**: a scratch copy on a
+host list of its own, ssh's config kept out by `XCTestSessionIdentifier`, the
+window sized to 1220×798 points and photographed alone with `screencapture -l`
+on a real CoreGraphics window number. It presses the list/grid switch rather
+than trusting `libraryLayout`, and clicks the breadcrumb's All Hosts after
+picking db-01, since a group picked in the sidebar is gone to. **It takes the
+screen for a minute and the lock will end a run that began unlocked**, so run
+it when the Mac is free. The site's images are remade from it afterwards
+(`swift tools/site-images.swift <icon-preview dir>`); the three icon files
+come out a few bytes different with nothing changed, so keep those out of the
+commit.
 → [how it is taken](docs/notes/driving.md#taking-the-readmes-picture)
 
 **Installing from the tap needs `brew trust` first.** Since Homebrew 7 a cask

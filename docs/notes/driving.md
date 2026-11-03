@@ -201,7 +201,38 @@ session dictionary — because a guard nobody can make fire is worth nothing.
 
 ## Taking the README's picture
 
-**The README's picture was retaken on 2026-10-31, for 0.1.3's look** — the
+**It is `scripts/readme-picture.sh` now**, which seeds the list, sizes the
+window, picks db-01 and takes the photograph, so the five things below are
+handled rather than remembered. Retaken that way on 2026-11-03 for 0.2.0's
+look — the list drawing every row's columns the same, the grid's cards, All
+Hosts marked by weight, the sidebar heading its tree Groups. Three traps came
+out of scripting it, all of them in the driving rather than the app:
+
+- **A reference System Events hands back is spelled through `window "Hosts"`,
+  and picking a host retitles the window**, so every reference taken before
+  the first selection stops resolving — the outline included, not just the
+  window it came from. Find it again each pass. Re-*focusing* is the thing
+  that must not be repeated, since that puts the selection back at the first
+  row; re-finding costs nothing.
+- **The pane in grid mode has no list to drive at all.** A `LazyVGrid` has no
+  `AXOutline` and no rows, so a drive looking for the pane's list finds one
+  outline where it expects two and reads exactly like a pane drawing no
+  hosts. `libraryLayout` is written before the copy launches and still came up
+  a grid, so the script presses the list/grid switch — an `AXRadioGroup`, list
+  first — rather than trusting the preference.
+- **A group picked in the sidebar is gone to, so walking down to db-01 leaves
+  the pane inside US**: two hosts and a screenful of nothing, which is a worse
+  picture than the one it replaced. Where the pane looks is kept apart from
+  what is selected, so the fix is to click the breadcrumb's All Hosts — an
+  `AXLink`, the first in the window — after picking. The selection stays.
+
+**And the screen locks mid-drive.** Three runs failed in a row with
+`NOT-FOUND`, one outline where there should be two, and `could not create
+image from window`; all three were the lock, which reports no windows for any
+process. The guard catches it at the start of a run, but a run that begins
+unlocked can still end behind one, so a retake wants the Mac left alone.
+
+**The picture was retaken on 2026-10-31, for 0.1.3's look** — the
 bolt, no strip holding a lone Hosts tab, inherited values said "from
 Production", What will run one argument a line — the same way as on
 2026-10-29: from a scratch copy on a host list of its own, Production with
