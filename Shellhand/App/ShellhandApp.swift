@@ -16,6 +16,15 @@ struct ShellhandApp: App {
     private let config: LaunchConfig
 
     init() {
+        // **Before everything**, including the settings file and Sparkle:
+        // ssh runs this same binary as its askpass helper, handing it the
+        // prompt as its only argument and naming the identity in the
+        // environment. It answers on standard output and exits; nothing of
+        // the app proper should start, and no window should ever appear.
+        if let identity = Askpass.identityBeingAsked {
+            Askpass.answer(
+                identity: identity, prompt: CommandLine.arguments.dropFirst().first ?? "")
+        }
         let options = LaunchOptions()
         self.options = options
         // Before any window, so nothing connects without the settings the

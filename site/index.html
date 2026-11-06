@@ -215,7 +215,7 @@ brew install --cask shellhand</code></pre>
         </div>
         <div class="qa">
           <h3>Does it keep my passwords?</h3>
-          <p>No, and it does not answer a password prompt for you. A host that takes only a password still opens in a tab — ssh asks in the terminal and you type it, exactly as in Terminal — but the SFTP window needs a key or an agent to log in.</p>
+          <p>Only the ones you ask it to. An identity can hold a password, and it is kept in this Mac&rsquo;s keychain &mdash; never in the host list or its export, which are plain text meant for a dotfiles repository. The SFTP window logs in with it; in a terminal tab ssh still asks and you type it, exactly as in Terminal. A host whose key this Mac has never seen has to be opened in a tab once first, whatever it logs in with.</p>
         </div>
         <div class="qa">
           <h3>What does it send, and where?</h3>

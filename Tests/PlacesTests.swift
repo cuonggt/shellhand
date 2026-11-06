@@ -213,9 +213,10 @@ nonisolated struct PlacesTests {
 
     // MARK: a host it cannot reach
 
-    /// SFTP's ssh runs with `BatchMode=yes`, so a host whose key it has never
+    /// SFTP's ssh has nobody in front of it, so a host whose key it has never
     /// seen fails with this and nothing else — and a terminal tab is the one
-    /// place the question can be answered.
+    /// place the question can be answered. That holds whether or not a
+    /// password is stored: the question comes before authentication.
     @Test("a host never connected to says so, and offers a terminal tab")
     func neverConnected() {
         let trouble = Places.trouble("Host key verification failed.", on: "staging-web")
@@ -237,14 +238,41 @@ nonisolated struct PlacesTests {
         #expect(!trouble.offersTerminal)
     }
 
-    @Test("a host that takes only a password says SFTP needs a key")
+    /// Not "SFTP needs a key" any more: SFTP can log in with a password now,
+    /// given an identity holding one, so the advice points at the thing that
+    /// would fix it rather than only at a terminal tab.
+    @Test("a host that takes only a password says to give it one")
     func passwordOnly() {
         let trouble = Places.trouble("deploy@192.0.2.21: Permission denied (password).", on: "db-01")
-        #expect(trouble.title == "SFTP needs a key for db-01")
+        #expect(trouble.title == "db-01 takes only a password")
+        #expect(trouble.advice.contains("Identities"))
         #expect(trouble.offersTerminal)
         let interactive = Places.trouble(
             "deploy@192.0.2.21: Permission denied (keyboard-interactive).", on: "db-01")
-        #expect(interactive.title == "SFTP needs a key for db-01")
+        #expect(interactive.title == "db-01 takes only a password")
+    }
+
+    /// With a password offered and turned down, "SFTP has no way to type
+    /// one" would be plainly false — it typed one, and the host said no. The
+    /// one thing worth saying is where to change it.
+    @Test("a password that was offered and refused says where to change it")
+    func passwordRefused() {
+        let trouble = Places.trouble(
+            "root@192.0.2.21: Permission denied (password).", on: "sw-1", answering: true)
+        #expect(trouble.title == "sw-1 turned down the password")
+        #expect(trouble.advice.contains("Identities"))
+        #expect(trouble.offersTerminal)
+    }
+
+    /// A host key it has never seen is still the end of the road here,
+    /// password or no: nobody can read a fingerprint in a window with no
+    /// terminal in it.
+    @Test("a stored password does not get past an unknown host key")
+    func passwordDoesNotAnswerAHostKey() {
+        let trouble = Places.trouble(
+            "Host key verification failed.", on: "sw-1", answering: true)
+        #expect(trouble.title == "sw-1 hasn't been connected to yet")
+        #expect(trouble.offersTerminal)
     }
 
     /// Takes keys, and turned down every one: a terminal tab helps only where

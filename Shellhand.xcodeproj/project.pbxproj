@@ -101,6 +101,7 @@
 		80DA80513BDDDE4F58D35CFA /* RouteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68CA28334DFC582B3A999D1C /* RouteTests.swift */; };
 		82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3473C3E584F456CD7438584F /* OSMarkTests.swift */; };
 		859DE5BE2E4F84E2820353C5 /* ClosingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF621E4651793C0613EFA8B2 /* ClosingTests.swift */; };
+		85DB10380D1BA75E78FF8554 /* AskpassTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 710BF29AB8DD315F3C7BEA58 /* AskpassTests.swift */; };
 		8616DC3036D6892CAB562898 /* SSHConfigFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B79D4DCBCDC7698F63377F3 /* SSHConfigFile.swift */; };
 		865CB1F564DC202052056AF5 /* QuickConnectSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */; };
 		8729DC9DB340FF5F95048F0D /* os-alpine.svg in Resources */ = {isa = PBXBuildFile; fileRef = 9DFF9FDE3B6B95D6C87CFF51 /* os-alpine.svg */; };
@@ -147,6 +148,7 @@
 		C0A2550D1969F2F6C19A4CE8 /* Commands.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA3966F3845382E6166AE1A0 /* Commands.swift */; };
 		C1483227B1300FF71FBC66FF /* ReplacingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 352A631E0D763F87ECB2AEF6 /* ReplacingTests.swift */; };
 		C15994E660A2E90781F49F7A /* QuickConnectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C4EA7A75A2EF2C9B73F5B9 /* QuickConnectTests.swift */; };
+		C32960F5F45D18E1A5491DB6 /* Askpass.swift in Sources */ = {isa = PBXBuildFile; fileRef = D85B1CD859CEEFC8E0DFE701 /* Askpass.swift */; };
 		C645D14004B98E57D2525464 /* SSHConfigFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACE990965FED1D8D36CAF7C0 /* SSHConfigFileTests.swift */; };
 		C8EA21A5C0DC575E080631E4 /* ImportPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A94C6CEECFE9EC0C9B824BC /* ImportPlanTests.swift */; };
 		CDAFB463546EC02CCDB803D1 /* ImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DAFFE70024C0AFE57E75AD1 /* ImportSheet.swift */; };
@@ -278,6 +280,7 @@
 		6E90F01AA6850EC14084DCEE /* SheetHeight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetHeight.swift; sourceTree = "<group>"; };
 		6EABC8C0B498E3FE2E88EE84 /* HostKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostKeyTests.swift; sourceTree = "<group>"; };
 		709897B4D50481E64978D1C7 /* Browsing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Browsing.swift; sourceTree = "<group>"; };
+		710BF29AB8DD315F3C7BEA58 /* AskpassTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskpassTests.swift; sourceTree = "<group>"; };
 		732613D4722CA165CE7C2C8B /* GroupEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEditorSheet.swift; sourceTree = "<group>"; };
 		73F634D1B0D27FBB8ECFB95E /* Merge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Merge.swift; sourceTree = "<group>"; };
 		74F618F3BB7CC761EA980324 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
@@ -346,6 +349,7 @@
 		D66CDA5E3713F79D55007FAD /* os-amzn.svg */ = {isa = PBXFileReference; path = "os-amzn.svg"; sourceTree = "<group>"; };
 		D73E4F1964E8F5B7DD8576B5 /* TestRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRun.swift; sourceTree = "<group>"; };
 		D7BAF2CE3EEA86B98A32D091 /* SessionProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionProgressTests.swift; sourceTree = "<group>"; };
+		D85B1CD859CEEFC8E0DFE701 /* Askpass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Askpass.swift; sourceTree = "<group>"; };
 		DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InheritanceTests.swift; sourceTree = "<group>"; };
 		DA96D946715413445668CB3B /* FindBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindBar.swift; sourceTree = "<group>"; };
 		DB08C1CB269C73C6583B79AD /* Selectable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Selectable.swift; sourceTree = "<group>"; };
@@ -402,6 +406,7 @@
 		2EEDC703CADF443D5EACF901 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				710BF29AB8DD315F3C7BEA58 /* AskpassTests.swift */,
 				38BE0F06FBAF9F6EDA06B0BB /* BrowsingTests.swift */,
 				BF621E4651793C0613EFA8B2 /* ClosingTests.swift */,
 				07131B8D84FE1C530C9F1F67 /* CSVHostsTests.swift */,
@@ -565,6 +570,7 @@
 		A06B38121259F1E62DC8EFEF /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				D85B1CD859CEEFC8E0DFE701 /* Askpass.swift */,
 				593A5D44E7FD2E569688A062 /* Config.swift */,
 				DFC5B41C053B8973B6F4996E /* Core.swift */,
 				759DA8F72FB3A8A7AF07474B /* CSVHosts.swift */,
@@ -785,6 +791,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				85DB10380D1BA75E78FF8554 /* AskpassTests.swift in Sources */,
 				B21B689C295987D3C3A0834F /* BrowsingTests.swift in Sources */,
 				ED8FF6F6F6CCC514E6DFAEFE /* CSVHostsTests.swift in Sources */,
 				859DE5BE2E4F84E2820353C5 /* ClosingTests.swift in Sources */,
@@ -855,6 +862,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				093D9D0B7F2A98126F9DE06D /* AgentChoice.swift in Sources */,
+				C32960F5F45D18E1A5491DB6 /* Askpass.swift in Sources */,
 				9EE9F8D48B36608375A43183 /* Browsing.swift in Sources */,
 				04759EB87D4A08C1FE7B7F68 /* CSVHosts.swift in Sources */,
 				AA8438BD92FFC71D2378A1E1 /* Closing.swift in Sources */,

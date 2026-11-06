@@ -168,9 +168,9 @@ nonisolated enum Places {
         /// What it means and what to do, where that is known.
         var advice: String
         /// Whether a terminal tab on the host gets past this. It can answer
-        /// ssh's question about a new key, and type a password, where SFTP
-        /// can do neither: its ssh runs with `BatchMode=yes`, since there is
-        /// nobody to ask.
+        /// ssh's question about a new key, and a password can be typed there
+        /// whether or not one is stored — where SFTP's ssh has nobody in
+        /// front of it to ask.
         var offersTerminal: Bool
     }
 
@@ -179,7 +179,13 @@ nonisolated enum Places {
     /// "Host key verification failed." was all a host never connected to
     /// got, with no way on from there — and a host that takes only a password
     /// got "Permission denied", which reads as a wrong password nobody typed.
-    static func trouble(_ said: String, on host: String) -> Trouble {
+    ///
+    /// `answering` is whether this host's identity had a password for SFTP to
+    /// offer. It changes what a refusal **means**: with one, the stored
+    /// password was tried and turned down, and saying "SFTP has no way to
+    /// type one" would be plainly false; without one, the way forward is now
+    /// to give the host an identity rather than only to open a tab.
+    static func trouble(_ said: String, on host: String, answering: Bool = false) -> Trouble {
         let text = said.lowercased()
         if text.contains("remote host identification has changed") {
             return Trouble(
@@ -202,18 +208,31 @@ nonisolated enum Places {
                 ways = String(text[open.upperBound..<close])
             }
             let takesPassword = ways.contains("password") || ways.contains("keyboard-interactive")
+            if answering {
+                // A password was offered and turned down, so the one thing
+                // worth saying is where to change it.
+                return Trouble(
+                    title: "\(host) turned down the password",
+                    advice: "The password stored for this host's identity wasn't accepted. "
+                        + "Open File ▸ Identities… and type it again, or open a terminal tab "
+                        + "to try one by hand.",
+                    offersTerminal: true)
+            }
             if takesPassword, !ways.contains("publickey") {
                 return Trouble(
-                    title: "SFTP needs a key for \(host)",
-                    advice: "\(host) takes only a password, and SFTP has no way to type one. "
-                        + "A terminal tab can: ssh asks for it there.",
+                    title: "\(host) takes only a password",
+                    advice: "Give it an identity with a password — File ▸ Identities… — and SFTP "
+                        + "can log in here. A terminal tab can too: ssh asks for it there.",
                     offersTerminal: true)
             }
             return Trouble(
                 title: "\(host) turned down the key",
-                advice: "SFTP logs in with a key alone, and the host accepted none that ssh offered. "
+                advice: "SFTP offered a key and the host accepted none. "
                     + "Check the host's user and key."
-                    + (takesPassword ? " A terminal tab can log in with its password." : ""),
+                    + (takesPassword
+                        ? " It also takes a password: an identity with one logs in here, and a "
+                            + "terminal tab asks for it."
+                        : ""),
                 offersTerminal: takesPassword)
         }
         return Trouble(

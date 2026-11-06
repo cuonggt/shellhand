@@ -47,12 +47,14 @@ again to get there — key management, credentials, snippets and port
 forwarding. None of it is pending by accident; `CLAUDE.md` records what each
 cut removed and what it cost.
 
-The one thing to know before you try it: **Shellhand no longer answers a
-password prompt.** A host that takes only a password still opens in a session,
-because `ssh` asks on the pty where you can type it, exactly as in
-Terminal.app — but the SFTP window cannot reach such a host, because an sftp
-child is given `BatchMode=yes` and nothing is left to answer with. Key or
-agent authentication works everywhere.
+The one thing to know before you try it: **a password is answered only where
+you have stored one.** Give a host an identity with a password — File ▸
+Identities… — and the SFTP window logs in with it, from this Mac's keychain
+and nowhere else; the host list and its export are plain text and never hold
+it. In a terminal tab `ssh` still asks on the pty and you type it, exactly as
+in Terminal.app. And a host whose key this Mac has never seen has to be
+opened in a tab once first, whatever it logs in with: SFTP has nowhere to put
+a fingerprint in front of you. Key and agent authentication work everywhere.
 
 ## What it does
 

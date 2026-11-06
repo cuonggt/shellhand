@@ -136,6 +136,10 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// outside the store has any use for an id.
     var identity: String = ""
     var identityFrom: String = ""
+    /// What kind it is, for the rows that would otherwise say "—" where the
+    /// honest answer is "this one does not log in that way". Not its id: an
+    /// id goes no further than the askpass helper's environment.
+    var identityKind: Identity.Kind?
     var proxyJump: String = ""
     var proxyJumpFrom: String = ""
     var port: Int = 22

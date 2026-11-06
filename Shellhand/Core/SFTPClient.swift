@@ -107,7 +107,8 @@ actor SFTPClient {
     /// test leads with its own config (`TestRun.sshFixed`), ahead of what the
     /// caller fixes, so a caller's own `-F` comes later and is the one kept.
     static func arguments(_ resolved: Resolved, fixed: [String] = []) -> [String] {
-        SSHArgs.subsystem(resolved, "sftp", fixed: TestRun.sshFixed + SSHArgs.unattended + fixed)
+        SSHArgs.subsystem(
+            resolved, "sftp", fixed: TestRun.sshFixed + SSHArgs.unattended(resolved) + fixed)
     }
 
     /// Opens a session to a host.
@@ -116,6 +117,15 @@ actor SFTPClient {
     /// protocol, so a password prompt is one nobody can answer, and a single
     /// `-o BatchMode=no` from the config was once enough to leave a session
     /// waiting at one forever.
+    ///
+    /// **Unless there is an answer ready.** A host whose identity keeps a
+    /// password in the keychain gets `SSHArgs.answering` in place of
+    /// BatchMode and an askpass helper in its environment, because BatchMode
+    /// turns off the very prompt the helper exists to answer. That is the one
+    /// thing the MVP cut took away and this gives back. A host key it has
+    /// never seen is still the end of the road here — nobody can read a
+    /// fingerprint in a window with no terminal — and `Places.trouble` says
+    /// so, offering the tab where the question can be put to somebody.
     ///
     /// `fixed` is added to what nothing may override, and like the rest of it
     /// leads every hop, carried into each jump's own `ssh`. The one caller with
@@ -127,6 +137,12 @@ actor SFTPClient {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
         process.arguments = args
+        // A password identity's answer, which ssh fetches by running this
+        // same bundle as its askpass helper. Nil for every other kind, so no
+        // other connection is handed an environment at all — and never only
+        // the two variables, since setting this replaces what a child would
+        // otherwise inherit rather than adding to it.
+        process.environment = Askpass.childEnvironment(for: resolved)
         // Marked, and made where no terminal can fork in between — see `Forking`.
         let input = Pipe.marked(), output = Pipe.marked(), errors = Pipe.marked()
         process.standardInput = input

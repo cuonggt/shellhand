@@ -146,6 +146,10 @@ credentials, which is most of it.
   is forced, against a server of its own on loopback. Not a check: it answers
   a question the suite cannot, and it needs no password and nothing of the
   user's.
+- `scripts/askpass-helper-check.sh` — that the app, run as ssh's askpass
+  helper, answers on stdout and exits without a window. The suite holds which
+  prompt is a question and what a connection carries; being the helper is the
+  part only this can prove.
 - `Casks/shellhand.rb` — the Homebrew cask, copied into the tap on release.
 - `appcast.xml` — the update feed, served from `main`. Generated, never
   hand-edited.
@@ -180,11 +184,36 @@ credentials, which is most of it.
   them, so **this app no longer answers a password prompt** and the SFTP window
   cannot reach a host that takes only a password. `identity` stayed, a plain
   `-i`. **Don't bring any of it back without a reason from someone other than
-  us** — the one exception being **identities**, which came back at the
-  owner's word as a named user and key with no secrets in them: no keychain
-  and no askpass, so the sentence above still holds. Key generation,
-  `ssh-copy-id`, the Keys manager, snippets and startup scripts stayed cut.
+  us** — the exception being **identities**, which came back at the owner's
+  word, and with them the keychain and the askpass helper for **unattended
+  connections only**: the sentence above now holds for a terminal tab, where
+  ssh still asks on the pty, and no longer for the SFTP window, which logs
+  in with a stored password. Key generation, `ssh-copy-id`, the Keys
+  manager, snippets and startup scripts stayed cut.
   → [the MVP cut](docs/notes/cuts-and-sweeps.md#the-mvp-cut)
+- **A password is answered by the app run as ssh's own askpass helper**
+  (`Core/Askpass.swift`), and only where there is nobody in front of the
+  connection. What travels is the **identity's id** and the path to this
+  bundle — never the password, since an argument list is readable by every
+  process on the machine and an environment variable by every child of one;
+  the password goes keychain to the helper's stdout and nowhere else.
+  `SSH_ASKPASS` alone, **never `SSH_ASKPASS_REQUIRE`**: an unattended child
+  has no tty so ssh uses the helper unasked, and forcing it is what takes the
+  host-key question away from `HostKey.swift`. The helper tells that question
+  from a password prompt (`Askpass.isQuestion`) and answers **no** — nobody
+  can read a fingerprint in a window with no terminal — which is the trap the
+  cut-era code recorded: answered with the password, ssh asked again several
+  hundred times a second, each one a keychain read, and the connection never
+  ended. `ShellhandApp.init()` intercepts **before everything**, so no window
+  ever appears; `scripts/askpass-helper-check.sh` proves it does, which the
+  suite cannot.
+- **An sftp child drops `BatchMode=yes` exactly when it has an answer ready**
+  (`SSHArgs.unattended(_:)`): BatchMode turns off the very prompt the helper
+  exists to answer, and `SSHArgs.answering` stands in its place —
+  `PreferredAuthentications=keyboard-interactive,password` so ssh does not
+  get in as somebody else on an agent key first, and `NumberOfPasswordPrompts=1`
+  so a stale password fails once rather than three times. Both lead, with
+  what nothing may override, since ssh keeps the first value it is given.
 - **An identity is a group that is not a place**: a named user and key
   (`Identity`, the store's v11) that a host or a group points at **by id**, so
   renaming one takes nothing with it and there is no rename to follow — don't
@@ -984,9 +1013,14 @@ credentials, which is most of it.
   dialog named the host. A refused host stays named, rather than the pane
   calling itself This Mac over nothing.
 - **A host SFTP cannot open says what it means and what to do**
-  (`Places.trouble`): one never connected to, or one taking only a password,
-  offers Open in Terminal — a tab can answer what SFTP's `BatchMode=yes`
-  cannot — and every failure offers Edit Host…, as a terminal tab that could
+  (`Places.trouble`): one never connected to, or one taking a password it has
+  none stored for, offers Open in Terminal — a tab can answer what a
+  connection with nobody in front of it cannot. **What a refusal means turns
+  on whether a password was offered** (`answering:`): with one, it was tried
+  and turned down, and "SFTP has no way to type one" would be plainly false,
+  so the card says where to change it; without one, the way forward is to
+  give the host an identity, which it did not used to be. Every failure
+  offers Edit Host…, as a terminal tab that could
   not connect does, and Try Again, which reads the host from the list afresh
   (`FilePlace.tryAgain(with:)`, handed it by the window): it went again with
   the copy the side was pointed with, so a host renamed in Edit Host… kept
@@ -1871,9 +1905,16 @@ queue rather than all starting at once, a couple at a time, with the rest
 shown waiting their turn, and carrying a file onto one already there asks
 first.
 
-A host that takes only a password still connects — ssh asks on the pty, where
-it can be typed — but the SFTP window cannot reach one, because an sftp child
-is given `BatchMode=yes` and there is nothing left to answer a prompt with.
+A host that takes only a password connects in a tab, where ssh asks on the pty
+and it can be typed — and **in the SFTP window too, given an identity holding
+one**: the password is kept in this Mac's keychain, and the app is run as
+ssh's own askpass helper to hand it over. That is the capability the MVP cut
+took away, back. What a stored password does **not** get past is a host key
+this Mac has never seen: the question comes before authentication and there is
+nowhere to put a fingerprint in a window with no terminal, so `Places.trouble`
+sends you to a tab once first. A terminal tab still asks rather than answering
+for you, because forcing askpass there would take that question away from the
+dialog the app already has.
 
 It has an icon: a shell prompt, chevron and block cursor, as an Icon Composer
 bundle that macOS composites into the Tahoe squircle. `docs/app-icon.md` has

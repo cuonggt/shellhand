@@ -40,6 +40,11 @@ nonisolated struct Resolved: Sendable {
     /// pointed at it — empty where the host points at it itself.
     var identity = ""
     var identityFrom = ""
+    /// Its **id**, which is what a password is filed under in the keychain,
+    /// and what kind it is. The id goes no further than the askpass helper's
+    /// environment; nothing user-facing has any use for one.
+    var identityId = ""
+    var identityKind: Identity.Kind?
     var proxyJump = ""
     var proxyJumpFrom = ""
     /// The chain in front of this host, the first hop first.
@@ -78,7 +83,7 @@ nonisolated struct Resolved: Sendable {
         Effective(
             user: user, userFrom: userFrom,
             keyPath: keyPath, keyPathFrom: keyPathFrom,
-            identity: identity, identityFrom: identityFrom,
+            identity: identity, identityFrom: identityFrom, identityKind: identityKind,
             proxyJump: proxyJump, proxyJumpFrom: proxyJumpFrom,
             port: port, aliasElsewhere: aliasElsewhere, configProxy: configProxy,
             configProxyCommand: configProxyCommand,
@@ -354,6 +359,8 @@ nonisolated struct Resolver: Sendable {
         if out.identity.isEmpty {
             out.identity = identity.name
             out.identityFrom = pointedFrom
+            out.identityId = identity.id
+            out.identityKind = identity.kind
         }
         if out.user.isEmpty, !identity.user.isEmpty {
             out.user = identity.user

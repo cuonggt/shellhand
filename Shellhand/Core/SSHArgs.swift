@@ -216,4 +216,31 @@ nonisolated enum SSHArgs {
     /// nothing left to answer with now that credentials are gone, and a
     /// transfer that hangs on an invisible prompt is the worse of the two.
     static let unattended = ["-o", "BatchMode=yes"]
+
+    /// The options for a connection with nobody in front of it that **does**
+    /// have an answer ready: an identity whose password is in the keychain,
+    /// handed to ssh by the askpass helper.
+    ///
+    /// BatchMode is absent on purpose — it turns every prompt off, the one
+    /// the helper exists to answer included — and these two take its place:
+    ///
+    /// `PreferredAuthentications` because ssh would otherwise offer every key
+    /// the agent holds before it ever reaches the password, and could get in
+    /// as somebody else entirely; `NumberOfPasswordPrompts=1` because a
+    /// password that has gone stale should fail once rather than three
+    /// times, each one a keychain read answering the same wrong thing.
+    ///
+    /// They lead, with the rest of what nothing may override, so a config's
+    /// own value cannot come first — ssh keeps the first it is given.
+    static let answering = [
+        "-o", "PreferredAuthentications=keyboard-interactive,password",
+        "-o", "NumberOfPasswordPrompts=1",
+    ]
+
+    /// Which of the two a connection with nobody in front of it gets: an
+    /// answer ready, or every prompt off.
+    static func unattended(_ resolved: Resolved) -> [String] {
+        resolved.identityKind == .password && !resolved.identityId.isEmpty
+            ? answering : unattended
+    }
 }
