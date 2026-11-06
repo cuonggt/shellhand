@@ -127,15 +127,28 @@ done
 kill "$first" 2>/dev/null
 wait "$first" 2>/dev/null
 sqlite3 "$db" '.tables' 2>/dev/null | grep -q hosts || fail "the app never made a store at $db"
+# The identities table is the v11 migration, and this is the only place it is
+# checked against a store the **app** made rather than one a test opened: a
+# migration that did not run leaves every INSERT below failing instead, which
+# reads as a broken seed rather than a broken schema.
+sqlite3 "$db" '.tables' 2>/dev/null | grep -q identities \
+    || fail "the app's own store has no identities table — the v11 migration did not run"
 
+# Every host here takes its login from one identity, two of them through the
+# group that points at it and one pointing at it itself, so the inspector
+# says the same thing whichever the pane lands on.
 sqlite3 "$db" <<'SQL' || exit 1
-INSERT INTO host_groups (id, name, parentId) VALUES ('g-prod', 'Production', '');
+INSERT INTO identities (id, name, user, keyPath)
+  VALUES ('i-deploy', 'deploy', 'deploy', '~/.ssh/id_ed25519');
+INSERT INTO host_groups (id, name, parentId, identityId)
+  VALUES ('g-prod', 'Production', '', 'i-deploy');
 INSERT INTO host_groups (id, name, parentId) VALUES ('g-eu', 'EU', 'g-prod');
 INSERT INTO hosts (id, name, addr, groupId) VALUES ('h-web', 'web-1', '198.51.100.1', 'g-prod');
 INSERT INTO hosts (id, name, addr, groupId) VALUES ('h-edge', 'edge-1', '198.51.100.2', 'g-eu');
-INSERT INTO hosts (id, name, addr, groupId) VALUES ('h-loose', 'unfiled-1', '198.51.100.3', '');
+INSERT INTO hosts (id, name, addr, groupId, identityId)
+  VALUES ('h-loose', 'unfiled-1', '198.51.100.3', '', 'i-deploy');
 SQL
-echo "window-check: seeded 2 groups and 3 hosts into a store of its own"
+echo "window-check: seeded an identity, 2 groups and 3 hosts into a store of its own"
 
 # The pane draws rows or cards, and only the rows are a `List` with a
 # selection of its own — a `LazyVGrid` has none, so grid mode has buttons and
@@ -555,6 +568,199 @@ echo "window-check: the inspector names the operating system row"
 printf '%s' "$pane_said" | grep -q "Colours" \
     || fail "the inspector has no palette picker: $pane_said"
 echo "window-check: the inspector offers the palette picker"
+
+# The identity rows. Every seeded host takes its login from one identity —
+# two through the group that points at it, one pointing at it itself — so
+# this holds whichever host the pane landed on above.
+#
+# **"from the deploy identity" is the assertion that matters.** A group holds
+# the pointer and the identity holds the value, so a User or Key row credited
+# to Production rather than to the identity would send somebody to the wrong
+# editor to change it, and nothing else here would notice.
+printf '%s' "$pane_said" | grep -q "Identity" \
+    || fail "the inspector has no Identity row: $pane_said"
+printf '%s' "$pane_said" | grep -q "from the deploy identity" \
+    || fail "the inspector credits something other than the identity for what it fills in: $pane_said"
+echo "window-check: the inspector names the identity and credits it for the login"
+
+# File ▸ Identities… opens the manager, and is never greyed: an empty list is
+# exactly when the first identity gets made.
+read -r -d '' IDENTITIES_ITEM <<'APPLESCRIPT'
+tell application "System Events" to tell process "Shellhand"
+	repeat with i in (every menu item of menu 1 of menu bar item "File" of menu bar 1)
+		try
+			if (name of i as text) is "Identities…" then return (enabled of i as text)
+		end try
+	end repeat
+	return "missing"
+end tell
+APPLESCRIPT
+identities_item=$(osascript -e "$IDENTITIES_ITEM" 2>/dev/null)
+[ "$identities_item" = "true" ] \
+    || fail "File ▸ Identities… is $identities_item, where it should be there and live"
+echo "window-check: File ▸ Identities… is there and live"
+
+# --- neither editor's tab scrolls -----------------------------------------
+#
+# **The rule is that neither tab of either editor ever scrolls**, and until
+# now it was held by measuring on screen by hand — which is how the Identity
+# row shipped a first guess that left db-01's General with 87pt of empty form
+# under its last row. The form's own scroll area answers it from outside: no
+# `AXScrollBar` among its direct children means it fits.
+#
+# Direct children, never a recursive search: the ssh options editor on
+# Advanced is itself a scroll area and reports an overflow that is not there.
+#
+# The window is made tall first. A sheet is capped at the room below the
+# toolbar less a margin, so at the window's default height both editors are
+# cut and the command's box gives way **by design** — which would read here
+# as a form that scrolls.
+osascript -e 'tell application "System Events" to tell process "Shellhand" to set size of front window to {1220, 1000}' >/dev/null 2>&1
+sleep 0.8
+
+read -r -d '' FIT <<'APPLESCRIPT'
+on radios(el)
+	set out to {}
+	tell application "System Events"
+		try
+			if role of el is "AXRadioButton" then set end of out to el
+		end try
+		try
+			repeat with child in UI elements of el
+				set out to out & my radios(child)
+			end repeat
+		end try
+	end tell
+	return out
+end radios
+
+on sheetOf(w)
+	tell application "System Events"
+		try
+			repeat with el in UI elements of w
+				if role of el is "AXSheet" then return el
+			end repeat
+		end try
+	end tell
+	return missing value
+end sheetOf
+
+on fitOf(sheetEl)
+	set out to ""
+	tell application "System Events"
+		repeat with top in UI elements of sheetEl
+			try
+				repeat with el in UI elements of top
+					if role of el is "AXScrollArea" then
+						set bar to missing value
+						repeat with b in UI elements of el
+							try
+								if role of b is "AXScrollBar" then
+									if (item 2 of (size of b)) > (item 1 of (size of b)) then set bar to b
+								end if
+							end try
+						end repeat
+						if bar is missing value then
+							set out to out & " fits"
+						else
+							set out to out & " SCROLLS"
+						end if
+					end if
+				end repeat
+			end try
+		end repeat
+	end tell
+	return out
+end fitOf
+
+tell application "System Events"
+	tell process "Shellhand"
+		click menu item "EDITOR_ITEM" of menu 1 of menu bar item "Host" of menu bar 1
+		delay 1.6
+		set sheetEl to my sheetOf(front window)
+		if sheetEl is missing value then return "NO-SHEET"
+		set {sw, sh} to size of sheetEl
+		set said to "" & (sh as integer) & "pt — General" & my fitOf(sheetEl)
+		repeat with r in my radios(sheetEl)
+			try
+				if (name of r as text) is "Advanced" then click r
+			end try
+		end repeat
+		delay 0.9
+		set sheetEl to my sheetOf(front window)
+		if sheetEl is missing value then return "NO-SHEET-AFTER-TAB"
+		set said to said & ", Advanced" & my fitOf(sheetEl)
+		key code 53
+		delay 0.9
+		return said
+	end tell
+end tell
+APPLESCRIPT
+
+# A host is still the one the pane selected above.
+host_fit=$(osascript -e "${FIT//EDITOR_ITEM/Edit Host…}" 2>&1)
+case "$host_fit" in
+    NO-SHEET*) fail "the host editor did not open: $host_fit" ;;
+    *SCROLLS*) fail "the host editor scrolls — it is too short for what it holds: $host_fit" ;;
+    *fits*fits*) ;;
+    *) fail "could not read whether the host editor fits: $host_fit" ;;
+esac
+echo "window-check: the host editor fits on both tabs — $host_fit"
+
+# And a group, arrowed to in the sidebar: `select` on a row sets AXSelected
+# and SwiftUI never hears it, so the keyboard is the only way to a selection
+# the menus can see.
+read -r -d '' PICK_GROUP <<'APPLESCRIPT'
+on findOutline(el, depth)
+	if depth > 12 then return missing value
+	tell application "System Events"
+		try
+			if role of el is "AXOutline" then return el
+		end try
+		try
+			repeat with child in UI elements of el
+				set got to my findOutline(child, depth + 1)
+				if got is not missing value then return got
+			end repeat
+		end try
+	end tell
+	return missing value
+end findOutline
+
+tell application "System Events"
+	tell process "Shellhand"
+		set side to my findOutline(front window, 0)
+		if side is missing value then return "NO-SIDEBAR"
+		set focused of side to true
+		delay 0.5
+		-- **Up first, then down.** The sidebar's selection is wherever the
+		-- walk above left it, which is its last row — and Down from there
+		-- goes nowhere, so a one-way sweep reported "no group" against a
+		-- sidebar that had two of them.
+		repeat with theKey in {126, 125}
+			repeat 10 times
+				if enabled of menu item "Edit Group…" of menu 1 of menu bar item "Host" of menu bar 1 then
+					return "a group"
+				end if
+				key code (theKey as integer)
+				delay 0.45
+			end repeat
+		end repeat
+		return "no group"
+	end tell
+end tell
+APPLESCRIPT
+picked=$(osascript -e "$PICK_GROUP" 2>&1)
+[ "$picked" = "a group" ] || fail "could not arrow to a group for the group editor: $picked"
+
+group_fit=$(osascript -e "${FIT//EDITOR_ITEM/Edit Group…}" 2>&1)
+case "$group_fit" in
+    NO-SHEET*) fail "the group editor did not open: $group_fit" ;;
+    *SCROLLS*) fail "the group editor scrolls — it is too short for what it holds: $group_fit" ;;
+    *fits*) ;;
+    *) fail "could not read whether the group editor fits: $group_fit" ;;
+esac
+echo "window-check: the group editor fits on both tabs — $group_fit"
 
 # At its narrowest the window survives picking a group. The middle column's
 # minimum moved with what it showed — a group raised it 34pt — so a window

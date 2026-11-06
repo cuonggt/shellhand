@@ -74,8 +74,13 @@ store of its own, launches a real window against it with `--db`, and drives the
 sidebar through System Events the way somebody on the keyboard does — the tree
 folded as it comes up, then opened with the arrow keys, then a row picked and
 the **Host** menu read back to prove the selection reached the app rather than
-only the outline. It asks the app for nothing it does not already publish:
-`--db` is the whole of it.
+only the outline. It also holds what no unit test can: that the app's own
+store gains the **identities** table, that the inspector names the identity
+and credits **it** — not the group holding the pointer — for the user and key
+it fills in, that File ▸ Identities… is there and live, and that **neither
+tab of either editor scrolls**, read off each form's own scroll area with the
+window made tall enough that the sheets are not capped. It asks the app for
+nothing it does not already publish: `--db` is the whole of it.
 
 Two things about the suite hold whatever is added to it. The removed shell
 harnesses stay removed: they cost a Go toolchain and test-only flags inside
@@ -1436,7 +1441,8 @@ credentials, which is most of it.
   28 it was tuned to — so the host editor's is 741, measured; the group
   editor's 516 came back at 46pt under Production's last row on both tabs and
   stood. **A row's worth added by eye is a band of nothing shipped**: read it
-  off the form's own scroll area instead.
+  off the form's own scroll area instead — which `window-check.sh` now does
+  on every run, so this rule is checked rather than remembered.
   **Each editor is drawn at its taller tab's height on both tabs**: a
   sheet is centred on its window, so one that changed height with the tab
   moved the tab control under the pointer, 7pt in the group editor and 27
