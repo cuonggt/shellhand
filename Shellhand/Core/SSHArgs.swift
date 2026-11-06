@@ -7,7 +7,7 @@ nonisolated struct Endpoint: Sendable, Hashable {
     /// As stored. Nothing means ssh's own default, and `-p` is left off.
     var port = 0
     var user = ""
-    var identity = ""
+    var keyPath = ""
     /// The name ssh's own config knows this machine by, where it knows one.
     var alias = ""
     /// A jump host that is not one of yours, left for ssh to interpret.
@@ -29,7 +29,7 @@ extension Resolved {
     /// argv builder walks.
     nonisolated var endpoints: [Endpoint] {
         var out = [Endpoint(
-            addr: host.addr, port: host.port, user: user, identity: identity,
+            addr: host.addr, port: host.port, user: user, keyPath: keyPath,
             alias: alias,
             // Where the chain resolved, the hops carry it; what is left here is
             // a destination ssh has to make sense of on its own.
@@ -37,7 +37,7 @@ extension Resolved {
             options: sshOptions, forwardAgent: forwardAgent)]
         out += jumps.map {
             Endpoint(
-                addr: $0.addr, port: $0.port, user: $0.user, identity: $0.identity,
+                addr: $0.addr, port: $0.port, user: $0.user, keyPath: $0.keyPath,
                 alias: $0.alias,
                 options: $0.options, forwardAgent: $0.forwardAgent)
         }
@@ -137,7 +137,7 @@ nonisolated enum SSHArgs {
         for option in globalOptions { args += ["-o", option] }
 
         if end.port != 0 && end.port != 22 { args += ["-p", String(end.port)] }
-        if !end.identity.isEmpty { args += ["-i", end.identity] }
+        if !end.keyPath.isEmpty { args += ["-i", end.keyPath] }
 
         if index + 1 < chain.count {
             // ssh -J hands the hop only -l, -p and -v, so the hop's own key and

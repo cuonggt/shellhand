@@ -35,7 +35,8 @@ actor Core {
 
     private func resolver(_ snapshot: Snapshot) -> Resolver {
         let config = sshConfig()
-        return Resolver(groups: snapshot.groups, hosts: snapshot.hosts)
+        return Resolver(
+            groups: snapshot.groups, hosts: snapshot.hosts, identities: snapshot.identities)
             .withAliases(config.aliases)
             .withProxies(config.proxy)
     }
@@ -144,8 +145,11 @@ actor Core {
     func save(db: String, host: Host) throws -> Host { try store(db).save(host) }
     @discardableResult
     func save(db: String, group: Group) throws -> Group { try store(db).save(group) }
+    @discardableResult
+    func save(db: String, identity: Identity) throws -> Identity { try store(db).save(identity) }
     func deleteHost(db: String, id: String) throws { try store(db).deleteHost(id: id) }
     func deleteGroup(db: String, id: String) throws { try store(db).deleteGroup(id: id) }
+    func deleteIdentity(db: String, id: String) throws { try store(db).deleteIdentity(id: id) }
 
     // MARK: settings
 
@@ -173,7 +177,8 @@ actor Core {
     func exportYAML(db: String) throws -> String {
         let store = try store(db)
         let snapshot = try store.snapshot()
-        return try Portable.export(groups: snapshot.groups, hosts: snapshot.hosts)
+        return try Portable.export(
+            groups: snapshot.groups, hosts: snapshot.hosts, identities: snapshot.identities)
     }
 
     func importYAML(db: String, text: String, group: String = "", dryRun: Bool) throws

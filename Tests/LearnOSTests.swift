@@ -36,7 +36,7 @@ nonisolated struct LearnOSTests {
         await store.refresh()
         var host = AppHost(name: "local-sshd", addr: "127.0.0.1", port: server.port)
         host.user = server.user
-        host.identity = server.clientKey
+        host.keyPath = server.clientKey
         let saved = await store.save(host)
         return (store.dbPath, saved?.id ?? "")
     }

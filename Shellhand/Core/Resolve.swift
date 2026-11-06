@@ -15,7 +15,7 @@ nonisolated struct Hop: Sendable, Hashable {
     /// As it is stored: nothing means ssh's own default, and `-p` is left off.
     var port = 0
     var user = ""
-    var identity = ""
+    var keyPath = ""
     /// This hop's own settings, which reach the ssh that reaches it and not
     /// the one beyond.
     var options: [String] = []
@@ -34,6 +34,10 @@ nonisolated struct Resolved: Sendable {
     var host = Host()
     var user = ""
     var userFrom = ""
+    var keyPath = ""
+    var keyPathFrom = ""
+    /// The name of the identity that reached this host, and the group that
+    /// pointed at it — empty where the host points at it itself.
     var identity = ""
     var identityFrom = ""
     var proxyJump = ""
@@ -73,6 +77,7 @@ nonisolated struct Resolved: Sendable {
     var effective: Effective {
         Effective(
             user: user, userFrom: userFrom,
+            keyPath: keyPath, keyPathFrom: keyPathFrom,
             identity: identity, identityFrom: identityFrom,
             proxyJump: proxyJump, proxyJumpFrom: proxyJumpFrom,
             port: port, aliasElsewhere: aliasElsewhere, configProxy: configProxy,
@@ -97,6 +102,11 @@ nonisolated struct Resolved: Sendable {
 nonisolated struct FromAbove: Sendable, Equatable {
     var user = ""
     var userFrom = ""
+    var keyPath = ""
+    var keyPathFrom = ""
+    /// The identity a group above points at, and which group that is. What
+    /// it fills in is already folded into `user` and `keyPath` above, with
+    /// the identity named as their source.
     var identity = ""
     var identityFrom = ""
     var proxyJump = ""
@@ -127,22 +137,27 @@ nonisolated struct FromAbove: Sendable, Equatable {
 
     init() {}
 
-    init(of group: Group, among groups: [Group]) {
+    init(of group: Group, among groups: [Group], identities: [Identity] = []) {
         // The group's own id seeds the guard: a group that is somehow its own
         // ancestor stops the walk rather than hanging it.
-        self.init(from: group.parentId, seen: [group.id], among: groups)
+        self.init(
+            from: group.parentId, seen: [group.id], among: groups, identities: identities)
     }
 
     /// What a host would take from the groups it is filed under if it set
     /// nothing itself, its own group first. What the host resolves to has
     /// its own choices in it, so an inherit row read off that names the
     /// host's own: chosen, the agent's read "From above — carried".
-    init(of host: Host, among groups: [Group]) {
-        self.init(from: host.groupId, seen: [], among: groups)
+    init(of host: Host, among groups: [Group], identities: [Identity] = []) {
+        self.init(from: host.groupId, seen: [], among: groups, identities: identities)
     }
 
-    private init(from first: String, seen: Set<String>, among groups: [Group]) {
+    private init(
+        from first: String, seen: Set<String>, among groups: [Group], identities: [Identity]
+    ) {
         let byID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
+        let identityByID = Dictionary(
+            identities.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
         var seen = seen
         var id = first
         while !id.isEmpty, !seen.contains(id) {
@@ -152,9 +167,30 @@ nonisolated struct FromAbove: Sendable, Equatable {
                 user = parent.user
                 userFrom = parent.name
             }
-            if identity.isEmpty, !parent.identity.isEmpty {
-                identity = parent.identity
-                identityFrom = parent.name
+            if keyPath.isEmpty, !parent.keyPath.isEmpty {
+                keyPath = parent.keyPath
+                keyPathFrom = parent.name
+            }
+            // Then whatever this group points at, after its own fields and
+            // before the group above it — the same place an identity sits
+            // for a host.
+            if let named = identityByID[parent.identityId] {
+                if identity.isEmpty {
+                    identity = named.name
+                    identityFrom = parent.name
+                }
+                if user.isEmpty, !named.user.isEmpty {
+                    user = named.user
+                    // The identity, not the group that pointed at it: the
+                    // group is where the pointer is and the identity is
+                    // where the value is, and a caption naming the group
+                    // would send somebody to the wrong editor.
+                    userFrom = named.source
+                }
+                if keyPath.isEmpty, !named.keyPath.isEmpty {
+                    keyPath = named.keyPath
+                    keyPathFrom = named.source
+                }
             }
             if proxyJump.isEmpty, !parent.proxyJump.isEmpty {
                 proxyJump = parent.proxyJump
@@ -189,14 +225,17 @@ nonisolated struct Resolver: Sendable {
 
     private let groupsByID: [String: Group]
     private let hostsByName: [String: Host]
+    private let identitiesByID: [String: Identity]
     private var aliases: [String: Alias] = [:]
     private var proxyFor: (@Sendable (String) -> SSHConfigFile.Route)?
 
-    init(groups: [Group], hosts: [Host]) {
+    init(groups: [Group], hosts: [Host], identities: [Identity] = []) {
         groupsByID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
         // Last one wins, which matches what the list shows for a duplicate.
         hostsByName = Dictionary(
             hosts.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { _, b in b })
+        identitiesByID = Dictionary(
+            identities.map { ($0.id, $0) }, uniquingKeysWith: { _, b in b })
     }
 
     /// The resolver knowing what ssh's own config calls machines, so a host the
@@ -248,13 +287,20 @@ nonisolated struct Resolver: Sendable {
     private func inherit(_ host: Host) -> Resolved {
         var out = Resolved(host: host)
         out.user = host.user
-        out.identity = host.identity
+        out.keyPath = host.keyPath
         out.proxyJump = host.proxyJump
         // Its own first: ssh keeps the first value it sees for a setting, so
         // gathering them nearest-first is the whole of the precedence.
         out.sshOptions = host.sshOptions
         out.forwardAgent = host.forwardAgent
         out.theme = host.theme
+
+        // The identity the host itself points at: after its own fields,
+        // because typing a value onto the host is the more deliberate of the
+        // two, and before any group's, because pointing at one is still a
+        // choice the host made. `from` is empty — the host names it itself,
+        // as `userFrom` is empty when the host sets its own user.
+        take(identity: host.identityId, pointedFrom: "", into: &out)
 
         var seen: Set<String> = []
         var id = host.groupId
@@ -265,10 +311,13 @@ nonisolated struct Resolver: Sendable {
                 out.user = group.user
                 out.userFrom = group.name
             }
-            if out.identity.isEmpty, !group.identity.isEmpty {
-                out.identity = group.identity
-                out.identityFrom = group.name
+            if out.keyPath.isEmpty, !group.keyPath.isEmpty {
+                out.keyPath = group.keyPath
+                out.keyPathFrom = group.name
             }
+            // Then what this group points at, in the same place relative to
+            // the group as the host's identity is to the host.
+            take(identity: group.identityId, pointedFrom: group.name, into: &out)
             if out.proxyJump.isEmpty, !group.proxyJump.isEmpty {
                 out.proxyJump = group.proxyJump
                 out.proxyJumpFrom = group.name
@@ -285,6 +334,35 @@ nonisolated struct Resolver: Sendable {
             id = group.parentId
         }
         return out
+    }
+
+    /// What an identity fills in, where nothing nearer has already.
+    ///
+    /// `pointedFrom` is the group that points at it, or empty where the host
+    /// itself does — which is what the inspector's Identity row shows. The
+    /// **values** it supplies name the identity as their source instead:
+    /// the group is where the pointer is, the identity is where the value
+    /// is, and a caption naming the group would send somebody to the wrong
+    /// editor to change it.
+    ///
+    /// An id nothing answers to fills nothing in and is not an error. The
+    /// store clears a pointer when the identity it names is deleted, so this
+    /// only happens to a list edited from outside — and inheriting from
+    /// further up is a better answer there than resolving to nothing.
+    private func take(identity id: String, pointedFrom: String, into out: inout Resolved) {
+        guard let identity = identitiesByID[id] else { return }
+        if out.identity.isEmpty {
+            out.identity = identity.name
+            out.identityFrom = pointedFrom
+        }
+        if out.user.isEmpty, !identity.user.isEmpty {
+            out.user = identity.user
+            out.userFrom = identity.source
+        }
+        if out.keyPath.isEmpty, !identity.keyPath.isEmpty {
+            out.keyPath = identity.keyPath
+            out.keyPathFrom = identity.source
+        }
     }
 
     // MARK: jump hosts
@@ -306,7 +384,7 @@ nonisolated struct Resolver: Sendable {
             let (alias, _) = aliasFor(host)
             out.append(Hop(
                 name: host.name, alias: alias, addr: host.addr, port: host.port,
-                user: hop.user, identity: hop.identity,
+                user: hop.user, keyPath: hop.keyPath,
                 options: hop.sshOptions, forwardAgent: hop.forwardAgent))
             next = hop.proxyJump.trimmingCharacters(in: .whitespaces)
         }

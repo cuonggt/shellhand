@@ -10,6 +10,7 @@ nonisolated extension Portable {
     nonisolated struct Plan: Sendable {
         var groups: [Shellhand.Group] = []
         var hosts: [Shellhand.Host] = []
+        var identities: [Shellhand.Identity] = []
         var changes: [Change] = []
         var unchanged = 0
         /// Sections and fields the file carried that this app no longer
@@ -62,6 +63,51 @@ nonisolated extension Portable {
         // through rather than noted as a change: nothing is written for it.
         plan.passedOver = document.passedOver
 
+        // The identities first, since a group or a host may name one. Matched
+        // by name against what is already here, so importing the same file
+        // twice points at the same record rather than making a second.
+        var identitiesByName: [String: Shellhand.Identity] = [:]
+        for identity in snapshot.identities { identitiesByName[key(identity.name)] = identity }
+        for input in document.identities {
+            let k = key(input.name)
+            let was = identitiesByName[k]
+            var now = was ?? Shellhand.Identity()
+            now.name = input.name
+            now.user = pick(input.user, was?.user ?? "")
+            now.keyPath = pick(input.keyPath, was?.keyPath ?? "")
+            if was == nil {
+                now.id = Store.newID()
+                plan.identities.append(now)
+                plan.note("identity", now.name, "add")
+            } else if now != was! {
+                plan.identities.append(now)
+                plan.note("identity", now.name, "update")
+            } else {
+                plan.unchanged += 1
+            }
+            identitiesByName[k] = now
+        }
+
+        /// The id of the identity a record names, or nothing where it names
+        /// none.
+        ///
+        /// A name nothing answers to is **refused**, not turned into an empty
+        /// identity: one that says nothing fills nothing in, so inventing it
+        /// would quietly take the host's login away and leave the import
+        /// reporting success. A group naming an unknown parent is refused for
+        /// the same reason. An unknown *group*, by contrast, is created — a
+        /// group is a place, and a place with nothing set is still a place.
+        func pointed(at name: String, by what: String) throws -> String {
+            let name = name.trimmingCharacters(in: .whitespaces)
+            guard !name.isEmpty else { return "" }
+            guard let identity = identitiesByName[key(name)] else {
+                throw PortableError(
+                    "\(what) names identity \"\(name)\", which is neither in this document "
+                        + "nor already here")
+            }
+            return identity.id
+        }
+
         // Every group the document names gets an id up front, so a parent
         // still resolves when the document lists the child first.
         var groupsByName: [String: Shellhand.Group] = [:]
@@ -89,7 +135,9 @@ nonisolated extension Portable {
             let was = groupsByName[k] ?? Shellhand.Group()
             var now = was
             now.user = pick(input.user, was.user)
-            now.identity = pick(input.identity, was.identity)
+            now.keyPath = pick(input.keyPath, was.keyPath)
+            now.identityId = pick(
+                try pointed(at: input.identity, by: "group \"\(input.name)\""), was.identityId)
             now.proxyJump = pick(input.jump, was.proxyJump)
             now.sshOptions = input.options.isEmpty ? was.sshOptions : input.options
             now.forwardAgent = input.forwardAgent ?? was.forwardAgent
@@ -124,7 +172,10 @@ nonisolated extension Portable {
             now.addr = pick(input.addr, was?.addr ?? "")
             now.port = input.port != 0 ? input.port : (was?.port ?? 0)
             now.user = pick(input.user, was?.user ?? "")
-            now.identity = pick(input.identity, was?.identity ?? "")
+            now.keyPath = pick(input.keyPath, was?.keyPath ?? "")
+            now.identityId = pick(
+                try pointed(at: input.identity, by: "host \"\(input.name)\""),
+                was?.identityId ?? "")
             now.proxyJump = pick(input.jump, was?.proxyJump ?? "")
             if !input.tags.isEmpty { now.tags = input.tags }
             if !input.options.isEmpty { now.sshOptions = input.options }
@@ -186,7 +237,8 @@ nonisolated extension Portable {
 
     private static func same(_ a: Shellhand.Host, _ b: Shellhand.Host) -> Bool {
         a.id == b.id && a.name == b.name && a.addr == b.addr && a.port == b.port
-            && a.user == b.user && a.identity == b.identity && a.proxyJump == b.proxyJump
+            && a.user == b.user && a.keyPath == b.keyPath && a.identityId == b.identityId
+            && a.proxyJump == b.proxyJump
             && a.groupId == b.groupId && a.tags == b.tags
             && a.sshOptions == b.sshOptions && a.forwardAgent == b.forwardAgent
             && a.theme == b.theme

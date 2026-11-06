@@ -8,6 +8,10 @@ import Foundation
 nonisolated struct Snapshot: Codable, Sendable, Equatable {
     var groups: [Group] = []
     var hosts: [Host] = []
+    /// The logins a host or a group can point at. Read with the list rather
+    /// than asked for per host: there are a handful of them and every
+    /// resolve needs all of them.
+    var identities: [Identity] = []
 }
 
 nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
@@ -18,7 +22,14 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     /// What is typed onto the host itself. Empty means "take it from above",
     /// which is what `effective` then reports.
     var user: String = ""
-    var identity: String = ""
+    var keyPath: String = ""
+    /// The identity this host points at, by id. Empty means it points at
+    /// none, which is not the same as pointing at one that says nothing.
+    ///
+    /// By id rather than by name, as a group is: ids never leave this app, so
+    /// renaming an identity costs nothing and takes nothing with it — unlike
+    /// a jump host, which is named and so has to be followed.
+    var identityId: String = ""
     var proxyJump: String = ""
     var groupId: String = ""
     var tags: [String] = []
@@ -115,6 +126,14 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
 nonisolated struct Effective: Codable, Sendable, Hashable {
     var user: String = ""
     var userFrom: String = ""
+    var keyPath: String = ""
+    var keyPathFrom: String = ""
+    /// The name of the identity that reached this host, and the group that
+    /// pointed at it — empty when the host points at it itself, as
+    /// `userFrom` is empty when the host sets its own user.
+    ///
+    /// The **name**, not the id: this is what a row shows, and nothing
+    /// outside the store has any use for an id.
     var identity: String = ""
     var identityFrom: String = ""
     var proxyJump: String = ""
@@ -218,7 +237,11 @@ nonisolated struct Group: Codable, Sendable, Identifiable, Hashable {
     var name: String = ""
     var parentId: String = ""
     var user: String = ""
-    var identity: String = ""
+    var keyPath: String = ""
+    /// The identity every host beneath it takes its login from, unless the
+    /// host says otherwise — reaching them after this group's own fields and
+    /// before the group above it.
+    var identityId: String = ""
     var proxyJump: String = ""
     /// Reaches every host beneath it, after each host's own.
     var sshOptions: [String] = []
@@ -226,6 +249,49 @@ nonisolated struct Group: Codable, Sendable, Identifiable, Hashable {
     /// The palette every host beneath it comes up in unless it says otherwise.
     /// Production not looking like staging is the point.
     var theme: String = ""
+}
+
+/// A login written once and pointed at from many hosts and groups: who to log
+/// in as, and the key to log in with.
+///
+/// **A group that is not a place.** It sits in the inheritance chain between
+/// a record's own fields and its parent's — your own first, then whatever you
+/// point at, then the same again for each group above you — so it is one more
+/// step in the walk the resolver already does rather than a second mechanism
+/// with its own precedence to get wrong.
+///
+/// Nothing here is a secret. A key is a path handed to ssh, which does its
+/// own expanding; the YAML export carries these as they stand, and its header
+/// says as much.
+nonisolated struct Identity: Codable, Sendable, Identifiable, Hashable {
+    var id: String = ""
+    var name: String = ""
+    var user: String = ""
+    var keyPath: String = ""
+
+    /// Whether it would fill anything in. One that says nothing is not a
+    /// failure — it is a record somebody has started — but it is worth
+    /// saying before four hosts are filed under it.
+    var saysNothing: Bool {
+        user.trimmingCharacters(in: .whitespaces).isEmpty
+            && keyPath.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// How a row names where a value came from: "from the deploy identity".
+    ///
+    /// A phrase rather than the bare name, because every other source in this
+    /// app is a group — "from Production" — and a bare "from deploy" would
+    /// read as one. The captions, the inherit rows and the inspectors all go
+    /// through here, so the spelling cannot drift between them.
+    var source: String { "the \(name) identity" }
+
+    /// What it fills in, in as many words as a row has room for: "deploy ·
+    /// ~/.ssh/id_ed25519", or what it says of the two.
+    var summary: String {
+        let parts = [user, keyPath].map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        return parts.isEmpty ? "Says nothing yet" : parts.joined(separator: " · ")
+    }
 }
 
 /// What an import did, or would do with `dryRun`.

@@ -58,6 +58,10 @@ struct ContentView: View {
     @State private var exportText = ""
     @State private var exportingList = false
     @State private var showingQuickConnect = false
+    /// Whether the identities manager is open. A flag rather than a value is
+    /// safe here: unlike the import sheet, it reads nothing that is set in
+    /// the same gesture that opens it.
+    @State private var showingIdentities = false
     /// Which way in the import sheet opens on, and whether it is open at all.
     ///
     /// One value rather than a flag beside a source, because the content of a
@@ -231,6 +235,9 @@ struct ContentView: View {
         }
         .sheet(item: $editingGroup) { group in
             GroupEditorSheet(store: store, group: group, room: sheetRoom)
+        }
+        .sheet(isPresented: $showingIdentities) {
+            IdentitiesSheet(store: store, room: sheetRoom)
         }
         .confirmationDialog(
             deletingHost.map { "Delete \($0.name)?" } ?? "",
@@ -586,6 +593,7 @@ struct ContentView: View {
             toggleSplit: toggleSplit,
             quickConnect: { showingQuickConnect = true },
             openImport: { open(import: .sshConfig) },
+            openIdentities: { showingIdentities = true },
             // In a terminal, its scrollback; with the hosts in front, the
             // hosts — where ⌘F did nothing.
             find: {

@@ -60,7 +60,11 @@ the real watchdog running over it — `Model/Files.swift`'s own orchestration
 copy genuinely parked on its continuation), the SFTP
 conversation — against a server written in Swift in this process, **and against
 OpenSSH's own `sftp-server`**, which ships with macOS — the `ssh` layer itself
-against macOS's own `sshd`, kept off your own `~/.ssh`, and
+against macOS's own `sshd`, kept off your own `~/.ssh`,
+**identities** — where one sits in the resolver's chain, what `FromAbove`
+gives a row, what deleting one says, and the file's two readings of
+`identity:`, in `Tests/IdentityTests.swift` and
+`Tests/IdentityFileTests.swift` — and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs.
@@ -167,8 +171,47 @@ credentials, which is most of it.
   them, so **this app no longer answers a password prompt** and the SFTP window
   cannot reach a host that takes only a password. `identity` stayed, a plain
   `-i`. **Don't bring any of it back without a reason from someone other than
-  us.**
+  us** — the one exception being **identities**, which came back at the
+  owner's word as a named user and key with no secrets in them: no keychain
+  and no askpass, so the sentence above still holds. Key generation,
+  `ssh-copy-id`, the Keys manager, snippets and startup scripts stayed cut.
   → [the MVP cut](docs/notes/cuts-and-sweeps.md#the-mvp-cut)
+- **An identity is a group that is not a place**: a named user and key
+  (`Identity`, the store's v11) that a host or a group points at **by id**, so
+  renaming one takes nothing with it and there is no rename to follow — don't
+  add one. It sits in the resolver's existing walk between a record's own
+  fields and its parent's — **your own first, then whatever you point at,
+  then the same again for each group above you** (`Resolver.take`,
+  `FromAbove`) — so it is one more step in a walk that already guards against
+  a looping tree, not a second precedence to get wrong. A value an identity
+  supplies is credited to the **identity**, never to the group that pointed at
+  it (`Identity.source`, "from the deploy identity"): the group holds the
+  pointer and the identity holds the value, and a caption naming the group
+  sends somebody to the wrong editor. An identity that says nothing blocks
+  nothing, and an id nothing answers to falls through rather than resolving to
+  nothing. Deleting one clears every pointer in the same transaction and says
+  what loses what (`Validation.deletionWarning`); an editor's inherit row
+  reads `FromAbove`, never the preview, which has the record's own choice in
+  it. It is **File ▸ Identities…**, the documented list-beside-detail sheet at
+  `DialogSize.large`, written on a debounce and flushed on disappear, since
+  a save resolves every host and crashes the table view drawing the list.
+  **`IdentityChoice` is a named row, not a glyph on the user field**, which is
+  where Termius puts the same choice: theirs is the better idea in the
+  abstract and does not survive a group pointing at an identity, because a
+  glyph has nowhere to put "from Production".
+- **`identity` in the model is a key path, and is spelled `keyPath`**; the
+  record called an identity is the thing above. The store's columns on `hosts`
+  and `host_groups` are still `identity` — every store in existence has them —
+  while the `identities` table's is `keyPath`, and the two spellings meet in
+  the hand-written row mappings at the foot of `Core/Store.swift`. In the
+  file, **`identity:` means a key path in a document at version 4 or below and
+  an identity's name at 5 or above**, with `key:` carrying the path from 5 on
+  (`Portable.identitiesFrom`); a list with no identities is still written as a
+  1 or a 4, so an older copy goes on reading it, and a file below 5 may carry
+  neither `key` nor `identities`. **That rule is as permanent as the files
+  written under it.** A host naming an identity no document and no store has
+  is refused, as a group naming an unknown parent is — an unknown *group* is
+  created instead, because a place with nothing set is still a place.
 - **The cut's leftover engines are gone**: `Core/Command.swift` and
   `Model/Shell.swift` ran programs for features since removed, and are in this
   repository's root commit. Three things in `Command` outlast it, for whenever
@@ -417,8 +460,14 @@ credentials, which is most of it.
 - **A copy running from the build products has also been seen not to stop a
   run**, 539 passing beside one, so that rule is narrower than it reads. What
   holds is that `window-check.sh` cannot run beside another copy; address a
-  copy by its `unix id`, never its name.
-  → [a copy beside the run](docs/notes/testing.md#a-copy-beside-the-run)
+  copy by its `unix id`, never its name — and **put the pid into the script
+  as a literal**. A process held in a variable instead (`repeat with q in
+  application processes … contents of q`) sees the window and **not its
+  sheet**, and reports the whole screen where the window's rect belongs,
+  in silence: every sheet reads as "no sheet", which looks exactly like a
+  dialog that failed to open.
+  → [a copy beside the run](docs/notes/testing.md#a-copy-beside-the-run),
+  [by unix id](docs/notes/driving.md#addressing-a-copy-by-its-unix-id)
 - **One walk per release, and the walk's list is the release record.** A walk
   is drives over the whole window on a scratch copy, photographed, with every
   menu and static text dumped beside them and each finding checked against its
@@ -1374,11 +1423,20 @@ credentials, which is most of it.
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor's
-  General needs 736 and its Advanced 640 — room for the command's six lines
-  at its foot and one line more, a problem or a rename note, and for the
-  inherited user's caption under Connect to — and the group editor's 486,
-  General's with the footer's problem line up, where 570, measured when it
+  General needs **741** and its Advanced 640 — room for the command's six
+  lines at its foot and one line more, a problem or a rename note, for the
+  inherited user's caption under Connect to, and for the Identity row at the
+  head of Connect with — and the group editor's **516**, General's with the
+  footer's problem line up, where 570, measured when it
   had rows since gone, left General 137pt of empty form and Advanced 160.
+  **736 and 486 were those numbers before identities**, and the row each
+  gained was first allowed for by eye at 766 and 516. Driven from outside,
+  766 left db-01's General fitting with **87pt** of empty form under its last
+  row — 53 once normalised to the six lines `commandRoom` allows, against the
+  28 it was tuned to — so the host editor's is 741, measured; the group
+  editor's 516 came back at 46pt under Production's last row on both tabs and
+  stood. **A row's worth added by eye is a band of nothing shipped**: read it
+  off the form's own scroll area instead.
   **Each editor is drawn at its taller tab's height on both tabs**: a
   sheet is centred on its window, so one that changed height with the tab
   moved the tab control under the pointer, 7pt in the group editor and 27
@@ -1759,13 +1817,26 @@ costs. What is left is the host list, the editor, tabs on real `ssh`, files
 over SFTP, and import and export — and that is what to finish before anything
 is added back.
 
+**Identities are the one thing added back**, at the owner's word: a named user
+and key, pointed at from hosts and groups, with no secrets in them. The two
+phases after it — a password kept in the keychain and answered through an
+askpass helper, and with it an SFTP window that can reach a host taking only a
+password — are **not built**, and the hard part is recorded: ssh routes every
+prompt through askpass, the host-key question included, and
+`Terminal/HostKey.swift` now owns that question on the pty. Password auth
+cannot be held by this suite at all, since it validates against the real
+system and `LocalSSHD` has no test user to give a password to, so that one has
+to be proven by hand.
+
 The engine behind it is Swift. The terminal takes a palette — five ship, and
 the config can add more. A fresh install lands on a welcome that counts the
 machines in `~/.ssh/config` and offers them, a CSV, or a YAML file. Hosts are
 filed by dragging them onto a group, and found by tag as well as by name —
 several tags at once, narrowing. A group can set the terminal's colours for
 everything beneath it, so production need not look like staging, and passes
-down the user, the key and the jump host to everything under it. Transfers
+down the user, the key, the jump host and an identity to everything under it;
+an identity is a login written once, so rotating a key is one edit rather than
+one per host. Transfers
 queue rather than all starting at once, a couple at a time, with the rest
 shown waiting their turn, and carrying a file onto one already there asks
 first.

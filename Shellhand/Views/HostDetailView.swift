@@ -119,8 +119,16 @@ struct HostDetailView: View {
                     // name — the one row in this grid that answers a question
                     // somebody is otherwise left asking.
                     ValueRow("OS", host.osLabel)
+                    // Above the two it fills in, as it stands above them in
+                    // the editor. Only when something points at one: unlike
+                    // the OS row, a dash here answers no question — the User
+                    // and Key rows below already say where they came from.
+                    if !host.effective.identity.isEmpty {
+                        ValueRow("Identity", host.effective.identity,
+                                 from: host.effective.identityFrom)
+                    }
                     ValueRow("User", host.effective.user, from: host.effective.userFrom)
-                    ValueRow("Key", host.effective.identity, from: host.effective.identityFrom)
+                    ValueRow("Key", host.effective.keyPath, from: host.effective.keyPathFrom)
                     ValueRow("Jump host", host.effective.jumpHost.value,
                              from: host.effective.jumpHost.from)
                     if let group = store.group(host.groupId) {

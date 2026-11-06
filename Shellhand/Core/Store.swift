@@ -184,6 +184,39 @@ nonisolated final class Store: Sendable {
                 }
             }
         }
+        // A login written once and pointed at from many hosts and groups.
+        // The pointer is a column on each, like every other inherited
+        // setting; what it points at is a record of its own, since a login is
+        // a thing and not a place.
+        //
+        // **The key path's column here is `keyPath`, where `hosts` and
+        // `host_groups` call theirs `identity`.** Those two cannot be renamed
+        // — every store in existence has them under that name — and a column
+        // called `identity` on the `identities` table would mean the record's
+        // own name. The hand-written row mappings at the foot of this file are
+        // where the two spellings meet.
+        //
+        // Append-only, like every migration here: the columns are looked up
+        // before they are added, since a store that cannot be opened is the
+        // whole host list lost.
+        migrator.registerMigration("v11") { db in
+            try db.create(table: "identities") { t in
+                t.primaryKey("id", .text)
+                t.column("name", .text).notNull().defaults(to: "")
+                t.column("user", .text).notNull().defaults(to: "")
+                t.column("keyPath", .text).notNull().defaults(to: "")
+            }
+            for table in ["host_groups", "hosts"] {
+                let held = try String.fetchAll(
+                    db, sql: "SELECT name FROM pragma_table_info(?)", arguments: [table])
+                if !held.contains("identityId") {
+                    try db.alter(table: table) { t in
+                        t.add(column: "identityId", .text).notNull().defaults(to: "")
+                    }
+                }
+            }
+            try db.create(indexOn: "hosts", columns: ["identityId"])
+        }
         return migrator
     }
 
@@ -196,7 +229,8 @@ nonisolated final class Store: Sendable {
         try db.read { db in
             Snapshot(
                 groups: try Group.fetchAll(db),
-                hosts: try Host.fetchAll(db))
+                hosts: try Host.fetchAll(db),
+                identities: try Identity.fetchAll(db))
         }
     }
 
@@ -245,9 +279,38 @@ nonisolated final class Store: Sendable {
         return out
     }
 
+    /// Saves an identity. Nothing follows a rename: hosts and groups point at
+    /// one by id, so the name is free to change — which is the whole reason
+    /// the pointer is an id and not a name.
+    @discardableResult
+    func save(_ identity: Identity) throws -> Identity {
+        var out = identity
+        out.id = out.id.isEmpty ? Store.newID() : out.id
+        out.name = out.name.trimmingCharacters(in: .whitespaces)
+        try db.write { db in try out.upsert(db) }
+        return out
+    }
+
     func deleteHost(id: String) throws {
         try db.write { db in
             try db.execute(sql: "DELETE FROM hosts WHERE id = ?", arguments: [id])
+        }
+    }
+
+    /// Deleting an identity leaves nothing pointing at a record that is gone.
+    ///
+    /// One transaction, as `deleteGroup` is: a host left naming a deleted
+    /// identity would resolve to nothing in silence, which looks exactly like
+    /// a host that simply inherits less — the worst of the two outcomes,
+    /// because there is nothing anywhere to notice.
+    func deleteIdentity(id: String) throws {
+        try db.write { db in
+            try db.execute(
+                sql: "UPDATE hosts SET identityId = '' WHERE identityId = ?", arguments: [id])
+            try db.execute(
+                sql: "UPDATE host_groups SET identityId = '' WHERE identityId = ?",
+                arguments: [id])
+            try db.execute(sql: "DELETE FROM identities WHERE id = ?", arguments: [id])
         }
     }
 
@@ -274,6 +337,10 @@ nonisolated final class Store: Sendable {
     /// be exactly this.
     func apply(_ plan: Portable.Plan) throws {
         try db.write { db in
+            // Identities first: a host in the same plan may point at one, and
+            // a pointer written before its record would be a dangling id for
+            // as long as the transaction lasts.
+            for identity in plan.identities { try identity.upsert(db) }
             for group in plan.groups { try group.upsert(db) }
             for host in plan.hosts { try host.upsert(db) }
         }
@@ -303,7 +370,8 @@ nonisolated extension Group: FetchableRecord, PersistableRecord {
         name = row["name"]
         parentId = row["parentId"]
         user = row["user"]
-        identity = row["identity"]
+        keyPath = row["identity"]
+        identityId = row["identityId"]
         proxyJump = row["proxyJump"]
         sshOptions = Host.decodeTags(row["sshOptions"])
         forwardAgent = row["forwardAgent"]
@@ -315,7 +383,8 @@ nonisolated extension Group: FetchableRecord, PersistableRecord {
         container["name"] = name
         container["parentId"] = parentId
         container["user"] = user
-        container["identity"] = identity
+        container["identity"] = keyPath
+        container["identityId"] = identityId
         container["proxyJump"] = proxyJump
         container["sshOptions"] = Host.encodeTags(sshOptions)
         container["forwardAgent"] = forwardAgent
@@ -333,7 +402,8 @@ nonisolated extension Host: FetchableRecord, PersistableRecord {
         addr = row["addr"]
         port = row["port"]
         user = row["user"]
-        identity = row["identity"]
+        keyPath = row["identity"]
+        identityId = row["identityId"]
         proxyJump = row["proxyJump"]
         groupId = row["groupId"]
         tags = Host.decodeTags(row["tags"])
@@ -351,7 +421,8 @@ nonisolated extension Host: FetchableRecord, PersistableRecord {
         container["addr"] = addr
         container["port"] = port
         container["user"] = user
-        container["identity"] = identity
+        container["identity"] = keyPath
+        container["identityId"] = identityId
         container["proxyJump"] = proxyJump
         container["groupId"] = groupId
         container["tags"] = Host.encodeTags(tags)
@@ -379,5 +450,27 @@ nonisolated extension Host: FetchableRecord, PersistableRecord {
               let text = String(data: data, encoding: .utf8)
         else { return "[]" }
         return text
+    }
+}
+
+// Its own table, so its key path keeps its own name. `hosts` and
+// `host_groups` store theirs in a column called `identity`, which cannot be
+// renamed; this one has no history to keep and says what it holds.
+nonisolated extension Identity: FetchableRecord, PersistableRecord {
+    static var databaseTableName: String { "identities" }
+
+    init(row: Row) {
+        self.init()
+        id = row["id"]
+        name = row["name"]
+        user = row["user"]
+        keyPath = row["keyPath"]
+    }
+
+    func encode(to container: inout PersistenceContainer) {
+        container["id"] = id
+        container["name"] = name
+        container["user"] = user
+        container["keyPath"] = keyPath
     }
 }

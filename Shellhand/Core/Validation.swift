@@ -214,7 +214,7 @@ nonisolated enum Validation {
         // What it gives the hosts beneath it, which goes with it.
         var gives: [String] = []
         if !group.user.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the user") }
-        if !group.identity.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the key") }
+        if !group.keyPath.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the key") }
         if !group.proxyJump.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the jump host") }
         if group.forwardAgent != nil { gives.append("agent forwarding") }
         if !group.theme.isEmpty { gives.append("the palette") }
@@ -260,5 +260,75 @@ nonisolated enum Validation {
             return "A group cannot be inside itself."
         }
         return problem(withOptions: group.sshOptions)
+    }
+
+    /// The same for an identity: a name, and not one another identity has.
+    ///
+    /// An identity that says nothing — no user and no key — is **not** a
+    /// problem. It is a record somebody has started, and refusing to save it
+    /// would mean the name could not be typed before the rest. The sheet says
+    /// so quietly instead.
+    static func problem(with identity: Identity, among others: [Identity]) -> String? {
+        let name = identity.name.trimmingCharacters(in: .whitespaces)
+        if name.isEmpty { return "An identity needs a name." }
+        if others.contains(where: {
+            $0.id != identity.id && $0.name.caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            return "There is already an identity called \(name)."
+        }
+        return nil
+    }
+
+    /// What deleting an identity takes with it: everything that points at it
+    /// stops pointing at anything, and what it was filling in goes.
+    ///
+    /// **There is no rename to follow.** A host and a group point at an
+    /// identity by id, not by name, so renaming one takes nothing with it —
+    /// unlike renaming a host, which has to rewrite every jump field that
+    /// named it. Don't add one.
+    static func deletionWarning(
+        for identity: Identity, hosts: [Host] = [], groups: [Group] = []
+    ) -> String {
+        let name = identity.name.trimmingCharacters(in: .whitespaces)
+        // Every host it **reaches**, not only the ones pointing straight at
+        // it: a group that points at it passes it to everything beneath, and
+        // saying "2 groups" of six machines is the mistake the jump host's
+        // warning already made once. `effective.identity` is what reaches a
+        // host, which is the same question answered by the resolver.
+        let reached = hosts.count {
+            !$0.effective.identity.isEmpty
+                && $0.effective.identity.caseInsensitiveCompare(name) == .orderedSame
+        }
+        // The groups are named, since that is where the pointer would be
+        // changed.
+        let pointing = groups.filter { !identity.id.isEmpty && $0.identityId == identity.id }
+            .map(\.name)
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+
+        var who: [String] = []
+        if reached > 0 { who.append(reached == 1 ? "1 host" : "\(reached) hosts") }
+        switch pointing.count {
+        case 0: break
+        case 1: who.append("the group \(pointing[0])")
+        case 2...3:
+            who.append(
+                "the groups \(pointing.dropLast().joined(separator: ", ")) and \(pointing.last!)")
+        default: who.append("\(pointing.count) groups")
+        }
+        guard !who.isEmpty else { return "Nothing points at it. \(cannotBeUndone)" }
+
+        let one = reached + pointing.count == 1
+        var gives: [String] = []
+        if !identity.user.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the user") }
+        if !identity.keyPath.trimmingCharacters(in: .whitespaces).isEmpty {
+            gives.append("the key")
+        }
+        let whom = who.joined(separator: " and ")
+        var said = whom.prefix(1).uppercased() + whom.dropFirst()
+            + (one ? " points" : " point") + " at it"
+        if !gives.isEmpty {
+            said += ", and \(one ? "loses" : "lose") \(gives.joined(separator: " and "))"
+        }
+        return said + ". Nothing is deleted but the identity itself. \(cannotBeUndone)"
     }
 }

@@ -28,7 +28,7 @@ nonisolated enum CSVHosts {
     /// options, its palette — is not a thing spreadsheets carry, and is left
     /// to the editor.
     private enum Field: CaseIterable {
-        case name, addr, port, user, identity, group, tags, jump
+        case name, addr, port, user, keyPath, group, tags, jump
 
         /// Spellings seen in the wild, already normalised. A header is matched
         /// by letters and digits alone, so `Host Name`, `host_name` and
@@ -39,7 +39,7 @@ nonisolated enum CSVHosts {
             case .addr: ["address", "addr", "hostname", "ip", "ipaddress", "server"]
             case .port: ["port", "sshport"]
             case .user: ["user", "username", "login", "loginname", "sshuser"]
-            case .identity: ["identity", "identityfile", "key", "keyfile", "privatekey", "sshkey"]
+            case .keyPath: ["identity", "identityfile", "key", "keyfile", "privatekey", "sshkey"]
             case .group: ["group", "folder", "category", "parent"]
             case .tags: ["tags", "tag", "labels", "keywords"]
             case .jump: ["jump", "jumphost", "proxyjump", "bastion", "proxy"]
@@ -88,7 +88,7 @@ nonisolated enum CSVHosts {
             throw PortableError(
                 "the first row of this file should name its columns, and none of them is a name "
                     + "or an address — the ones understood are name, address, port, user, "
-                    + "identity, group, tags and jump")
+                    + "key, group, tags and jump")
         }
 
         for (offset, row) in rows.dropFirst().enumerated() {
@@ -124,7 +124,7 @@ nonisolated enum CSVHosts {
             case .user: host.user = value
             case .group: host.group = value
             case .jump: host.jump = value
-            case .identity: host.identity = NSString(string: value).expandingTildeInPath
+            case .keyPath: host.keyPath = NSString(string: value).expandingTildeInPath
             case .tags: host.tags = Tags.clean(value)
             case .port:
                 guard let port = Int(value), port > 0, port < 65536 else {

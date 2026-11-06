@@ -64,7 +64,7 @@ nonisolated struct SSHTransportTests {
 
         do {
             _ = try await SFTPClient.connect(
-                server.resolved(identity: stranger), fixed: server.isolation())
+                server.resolved(keyPath: stranger), fixed: server.isolation())
             Issue.record("a key nobody authorised should not have got in")
         } catch let error as SFTPError {
             #expect(error.message.contains("Permission denied"), "ssh said: \(error.message)")
@@ -100,7 +100,7 @@ nonisolated struct SSHTransportTests {
         var resolved = server.resolved()
         resolved.jumps = [
             Hop(name: "hop", addr: "127.0.0.1", port: server.port, user: server.user,
-                identity: server.clientKey)
+                keyPath: server.clientKey)
         ]
 
         try await server.session(resolved) { client in _ = try await client.list(server.root) }
@@ -241,10 +241,10 @@ nonisolated final class LocalSSHD: @unchecked Sendable {
     }
 
     /// This server, as the app would resolve a host pointed at it.
-    func resolved(identity: String? = nil) -> Resolved {
+    func resolved(keyPath: String? = nil) -> Resolved {
         Resolved(
             host: Shellhand.Host(name: "local-sshd", addr: "127.0.0.1", port: port),
-            user: user, identity: identity ?? clientKey)
+            user: user, keyPath: keyPath ?? clientKey)
     }
 
     /// Connects, runs `body`, and lets the client go whether or not it threw —

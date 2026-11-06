@@ -297,7 +297,7 @@ nonisolated struct DeletionWarningTests {
     /// every host beneath it, and the question never said so.
     @Test("a group says that what it gives the hosts beneath it goes with it")
     func saysWhatItGives() {
-        var production = Group(id: "p", name: "Production", user: "deploy", identity: "~/.ssh/id_ed25519")
+        var production = Group(id: "p", name: "Production", user: "deploy", keyPath: "~/.ssh/id_ed25519")
         production.theme = "Nord"
         let said = Validation.deletionWarning(
             for: production, groups: [production, groups[1]], hosts: hosts)

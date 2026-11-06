@@ -88,8 +88,8 @@ nonisolated struct CSVHostsTests {
         let host = try #require(reading.document.hosts.first)
         #expect(host.addr == "10.0.0.1")
         #expect(host.user == "deploy")
-        #expect(host.identity.hasSuffix("/.ssh/id_ed25519"))
-        #expect(!host.identity.hasPrefix("~"))
+        #expect(host.keyPath.hasSuffix("/.ssh/id_ed25519"))
+        #expect(!host.keyPath.hasPrefix("~"))
     }
 
     @Test("port 22 is left unset, because it is what ssh does anyway")

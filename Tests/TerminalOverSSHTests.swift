@@ -74,7 +74,7 @@ struct TerminalOverSSHTests {
         defer { server.stop() }
         let stranger = try LocalSSHD.key(in: TestScratch.directory("stranger"))
         let session = start(
-            SSHArgs.build(server.resolved(identity: stranger), fixed: server.isolation()))
+            SSHArgs.build(server.resolved(keyPath: stranger), fixed: server.isolation()))
         defer { session.close() }
 
         let seen = await states(of: session, until: Self.ended)

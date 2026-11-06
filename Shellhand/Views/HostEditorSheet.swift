@@ -125,7 +125,7 @@ struct HostEditorSheet: View {
     }
 
     /// What each tab was measured to need; see the frame for how.
-    private var wanted: CGFloat { tab == .general ? 736 : 640 }
+    private var wanted: CGFloat { tab == .general ? 741 : 640 }
 
     /// How much of the command the foot shows: from the form as drawn once
     /// this tab's has been laid out, and the estimate until then.
@@ -155,7 +155,7 @@ struct HostEditorSheet: View {
     }
 
     /// What it gets, over the window it opens over.
-    private var height: CGFloat { SheetHeight.fitted(736, in: room.height) }
+    private var height: CGFloat { SheetHeight.fitted(741, in: room.height) }
 
     /// The lines along the foot above the command, each taking room the form
     /// could otherwise spare it.
@@ -220,8 +220,18 @@ struct HostEditorSheet: View {
         // fitted it with 4 to spare, which a problem along the foot then
         // overran by 19 — where 650/570 had room for one — so each is 70pt
         // taller. The caption under Connect to saying where the user comes
-        // from added 17pt to General's form, so it is 736 — the spare back
+        // from added 17pt to General's form, so it was 736 — the spare back
         // to within a point.
+        //
+        // **741 since, and this one is measured.** The Identity row at the
+        // head of Connect with is one grouped-form row more than General was
+        // measured with. A first guess of 766 — a row's worth added by eye —
+        // left db-01's General fitting with **87pt** of empty form under its
+        // last row, read off the form's own scroll area with the app driven
+        // from outside. The box was 82 there, four lines of command, so at
+        // the six lines `commandRoom` allows that spare is 53 against the 28
+        // this was tuned to; 741 puts it back. Neither tab scrolls, and the
+        // 25pt is the band of nothing a guess would have shipped.
         //
         // Where the window has less room than that below its toolbar — 668
         // at its default 1106×720 — the editor is the room less a margin, and
@@ -309,9 +319,17 @@ struct HostEditorSheet: View {
             }
 
             Section("Connect with") {
-                row("Key", from: preview.effective.identityFrom, set: host.identity) {
-                    TextField("", text: $host.identity,
-                              prompt: Text(shown(preview.effective.identity,
+                // First, because it is what fills the two rows under it in:
+                // an identity is not a third setting beside the user and the
+                // key, it is a way of writing both once.
+                row("Identity", from: preview.effective.identityFrom, set: host.identityId) {
+                    IdentityChoice(
+                        chosen: $host.identityId, identities: store.identitiesByName,
+                        inherited: inheritedIdentity)
+                }
+                row("Key", from: preview.effective.keyPathFrom, set: host.keyPath) {
+                    TextField("", text: $host.keyPath,
+                              prompt: Text(shown(preview.effective.keyPath,
                                                  Self.keyExample(avoiding: keysInList))))
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
@@ -461,7 +479,8 @@ struct HostEditorSheet: View {
     /// they stand in.
     private var shownFroms: [String] {
         [
-            Self.shownFrom(preview.effective.identityFrom, set: host.identity),
+            Self.shownFrom(preview.effective.identityFrom, set: host.identityId),
+            Self.shownFrom(preview.effective.keyPathFrom, set: host.keyPath),
             Self.shownFrom(preview.effective.proxyJumpFrom, set: host.proxyJump),
         ].compactMap { $0 }
     }
@@ -535,12 +554,14 @@ struct HostEditorSheet: View {
 
     /// Every key the list names, hosts' and groups', for `keyExample`.
     private var keysInList: [String] {
-        store.snapshot.hosts.map(\.identity) + store.snapshot.groups.map(\.identity)
+        store.snapshot.hosts.map(\.keyPath) + store.snapshot.groups.map(\.keyPath)
+            + store.snapshot.identities.map(\.keyPath)
     }
 
     /// Every user the list names, hosts' and groups', for `userExample`.
     private var usersInList: [String] {
         store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)
+            + store.snapshot.identities.map(\.user)
     }
 
     /// Whether what is wrong is the ssh options, which live on the other tab.
@@ -663,8 +684,8 @@ struct HostEditorSheet: View {
     /// changes — the group, and the fields that stop a value
     /// being inherited at all.
     private var previewKey: String {
-        [host.groupId, newGroupParent, host.user, host.identity, host.proxyJump,
-         host.addr, String(host.port), optionsText,
+        [host.groupId, newGroupParent, host.user, host.keyPath, host.identityId,
+         host.proxyJump, host.addr, String(host.port), optionsText,
          host.forwardAgent.map(String.init) ?? "-"].joined(separator: "\u{2}")
     }
 
@@ -713,9 +734,21 @@ struct HostEditorSheet: View {
     /// row — so choosing it is a decision rather than a shrug. Read off the
     /// groups, not the preview, which has this host's own choice in it.
     private var inheritedAgent: String {
-        let above = FromAbove(of: filed, among: store.snapshot.groups)
+        let above = fromAbove
         return Effective.inheritedAgent(above.forwardAgent, from: above.forwardAgentFrom)
     }
+
+    /// What this host's groups give it, read off the groups rather than off
+    /// the preview, which has the host's own choices folded into it: an
+    /// inherit row read off that names the host's own.
+    private var fromAbove: FromAbove {
+        FromAbove(
+            of: filed, among: store.snapshot.groups, identities: store.snapshot.identities)
+    }
+
+    /// The name of the identity a group above points at, for the Identity
+    /// menu's "leave it alone" item and for its grey label.
+    private var inheritedIdentity: String { fromAbove.identity }
 
     /// What the terminal would come up in if this host chose nothing: the
     /// nearest group that names a palette, or the one in Settings.

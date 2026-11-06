@@ -9,6 +9,8 @@ import Yams
 nonisolated enum Portable {
     struct Document: Sendable, Equatable {
         var version = 1
+        /// The logins the file declares, which its hosts and groups name.
+        var identities: [Identity] = []
         var groups: [Group] = []
         var hosts: [Host] = []
         /// What the file said that this app no longer keeps, in words an
@@ -17,13 +19,25 @@ nonisolated enum Portable {
         /// parser gives, and said rather than passed over in silence.
         var passedOver: [String] = []
 
-        var isEmpty: Bool { groups.isEmpty && hosts.isEmpty }
+        var isEmpty: Bool { groups.isEmpty && hosts.isEmpty && identities.isEmpty }
+    }
+
+    /// A login the file declares, named by the hosts and groups that use it.
+    /// Nothing secret: a key is a path, as it is everywhere else here.
+    struct Identity: Sendable, Equatable {
+        var name = ""
+        var user = ""
+        var keyPath = ""
     }
 
     struct Group: Sendable, Equatable {
         var name = ""
         var parent = ""
         var user = ""
+        var keyPath = ""
+        /// The identity it points at, by name — `identity:` in a document at
+        /// version 5 or later. Below that the word meant the key path, which
+        /// is what `keyPath` above carries.
         var identity = ""
         var jump = ""
         var options: [String] = []
@@ -36,6 +50,7 @@ nonisolated enum Portable {
         var addr = ""
         var port = 0
         var user = ""
+        var keyPath = ""
         var identity = ""
         var jump = ""
         var group = ""
@@ -72,8 +87,10 @@ nonisolated enum Portable {
         guard let top = first as? [String: Any] else {
             throw PortableError("the top of this file should be version, groups and hosts")
         }
-        try reject(unknown: top, allowed: ["version", "credentials", "groups", "hosts", "snippets"],
-                   in: "this file")
+        try reject(
+            unknown: top,
+            allowed: ["version", "credentials", "groups", "hosts", "identities", "snippets"],
+            in: "this file")
 
         var out = Document()
         /// What records named that this app no longer keeps. A set, because
@@ -96,10 +113,35 @@ nonisolated enum Portable {
         // log in.
         if top["credentials"] != nil { out.passedOver.append("credentials") }
         if top["snippets"] != nil { out.passedOver.append("snippets") }
+
+        // **What `identity` means depends on the version the file declares.**
+        // From 5 it names one of the identities above and `key` carries the
+        // key path; below 5 there were no identities, and `identity` *was*
+        // the key path — which is what every file written before this means,
+        // so that is what it goes on meaning. The version is read above, and
+        // the fields a record may hold follow from it, so a file claiming 1
+        // and carrying a `key` is refused with the usual list rather than
+        // read two ways.
+        let named = out.version >= identitiesFrom
+
+        out.identities = try each(top["identities"], "identities") { fields in
+            try reject(unknown: fields, allowed: ["name", "user", "key"], in: "an identity")
+            return Identity(
+                name: try text(fields, "name", required: true, in: "an identity"),
+                user: try text(fields, "user", in: "an identity"),
+                keyPath: try text(fields, "key", in: "an identity"))
+        }
+        if !out.identities.isEmpty, !named {
+            throw PortableError(
+                "this file says version \(out.version) and has identities, which came in at "
+                    + "version \(identitiesFrom)")
+        }
+
         out.groups = try each(top["groups"], "groups") { fields in
             try reject(unknown: fields,
-                       allowed: ["name", "parent", "user", "identity", "jump", "credential",
-                                 "options", "forward_agent", "theme", "startup"],
+                       allowed: Set(["name", "parent", "user", "identity", "jump", "credential",
+                                 "options", "forward_agent", "theme", "startup"])
+                           .union(named ? ["key"] : []),
                        in: "a group")
             if fields["credential"] != nil { dropped.insert("credentials") }
             if fields["startup"] != nil { dropped.insert("startup snippets") }
@@ -107,7 +149,8 @@ nonisolated enum Portable {
                 name: try text(fields, "name", required: true, in: "a group"),
                 parent: try text(fields, "parent", in: "a group"),
                 user: try text(fields, "user", in: "a group"),
-                identity: try text(fields, "identity", in: "a group"),
+                keyPath: try text(fields, named ? "key" : "identity", in: "a group"),
+                identity: named ? try text(fields, "identity", in: "a group") : "",
                 jump: try text(fields, "jump", in: "a group"),
                 options: try strings(fields, "options", in: "a group"),
                 forwardAgent: try flag(fields, "forward_agent", in: "a group"),
@@ -115,9 +158,10 @@ nonisolated enum Portable {
         }
         out.hosts = try each(top["hosts"], "hosts") { fields in
             try reject(unknown: fields,
-                       allowed: ["name", "addr", "port", "user", "identity", "jump", "group",
+                       allowed: Set(["name", "addr", "port", "user", "identity", "jump", "group",
                                  "credential", "tags", "options", "forward_agent", "theme",
-                                 "startup", "forwards"],
+                                 "startup", "forwards"])
+                           .union(named ? ["key"] : []),
                        in: "a host")
             if fields["credential"] != nil { dropped.insert("credentials") }
             if fields["startup"] != nil { dropped.insert("startup snippets") }
@@ -126,7 +170,8 @@ nonisolated enum Portable {
                 addr: try text(fields, "addr", in: "a host"),
                 port: try number(fields, "port", in: "a host"),
                 user: try text(fields, "user", in: "a host"),
-                identity: try text(fields, "identity", in: "a host"),
+                keyPath: try text(fields, named ? "key" : "identity", in: "a host"),
+                identity: named ? try text(fields, "identity", in: "a host") : "",
                 jump: try text(fields, "jump", in: "a host"),
                 group: try text(fields, "group", in: "a host"))
             if let tags = fields["tags"] {
@@ -157,21 +202,47 @@ nonisolated enum Portable {
 
     // MARK: writing
 
-    /// The store as a file, in the order the document declares things.
-    static func export(groups: [Shellhand.Group], hosts: [Shellhand.Host]) throws -> String {
+    /// The store as a file, in the order the document declares things:
+    /// identities, then groups, then hosts, so a name is declared above every
+    /// record that uses it.
+    ///
+    /// **The key path is written as `key` only where the file says version 5
+    /// or later**, since below that the word for it is `identity`. A list
+    /// with no identities is still written as a 1 or a 4, so it imports into
+    /// a copy of this app that has never heard of them.
+    static func export(
+        groups: [Shellhand.Group], hosts: [Shellhand.Host],
+        identities: [Shellhand.Identity] = []
+    ) throws -> String {
         let groupByID = Dictionary(groups.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let identityByID = Dictionary(
+            identities.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let sorted = { (a: String, b: String) in a.lowercased() < b.lowercased() }
         let groups = groups.sorted { sorted($0.name, $1.name) }
         let hosts = hosts.sorted { sorted($0.name, $1.name) }
+        // Only the ones something points at, and only where there are any:
+        // an identity nothing uses is still worth carrying, since it is a
+        // record somebody made, so this is every one of them.
+        let identities = identities.sorted { sorted($0.name, $1.name) }
 
-        var top: [(String, Node)] = [(
-            "version",
-            Node(
-                String(version(
-                    settings: hosts.contains { !$0.sshOptions.isEmpty || $0.forwardAgent != nil }
-                        || groups.contains { !$0.sshOptions.isEmpty || $0.forwardAgent != nil })),
-                Tag(.int)))]
+        let number = version(
+            settings: hosts.contains { !$0.sshOptions.isEmpty || $0.forwardAgent != nil }
+                || groups.contains { !$0.sshOptions.isEmpty || $0.forwardAgent != nil },
+            identities: !identities.isEmpty)
+        let named = number >= identitiesFrom
+        /// What this file calls a key path.
+        let keyField = named ? "key" : "identity"
 
+        var top: [(String, Node)] = [("version", Node(String(number), Tag(.int)))]
+
+        if !identities.isEmpty {
+            top.append(("identities", sequence(identities.map { identity in
+                var fields: [(String, Node)] = [("name", Node(identity.name))]
+                if !identity.user.isEmpty { fields.append(("user", Node(identity.user))) }
+                if !identity.keyPath.isEmpty { fields.append(("key", Node(identity.keyPath))) }
+                return mapping(fields)
+            })))
+        }
         if !groups.isEmpty {
             top.append(("groups", sequence(groups.map { group in
                 var fields: [(String, Node)] = [("name", Node(group.name))]
@@ -179,7 +250,10 @@ nonisolated enum Portable {
                     fields.append(("parent", Node(parent.name)))
                 }
                 if !group.user.isEmpty { fields.append(("user", Node(group.user))) }
-                if !group.identity.isEmpty { fields.append(("identity", Node(group.identity))) }
+                if named, let identity = identityByID[group.identityId] {
+                    fields.append(("identity", Node(identity.name)))
+                }
+                if !group.keyPath.isEmpty { fields.append((keyField, Node(group.keyPath))) }
                 if !group.proxyJump.isEmpty { fields.append(("jump", Node(group.proxyJump))) }
                 fields += written(group.sshOptions, group.forwardAgent, group.theme)
                 return mapping(fields)
@@ -192,7 +266,10 @@ nonisolated enum Portable {
                 ]
                 if host.port != 0 { fields.append(("port", Node(String(host.port), Tag(.int)))) }
                 if !host.user.isEmpty { fields.append(("user", Node(host.user))) }
-                if !host.identity.isEmpty { fields.append(("identity", Node(host.identity))) }
+                if named, let identity = identityByID[host.identityId] {
+                    fields.append(("identity", Node(identity.name)))
+                }
+                if !host.keyPath.isEmpty { fields.append((keyField, Node(host.keyPath))) }
                 if !host.proxyJump.isEmpty { fields.append(("jump", Node(host.proxyJump))) }
                 if let group = groupByID[host.groupId] {
                     fields.append(("group", Node(group.name)))
@@ -210,7 +287,7 @@ nonisolated enum Portable {
         let header = """
             # Shellhand host list. Fold it into another machine with File ▸ Import.
             # Records match by name, so ids differing between machines does not matter.
-            # No secrets here: identity is a path to a key, never the key.
+            # No secrets here: a key is a path to one, never the key itself.
 
             """
         return header + (try Yams.serialize(node: mapping(top)))
@@ -232,13 +309,26 @@ nonisolated enum Portable {
         return out
     }
 
+    /// The version the identities section came in at, and with it the change
+    /// of meaning: from here on `identity` on a host or a group names an
+    /// identity and `key` carries the key path, where below it `identity`
+    /// *was* the key path.
+    ///
+    /// This number is as permanent as the files written under it. Changing it
+    /// would reinterpret every list anyone has exported.
+    static let identitiesFrom = 5
+
     /// What a reader has to understand to read this file.
     ///
     /// 2 and 3 were the credential and snippet sections, which this app no
     /// longer writes. The numbers are not reused: a file announcing 3 means
     /// those sections wherever it came from, and the sections are still read.
-    static func version(settings: Bool = false) -> Int {
-        settings ? 4 : 1
+    ///
+    /// A list with no identities is still a 1 or a 4, so nothing that could
+    /// read it before stops being able to.
+    static func version(settings: Bool = false, identities: Bool = false) -> Int {
+        if identities { return identitiesFrom }
+        return settings ? 4 : 1
     }
 
     // MARK: reading helpers
@@ -328,12 +418,14 @@ extension Portable.Document {
     /// record, no two records of a kind sharing one, and an address on every
     /// host.
     nonisolated func validate() throws {
-        guard (1...4).contains(version) else {
+        guard (1...Portable.identitiesFrom).contains(version) else {
             throw PortableError(
-                "this file says version \(version); this reads up to version 4")
+                "this file says version \(version); this reads up to version "
+                    + "\(Portable.identitiesFrom)")
         }
         try unique(groups.map(\.name), "group")
         try unique(hosts.map(\.name), "host")
+        try unique(identities.map(\.name), "identity")
         for host in hosts where host.addr.trimmingCharacters(in: .whitespaces).isEmpty {
             throw PortableError("host \"\(host.name)\" has no addr")
         }

@@ -8,11 +8,11 @@ nonisolated struct SSHArgsTests {
     private func clean() { SSHArgs.setGlobalOptions([]) }
 
     private func host(
-        _ addr: String, port: Int = 0, user: String = "", identity: String = "",
+        _ addr: String, port: Int = 0, user: String = "", keyPath: String = "",
         alias: String = "", name: String = "web"
     ) -> Resolved {
         Resolved(
-            host: Host(name: name, addr: addr, port: port), user: user, identity: identity,
+            host: Host(name: name, addr: addr, port: port), user: user, keyPath: keyPath,
             alias: alias)
     }
 
@@ -37,9 +37,9 @@ nonisolated struct SSHArgsTests {
     }
 
     @Test("a key becomes -i")
-    func identity() {
+    func keyPath() {
         clean()
-        #expect(SSHArgs.build(host("10.0.0.1", identity: "/keys/id"))
+        #expect(SSHArgs.build(host("10.0.0.1", keyPath: "/keys/id"))
             == ["-i", "/keys/id", "10.0.0.1"])
     }
 
@@ -47,7 +47,7 @@ nonisolated struct SSHArgsTests {
     func globalOptionsLead() {
         SSHArgs.setGlobalOptions(["IdentitiesOnly=yes", "ServerAliveInterval=30"])
         defer { clean() }
-        #expect(SSHArgs.build(host("10.0.0.1", port: 2222, identity: "/keys/id")) == [
+        #expect(SSHArgs.build(host("10.0.0.1", port: 2222, keyPath: "/keys/id")) == [
             "-o", "IdentitiesOnly=yes", "-o", "ServerAliveInterval=30",
             "-p", "2222", "-i", "/keys/id", "10.0.0.1",
         ])
@@ -69,7 +69,7 @@ nonisolated struct SSHArgsTests {
         ])
         defer { clean() }
         let resolved = host(
-            "127.0.0.1", port: 42222, user: "spike", identity: "/tmp/shellhand-check/id_spike",
+            "127.0.0.1", port: 42222, user: "spike", keyPath: "/tmp/shellhand-check/id_spike",
             name: "demoserver")
         #expect((["ssh"] + SSHArgs.build(resolved)).joined(separator: " ")
             == "ssh -o UserKnownHostsFile=/tmp/shellhand-check/known_hosts.uicheck"
@@ -84,7 +84,7 @@ nonisolated struct SSHArgsTests {
         var resolved = host("10.0.1.5", port: 2200, user: "app")
         resolved.jumps = [Hop(
             name: "bastion", addr: "10.0.0.9", port: 2222, user: "jump",
-            identity: "/keys/jump")]
+            keyPath: "/keys/jump")]
         let args = SSHArgs.build(resolved)
         #expect(args == [
             "-p", "2200",

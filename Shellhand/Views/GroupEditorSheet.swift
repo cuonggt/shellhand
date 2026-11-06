@@ -89,7 +89,13 @@ struct GroupEditorSheet: View {
         // wrong, about 25pt, which comes out of the form: this leaves
         // General a margin under its last row with that line up, and both
         // tabs unscrolled.
-        .frame(width: DialogSize.medium, height: SheetHeight.fitted(486, in: room.height))
+        //
+        // **516 since, and measured**: the Identity row at the head of what
+        // is passed down is one grouped-form row more than 486 was measured
+        // with. Driven from outside, Production's General and Advanced both
+        // fit at 516 with 46pt under the last row — a margin, not the band
+        // of nothing that 570 left — and neither tab scrolls.
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(516, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible
@@ -149,7 +155,7 @@ struct GroupEditorSheet: View {
     /// What the group is called, where it sits, and how the hosts under it
     /// log in.
     private var general: some View {
-        let above = FromAbove(of: group, among: store.snapshot.groups)
+        let above = fromAbove
         return Form {
             // No header: a name and where it sits are what the dialog is
             // about, and a title above them would only name the thing you
@@ -177,14 +183,15 @@ struct GroupEditorSheet: View {
             }
 
             Section("Passed down, unless something beneath says otherwise") {
+                // First, as in the host editor: it is what fills the two
+                // rows under it in, for every host beneath this group.
+                identityRow(from: above.identityFrom, inherited: above.identity)
                 row("User", value: above.user, from: above.userFrom,
-                    example: HostEditorSheet.userExample(
-                        avoiding: store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)),
+                    example: HostEditorSheet.userExample(avoiding: usersInList),
                     text: $group.user)
-                row("Key", value: above.identity, from: above.identityFrom,
-                    example: HostEditorSheet.keyExample(
-                        avoiding: store.snapshot.hosts.map(\.identity) + store.snapshot.groups.map(\.identity)),
-                    text: $group.identity)
+                row("Key", value: above.keyPath, from: above.keyPathFrom,
+                    example: HostEditorSheet.keyExample(avoiding: keysInList),
+                    text: $group.keyPath)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
                     example: HostEditorSheet.jumpExample(
                         avoiding: store.snapshot.hosts.map(\.name)),
@@ -199,7 +206,7 @@ struct GroupEditorSheet: View {
 
     /// What happens once you are on a host beneath it.
     private var advanced: some View {
-        let above = FromAbove(of: group, among: store.snapshot.groups)
+        let above = fromAbove
         return Form {
             Section("Once connected") {
                 // Chosen by looking at it, as everywhere a palette is.
@@ -316,19 +323,61 @@ struct GroupEditorSheet: View {
         }
     }
 
+    /// The identity row: the same shape as the others — the choice where
+    /// their field is, the menu's room after it so everything in the section
+    /// ends at one edge, and the caption beside it — with a menu in place of
+    /// a field, since an identity is picked rather than typed.
+    private func identityRow(from: String, inherited: String) -> some View {
+        LabeledContent("Identity") {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                HStack(spacing: 6) {
+                    IdentityChoice(
+                        chosen: $group.identityId, identities: store.identitiesByName,
+                        inherited: inherited)
+                    FieldMenu.room
+                }
+                if let from = Self.shownFrom(from, set: group.identityId) {
+                    FromCaption(from: from, among: shownFroms,
+                                help: "Inherited from \(from). Pick one here to set it "
+                                    + "for everything under this group.")
+                }
+            }
+        }
+    }
+
     /// Where a row's value comes from, said beside it only while this group
     /// sets nothing there itself.
     private static func shownFrom(_ from: String, set: String) -> String? {
         set.trimmingCharacters(in: .whitespaces).isEmpty && !from.isEmpty ? from : nil
     }
 
+    /// What this group's parents give it. Read off the groups above, never
+    /// off the group itself, which is what its own fields are for.
+    private var fromAbove: FromAbove {
+        FromAbove(
+            of: group, among: store.snapshot.groups, identities: store.snapshot.identities)
+    }
+
+    /// Every user and key the list already names, identities included, so an
+    /// example names none of them.
+    private var usersInList: [String] {
+        store.snapshot.hosts.map(\.user) + store.snapshot.groups.map(\.user)
+            + store.snapshot.identities.map(\.user)
+    }
+
+    private var keysInList: [String] {
+        store.snapshot.hosts.map(\.keyPath) + store.snapshot.groups.map(\.keyPath)
+            + store.snapshot.identities.map(\.keyPath)
+    }
+
     /// What the captions beside the fields say, every row's, for the column
     /// they stand in.
     private var shownFroms: [String] {
-        let above = FromAbove(of: group, among: store.snapshot.groups)
+        let above = fromAbove
         return [
+            Self.shownFrom(above.identityFrom, set: group.identityId),
             Self.shownFrom(above.userFrom, set: group.user),
-            Self.shownFrom(above.identityFrom, set: group.identity),
+            Self.shownFrom(above.keyPathFrom, set: group.keyPath),
             Self.shownFrom(above.proxyJumpFrom, set: group.proxyJump),
         ].compactMap { $0 }
     }

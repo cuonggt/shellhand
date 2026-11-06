@@ -190,7 +190,7 @@ nonisolated struct PortableTests {
         let group = Group(id: "g", name: "Production", user: "ubuntu")
         let child = Group(id: "g2", name: "EU", parentId: "g")
         let host = Host(id: "h", name: "web", addr: "10.0.0.1", port: 2222,
-                        identity: "~/.ssh/id_ed25519", groupId: "g2", tags: ["edge"])
+                        keyPath: "~/.ssh/id_ed25519", groupId: "g2", tags: ["edge"])
 
         let yaml = try Portable.export(groups: [group, child], hosts: [host])
         let document = try Portable.parse(yaml)
@@ -199,7 +199,7 @@ nonisolated struct PortableTests {
         #expect(document.hosts.first?.name == "web")
         #expect(document.hosts.first?.port == 2222)
         #expect(document.hosts.first?.group == "EU")
-        #expect(document.hosts.first?.identity == "~/.ssh/id_ed25519")
+        #expect(document.hosts.first?.keyPath == "~/.ssh/id_ed25519")
         #expect(document.hosts.first?.tags == ["edge"])
         #expect(document.groups.first { $0.name == "EU" }?.parent == "Production")
         // Nothing of the three is written any more, so a round trip has

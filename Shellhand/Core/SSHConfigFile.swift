@@ -119,7 +119,7 @@ nonisolated enum SSHConfigFile {
             if let port = settings["port"].flatMap(Int.init), port != 22 { host.port = port }
             host.user = settings["user"] ?? ""
             if let identity = settings["identityfile"] {
-                host.identity = NSString(string: identity).expandingTildeInPath
+                host.keyPath = NSString(string: identity).expandingTildeInPath
             }
             let jump = settings["proxyjump"] ?? ""
             host.jump = jump.lowercased() == "none" ? "" : jump

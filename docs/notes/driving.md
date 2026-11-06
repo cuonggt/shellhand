@@ -168,6 +168,61 @@ answers on, ended a few seconds later when the copy was quit, but past
 loopback all the same. Press Escape in the list first, so nothing is
 selected and SFTP asks which host.
 
+## Addressing a copy by its unix id
+
+`window-check.sh` refuses to run beside another copy, because System Events
+addresses a process by name. A drive **can** run beside one — the user's
+installed copy, say — but only if it addresses its own by `unix id`, and
+only if the pid is written into the script text as a **literal**.
+
+Two forms look equivalent and are not. Measured side by side against one
+running app, with its editor open:
+
+    tell (first application process whose unix id is 12014)
+      → AXGroup AXToolbar AXButton AXButton AXButton AXStaticText AXSheet
+
+    repeat with q in application processes
+      if (unix id of q) is 12014 then set p to contents of q
+    tell p
+      → AXGroup AXToolbar AXButton AXButton AXButton AXStaticText
+
+The held reference **sees the window and not its sheet**, and `front window`
+through it reports the whole screen's rect rather than the window's. Nothing
+errors; every sheet simply reads as "no sheet", which looks exactly like a
+dialog that failed to open — and that is three passes of a drive spent
+debugging the app rather than the script. A `whose` filter holding a script
+**variable** rather than a literal fails the same quiet way, which is why the
+pid goes in by string interpolation from the shell.
+
+## A window retitled by its own selection
+
+The host window's title carries what is picked — "Hosts – db-01 ·
+Production" — so it changes on **every arrow press**. That makes `front
+window` worse than the general warning about stale titles suggests: a
+reference taken at the top of a statement and dereferenced further down
+fails with *"Can't get window \"Hosts – db-01 · Production\""* even inside
+one script, and a handler that takes an element and walks it fails the
+moment the selection moves under it. Address `window 1` instead of `front
+window` when more than one reference is taken, and do the arrowing and the
+reading in the same statement where you can.
+
+**One editor per launch.** The window opens with the keyboard in the
+sidebar's host list, which is the only dependable way into it: once a sheet
+has been open the keyboard is elsewhere, and walking the tree to focus the
+outline hits the stale-title problem above. Relaunching is cheaper than
+getting focus back.
+
+## Does a form fit, with a band of nothing under it?
+
+`Does it fit` below says how to tell scrolling from fitting. It does not say
+how to tell **fitting** from **fitting with too much room**, which is the
+other half of the editors' rule — and the half a guessed height gets wrong.
+Walk the form's scroll area's own children, take the lowest bottom edge that
+is still inside it, and subtract: that is the empty band. 87pt under db-01's
+last row is what a row allowed for by eye left behind; 28pt, normalised to
+the six lines the command box may take, is what the host editor was tuned
+to.
+
 ## The lock
 
 **A locked screen looks exactly like an app that failed to launch.** With

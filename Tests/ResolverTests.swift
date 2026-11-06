@@ -21,15 +21,15 @@ nonisolated struct ResolverTests {
 
     @Test("an empty field comes from the nearest group that sets it, and says so")
     func nearestGroupWins() {
-        let parent = Group(id: "p", name: "Production", user: "deploy", identity: "/keys/prod")
+        let parent = Group(id: "p", name: "Production", user: "deploy", keyPath: "/keys/prod")
         let child = Group(id: "c", name: "EU", parentId: "p", user: "eu-deploy")
         let host = Host(id: "h", name: "web", addr: "10.0.0.1", groupId: "c")
         let out = resolver(groups: [parent, child], hosts: [host]).resolve(host)
         #expect(out.user == "eu-deploy")
         #expect(out.userFrom == "EU")
         // Nothing nearer sets the key, so the grandparent's is used.
-        #expect(out.identity == "/keys/prod")
-        #expect(out.identityFrom == "Production")
+        #expect(out.keyPath == "/keys/prod")
+        #expect(out.keyPathFrom == "Production")
     }
 
     @Test("a group chain that loops stops rather than spinning")
@@ -47,7 +47,7 @@ nonisolated struct ResolverTests {
     func jumpResolves() {
         let bastion = Host(
             id: "b", name: "bastion", addr: "10.0.0.9", port: 2222, user: "jump",
-            identity: "/keys/jump")
+            keyPath: "/keys/jump")
         let host = Host(
             id: "h", name: "web", addr: "10.0.1.5", proxyJump: "bastion")
         let out = resolver(hosts: [bastion, host]).resolve(host)
@@ -55,7 +55,7 @@ nonisolated struct ResolverTests {
         #expect(out.jumps.first?.addr == "10.0.0.9")
         #expect(out.jumps.first?.port == 2222)
         #expect(out.jumps.first?.user == "jump")
-        #expect(out.jumps.first?.identity == "/keys/jump")
+        #expect(out.jumps.first?.keyPath == "/keys/jump")
     }
 
     @Test("a jump host that is not one of yours is left for ssh")

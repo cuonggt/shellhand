@@ -340,7 +340,7 @@ struct ImportSheet: View {
             DisclosureGroup("What the columns should be") {
                 Text(
                     """
-                    name,address,port,user,identity,group,tags,jump
+                    name,address,port,user,key,group,tags,jump
                     bastion,10.0.0.1,22,deploy,~/.ssh/id_ed25519,Production,edge,
                     web-1,10.0.1.7,,deploy,,Production,web;live,bastion
                     """

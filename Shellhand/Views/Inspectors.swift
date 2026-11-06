@@ -18,7 +18,8 @@ struct GroupInspector: View {
     let onNewGroupIn: (Group) -> Void
 
     var body: some View {
-        let above = FromAbove(of: group, among: store.snapshot.groups)
+        let above = FromAbove(
+            of: group, among: store.snapshot.groups, identities: store.snapshot.identities)
         let inside = store.tree.children(of: group.id)
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         ScrollView {
@@ -47,8 +48,9 @@ struct GroupInspector: View {
                 // column: two, each sizing its own labels, put Contents'
                 // values 41.5pt left of what is passed down.
                 Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
+                    identity(above)
                     passed("User", own: group.user, above: above.user, from: above.userFrom)
-                    passed("Key", own: group.identity, above: above.identity, from: above.identityFrom)
+                    passed("Key", own: group.keyPath, above: above.keyPath, from: above.keyPathFrom)
                     passed("Jump host", own: group.proxyJump, above: above.proxyJump,
                            from: above.proxyJumpFrom)
                     agent(above)
@@ -99,6 +101,15 @@ struct GroupInspector: View {
     /// Its own value with no caption, or what reaches it from above with one.
     private func passed(_ label: String, own: String, above: String, from: String) -> ValueRow {
         own.isEmpty ? ValueRow(label, above, from: from) : ValueRow(label, own)
+    }
+
+    /// The identity this group points at, by **name**: the store holds an id
+    /// and nothing outside it has any use for one. A dash where nothing
+    /// points anywhere, since this grid says what the group passes down and
+    /// "nothing" is an answer here, unlike in a host's.
+    private func identity(_ above: FromAbove) -> ValueRow {
+        let own = store.identity(group.identityId)?.name ?? ""
+        return passed("Identity", own: own, above: above.identity, from: above.identityFrom)
     }
 
     /// Its own choice, or what reaches it from above with where from, in the

@@ -66,6 +66,9 @@ struct AppActions {
     var toggleSplit: () -> Void = {}
     var quickConnect: () -> Void = {}
     var openImport: () -> Void = {}
+    /// The identities manager. In File because its items act on the list, as
+    /// Import and Export do, and an identity is part of the list.
+    var openIdentities: () -> Void = {}
     var find: () -> Void = {}
     var findNext: () -> Void = {}
     var findPrevious: () -> Void = {}
@@ -390,6 +393,12 @@ struct ShellhandCommands: Commands {
             // No key: ⇧⌘E, the usual one, is Edit Group's here.
             Button("Export…") { actions?.exportList() }
                 .disabled(!(actions?.canExport ?? false))
+            Divider()
+            // No key either: ⇧⌘I is Import's and ⌥⌘I is the inspector's.
+            // Never greyed for an empty list — an empty list is exactly when
+            // the first identity gets made.
+            Button("Identities…") { actions?.openIdentities() }
+                .disabled(actions == nil)
         }
 
         // With the host window in front, ⌘W closes the tab in front and

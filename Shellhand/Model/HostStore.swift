@@ -47,7 +47,9 @@ final class HostStore {
     /// Whether there is a list to export: File ▸ Export… greys out without
     /// one, and the import sheet's Export… with it, where it wrote a file
     /// holding nothing.
-    var canExport: Bool { !snapshot.hosts.isEmpty || !snapshot.groups.isEmpty }
+    var canExport: Bool {
+        !snapshot.hosts.isEmpty || !snapshot.groups.isEmpty || !snapshot.identities.isEmpty
+    }
 
     func refresh() async {
         loading = true
@@ -191,6 +193,42 @@ final class HostStore {
             for: group, groups: snapshot.groups, hosts: snapshot.hosts)
     }
 
+    func deletionWarning(for identity: Identity) -> String {
+        Validation.deletionWarning(
+            for: identity, hosts: snapshot.hosts, groups: snapshot.groups)
+    }
+
+    /// What an identity reaches, for the sheet's Used by and for the count
+    /// beside its name: the hosts it actually fills in for — by what the
+    /// resolver says reaches them, so a host under a pointing group is
+    /// counted — and the groups that point at it, which is where that
+    /// pointer would be changed.
+    func using(_ identity: Identity) -> (hosts: [Host], groups: [Group]) {
+        let name = identity.name.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return ([], []) }
+        let hosts = snapshot.hosts.filter {
+            !$0.effective.identity.isEmpty
+                && $0.effective.identity.caseInsensitiveCompare(name) == .orderedSame
+        }
+        let groups = snapshot.groups.filter {
+            !identity.id.isEmpty && $0.identityId == identity.id
+        }
+        return (hosts, groups)
+    }
+
+    /// The identity a host or a group points at, where it points at one.
+    func identity(_ id: String) -> Identity? {
+        guard !id.isEmpty else { return nil }
+        return snapshot.identities.first { $0.id == id }
+    }
+
+    /// The identities as a menu lists them, by name.
+    var identitiesByName: [Identity] {
+        snapshot.identities.sorted {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+        }
+    }
+
     /// What saving a host under a new name would take along, for the editor
     /// to say before Save. Nil for a host not yet saved, and for one nothing
     /// goes through.
@@ -216,12 +254,21 @@ final class HostStore {
         await write { try await Core.shared.save(db: $0, group: group) }
     }
 
+    @discardableResult
+    func save(_ identity: Identity) async -> Identity? {
+        await write { try await Core.shared.save(db: $0, identity: identity) }
+    }
+
     func delete(_ host: Host) async {
         await write { try await Core.shared.deleteHost(db: $0, id: host.id) }
     }
 
     func delete(_ group: Group) async {
         await write { try await Core.shared.deleteGroup(db: $0, id: group.id) }
+    }
+
+    func delete(_ identity: Identity) async {
+        await write { try await Core.shared.deleteIdentity(db: $0, id: identity.id) }
     }
 
     /// What a host would inherit and what it would run, for a host being

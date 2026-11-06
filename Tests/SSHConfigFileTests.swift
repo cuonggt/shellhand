@@ -25,8 +25,8 @@ nonisolated struct SSHConfigFileTests {
         #expect(host.addr == "10.0.0.1")
         #expect(host.user == "deploy")
         #expect(host.port == 2222)
-        #expect(host.identity.hasSuffix("/.ssh/id_deploy"))
-        #expect(!host.identity.hasPrefix("~"))
+        #expect(host.keyPath.hasSuffix("/.ssh/id_deploy"))
+        #expect(!host.keyPath.hasPrefix("~"))
     }
 
     @Test("a name with no HostName is the address, which is how many are written")
