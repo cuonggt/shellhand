@@ -320,8 +320,15 @@ nonisolated enum Validation {
         let one = reached + pointing.count == 1
         var gives: [String] = []
         if !identity.user.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the user") }
-        if !identity.keyPath.trimmingCharacters(in: .whitespaces).isEmpty {
-            gives.append("the key")
+        switch identity.kind {
+        case .key:
+            if !identity.keyPath.trimmingCharacters(in: .whitespaces).isEmpty {
+                gives.append("the key")
+            }
+        case .password:
+            // Always, and without asking the keychain: this is nonisolated
+            // engine code, and the kind is enough to know what goes.
+            gives.append("the password")
         }
         let whom = who.joined(separator: " and ")
         var said = whom.prefix(1).uppercased() + whom.dropFirst()

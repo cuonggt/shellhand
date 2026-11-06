@@ -73,6 +73,9 @@ nonisolated extension Portable {
             let was = identitiesByName[k]
             var now = was ?? Shellhand.Identity()
             now.name = input.name
+            // A file that says nothing about the kind keeps the one already
+            // here, as an empty field keeps the value already here.
+            now.kind = input.kind ?? was?.kind ?? .key
             now.user = pick(input.user, was?.user ?? "")
             now.keyPath = pick(input.keyPath, was?.keyPath ?? "")
             if was == nil {
@@ -84,6 +87,13 @@ nonisolated extension Portable {
                 plan.note("identity", now.name, "update")
             } else {
                 plan.unchanged += 1
+            }
+            // A password never travels, so one arriving here has none on this
+            // Mac. Said rather than left to be found by a host that will not
+            // connect — the same reason a CSV reports a column it made
+            // nothing of.
+            if now.kind == .password, was?.kind != .password {
+                plan.note("identity", now.name, "needs its password typing in")
             }
             identitiesByName[k] = now
         }

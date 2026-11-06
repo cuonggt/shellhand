@@ -58,6 +58,7 @@
 		4014E7F5E27F15C047D144A3 /* TerminalSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698FB29279E1A464B3B505E5 /* TerminalSessionTests.swift */; };
 		41010B3442CF0D67DB46B249 /* HelpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB4E77B205AE7FFEDB57909 /* HelpTests.swift */; };
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
+		4376D4B4C41780F03816201A /* KeychainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7071A9973335A154823B67 /* KeychainTests.swift */; };
 		458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */; };
 		471A8CC5C1170C8A955A6110 /* SFTPTransferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92963BFA25E6683E3DB57652 /* SFTPTransferTests.swift */; };
 		474950C3E6ECFE6BF7F32AF5 /* SFTPWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */; };
@@ -154,6 +155,7 @@
 		CF0F07821556C71F14A89E79 /* os-pop.svg in Resources */ = {isa = PBXBuildFile; fileRef = EDFA905F2313EAE92AE2520C /* os-pop.svg */; };
 		D0E954CC76ABADA4C1D55EEA /* ControlIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B79AFFE8A661B7E00AB94A2 /* ControlIcon.swift */; };
 		D471A3549BB81BB35D351A02 /* SSHOptionsField.swift in Sources */ = {isa = PBXBuildFile; fileRef = A59768A220DBBFDDA6EE1EC0 /* SSHOptionsField.swift */; };
+		D663810AD0099B4993B550C9 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = E73EF954C5B0A0FF971B1CCA /* Keychain.swift */; };
 		D76CD7C0865DB22D1F50B829 /* os-debian.svg in Resources */ = {isa = PBXBuildFile; fileRef = 5B67841A2E143C6C731414FF /* os-debian.svg */; };
 		D7928AEC052F70CFDE56688F /* SFTPListingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458ADCEF7809E0C3A0597BD9 /* SFTPListingTests.swift */; };
 		DC826D0F4C969112F8B5CBAA /* GridMoveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ADB2CCD3E9D384A889A8072 /* GridMoveTests.swift */; };
@@ -261,6 +263,7 @@
 		593A5D44E7FD2E569688A062 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		5B67841A2E143C6C731414FF /* os-debian.svg */ = {isa = PBXFileReference; path = "os-debian.svg"; sourceTree = "<group>"; };
 		5B8DD15CC7A430CC5F040C6A /* os-nixos.svg */ = {isa = PBXFileReference; path = "os-nixos.svg"; sourceTree = "<group>"; };
+		5F7071A9973335A154823B67 /* KeychainTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainTests.swift; sourceTree = "<group>"; };
 		5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PalettePicker.swift; sourceTree = "<group>"; };
 		62B7E2B9CD110DE3B22FAF37 /* JumpHostField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JumpHostField.swift; sourceTree = "<group>"; };
 		6621FD97BB914B528EA0DED0 /* PanesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanesTests.swift; sourceTree = "<group>"; };
@@ -355,6 +358,7 @@
 		E4C459BA6F54534E532188D6 /* SFTPTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPTransfer.swift; sourceTree = "<group>"; };
 		E4E2FD7B0D67D2818A824A9F /* SFTPChurnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPChurnTests.swift; sourceTree = "<group>"; };
 		E602729636E5D01693B35EA6 /* ThemeInheritanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeInheritanceTests.swift; sourceTree = "<group>"; };
+		E73EF954C5B0A0FF971B1CCA /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		E77E6E1ACBC30AB3828C1253 /* ValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
 		E8C564CAC406B2F78C655FD3 /* TagField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagField.swift; sourceTree = "<group>"; };
 		ECD25D9C629456EF78CC5021 /* os-linux.svg */ = {isa = PBXFileReference; path = "os-linux.svg"; sourceTree = "<group>"; };
@@ -414,6 +418,7 @@
 				2A94C6CEECFE9EC0C9B824BC /* ImportPlanTests.swift */,
 				512570C863871D171BD66EB6 /* IncludeCycleTests.swift */,
 				DA0CDBD7BC02AA4AA42BB142 /* InheritanceTests.swift */,
+				5F7071A9973335A154823B67 /* KeychainTests.swift */,
 				4B379F54A855878D59FB8389 /* LaunchOptionsTests.swift */,
 				AB64165C843191AFB132FDE8 /* LearnOSTests.swift */,
 				3473C3E584F456CD7438584F /* OSMarkTests.swift */,
@@ -564,6 +569,7 @@
 				DFC5B41C053B8973B6F4996E /* Core.swift */,
 				759DA8F72FB3A8A7AF07474B /* CSVHosts.swift */,
 				4D05B62E7B658B3DDBB3926F /* Descriptors.swift */,
+				E73EF954C5B0A0FF971B1CCA /* Keychain.swift */,
 				73F634D1B0D27FBB8ECFB95E /* Merge.swift */,
 				C90CCBBC70703651BE9ADC36 /* OSRelease.swift */,
 				C980CDA163D4D20A0C1C3D6F /* Portable.swift */,
@@ -795,6 +801,7 @@
 				C8EA21A5C0DC575E080631E4 /* ImportPlanTests.swift in Sources */,
 				F7B1346F27E91095DFB9A17C /* IncludeCycleTests.swift in Sources */,
 				E904FCF5F9BF28756823BCFE /* InheritanceTests.swift in Sources */,
+				4376D4B4C41780F03816201A /* KeychainTests.swift in Sources */,
 				7E1FCDAECCDA5D16624A819A /* LaunchOptionsTests.swift in Sources */,
 				DDCCD2B12151C47345A5C18C /* LearnOSTests.swift in Sources */,
 				82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */,
@@ -879,6 +886,7 @@
 				CDAFB463546EC02CCDB803D1 /* ImportSheet.swift in Sources */,
 				8D7C57DD0EAC29F99A9917AE /* Inspectors.swift in Sources */,
 				1ECA8EDAFB6E7A91A92E2E8D /* JumpHostField.swift in Sources */,
+				D663810AD0099B4993B550C9 /* Keychain.swift in Sources */,
 				8D47EFA3F81EF5C89DC1B145 /* Merge.swift in Sources */,
 				9BF3CE2BB610B88116E445FB /* Model.swift in Sources */,
 				CDE22787942D1A523B9377EA /* OSRelease.swift in Sources */,

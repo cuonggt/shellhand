@@ -23,9 +23,17 @@ nonisolated enum Portable {
     }
 
     /// A login the file declares, named by the hosts and groups that use it.
-    /// Nothing secret: a key is a path, as it is everywhere else here.
+    ///
+    /// **Nothing secret.** A key is a path, as it is everywhere else here,
+    /// and a password identity carries its *kind* and its user and no
+    /// password at all — that lives in the keychain of the Mac that typed
+    /// it, and a list meant for a dotfiles repository is the last place for
+    /// one.
     struct Identity: Sendable, Equatable {
         var name = ""
+        /// Nil where the file says nothing, which keeps what the store
+        /// already holds: an import fills in and corrects, and never blanks.
+        var kind: Shellhand.Identity.Kind?
         var user = ""
         var keyPath = ""
     }
@@ -125,9 +133,22 @@ nonisolated enum Portable {
         let named = out.version >= identitiesFrom
 
         out.identities = try each(top["identities"], "identities") { fields in
-            try reject(unknown: fields, allowed: ["name", "user", "key"], in: "an identity")
+            try reject(
+                unknown: fields, allowed: ["name", "kind", "user", "key"], in: "an identity")
+            let said = try text(fields, "kind", in: "an identity")
+            var kind: Shellhand.Identity.Kind?
+            if !said.isEmpty {
+                guard let read = Shellhand.Identity.Kind(rawValue: said) else {
+                    throw PortableError(
+                        "an identity has kind \"\(said)\" — they are "
+                            + Shellhand.Identity.Kind.allCases.map(\.rawValue)
+                                .sorted().joined(separator: " and "))
+                }
+                kind = read
+            }
             return Identity(
                 name: try text(fields, "name", required: true, in: "an identity"),
+                kind: kind,
                 user: try text(fields, "user", in: "an identity"),
                 keyPath: try text(fields, "key", in: "an identity"))
         }
@@ -238,6 +259,12 @@ nonisolated enum Portable {
         if !identities.isEmpty {
             top.append(("identities", sequence(identities.map { identity in
                 var fields: [(String, Node)] = [("name", Node(identity.name))]
+                // Only when it is not the default, as every other optional
+                // field here is written. **Never the password**: it is not in
+                // the store to write, and this file is meant to be committed.
+                if identity.kind != .key {
+                    fields.append(("kind", Node(identity.kind.rawValue)))
+                }
                 if !identity.user.isEmpty { fields.append(("user", Node(identity.user))) }
                 if !identity.keyPath.isEmpty { fields.append(("key", Node(identity.keyPath))) }
                 return mapping(fields)
@@ -287,7 +314,8 @@ nonisolated enum Portable {
         let header = """
             # Shellhand host list. Fold it into another machine with File ▸ Import.
             # Records match by name, so ids differing between machines does not matter.
-            # No secrets here: a key is a path to one, never the key itself.
+            # No secrets here: a key is a path to one, never the key itself, and
+            # a password identity carries no password — type it in on arrival.
 
             """
         return header + (try Yams.serialize(node: mapping(top)))

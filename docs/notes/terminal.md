@@ -311,6 +311,58 @@ question came back"*. A different question straight after an answer is
 asked either way — that test is the control that keeps the fix from muting
 every question.
 
+## Where a forced askpass puts the host-key question
+
+A password reaches ssh through `SSH_ASKPASS`: ssh runs a helper instead of
+asking the terminal. The hazard the cut-era code recorded is that ssh puts
+**every** prompt through that helper, the host-key question among them — and
+since then `Terminal/HostKey.swift` has come to own that question on the pty.
+Whether forcing askpass takes it away from that dialog was the thing Phase 2
+could not be estimated without, so it was measured: macOS's own `sshd` on a
+loopback port with password auth on and pubkey off, a `known_hosts` that does
+not hold its key, and `ssh` run under a pty by `script`, the way SwiftTerm
+runs it. **No valid password is needed — the host-key question comes before
+authentication**, so a server that will refuse you anyway still asks it.
+
+Three runs, and they settle it.
+
+**With `SSH_ASKPASS_REQUIRE=force`, the helper is handed the host-key
+question** — the whole of it, warning, fingerprint and all — and then the
+password prompt after it. The pty sees neither: only *"Warning: Permanently
+added …"* and the result. So `HostKey.swift` never fires, and a yes from the
+helper writes `known_hosts` **without the person having seen the
+fingerprint**.
+
+**A helper that declines the question does not hand it back.** Exiting 1 on
+the question ends the connection with *"Host key verification failed."* and
+`known_hosts` untouched. So "let the helper refuse and let ssh fall back to
+the terminal" is not a design — ssh reads a failing helper as no and gives
+up.
+
+**Without `REQUIRE=force`, and with a pty, the helper is never called at
+all.** The question goes to the pty and so does the password prompt. That is
+today's behaviour, and it is why a stored password buys a terminal tab
+nothing unless askpass is forced.
+
+What that leaves:
+
+* **An unattended child — sftp — needs no `REQUIRE`.** It has no tty, so
+  `SSH_ASKPASS` alone is used. The host-key question reaches the helper
+  there too, and nobody can approve a fingerprint in a window with no
+  terminal in it, so the answer is no and the way out is the one
+  `Places.trouble` already offers: open it in a tab first.
+* **A tab is the hard one.** Forcing askpass there means the helper has to
+  put the question somewhere a person can see it — back to the pane through
+  `/dev/tty`, as the cut-era code did, or handed to the running app so the
+  dialog that already exists answers it. Not forcing it means the password
+  is typed, as now.
+
+So the two halves are not equally hard, and **the easier one is the one that
+carries the capability the MVP cut actually cost**. The reproducer is
+`scripts/askpass-probe.sh`: three runs against a server of its own, needing
+no password and nothing of the user's, and cheap to run again when a
+version of ssh changes under this.
+
 ## The scrollback
 
 **The scrollback is 10,000 lines, and what held it at 500 was the

@@ -126,6 +126,88 @@ nonisolated struct IdentityFileTests {
         #expect(!text.contains("key: /keys/deploy"))
     }
 
+    @Test("a password identity carries its kind and its user, and no password")
+    func passwordTravelsWithoutItsPassword() throws {
+        let switches = Shellhand.Identity(
+            id: "i1", name: "switches", kind: .password, user: "root")
+        let text = try Portable.export(groups: [], hosts: [], identities: [switches])
+        #expect(text.contains("kind: password"))
+        #expect(text.contains("user: root"))
+        // There is nothing in the store to write, and this file is meant to
+        // be committed: the header says so and the section holds no secret.
+        #expect(!text.lowercased().contains("password:"))
+
+        let read = try Portable.parse(text)
+        #expect(read.identities == [Portable.Identity(
+            name: "switches", kind: .password, user: "root")])
+    }
+
+    @Test("a key identity does not write its kind, since that is the default")
+    func keyKindIsNotWritten() throws {
+        let text = try Portable.export(
+            groups: [], hosts: [],
+            identities: [Shellhand.Identity(id: "i1", name: "deploy", user: "deploy")])
+        #expect(!text.contains("kind:"))
+        #expect(try Portable.parse(text).identities.first?.kind == nil)
+    }
+
+    @Test("a kind the reader does not know is refused rather than taken for a key")
+    func unknownKind() {
+        #expect(throws: PortableError.self) {
+            try Portable.parse("""
+                version: 5
+                identities:
+                  - name: odd
+                    kind: fingerprint
+                """)
+        }
+    }
+
+    @Test("a file that says nothing about the kind keeps the one already here")
+    func kindIsNotBlanked() throws {
+        let here = Shellhand.Identity(id: "i1", name: "switches", kind: .password, user: "root")
+        let plan = try Portable.merge(
+            try Portable.parse("""
+                version: 5
+                identities:
+                  - name: switches
+                    user: admin
+                """),
+            into: Snapshot(identities: [here]))
+        let now = try #require(plan.identities.first)
+        #expect(now.user == "admin")
+        #expect(now.kind == .password)
+    }
+
+    @Test("an imported password identity is reported as needing its password")
+    func importSaysToTypeItIn() throws {
+        let plan = try Portable.merge(
+            try Portable.parse("""
+                version: 5
+                identities:
+                  - name: switches
+                    kind: password
+                    user: root
+                """),
+            into: Snapshot())
+        #expect(plan.changes.contains {
+            $0.kind == "identity" && $0.name == "switches"
+                && $0.action == "needs its password typing in"
+        })
+        // And one already here as a password is not reported again.
+        let here = Shellhand.Identity(id: "i1", name: "switches", kind: .password, user: "root")
+        let again = try Portable.merge(
+            try Portable.parse("""
+                version: 5
+                identities:
+                  - name: switches
+                    kind: password
+                    user: root
+                """),
+            into: Snapshot(identities: [here]))
+        #expect(!again.changes.contains { $0.action == "needs its password typing in" })
+    }
+
     @Test("a list with identities says version 5 and writes key for a path")
     func withIdentities() throws {
         let identity = Shellhand.Identity(
@@ -328,6 +410,28 @@ nonisolated struct IdentityStoreTests {
         let identity = try #require(snapshot.identities.first)
         #expect(identity.name == "deploy")
         #expect(snapshot.hosts.first?.identityId == identity.id)
+    }
+
+    @Test("what kind an identity is survives a write and a read")
+    func kindPersists() throws {
+        let store = try scratch()
+        let saved = try store.save(Identity(name: "switches", kind: .password, user: "root"))
+        let read = try #require(try store.snapshot().identities.first)
+        #expect(read.id == saved.id)
+        #expect(read.kind == .password)
+        #expect(read.user == "root")
+    }
+
+    /// The row mapping reads `Identity.Kind(rawValue:) ?? .key`, so a store
+    /// written by something newer costs at most the wrong icon rather than a
+    /// list that will not load. Reaching into the file to write a kind this
+    /// build does not know would mean a test-only hole in the shipping
+    /// store; what is checkable without one is the premise the `??` rests on.
+    @Test("a kind nothing answers to is nothing, so the mapping's fallback has work to do")
+    func unknownKindIsNil() {
+        #expect(Identity.Kind(rawValue: "fingerprint") == nil)
+        #expect(Identity.Kind(rawValue: "key") == .key)
+        #expect(Identity.Kind(rawValue: "password") == .password)
     }
 
     @Test("an old store gains the identities table and the two columns")

@@ -142,6 +142,10 @@ credentials, which is most of it.
   to change the icon at all.
 - `scripts/release.sh` — the whole of a release, from `xcodebuild` to the cask.
 - `scripts/readme-picture.sh` — the README's picture, seeded, driven and taken.
+- `scripts/askpass-probe.sh` — where ssh puts each prompt when `SSH_ASKPASS`
+  is forced, against a server of its own on loopback. Not a check: it answers
+  a question the suite cannot, and it needs no password and nothing of the
+  user's.
 - `Casks/shellhand.rb` — the Homebrew cask, copied into the tap on release.
 - `appcast.xml` — the update feed, served from `main`. Generated, never
   hand-edited.
@@ -204,6 +208,17 @@ credentials, which is most of it.
   where Termius puts the same choice: theirs is the better idea in the
   abstract and does not survive a group pointing at an identity, because a
   glyph has nowhere to put "from Production".
+- **ssh puts every prompt through `SSH_ASKPASS`, the host-key question
+  included** — measured, under a pty, against macOS's own `sshd`. Forcing it
+  (`SSH_ASKPASS_REQUIRE=force`) takes that question away from
+  `Terminal/HostKey.swift`, which owns it on the pty, and a yes from a helper
+  writes `known_hosts` with nobody having seen the fingerprint; a helper that
+  exits non-zero on it ends the connection rather than handing it back; and
+  **unforced, with a pty, the helper is never called at all**. An unattended
+  child has no tty, so `SSH_ASKPASS` alone is enough there and nothing needs
+  forcing. **Don't force askpass on a session until the question has
+  somewhere a person can see it.**
+  → [a forced askpass](docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question)
 - **`identity` in the model is a key path, and is spelled `keyPath`**; the
   record called an identity is the thing above. The store's columns on `hosts`
   and `host_groups` are still `identity` — every store in existence has them —
@@ -1827,12 +1842,21 @@ is added back.
 and key, pointed at from hosts and groups, with no secrets in them. The two
 phases after it — a password kept in the keychain and answered through an
 askpass helper, and with it an SFTP window that can reach a host taking only a
-password — are **not built**, and the hard part is recorded: ssh routes every
-prompt through askpass, the host-key question included, and
-`Terminal/HostKey.swift` now owns that question on the pty. Password auth
-cannot be held by this suite at all, since it validates against the real
-system and `LocalSSHD` has no test user to give a password to, so that one has
-to be proven by hand.
+password — are **not built**, but the gate is no longer open: **where a forced
+askpass puts the host-key question has been measured**, against macOS's own
+`sshd` under a pty, and it decides the shape of both. With
+`SSH_ASKPASS_REQUIRE=force` the helper is handed that question and the pty
+sees none of it, so `HostKey.swift` never fires and a yes writes
+`known_hosts` with nobody having seen the fingerprint; a helper that declines
+ends the connection rather than handing the question back; and without
+`REQUIRE`, with a pty, the helper is never called at all. So an **unattended**
+child needs no `REQUIRE` and is the straightforward half — and it is the half
+carrying the capability the cut actually cost — while a **tab** needs the
+question put somewhere a person can see it before askpass can be forced
+there. Password auth itself still cannot be held by this suite, since it
+validates against the real system and `LocalSSHD` has no test user to give a
+password to.
+→ [a forced askpass](docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question)
 
 The engine behind it is Swift. The terminal takes a palette — five ship, and
 the config can add more. A fresh install lands on a welcome that counts the

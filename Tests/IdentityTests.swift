@@ -262,4 +262,44 @@ nonisolated struct IdentityTests {
         let said = Validation.deletionWarning(for: operatorID, hosts: [host])
         #expect(said.hasPrefix("1 host points at it, and loses the user."))
     }
+
+    // MARK: what kind it is
+
+    @Test("a password identity says the password goes with it")
+    func deletingAPasswordOne() {
+        let switches = Identity(id: "i4", name: "switches", kind: .password, user: "root")
+        var host = Shellhand.Host(id: "h", name: "sw-1", addr: "10.0.9.2")
+        host.effective = Effective(identity: "switches")
+        let said = Validation.deletionWarning(for: switches, hosts: [host])
+        #expect(said.hasPrefix("1 host points at it, and loses the user and the password."))
+    }
+
+    @Test("a password identity is never 'says nothing', whatever is typed on it")
+    func passwordIsNeverEmpty() {
+        // What it carries is in the keychain, which the model cannot see and
+        // must not read: a property that touched it would do so per row, per
+        // redraw.
+        #expect(Identity(name: "switches", kind: .password).saysNothing == false)
+        #expect(Identity(name: "started", kind: .key).saysNothing)
+    }
+
+    @Test("a row says what kind it is without asking the keychain")
+    func kindInTheSummary() {
+        #expect(Identity(name: "x", kind: .password, user: "root").summary == "root · password")
+        #expect(Identity(name: "x", kind: .password).summary == "password")
+        #expect(deploy.summary == "deploy · ~/.ssh/id_ed25519")
+    }
+
+    @Test("a password identity fills in the user and leaves the key alone")
+    func passwordFillsTheUser() {
+        let switches = Identity(id: "i4", name: "switches", kind: .password, user: "root")
+        let host = Shellhand.Host(id: "h", name: "sw-1", addr: "10.0.9.2", identityId: "i4")
+        let out = resolver(hosts: [host], identities: [switches]).resolve(host)
+        #expect(out.user == "root")
+        #expect(out.userFrom == "the switches identity")
+        #expect(out.keyPath == "")
+        // And nothing of it reaches the command line yet: wiring a password
+        // into a connection is the phase after this one.
+        #expect(SSHArgs.build(out) == ["root@10.0.9.2"])
+    }
 }

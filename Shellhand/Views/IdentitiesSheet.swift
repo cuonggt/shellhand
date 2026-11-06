@@ -184,6 +184,9 @@ struct IdentitiesSheet: View {
         guard let identity = editing, !identity.id.isEmpty else { return }
         pendingSave?.cancel()
         editing = nil
+        // The password goes with it: a keychain item filed under an identity
+        // nothing names any more is one nobody can ever reach again.
+        try? Keychain.remove(identity.id)
         Task { await store.delete(identity) }
     }
 
@@ -235,6 +238,17 @@ struct IdentityDetail: View {
     @Binding var identity: Identity
     let problem: String?
 
+    /// Empty means "leave the keychain alone", which is why the field says
+    /// *unchanged* rather than showing anything: a password is not read back
+    /// to be displayed.
+    @State private var password = ""
+    @State private var trouble: String?
+    @State private var note: String?
+    /// Whether one is stored, read when the row changes rather than on every
+    /// redraw: this is drawn as somebody types, and a keychain call per
+    /// keystroke is not a thing to do quietly either.
+    @State private var stored = false
+
     var body: some View {
         VStack(spacing: 0) {
             Form {
@@ -257,15 +271,27 @@ struct IdentityDetail: View {
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
                     }
-                    LabeledContent("Key") {
-                        TextField("", text: $identity.keyPath, prompt: Text(
-                            HostEditorSheet.keyExample(avoiding: keysInList))
-                        )
-                        .textFieldStyle(.roundedBorder)
+                    LabeledContent("Logs in with") {
+                        Picker("", selection: $identity.kind) {
+                            ForEach(Identity.Kind.allCases, id: \.self) { kind in
+                                Text(kind.title).tag(kind)
+                            }
+                        }
                         .labelsHidden()
-                        .multilineTextAlignment(.leading)
+                    }
+                    if identity.kind == .key {
+                        LabeledContent("Key") {
+                            TextField("", text: $identity.keyPath, prompt: Text(
+                                HostEditorSheet.keyExample(avoiding: keysInList))
+                            )
+                            .textFieldStyle(.roundedBorder)
+                            .labelsHidden()
+                            .multilineTextAlignment(.leading)
+                        }
                     }
                 }
+
+                if identity.kind == .password { passwordSection }
 
                 // Said quietly, as New Group says a missing name: an identity
                 // with neither is a record somebody has started, not a
@@ -333,6 +359,76 @@ struct IdentityDetail: View {
                         .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+
+    /// The one field here that is **not** saved as it is typed, because it is
+    /// not saved to the same place: it goes to the keychain, under an id the
+    /// identity only has once it has been written. The record beside it
+    /// debounces to the store; writing half a password to the keychain on
+    /// every keystroke is not a thing to do quietly.
+    @ViewBuilder
+    private var passwordSection: some View {
+        Section("The password") {
+            LabeledContent("Password") {
+                HStack(spacing: 6) {
+                    SecureField("", text: $password, prompt: Text(
+                        stored ? "unchanged" : "needed to connect"))
+                        .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                        .multilineTextAlignment(.leading)
+                        .onSubmit { set() }
+                    Button("Set") { set() }
+                        .disabled(password.isEmpty || identity.id.isEmpty)
+                }
+            }
+            if stored {
+                Button("Forget it", role: .destructive) { forget() }
+                    .controlSize(.small)
+            }
+            Text("Kept in this Mac's keychain, never in the host list or its export."
+                + (identity.id.isEmpty
+                    ? " Give it a name first — the keychain files it under the id it "
+                        + "gets when it is saved."
+                    : ""))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if let trouble {
+                Text(trouble).font(.caption).foregroundStyle(.red)
+            } else if let note {
+                Text(note).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .task(id: identity.id) {
+            stored = !identity.id.isEmpty && Keychain.has(identity.id)
+            password = ""
+            note = nil
+            trouble = nil
+        }
+    }
+
+    private func set() {
+        guard !password.isEmpty, !identity.id.isEmpty else { return }
+        do {
+            try Keychain.save(password, for: identity.id)
+            trouble = nil
+            note = "Saved to the keychain."
+            stored = true
+            password = ""
+        } catch {
+            trouble = error.localizedDescription
+        }
+    }
+
+    private func forget() {
+        do {
+            try Keychain.remove(identity.id)
+            trouble = nil
+            note = "Forgotten."
+            stored = false
+            password = ""
+        } catch {
+            trouble = error.localizedDescription
         }
     }
 

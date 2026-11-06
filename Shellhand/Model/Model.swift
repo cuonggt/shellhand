@@ -264,16 +264,41 @@ nonisolated struct Group: Codable, Sendable, Identifiable, Hashable {
 /// own expanding; the YAML export carries these as they stand, and its header
 /// says as much.
 nonisolated struct Identity: Codable, Sendable, Identifiable, Hashable {
+    /// How it proves who it is. **Not a free-for-all**: a key is a path
+    /// handed to ssh, and a password is a secret kept in this Mac's keychain
+    /// and never in the store or its export.
+    nonisolated enum Kind: String, Codable, Sendable, CaseIterable {
+        case key, password
+
+        /// What the menu calls it, and what a row says it is.
+        var title: String {
+            switch self {
+            case .key: "A key on disk"
+            case .password: "A password"
+            }
+        }
+    }
+
     var id: String = ""
     var name: String = ""
+    /// Declared before `user` so the memberwise initialiser keeps working for
+    /// everything written before it existed: an argument it leaves out takes
+    /// the default, and the rest stay in order.
+    var kind: Kind = .key
     var user: String = ""
     var keyPath: String = ""
 
     /// Whether it would fill anything in. One that says nothing is not a
     /// failure — it is a record somebody has started — but it is worth
     /// saying before four hosts are filed under it.
+    ///
+    /// **A password identity is never "nothing"**, whatever is typed here:
+    /// what it carries lives in the keychain, which this cannot see and must
+    /// not read — a model property that touched the keychain would do so once
+    /// per row, per redraw.
     var saysNothing: Bool {
-        user.trimmingCharacters(in: .whitespaces).isEmpty
+        kind == .key
+            && user.trimmingCharacters(in: .whitespaces).isEmpty
             && keyPath.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
@@ -287,10 +312,17 @@ nonisolated struct Identity: Codable, Sendable, Identifiable, Hashable {
 
     /// What it fills in, in as many words as a row has room for: "deploy ·
     /// ~/.ssh/id_ed25519", or what it says of the two.
+    ///
+    /// Whether a password is actually **stored** is not said here: that is a
+    /// keychain read, and this is drawn once per row.
     var summary: String {
-        let parts = [user, keyPath].map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-        return parts.isEmpty ? "Says nothing yet" : parts.joined(separator: " · ")
+        var parts = [user].map { $0.trimmingCharacters(in: .whitespaces) }
+        switch kind {
+        case .key: parts.append(keyPath.trimmingCharacters(in: .whitespaces))
+        case .password: parts.append("password")
+        }
+        let said = parts.filter { !$0.isEmpty }
+        return said.isEmpty ? "Says nothing yet" : said.joined(separator: " · ")
     }
 }
 

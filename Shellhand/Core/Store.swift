@@ -217,6 +217,19 @@ nonisolated final class Store: Sendable {
             }
             try db.create(indexOn: "hosts", columns: ["identityId"])
         }
+        // How an identity proves who it is. A password is **not** here — it
+        // goes to this Mac's keychain, filed under the identity's id — so
+        // this column says only which kind it is, and an export carries the
+        // kind and nothing else.
+        migrator.registerMigration("v12") { db in
+            let held = try String.fetchAll(
+                db, sql: "SELECT name FROM pragma_table_info(?)", arguments: ["identities"])
+            if !held.contains("kind") {
+                try db.alter(table: "identities") { t in
+                    t.add(column: "kind", .text).notNull().defaults(to: "key")
+                }
+            }
+        }
         return migrator
     }
 
@@ -463,6 +476,10 @@ nonisolated extension Identity: FetchableRecord, PersistableRecord {
         self.init()
         id = row["id"]
         name = row["name"]
+        // A kind nothing answers to reads as a key rather than failing the
+        // row: a store written by something newer should cost at most the
+        // wrong icon, never a list that will not load.
+        kind = Identity.Kind(rawValue: row["kind"] ?? "") ?? .key
         user = row["user"]
         keyPath = row["keyPath"]
     }
@@ -470,6 +487,7 @@ nonisolated extension Identity: FetchableRecord, PersistableRecord {
     func encode(to container: inout PersistenceContainer) {
         container["id"] = id
         container["name"] = name
+        container["kind"] = kind.rawValue
         container["user"] = user
         container["keyPath"] = keyPath
     }
