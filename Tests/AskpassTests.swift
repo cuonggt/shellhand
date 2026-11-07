@@ -68,10 +68,14 @@ nonisolated struct AskpassTests {
         // process on the machine and an environment variable by every child
         // of one; the password goes keychain to stdout and nowhere else.
         #expect(!out.values.contains { $0.lowercased().contains("password") })
-        // And no REQUIRE: measured, an unattended child has no tty, so ssh
-        // uses the helper without being forced — and forcing it is what
-        // takes the host-key question away from the pty on a session.
-        #expect(out["SSH_ASKPASS_REQUIRE"] == nil)
+        // **And REQUIRE, which the first version of this left out.** ssh
+        // wants `DISPLAY` set before it will use a helper, a GUI app has
+        // none, and without this the helper was never run: the connection
+        // died at preauth with "Permission denied", which reads exactly like
+        // a wrong password. Safe here and nowhere else — this child has no
+        // pty, so there is no terminal for the host-key question to be taken
+        // away from.
+        #expect(out["SSH_ASKPASS_REQUIRE"] == "force")
     }
 
     @Test("every other kind of identity changes nothing about the connection")

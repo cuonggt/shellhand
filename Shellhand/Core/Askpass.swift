@@ -11,13 +11,20 @@ import Foundation
 /// processes and nothing else.
 ///
 /// **This is for a connection with nobody in front of it** — the `sftp` child
-/// behind the file window — and that is why it needs no
-/// `SSH_ASKPASS_REQUIRE`. Measured, under a pty, against macOS's own `sshd`:
-/// unforced, with a tty, ssh never calls the helper at all and asks on the
-/// terminal; without a tty it uses the helper as it stands. A child whose
-/// stdin carries the protocol has no tty, so setting the variable is enough.
-/// **Don't force it here, and don't force it on a session** until the
-/// host-key question has somewhere a person can see it:
+/// behind the file window.
+///
+/// `SSH_ASKPASS_REQUIRE=force` is **required**, and the first version of this
+/// left it out on a wrong reading of the probe. Measured three ways against
+/// macOS's own `sshd`: with no tty and no `DISPLAY`, ssh does **not** call the
+/// helper; with no tty and `DISPLAY` set it does; and `force` lifts the
+/// `DISPLAY` condition. A GUI app on macOS has no `DISPLAY`, so without this
+/// the helper was never run at all and the connection died at `preauth` with
+/// "Permission denied" — which reads exactly like a wrong password.
+///
+/// Forcing it **here** is safe for the reason the rest of it is: this child
+/// has no pty, so there is no terminal for the host-key question to be taken
+/// away from. **Don't force it on a session**, which has one, until that
+/// question has somewhere a person can see it:
 /// → docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question
 nonisolated enum Askpass {
     /// Names the identity whose password ssh is asking for. Its presence is
@@ -41,6 +48,9 @@ nonisolated enum Askpass {
         else { return [:] }
         var out = [
             "SSH_ASKPASS": app,
+            // Without this the helper is never run: ssh wants `DISPLAY` set
+            // before it will use one, and a GUI app has none. See above.
+            "SSH_ASKPASS_REQUIRE": "force",
             identityVariable: resolved.identityId,
         ]
         // Where the password is filed, when it is not the usual place: the

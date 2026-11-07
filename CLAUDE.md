@@ -197,9 +197,13 @@ credentials, which is most of it.
   bundle — never the password, since an argument list is readable by every
   process on the machine and an environment variable by every child of one;
   the password goes keychain to the helper's stdout and nowhere else.
-  `SSH_ASKPASS` alone, **never `SSH_ASKPASS_REQUIRE`**: an unattended child
-  has no tty so ssh uses the helper unasked, and forcing it is what takes the
-  host-key question away from `HostKey.swift`. The helper tells that question
+  **`SSH_ASKPASS_REQUIRE=force` is required here, and leaving it out is a
+  recorded mistake**: ssh uses a helper only with no tty **and** `DISPLAY`
+  set, a GUI app has no `DISPLAY`, and without it the helper never ran — the
+  connection died at `preauth` with "Permission denied", which reads exactly
+  like a wrong password. Safe for an unattended child, which has no pty, and
+  **not for a session**, where forcing it takes the host-key question away
+  from `HostKey.swift`. The helper tells that question
   from a password prompt (`Askpass.isQuestion`) and answers **no** — nobody
   can read a fingerprint in a window with no terminal — which is the trap the
   cut-era code recorded: answered with the password, ssh asked again several
@@ -1884,7 +1888,7 @@ sees none of it, so `HostKey.swift` never fires and a yes writes
 `known_hosts` with nobody having seen the fingerprint; a helper that declines
 ends the connection rather than handing the question back; and without
 `REQUIRE`, with a pty, the helper is never called at all. So an **unattended**
-child needs no `REQUIRE` and is the straightforward half — and it is the half
+child forces it safely, having no pty, and is the straightforward half — and it is the half
 carrying the capability the cut actually cost — while a **tab** needs the
 question put somewhere a person can see it before askpass can be forced
 there. Password auth itself still cannot be held by this suite, since it

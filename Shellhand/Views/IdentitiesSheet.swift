@@ -405,6 +405,13 @@ struct IdentityDetail: View {
             note = nil
             trouble = nil
         }
+        // **Typed and not Set was typed and lost**, in silence — and the
+        // thing that goes wrong next is a connection refused with
+        // "Permission denied", which reads as a wrong password rather than
+        // as no password at all. Saving on the way out is not the same as
+        // saving per keystroke, which is what the button is there to avoid:
+        // the record beside it flushes on disappear for the same reason.
+        .onDisappear { if !password.isEmpty { set() } }
     }
 
     private func set() {

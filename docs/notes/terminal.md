@@ -344,13 +344,56 @@ all.** The question goes to the pty and so does the password prompt. That is
 today's behaviour, and it is why a stored password buys a terminal tab
 nothing unless askpass is forced.
 
+### When ssh uses a helper at all
+
+The first reading of the three runs above was wrong, and it cost a
+connection that looked like a bad password. "Unforced, with a pty, the
+helper is never called" is true and says nothing about **why**: that run had
+no `DISPLAY` either, and `DISPLAY` is the other half of the condition. Three
+more runs, with no tty at all, settle it:
+
+| | helper called? |
+| --- | --- |
+| no tty, no `DISPLAY`, no `REQUIRE` | **no** |
+| no tty, `DISPLAY` set, no `REQUIRE` | yes |
+| no tty, no `DISPLAY`, `REQUIRE=force` | yes |
+
+So `SSH_ASKPASS` is used when ssh has **no tty and `DISPLAY` is set**, and
+`SSH_ASKPASS_REQUIRE=force` lifts both conditions. **A GUI app on macOS has
+no `DISPLAY`**, so an sftp child without `force` never runs the helper —
+ssh tries keyboard-interactive and password with nothing to offer, and the
+connection dies at `preauth` with *"Permission denied
+(password,keyboard-interactive)"*, which reads exactly like a password that
+is simply wrong. It was found by connecting for real, not by reading: three
+variants that agree about one thing can still disagree about why.
+
+### Why a successful password login cannot be proven on this Mac
+
+Driving the real thing is what found the `DISPLAY` half above, and it stops
+one step short of the end. **A non-root `sshd` on macOS cannot validate a
+password**: with `UsePAM no` it has no way to check one at all, and with
+`UsePAM yes` it reaches PAM and gets `PAM: authentication error for <user>`,
+because `pam_opendirectory` wants privilege the process does not have. The
+only `sshd` that can is the system's own, started by launchd as root — and
+on this Mac that one is deliberately keys-only
+(`/etc/ssh/sshd_config.d/200-keys-only.conf` sets `PasswordAuthentication
+no`), which is a hardening choice and not ours to undo.
+
+So what a local run proves is everything up to the far side's verdict: the
+helper is invoked, it reads the keychain, ssh submits a password — the
+server logs `Failed password`, which is an attempt — and the file window
+draws the right card for a refusal. What it cannot prove is a **yes**. That
+one wants a host that really takes a password, which means somebody's own
+machine.
+
 What that leaves:
 
-* **An unattended child — sftp — needs no `REQUIRE`.** It has no tty, so
-  `SSH_ASKPASS` alone is used. The host-key question reaches the helper
-  there too, and nobody can approve a fingerprint in a window with no
-  terminal in it, so the answer is no and the way out is the one
-  `Places.trouble` already offers: open it in a tab first.
+* **An unattended child — sftp — forces it.** Safe there for the same
+  reason the rest is: no pty means no terminal for the host-key question to
+  be taken away from. The question reaches the helper, nobody can approve a
+  fingerprint in a window with no terminal in it, so the answer is no and
+  the way out is the one `Places.trouble` already offers: open it in a tab
+  first.
 * **A tab is the hard one.** Forcing askpass there means the helper has to
   put the question somewhere a person can see it — back to the pane through
   `/dev/tty`, as the cut-era code did, or handed to the running app so the

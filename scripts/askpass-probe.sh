@@ -124,3 +124,30 @@ run B force decline
 
 say "C — askpass set but not forced, a pty present"
 run C "" answer
+
+# **Why C does not call the helper is not the pty alone.** ssh wants no tty
+# *and* `DISPLAY` set before it will use a helper, and these two separate the
+# conditions — which matters, because a GUI app on macOS has no `DISPLAY`, so
+# an unattended child without `force` never runs the helper at all and dies
+# at preauth with "Permission denied". Reading C as "no tty is enough" cost a
+# connection that looked like a bad password.
+notty() { # notty <name> <extra env…>
+    local name="$1"; shift
+    : > "$root/$name.askpass.log"
+    rm -f "$root/known_hosts"
+    /usr/bin/env "SSH_ASKPASS=$root/askpass.sh" "ASKPASS_LOG=$root/$name.askpass.log" \
+        "ASKPASS_MODE=answer" "$@" \
+        /usr/bin/perl -e 'alarm 20; exec @ARGV' \
+        /usr/bin/ssh "${common[@]}" "$(id -un)@127.0.0.1" true </dev/null >/dev/null 2>&1
+    if [ -s "$root/$name.askpass.log" ]; then echo "   helper CALLED"
+    else echo "   helper not called"; fi
+}
+
+say "D — no tty at all, no DISPLAY, not forced"
+notty D
+
+say "E — no tty at all, DISPLAY set, not forced"
+notty E DISPLAY=:0
+
+say "F — no tty at all, forced"
+notty F SSH_ASKPASS_REQUIRE=force
