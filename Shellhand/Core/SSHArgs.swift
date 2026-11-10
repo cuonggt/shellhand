@@ -218,8 +218,8 @@ nonisolated enum SSHArgs {
     static let unattended = ["-o", "BatchMode=yes"]
 
     /// The options for a connection with nobody in front of it that **does**
-    /// have an answer ready: an identity whose password is in the keychain,
-    /// handed to ssh by the askpass helper.
+    /// have an answer ready: a password in the keychain — the host's own, an
+    /// identity's or a group's — handed to ssh by the askpass helper.
     ///
     /// BatchMode is absent on purpose — it turns every prompt off, the one
     /// the helper exists to answer included — and these two take its place:
@@ -230,17 +230,22 @@ nonisolated enum SSHArgs {
     /// password that has gone stale should fail once rather than three
     /// times, each one a keychain read answering the same wrong thing.
     ///
+    /// **The key first where one is set**: a host with both is meant to log
+    /// in with the key and fall back on the password, as a terminal tab's
+    /// ssh does — so `publickey` leads, ahead of the two ways a password is
+    /// asked for. Where none is set the password is all there is.
+    ///
     /// They lead, with the rest of what nothing may override, so a config's
     /// own value cannot come first — ssh keeps the first it is given.
-    static let answering = [
-        "-o", "PreferredAuthentications=keyboard-interactive,password",
-        "-o", "NumberOfPasswordPrompts=1",
-    ]
+    static func answering(_ resolved: Resolved) -> [String] {
+        let ways = resolved.keyPath.trimmingCharacters(in: .whitespaces).isEmpty
+            ? "keyboard-interactive,password" : "publickey,keyboard-interactive,password"
+        return ["-o", "PreferredAuthentications=\(ways)", "-o", "NumberOfPasswordPrompts=1"]
+    }
 
     /// Which of the two a connection with nobody in front of it gets: an
     /// answer ready, or every prompt off.
     static func unattended(_ resolved: Resolved) -> [String] {
-        resolved.identityKind == .password && !resolved.identityId.isEmpty
-            ? answering : unattended
+        resolved.passwordAccount.isEmpty ? unattended : answering(resolved)
     }
 }

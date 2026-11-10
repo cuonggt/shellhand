@@ -14,6 +14,10 @@ final class HostStore {
     private(set) var snapshot = Snapshot()
     private(set) var lastError: String?
     private(set) var loading = false
+    /// Where hosts' and groups' own passwords are kept: `Keychain.service`,
+    /// which a test points at a service of its own, as `KeychainTests` does —
+    /// a store under test given the real one would write the user's items.
+    @ObservationIgnored var keychainService = Keychain.service
 
     let dbPath: String
     /// Held outside the actor so `deinit`, which is nonisolated, can stop it.
@@ -259,12 +263,85 @@ final class HostStore {
         await write { try await Core.shared.save(db: $0, identity: identity) }
     }
 
+    /// What an editor does on Save to a host's or a group's own password:
+    /// leave it as it is, keep a new one, or forget the one kept.
+    nonisolated enum PasswordChange: Equatable, Sendable {
+        case keep
+        case set(String)
+        case forget
+    }
+
+    /// Saves a host with what was done to its password: the keychain first,
+    /// then the record that says there is one, so the list never claims a
+    /// password the keychain refused to keep. A host not saved yet is given
+    /// its id here, since the password is filed under it.
+    @discardableResult
+    func save(_ host: Host, password: PasswordChange) async -> Host? {
+        var host = host
+        let isNew = host.id.isEmpty
+        if isNew { host.id = Store.newID() }
+        let account = Keychain.account(host: host.id)
+        guard keep(password, under: account, flag: &host.hasPassword) else { return nil }
+        guard let saved = await save(host) else {
+            // Kept for a host that never arrived, it is one nobody can reach.
+            if isNew { try? Keychain.remove(account, service: keychainService) }
+            return nil
+        }
+        return saved
+    }
+
+    /// The same for a group, whose password every host beneath it that keeps
+    /// none of its own is typed.
+    @discardableResult
+    func save(_ group: Group, password: PasswordChange) async -> Group? {
+        var group = group
+        let isNew = group.id.isEmpty
+        if isNew { group.id = Store.newID() }
+        let account = Keychain.account(group: group.id)
+        guard keep(password, under: account, flag: &group.hasPassword) else { return nil }
+        guard let saved = await save(group) else {
+            if isNew { try? Keychain.remove(account, service: keychainService) }
+            return nil
+        }
+        return saved
+    }
+
+    /// Writes a password change to the keychain and brings the record's flag
+    /// in line, saying whether it took. A refusal is the store's last error,
+    /// as every refused write is, for the editor to say.
+    private func keep(_ change: PasswordChange, under account: String, flag: inout Bool) -> Bool {
+        do {
+            switch change {
+            case .keep:
+                break
+            case .set(let password) where !password.isEmpty:
+                try Keychain.save(password, for: account, service: keychainService)
+                flag = true
+            case .set, .forget:
+                try Keychain.remove(account, service: keychainService)
+                flag = false
+            }
+            return true
+        } catch {
+            lastError = "The keychain wouldn't keep the password: \(error.localizedDescription)"
+            return false
+        }
+    }
+
     func delete(_ host: Host) async {
-        await write { try await Core.shared.deleteHost(db: $0, id: host.id) }
+        let gone: Void? = await write { try await Core.shared.deleteHost(db: $0, id: host.id) }
+        // Its password goes with it: an item filed under a host nothing names
+        // any more is one nobody can ever reach again.
+        if gone != nil, !host.id.isEmpty {
+            try? Keychain.remove(Keychain.account(host: host.id), service: keychainService)
+        }
     }
 
     func delete(_ group: Group) async {
-        await write { try await Core.shared.deleteGroup(db: $0, id: group.id) }
+        let gone: Void? = await write { try await Core.shared.deleteGroup(db: $0, id: group.id) }
+        if gone != nil, !group.id.isEmpty {
+            try? Keychain.remove(Keychain.account(group: group.id), service: keychainService)
+        }
     }
 
     func delete(_ identity: Identity) async {

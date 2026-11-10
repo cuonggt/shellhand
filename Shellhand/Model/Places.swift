@@ -180,11 +180,12 @@ nonisolated enum Places {
     /// got, with no way on from there — and a host that takes only a password
     /// got "Permission denied", which reads as a wrong password nobody typed.
     ///
-    /// `answering` is whether this host's identity had a password for SFTP to
-    /// offer. It changes what a refusal **means**: with one, the stored
-    /// password was tried and turned down, and saying "SFTP has no way to
-    /// type one" would be plainly false; without one, the way forward is now
-    /// to give the host an identity rather than only to open a tab.
+    /// `answering` is whether a password reached this host for SFTP to offer
+    /// — its own, an identity's or a group's. It changes what a refusal
+    /// **means**: with one, the stored password was tried and turned down,
+    /// and saying "SFTP has no way to type one" would be plainly false;
+    /// without one, the way forward is now to give the host a password rather
+    /// than only to open a tab.
     static func trouble(_ said: String, on host: String, answering: Bool = false) -> Trouble {
         let text = said.lowercased()
         if text.contains("remote host identification has changed") {
@@ -213,16 +214,16 @@ nonisolated enum Places {
                 // worth saying is where to change it.
                 return Trouble(
                     title: "\(host) turned down the password",
-                    advice: "The password stored for this host's identity wasn't accepted. "
-                        + "Open File ▸ Identities… and type it again, or open a terminal tab "
-                        + "to try one by hand.",
+                    advice: "The password stored for this host wasn't accepted. Type it "
+                        + "again in Edit Host… — or where it comes from, its group or its "
+                        + "identity — or open a terminal tab to try one by hand.",
                     offersTerminal: true)
             }
             if takesPassword, !ways.contains("publickey") {
                 return Trouble(
                     title: "\(host) takes only a password",
-                    advice: "Give it an identity with a password — File ▸ Identities… — and SFTP "
-                        + "can log in here. A terminal tab can too: ssh asks for it there.",
+                    advice: "Give it a password in Edit Host… and SFTP can log in here. A "
+                        + "terminal tab can too: ssh asks for it there.",
                     offersTerminal: true)
             }
             return Trouble(
@@ -230,8 +231,8 @@ nonisolated enum Places {
                 advice: "SFTP offered a key and the host accepted none. "
                     + "Check the host's user and key."
                     + (takesPassword
-                        ? " It also takes a password: an identity with one logs in here, and a "
-                            + "terminal tab asks for it."
+                        ? " It also takes a password: give it one in Edit Host… and SFTP "
+                            + "logs in with it, and a terminal tab asks for it."
                         : ""),
                 offersTerminal: takesPassword)
         }

@@ -72,7 +72,27 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
     var gotThrough: Bool { connectedAt != nil }
 
     /// What the tab, the pane and the window's subtitle say it is doing.
-    var status: SessionStatus { SessionStatus.of(state, stopped: stopped, gotThrough: gotThrough) }
+    var status: SessionStatus {
+        SessionStatus.of(state, stopped: stopped, gotThrough: gotThrough, turnedDown: turnedDown != nil)
+    }
+
+    /// The stop whose saved password this session typed last, by name, for
+    /// the connecting card: "Typed db-01's password from the keychain".
+    private(set) var typedFor: String?
+    /// The stop whose saved password was turned down — ssh asked again
+    /// after it was typed — by name. Nothing more is typed for it, and the
+    /// tab says so until the session is through.
+    private(set) var turnedDown: String?
+    /// Each stop typed for, by its place in the route, and how many times
+    /// its prompt stood on screen when it was: standing more times than that
+    /// is ssh asking again (`PasswordPrompt.count`).
+    private var typedAt: [Int: Int] = [:]
+    /// The prompts typed into, as `PasswordPrompt` holds them, which the
+    /// watchdog does not take for the far side.
+    private var typedPrompts: [String] = []
+    /// Where a stop's password is read from, by its keychain account: the
+    /// keychain, unless a test hands the session one of its own.
+    var passwordFor: (String) -> String? = { account in (try? Keychain.password(for: account)) ?? nil }
 
     /// Readable so that a test can put an ssh log where the watchdog looks.
     let logPath: String
@@ -401,8 +421,12 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                 }
 
                 self.looks += 1
+                // Read once a look: it is the whole history.
+                let screen = self.screen
+                self.typePassword(seeing: screen)
                 if let next = SessionProgress.next(
-                    from: self.state, screen: self.screen, answered: self.answered)
+                    from: self.state, screen: screen, answered: self.answered,
+                    typed: self.typedPrompts)
                 {
                     self.state = next
                     // Through, so any question after this is a new one, even
@@ -410,10 +434,44 @@ final class TerminalSession: Identifiable, LocalProcessTerminalViewDelegate {
                     if next == .connected {
                         self.answered = nil
                         self.connectedAt = Date()
+                        self.turnedDown = nil
                     }
                 }
             }
         }
+    }
+
+    /// Types a stop's saved password at ssh's own prompt for it
+    /// (`PasswordPrompt`), at the owner's word (2026-11-08): once, and only
+    /// while the session is still connecting — never into anything asked once
+    /// it is through, where `ssh` typed in the session could be asking.
+    ///
+    /// **Once.** That prompt standing again is ssh asking after turning the
+    /// password down, and a second try of the same password is a second
+    /// refusal at best and a locked account at worst: nothing more is typed
+    /// for that stop, and the session says it was turned down, for the person
+    /// to type there or change the one kept.
+    ///
+    /// A tab never forces `SSH_ASKPASS` for this, which would take the
+    /// host-key question away from `HostKey.swift`: the password goes where a
+    /// person would type it, onto ssh's own prompt on the pty.
+    private func typePassword(seeing screen: String) {
+        guard case .connecting = state,
+              let asked = PasswordPrompt.asked(in: screen, route: route)
+        else { return }
+        let stop = route.stops[asked.stop]
+        let times = PasswordPrompt.count(asked, in: screen)
+        if let before = typedAt[asked.stop] {
+            if times > before, turnedDown == nil { turnedDown = stop.name }
+            return
+        }
+        guard !stop.password.isEmpty, let password = passwordFor(stop.password),
+              !password.isEmpty
+        else { return }
+        typedAt[asked.stop] = times
+        typedPrompts.append(asked.tight)
+        typedFor = stop.name
+        send(password + "\r")
     }
 
     private func readDiagnostics() {

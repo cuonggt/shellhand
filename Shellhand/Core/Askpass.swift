@@ -4,11 +4,12 @@ import Foundation
 ///
 /// ssh asks a helper program instead of the terminal, and the helper is this
 /// same app run in a mode of its own. What travels in the environment is the
-/// **identity's id** and the path to the app — never the password, because an
-/// argument list is readable by every process on the machine and an
-/// environment variable by every child of one. The password goes from the
-/// keychain to the helper's standard output, which belongs to those two
-/// processes and nothing else.
+/// **keychain account** the password is filed under — an identity's id, or a
+/// host's or a group's own (`Keychain.account`) — and the path to the app,
+/// never the password, because an argument list is readable by every process
+/// on the machine and an environment variable by every child of one. The
+/// password goes from the keychain to the helper's standard output, which
+/// belongs to those two processes and nothing else.
 ///
 /// **This is for a connection with nobody in front of it** — the `sftp` child
 /// behind the file window.
@@ -27,31 +28,30 @@ import Foundation
 /// question has somewhere a person can see it:
 /// → docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question
 nonisolated enum Askpass {
-    /// Names the identity whose password ssh is asking for. Its presence is
-    /// also what tells the app it was run as a helper rather than by a
-    /// person: ssh invokes the program with the prompt as its only argument,
-    /// so there is no subcommand there to recognise.
-    static let identityVariable = "SHELLHAND_ASKPASS_IDENTITY"
+    /// Names the keychain account whose password ssh is asking for. Its
+    /// presence is also what tells the app it was run as a helper rather than
+    /// by a person: ssh invokes the program with the prompt as its only
+    /// argument, so there is no subcommand there to recognise.
+    static let accountVariable = "SHELLHAND_ASKPASS_ACCOUNT"
 
     // MARK: what a connection carries
 
     /// What an unattended connection needs added to its environment, and
-    /// nothing at all for every other kind of identity — so no other
+    /// nothing at all where no password reaches the host — so no other
     /// connection changes shape because this exists.
     ///
-    /// Empty where there is no password to answer with, where the app has no
-    /// executable path to point ssh at, and — deliberately — where the
-    /// identity has no id, which is what a machine typed into ⌘K carries.
+    /// Empty where there is no password to answer with, and where the app has
+    /// no executable path to point ssh at. A machine typed into ⌘K has no id
+    /// to have filed one under, so nothing reaches it of its own.
     static func environment(for resolved: Resolved) -> [String: String] {
-        guard resolved.identityKind == .password, !resolved.identityId.isEmpty,
-              let app = Bundle.main.executablePath
+        guard !resolved.passwordAccount.isEmpty, let app = Bundle.main.executablePath
         else { return [:] }
         var out = [
             "SSH_ASKPASS": app,
             // Without this the helper is never run: ssh wants `DISPLAY` set
             // before it will use one, and a GUI app has none. See above.
             "SSH_ASKPASS_REQUIRE": "force",
-            identityVariable: resolved.identityId,
+            accountVariable: resolved.passwordAccount,
         ]
         // Where the password is filed, when it is not the usual place: the
         // helper is a process of its own and would otherwise look in the one
@@ -72,10 +72,11 @@ nonisolated enum Askpass {
 
     // MARK: being the helper
 
-    /// The identity ssh is asking about, when this process is a helper.
-    static var identityBeingAsked: String? {
-        let id = ProcessInfo.processInfo.environment[identityVariable] ?? ""
-        return id.isEmpty ? nil : id
+    /// The keychain account ssh is asking about, when this process is a
+    /// helper.
+    static var accountBeingAsked: String? {
+        let account = ProcessInfo.processInfo.environment[accountVariable] ?? ""
+        return account.isEmpty ? nil : account
     }
 
     /// Answers one prompt and stops.
@@ -85,7 +86,7 @@ nonisolated enum Askpass {
     /// error, which for a file session is the stderr the window reports.
     /// Exiting non-zero tells ssh no answer is coming, which becomes an
     /// ordinary refusal rather than a prompt that hangs.
-    static func answer(identity id: String, prompt: String) -> Never {
+    static func answer(account: String, prompt: String) -> Never {
         if isQuestion(prompt) {
             // **No**, always, and that is not a shrug. Nobody can read a
             // fingerprint in a window with no terminal in it, and a yes here
@@ -96,9 +97,9 @@ nonisolated enum Askpass {
             exit(0)
         }
         do {
-            guard let password = try Keychain.password(for: id) else {
-                complain("no password stored for this identity — open it in "
-                    + "Shellhand's Identities and type one")
+            guard let password = try Keychain.password(for: account) else {
+                complain("no password stored for it — type one in Shellhand, in the "
+                    + "host's editor, its group's or its identity's")
             }
             print(password)
             exit(0)

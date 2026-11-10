@@ -25,6 +25,13 @@ struct GroupEditorSheet: View {
     @State private var saving = false
     @State private var confirmingDelete = false
     @State private var optionsText: String
+    /// A password typed for the group, kept in the keychain on Save.
+    @State private var passwordTyped = ""
+    /// Whether Save forgets the one the group keeps.
+    @State private var forgettingPassword = false
+    /// Why the store refused the last Save, said in the editor it refused,
+    /// as the host editor says it.
+    @State private var saveFailure: String?
     @State private var tab: Tab = .general
     @FocusState private var nameFocused: Bool
     @Environment(\.dismiss) private var dismiss
@@ -102,7 +109,12 @@ struct GroupEditorSheet: View {
         // — a user typed — had 46.5pt under General's last row at 516 in
         // the build before, and 86.5 after, Advanced 108 in both: General is
         // still the taller tab, and 476 gives it its margin back.
-        .frame(width: DialogSize.medium, height: SheetHeight.fitted(476, in: room.height))
+        //
+        // **517 since**: the Password row under the key (2026-11-10), 41pt.
+        // Driven from outside at 516, Edge — a password of its own — and Lab
+        // — none — both had 45.5pt under General's last row, a point short
+        // of that margin, and Advanced 108: one more point gives it back.
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(517, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible
@@ -198,6 +210,7 @@ struct GroupEditorSheet: View {
                 row("Key", value: key.value, from: key.from,
                     example: HostEditorSheet.keyExample(avoiding: keysInList),
                     text: $group.keyPath)
+                passwordRow(above)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
                     example: HostEditorSheet.jumpExample(
                         avoiding: store.snapshot.hosts.map(\.name)),
@@ -239,6 +252,12 @@ struct GroupEditorSheet: View {
 
     private var footer: some View {
         VStack(spacing: 10) {
+            if let saveFailure {
+                Label(saveFailure, systemImage: "xmark.octagon")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             // Said quietly while a new group has no name yet, as the host
             // editor says it, where it was a warning before anything had
             // been typed.
@@ -373,6 +392,40 @@ struct GroupEditorSheet: View {
         UserField.caption(typed: group.user, picked: picked, from: passedUser(above).from)
     }
 
+    /// The group's own password (`PasswordField`), for every host beneath
+    /// that keeps none, with whose would reach them otherwise said beside it.
+    private func passwordRow(_ above: FromAbove) -> some View {
+        LabeledContent("Password") {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                PasswordField(
+                    typed: $passwordTyped, forgetting: $forgettingPassword,
+                    keeps: group.hasPassword, inherited: !passedPassword(above).isEmpty)
+                if let from = passwordFrom(above) {
+                    FromCaption(from: from, among: shownFroms,
+                                help: "Kept for \(from) in this Mac's keychain. Type one here "
+                                    + "to keep this group's own.")
+                }
+            }
+        }
+    }
+
+    /// Where the password the hosts beneath would take comes from, if this
+    /// group kept none: the identity it picks, where that is a password
+    /// one, and otherwise the groups above. Empty where none would.
+    private func passedPassword(_ above: FromAbove) -> String {
+        if let picked, picked.kind == .password { return picked.source }
+        return above.passwordAccount.isEmpty ? "" : above.passwordFrom
+    }
+
+    /// The Password row's caption, while the group has none of its own in
+    /// play (`PasswordField.namesSource`).
+    private func passwordFrom(_ above: FromAbove) -> String? {
+        guard PasswordField.namesSource(typed: passwordTyped, keeps: group.hasPassword)
+        else { return nil }
+        let from = passedPassword(above)
+        return from.isEmpty ? nil : from
+    }
+
     /// What a field left empty in a group gives the hosts beneath it, and
     /// where from: what the identity the group picks fills in, and otherwise
     /// what the groups above give — the resolver's order, a group's own
@@ -418,6 +471,7 @@ struct GroupEditorSheet: View {
         return [
             userFrom(above),
             Self.shownFrom(passedKey(above).from, set: group.keyPath),
+            passwordFrom(above),
             Self.shownFrom(above.proxyJumpFrom, set: group.proxyJump),
         ].compactMap { $0 }
     }
@@ -469,10 +523,22 @@ struct GroupEditorSheet: View {
 
     private func save() {
         saving = true
+        saveFailure = nil
         group.name = group.name.trimmingCharacters(in: .whitespaces)
         group.sshOptions = SSHOptionsField.parse(optionsText)
         Task {
-            await store.save(group)
+            // A refusal keeps the editor open with what was typed and says
+            // why here, as the host editor does — the keychain's above all,
+            // since a password typed and lost would be found only at the
+            // next connection, as a refusal.
+            guard await store.save(group, password: PasswordField.change(
+                typed: passwordTyped, forgetting: forgettingPassword)) != nil
+            else {
+                saveFailure = store.lastError ?? "This group could not be saved."
+                store.clearError()
+                saving = false
+                return
+            }
             saving = false
             dismiss()
         }

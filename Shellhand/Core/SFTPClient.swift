@@ -118,10 +118,11 @@ actor SFTPClient {
     /// `-o BatchMode=no` from the config was once enough to leave a session
     /// waiting at one forever.
     ///
-    /// **Unless there is an answer ready.** A host whose identity keeps a
-    /// password in the keychain gets `SSHArgs.answering` in place of
-    /// BatchMode and an askpass helper in its environment, because BatchMode
-    /// turns off the very prompt the helper exists to answer. That is the one
+    /// **Unless there is an answer ready.** A host reached by a password kept
+    /// in the keychain — its own, an identity's or a group's — gets
+    /// `SSHArgs.answering(_:)` in place of BatchMode and an askpass helper in
+    /// its environment, because BatchMode turns off the very prompt the
+    /// helper exists to answer. That is the one
     /// thing the MVP cut took away and this gives back. A host key it has
     /// never seen is still the end of the road here — nobody can read a
     /// fingerprint in a window with no terminal — and `Places.trouble` says
@@ -137,9 +138,10 @@ actor SFTPClient {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
         process.arguments = args
-        // A password identity's answer, which ssh fetches by running this
-        // same bundle as its askpass helper. Nil for every other kind, so no
-        // other connection is handed an environment at all — and never only
+        // The answer for a host a stored password reaches, which ssh fetches
+        // by running this same bundle as its askpass helper. Nil for every
+        // other host, so no other connection is handed an environment at all
+        // — and never only
         // the two variables, since setting this replaces what a child would
         // otherwise inherit rather than adding to it.
         process.environment = Askpass.childEnvironment(for: resolved)

@@ -26,7 +26,7 @@ security add-generic-password -s "$svc" -a "$id" -w "$pw" -A -U >/dev/null 2>&1 
 echo "put a password under a service of this run's own"
 
 ask() { # ask <prompt>
-    SHELLHAND_ASKPASS_IDENTITY="$id" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
+    SHELLHAND_ASKPASS_ACCOUNT="$id" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
         /usr/bin/perl -e 'alarm 20; exec @ARGV' "$binary" "$1" 2>"$svc.err"
     local status=$?
     # To stderr, not stdout: the caller captures stdout, which is the
@@ -48,8 +48,8 @@ got=$(ask "Are you sure you want to continue connecting (yes/no/[fingerprint])? 
 if [ "$got" = "no" ]; then echo "   ANSWERED no ✓ — nobody can read a fingerprint in a window with no terminal"
 else echo "   said: '$got' — expected no ✗"; fi
 
-echo "— an identity with nothing stored —"
-got=$(SHELLHAND_ASKPASS_IDENTITY="nobody-$$" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
+echo "— an account with nothing stored —"
+got=$(SHELLHAND_ASKPASS_ACCOUNT="nobody-$$" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
     /usr/bin/perl -e 'alarm 20; exec @ARGV' "$binary" "password: " 2>&1)
 echo "   said: '$got'"
 

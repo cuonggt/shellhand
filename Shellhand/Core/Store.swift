@@ -230,6 +230,22 @@ nonisolated final class Store: Sendable {
                 }
             }
         }
+        // Whether a host or a group keeps a password of its own, at the
+        // owner's word (2026-11-08). The password is **not** here: it goes to
+        // this Mac's keychain, under `Keychain.account(host:)` or
+        // `(group:)`, and the export carries neither it nor this — a list
+        // moved to another Mac arrives with no passwords in its keychain.
+        migrator.registerMigration("v13") { db in
+            for table in ["host_groups", "hosts"] {
+                let held = try String.fetchAll(
+                    db, sql: "SELECT name FROM pragma_table_info(?)", arguments: [table])
+                if !held.contains("hasPassword") {
+                    try db.alter(table: table) { t in
+                        t.add(column: "hasPassword", .boolean).notNull().defaults(to: false)
+                    }
+                }
+            }
+        }
         return migrator
     }
 
@@ -385,6 +401,7 @@ nonisolated extension Group: FetchableRecord, PersistableRecord {
         user = row["user"]
         keyPath = row["identity"]
         identityId = row["identityId"]
+        hasPassword = row["hasPassword"]
         proxyJump = row["proxyJump"]
         sshOptions = Host.decodeTags(row["sshOptions"])
         forwardAgent = row["forwardAgent"]
@@ -398,6 +415,7 @@ nonisolated extension Group: FetchableRecord, PersistableRecord {
         container["user"] = user
         container["identity"] = keyPath
         container["identityId"] = identityId
+        container["hasPassword"] = hasPassword
         container["proxyJump"] = proxyJump
         container["sshOptions"] = Host.encodeTags(sshOptions)
         container["forwardAgent"] = forwardAgent
@@ -417,6 +435,7 @@ nonisolated extension Host: FetchableRecord, PersistableRecord {
         user = row["user"]
         keyPath = row["identity"]
         identityId = row["identityId"]
+        hasPassword = row["hasPassword"]
         proxyJump = row["proxyJump"]
         groupId = row["groupId"]
         tags = Host.decodeTags(row["tags"])
@@ -436,6 +455,7 @@ nonisolated extension Host: FetchableRecord, PersistableRecord {
         container["user"] = user
         container["identity"] = keyPath
         container["identityId"] = identityId
+        container["hasPassword"] = hasPassword
         container["proxyJump"] = proxyJump
         container["groupId"] = groupId
         container["tags"] = Host.encodeTags(tags)

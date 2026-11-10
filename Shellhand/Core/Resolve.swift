@@ -16,6 +16,9 @@ nonisolated struct Hop: Sendable, Hashable {
     var port = 0
     var user = ""
     var keyPath = ""
+    /// Where this hop's password is filed, or empty for none — so a tab can
+    /// type it when this hop's ssh asks, and not the host's behind it.
+    var passwordAccount = ""
     /// This hop's own settings, which reach the ssh that reaches it and not
     /// the one beyond.
     var options: [String] = []
@@ -45,6 +48,13 @@ nonisolated struct Resolved: Sendable {
     /// environment; nothing user-facing has any use for one.
     var identityId = ""
     var identityKind: Identity.Kind?
+    /// Where the password that reaches this host is filed — the host's own,
+    /// an identity's or a group's (`Keychain.account`) — and what supplied
+    /// it, as `userFrom` says for the user. Empty where none does. The
+    /// account goes no further than the askpass helper's environment and a
+    /// tab's own keychain read; nothing user-facing has a use for one.
+    var passwordAccount = ""
+    var passwordFrom = ""
     var proxyJump = ""
     var proxyJumpFrom = ""
     /// The chain in front of this host, the first hop first.
@@ -84,6 +94,7 @@ nonisolated struct Resolved: Sendable {
             user: user, userFrom: userFrom,
             keyPath: keyPath, keyPathFrom: keyPathFrom,
             identity: identity, identityFrom: identityFrom, identityKind: identityKind,
+            hasPassword: !passwordAccount.isEmpty, passwordFrom: passwordFrom,
             proxyJump: proxyJump, proxyJumpFrom: proxyJumpFrom,
             port: port, aliasElsewhere: aliasElsewhere, configProxy: configProxy,
             configProxyCommand: configProxyCommand,
@@ -114,6 +125,11 @@ nonisolated struct FromAbove: Sendable, Equatable {
     /// the identity named as their source.
     var identity = ""
     var identityFrom = ""
+    /// The password a group above keeps, or the one an identity a group
+    /// above points at holds, and what supplied it: the group's name, or the
+    /// identity's `source`. Empty where none above has one.
+    var passwordAccount = ""
+    var passwordFrom = ""
     var proxyJump = ""
     var proxyJumpFrom = ""
     var theme = ""
@@ -176,10 +192,18 @@ nonisolated struct FromAbove: Sendable, Equatable {
                 keyPath = parent.keyPath
                 keyPathFrom = parent.name
             }
+            if passwordAccount.isEmpty, parent.hasPassword, !parent.id.isEmpty {
+                passwordAccount = Keychain.account(group: parent.id)
+                passwordFrom = parent.name
+            }
             // Then whatever this group points at, after its own fields and
             // before the group above it — the same place an identity sits
             // for a host.
             if let named = identityByID[parent.identityId] {
+                if passwordAccount.isEmpty, named.kind == .password, !named.id.isEmpty {
+                    passwordAccount = named.id
+                    passwordFrom = named.source
+                }
                 if identity.isEmpty {
                     identity = named.name
                     identityFrom = parent.name
@@ -299,6 +323,12 @@ nonisolated struct Resolver: Sendable {
         out.sshOptions = host.sshOptions
         out.forwardAgent = host.forwardAgent
         out.theme = host.theme
+        // Its own password, where it keeps one. One with no id has nowhere
+        // it could have been filed: a machine typed into ⌘K, or a host not
+        // saved yet.
+        if host.hasPassword, !host.id.isEmpty {
+            out.passwordAccount = Keychain.account(host: host.id)
+        }
 
         // The identity the host itself points at: after its own fields,
         // because typing a value onto the host is the more deliberate of the
@@ -319,6 +349,10 @@ nonisolated struct Resolver: Sendable {
             if out.keyPath.isEmpty, !group.keyPath.isEmpty {
                 out.keyPath = group.keyPath
                 out.keyPathFrom = group.name
+            }
+            if out.passwordAccount.isEmpty, group.hasPassword, !group.id.isEmpty {
+                out.passwordAccount = Keychain.account(group: group.id)
+                out.passwordFrom = group.name
             }
             // Then what this group points at, in the same place relative to
             // the group as the host's identity is to the host.
@@ -370,6 +404,12 @@ nonisolated struct Resolver: Sendable {
             out.keyPath = identity.keyPath
             out.keyPathFrom = identity.source
         }
+        // A password identity's password, filed under its own id, credited
+        // to it as its user is.
+        if out.passwordAccount.isEmpty, identity.kind == .password, !identity.id.isEmpty {
+            out.passwordAccount = identity.id
+            out.passwordFrom = identity.source
+        }
     }
 
     // MARK: jump hosts
@@ -391,7 +431,7 @@ nonisolated struct Resolver: Sendable {
             let (alias, _) = aliasFor(host)
             out.append(Hop(
                 name: host.name, alias: alias, addr: host.addr, port: host.port,
-                user: hop.user, keyPath: hop.keyPath,
+                user: hop.user, keyPath: hop.keyPath, passwordAccount: hop.passwordAccount,
                 options: hop.sshOptions, forwardAgent: hop.forwardAgent))
             next = hop.proxyJump.trimmingCharacters(in: .whitespaces)
         }

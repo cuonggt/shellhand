@@ -368,9 +368,10 @@ private struct PlacePane: View {
             // card offers: one deleted since has no editor and no tab to open.
             let listed = store.snapshot.hosts.first { $0.id == host.id }
             // Read off the host as the list has it now, not off the copy the
-            // pane was pointed with: an identity given a password since the
-            // pane failed should change what the card says on Try Again.
-            let answering = (listed ?? host).effective.identityKind == .password
+            // pane was pointed with: a password stored since the pane failed
+            // — the host's own, an identity's or a group's — should change
+            // what the card says on Try Again.
+            let answering = (listed ?? host).effective.hasPassword
             Unreached(host: host, listed: listed != nil, said: failure,
                       trouble: Places.trouble(failure, on: host.name, answering: answering)) {
                 Task { await place.tryAgain(with: listed) }

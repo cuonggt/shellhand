@@ -42,7 +42,7 @@ struct SessionTabBar: View {
         }
         let widths = Panes.tabTitleWidths(
             room: room, needs: steps.map { $0.widths.first ?? 0 },
-            extras: sessions.all.map { $0.status == .needsAnswer ? Panes.tabGap + TabButton.badgeWidth : 0 },
+            extras: sessions.all.map { $0.status.needsYou ? Panes.tabGap + TabButton.badgeWidth : 0 },
             cuts: steps.map { $0.widths })
         HStack(spacing: Panes.tabSpacing) {
             // The way back to the list, outside the scrolling: with the strip
@@ -251,7 +251,7 @@ private struct TabButton: View {
                 .fixedSize(horizontal: false, vertical: true)
                 // A question in a tab behind this one was a yellow dot, and
                 // the far end gives up on it after a couple of minutes.
-                if session.status == .needsAnswer {
+                if session.status.needsYou {
                     Text(Self.needsYou)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.orange)
@@ -344,7 +344,7 @@ struct StatusMark: View {
     // SwiftTerm has a Color of its own, for terminal colours.
     private var tint: SwiftUI.Color {
         switch status {
-        case .needsAnswer: .orange
+        case .needsAnswer, .needsPassword: .orange
         case .couldNotConnect, .lost: .red
         default: .secondary
         }
@@ -438,6 +438,8 @@ struct TerminalPane: View {
         switch status {
         case .connecting:
             ConnectingCard(session: session)
+        case .needsPassword:
+            TurnedDownCard(session: session, actions: actions, onEdit: onEdit)
         case .stopped, .couldNotConnect, .lost, .ended:
             EndedCard(session: session, status: status, actions: actions,
                       onEdit: status == .couldNotConnect ? onEdit : nil)
@@ -580,6 +582,14 @@ private struct ConnectingCard: View {
                 .font(.callout.monospaced())
                 .foregroundStyle(Card.secondary)
             }
+            // Said where it happened, so a password typed for somebody is
+            // never typed in silence — which machine's, and from where.
+            if let typedFor = session.typedFor {
+                Label("Typed \(typedFor)'s password from the keychain", systemImage: "key")
+                    .labelStyle(.cardHeadline)
+                    .font(.callout)
+                    .foregroundStyle(Card.secondary)
+            }
             // ⌘. is the Terminal menu's, where the keys live.
             Button("Stop Connecting") { session.stopConnecting() }
                 .controlSize(.small)
@@ -592,6 +602,56 @@ private struct ConnectingCard: View {
     private var destination: String {
         guard let host = session.host else { return "" }
         return host.id.isEmpty ? "" : host.destinationLine
+    }
+}
+
+/// A saved password the tab typed, turned down: ssh is asking again, and the
+/// tab types nothing more — once is a guess at a machine's password, twice is
+/// a refusal earned twice and, on some machines, a locked account. The person
+/// types it in the terminal under the card, or changes the one kept.
+///
+/// Drawn as the connecting card it takes the place of, its spinner a warning:
+/// the session is still connecting, and through as soon as a password is
+/// taken, when the card goes.
+private struct TurnedDownCard: View {
+    let session: TerminalSession
+    let actions: TabActions
+    /// Edit Host…, for a host in the list; nil leaves it out.
+    let onEdit: (() -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(
+                SessionStatus.needsPassword.headline(for: session.turnedDown ?? session.host?.name),
+                systemImage: SessionStatus.needsPassword.symbol)
+                .labelStyle(.cardHeadline)
+                .font(.headline)
+                .foregroundStyle(SwiftUI.Color.orange)
+            Text("It was typed once and won't be typed again. Type the password in the "
+                + "terminal, or change the one kept for it.")
+                .font(.callout)
+                .foregroundStyle(Card.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            // Side by side where they fit, one above another where they do
+            // not, as the ending's are.
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons(stacked: false) }
+                VStack(alignment: .leading) { buttons(stacked: true) }
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .controlSize(.small)
+        }
+        .cardChrome()
+    }
+
+    @ViewBuilder
+    private func buttons(stacked: Bool) -> some View {
+        if let onEdit {
+            Button(action: onEdit) { Text("Edit Host…").stackedButtonLabel(stacked) }
+        }
+        Button { actions.close(session) } label: {
+            Text("Close Tab").stackedButtonLabel(stacked)
+        }
     }
 }
 

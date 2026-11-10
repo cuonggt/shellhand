@@ -30,6 +30,11 @@ nonisolated struct Host: Codable, Sendable, Identifiable, Hashable {
     /// renaming an identity costs nothing and takes nothing with it — unlike
     /// a jump host, which is named and so has to be followed.
     var identityId: String = ""
+    /// Whether a password of the host's own is kept for it in this Mac's
+    /// keychain (`Keychain.account(host:)`). The password itself is never
+    /// here, nor in the export: this says only that there is one, so the
+    /// resolver can say whose reaches a host without a keychain read per row.
+    var hasPassword: Bool = false
     var proxyJump: String = ""
     var groupId: String = ""
     var tags: [String] = []
@@ -140,6 +145,11 @@ nonisolated struct Effective: Codable, Sendable, Hashable {
     /// honest answer is "this one does not log in that way". Not its id: an
     /// id goes no further than the askpass helper's environment.
     var identityKind: Identity.Kind?
+    /// Whether a password reaches this host — its own, an identity's or a
+    /// group's — and what supplied it: empty for its own, a group's name, or
+    /// an identity's `source`. Never the password, nor where it is filed.
+    var hasPassword: Bool = false
+    var passwordFrom: String = ""
     var proxyJump: String = ""
     var proxyJumpFrom: String = ""
     var port: Int = 22
@@ -246,6 +256,9 @@ nonisolated struct Group: Codable, Sendable, Identifiable, Hashable {
     /// host says otherwise — reaching them after this group's own fields and
     /// before the group above it.
     var identityId: String = ""
+    /// Whether a password of the group's own is kept in this Mac's keychain
+    /// (`Keychain.account(group:)`), for every host beneath that sets none.
+    var hasPassword: Bool = false
     var proxyJump: String = ""
     /// Reaches every host beneath it, after each host's own.
     var sshOptions: [String] = []

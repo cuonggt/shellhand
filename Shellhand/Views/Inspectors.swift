@@ -51,6 +51,12 @@ struct GroupInspector: View {
                     identity(above)
                     passed("User", own: group.user, above: above.user, from: above.userFrom)
                     passed("Key", own: group.keyPath, above: above.keyPath, from: above.keyPathFrom)
+                    // Only where one is kept here or reaches it from above —
+                    // and only that one is, never the password.
+                    if group.hasPassword || !above.passwordAccount.isEmpty {
+                        passed("Password", own: group.hasPassword ? HostDetailView.kept : "",
+                               above: HostDetailView.kept, from: above.passwordFrom)
+                    }
                     passed("Jump host", own: group.proxyJump, above: above.proxyJump,
                            from: above.proxyJumpFrom)
                     agent(above)

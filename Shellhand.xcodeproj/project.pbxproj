@@ -50,7 +50,9 @@
 		2EA71C4B5CA4952E7DB64A20 /* SSHArgsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CF29EBA0986A68187D8D5A /* SSHArgsTests.swift */; };
 		2F972FD7A982C761A208E1B9 /* ResolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 467E73B5CE44F6B57382DC67 /* ResolverTests.swift */; };
 		3243D1D24C643C4DB18495CD /* TagField.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C564CAC406B2F78C655FD3 /* TagField.swift */; };
+		3638DF27CC3938B4FFCC0CE3 /* PasswordField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE99E1363F88FEDA8D921BF9 /* PasswordField.swift */; };
 		383C927BD8963DE7667CBF89 /* Help.swift in Sources */ = {isa = PBXBuildFile; fileRef = 066C95B6513A4E22C16637A7 /* Help.swift */; };
+		393BF22D595BF1E4B2665B39 /* PasswordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E1BED56C0A7B0AF687A1C76 /* PasswordTests.swift */; };
 		3A2EB394976CF16932AA9BF0 /* SSHArgs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F30BECE69E1DA23C37953AE /* SSHArgs.swift */; };
 		3A3665741D034387ED16AEEF /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5F1C9A8EC9E8345D811B6F3C /* Sparkle */; };
 		3BCCCCA1FCE58A325424678F /* HostHeaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4C89B31825E734E49A057E /* HostHeaderTests.swift */; };
@@ -59,6 +61,7 @@
 		41010B3442CF0D67DB46B249 /* HelpTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB4E77B205AE7FFEDB57909 /* HelpTests.swift */; };
 		42046769A99BA92B40873D19 /* PortableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */; };
 		4376D4B4C41780F03816201A /* KeychainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F7071A9973335A154823B67 /* KeychainTests.swift */; };
+		43B23D3F515538548654E2B2 /* PasswordPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04E15ADB3B755B524BAF05D6 /* PasswordPrompt.swift */; };
 		458CA409CA7BC5CAD2B96AE1 /* SessionTitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */; };
 		471A8CC5C1170C8A955A6110 /* SFTPTransferTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92963BFA25E6683E3DB57652 /* SFTPTransferTests.swift */; };
 		474950C3E6ECFE6BF7F32AF5 /* SFTPWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3EB3A03CBD2EA4AABB0F14E /* SFTPWire.swift */; };
@@ -198,6 +201,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		04E15ADB3B755B524BAF05D6 /* PasswordPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordPrompt.swift; sourceTree = "<group>"; };
 		064114937E7A1130113123BC /* IdentitiesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentitiesSheet.swift; sourceTree = "<group>"; };
 		066C95B6513A4E22C16637A7 /* Help.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Help.swift; sourceTree = "<group>"; };
 		06EF1D39F1F6E104E8386977 /* ShellhandApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellhandApp.swift; sourceTree = "<group>"; };
@@ -239,6 +243,7 @@
 		3B79AFFE8A661B7E00AB94A2 /* ControlIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlIcon.swift; sourceTree = "<group>"; };
 		3BCC349CD7DD0722E99B21C1 /* AgentChoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentChoice.swift; sourceTree = "<group>"; };
 		3D1883FC0FDED4184A8E0B04 /* SessionTitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTitleTests.swift; sourceTree = "<group>"; };
+		3E1BED56C0A7B0AF687A1C76 /* PasswordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordTests.swift; sourceTree = "<group>"; };
 		40C2A340AD1B26622F6D0AB2 /* Tree.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tree.swift; sourceTree = "<group>"; };
 		44F2EF5B501F37F17236155B /* HostEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostEditorSheet.swift; sourceTree = "<group>"; };
 		45197993005C1647F246D4EE /* os-opensuse-tumbleweed.svg */ = {isa = PBXFileReference; path = "os-opensuse-tumbleweed.svg"; sourceTree = "<group>"; };
@@ -341,6 +346,7 @@
 		C90CCBBC70703651BE9ADC36 /* OSRelease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSRelease.swift; sourceTree = "<group>"; };
 		C980CDA163D4D20A0C1C3D6F /* Portable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Portable.swift; sourceTree = "<group>"; };
 		CA3966F3845382E6166AE1A0 /* Commands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commands.swift; sourceTree = "<group>"; };
+		CE99E1363F88FEDA8D921BF9 /* PasswordField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordField.swift; sourceTree = "<group>"; };
 		CFB7415E72159874F3B55359 /* Tags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tags.swift; sourceTree = "<group>"; };
 		D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSReleaseTests.swift; sourceTree = "<group>"; };
 		D1452F6A5BE8A3ACD75B6D24 /* os-centos.svg */ = {isa = PBXFileReference; path = "os-centos.svg"; sourceTree = "<group>"; };
@@ -429,6 +435,7 @@
 				3473C3E584F456CD7438584F /* OSMarkTests.swift */,
 				D0B31C908099A9BEB86B70F4 /* OSReleaseTests.swift */,
 				6621FD97BB914B528EA0DED0 /* PanesTests.swift */,
+				3E1BED56C0A7B0AF687A1C76 /* PasswordTests.swift */,
 				E3798692706D23BAB1E792B2 /* PlacesTests.swift */,
 				31EAAFD22E56F9C63AF61DAF /* PortableTests.swift */,
 				78C4EA7A75A2EF2C9B73F5B9 /* QuickConnectTests.swift */,
@@ -477,6 +484,7 @@
 			isa = PBXGroup;
 			children = (
 				B20E60B26760CD52D26C77F6 /* HostKey.swift */,
+				04E15ADB3B755B524BAF05D6 /* PasswordPrompt.swift */,
 				32E39F04CC1F0098ECB930EE /* SessionProgress.swift */,
 				85FB6DD2DA8DF6EB5C326F77 /* SessionStatus.swift */,
 				1296ADE4A2645E725ABFCE03 /* TerminalFont.swift */,
@@ -634,6 +642,7 @@
 				62B7E2B9CD110DE3B22FAF37 /* JumpHostField.swift */,
 				5FB89EF6BBD76A8206B7162E /* PalettePicker.swift */,
 				53922636D26F782CC80079B8 /* Panes.swift */,
+				CE99E1363F88FEDA8D921BF9 /* PasswordField.swift */,
 				8296330F429BBF1DC2441250 /* QuickConnect.swift */,
 				C337F61DD9182EDDA2CC6339 /* QuickConnectSheet.swift */,
 				931C1FC210800200F259DC3B /* QuickLook.swift */,
@@ -814,6 +823,7 @@
 				82A3852E94D0A15B1E2ED097 /* OSMarkTests.swift in Sources */,
 				DE68274B64276D6FA9CF2309 /* OSReleaseTests.swift in Sources */,
 				DE6194ED176981DE3FC88C85 /* PanesTests.swift in Sources */,
+				393BF22D595BF1E4B2665B39 /* PasswordTests.swift in Sources */,
 				2C4FE0DE69CEBF00D97E6509 /* PlacesTests.swift in Sources */,
 				42046769A99BA92B40873D19 /* PortableTests.swift in Sources */,
 				C15994E660A2E90781F49F7A /* QuickConnectTests.swift in Sources */,
@@ -899,6 +909,8 @@
 				CDE22787942D1A523B9377EA /* OSRelease.swift in Sources */,
 				A9C4EEFCC8DAD29C08C573EF /* PalettePicker.swift in Sources */,
 				78C0ACBED9BC5C20E971BB4B /* Panes.swift in Sources */,
+				3638DF27CC3938B4FFCC0CE3 /* PasswordField.swift in Sources */,
+				43B23D3F515538548654E2B2 /* PasswordPrompt.swift in Sources */,
 				B57872FBBCB2B2C9A9BFD845 /* Places.swift in Sources */,
 				67681879901F818576724761 /* Portable.swift in Sources */,
 				6BB39E09BF2E658E1ECA272A /* QuickConnect.swift in Sources */,

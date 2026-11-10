@@ -63,7 +63,7 @@ nonisolated struct AskpassTests {
     func environmentForAPassword() {
         let out = Askpass.environment(for: resolved(switches))
         #expect(out["SSH_ASKPASS"] != nil)
-        #expect(out[Askpass.identityVariable] == "i-switches")
+        #expect(out[Askpass.accountVariable] == "i-switches")
         // **Never the password.** An argument list is readable by every
         // process on the machine and an environment variable by every child
         // of one; the password goes keychain to stdout and nowhere else.
@@ -104,9 +104,9 @@ nonisolated struct AskpassTests {
     @Test("the child's environment is the inherited one with ours folded in")
     func childEnvironmentMerges() throws {
         let out = try #require(Askpass.childEnvironment(for: resolved(switches)))
-        #expect(out[Askpass.identityVariable] == "i-switches")
+        #expect(out[Askpass.accountVariable] == "i-switches")
         for (key, value) in ProcessInfo.processInfo.environment
-        where key != Askpass.identityVariable && key != "SSH_ASKPASS" {
+        where key != Askpass.accountVariable && key != "SSH_ASKPASS" {
             #expect(out[key] == value, "the child lost \(key)")
         }
     }
@@ -116,7 +116,7 @@ nonisolated struct AskpassTests {
     @Test("a password identity drops BatchMode, which would turn off the prompt it answers")
     func unattendedWithAnAnswer() {
         let options = SSHArgs.unattended(resolved(switches))
-        #expect(options == SSHArgs.answering)
+        #expect(options == SSHArgs.answering(resolved(switches)))
         #expect(!options.contains("BatchMode=yes"))
         // Keys first would let ssh in as somebody else before it ever
         // reached the password; three tries would be three keychain reads

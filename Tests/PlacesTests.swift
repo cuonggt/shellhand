@@ -239,13 +239,13 @@ nonisolated struct PlacesTests {
     }
 
     /// Not "SFTP needs a key" any more: SFTP can log in with a password now,
-    /// given an identity holding one, so the advice points at the thing that
-    /// would fix it rather than only at a terminal tab.
+    /// given one — the host's own, since 2026-11-08 — so the advice points at
+    /// the thing that would fix it rather than only at a terminal tab.
     @Test("a host that takes only a password says to give it one")
     func passwordOnly() {
         let trouble = Places.trouble("deploy@192.0.2.21: Permission denied (password).", on: "db-01")
         #expect(trouble.title == "db-01 takes only a password")
-        #expect(trouble.advice.contains("Identities"))
+        #expect(trouble.advice.contains("Give it a password in Edit Host…"))
         #expect(trouble.offersTerminal)
         let interactive = Places.trouble(
             "deploy@192.0.2.21: Permission denied (keyboard-interactive).", on: "db-01")
@@ -260,7 +260,9 @@ nonisolated struct PlacesTests {
         let trouble = Places.trouble(
             "root@192.0.2.21: Permission denied (password).", on: "sw-1", answering: true)
         #expect(trouble.title == "sw-1 turned down the password")
-        #expect(trouble.advice.contains("Identities"))
+        // Where it may be kept: the host's own, its group's or its identity's.
+        #expect(trouble.advice.contains("Edit Host…"))
+        #expect(trouble.advice.contains("its group or its identity"))
         #expect(trouble.offersTerminal)
     }
 

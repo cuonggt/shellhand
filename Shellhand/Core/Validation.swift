@@ -215,6 +215,8 @@ nonisolated enum Validation {
         var gives: [String] = []
         if !group.user.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the user") }
         if !group.keyPath.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the key") }
+        // Its own, kept in the keychain, which deleting the group takes away.
+        if group.hasPassword { gives.append("the password") }
         if !group.proxyJump.trimmingCharacters(in: .whitespaces).isEmpty { gives.append("the jump host") }
         if group.forwardAgent != nil { gives.append("agent forwarding") }
         if !group.theme.isEmpty { gives.append("the palette") }

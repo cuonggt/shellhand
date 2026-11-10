@@ -315,7 +315,8 @@ nonisolated enum Portable {
             # Shellhand host list. Fold it into another machine with File ▸ Import.
             # Records match by name, so ids differing between machines does not matter.
             # No secrets here: a key is a path to one, never the key itself, and
-            # a password identity carries no password — type it in on arrival.
+            # no password travels — a host's, a group's or an identity's, each is
+            # kept in its own Mac's keychain; type them in again on arrival.
 
             """
         return header + (try Yams.serialize(node: mapping(top)))

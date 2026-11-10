@@ -12,6 +12,9 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     case connecting
     /// A host-key question waits on somebody, in the background too.
     case needsAnswer
+    /// The saved password a tab typed was turned down, and ssh is asking
+    /// again: the tab types nothing more, so it waits on somebody too.
+    case needsPassword
     case connected
     /// Ended by Stop Connecting, which is no failure to report.
     case stopped
@@ -25,11 +28,13 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     /// `gotThrough` is whether the session ever came through, which is no
     /// proof of having logged in: an answered question or a password prompt
     /// on screen reads as through. So what ssh said decides first.
+    /// `turnedDown` is whether a saved password the session typed was turned
+    /// down while it was still connecting.
     static func of(
-        _ state: TerminalSession.State, stopped: Bool, gotThrough: Bool
+        _ state: TerminalSession.State, stopped: Bool, gotThrough: Bool, turnedDown: Bool = false
     ) -> SessionStatus {
         switch state {
-        case .connecting: return .connecting
+        case .connecting: return turnedDown ? .needsPassword : .connecting
         case .askingHostKey: return .needsAnswer
         case .connected: return .connected
         case let .ended(code, said):
@@ -54,7 +59,7 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     var words: String {
         switch self {
         case .connecting: "connecting"
-        case .needsAnswer: "needs you"
+        case .needsAnswer, .needsPassword: "needs you"
         case .connected: "connected"
         case .stopped: "stopped"
         case .couldNotConnect: "couldn't connect"
@@ -65,8 +70,16 @@ nonisolated enum SessionStatus: Equatable, Sendable {
 
     /// What a tab says when it is read out, which can take the longer form.
     var spoken: String {
-        self == .needsAnswer ? "needs you to answer a host-key question" : words
+        switch self {
+        case .needsAnswer: "needs you to answer a host-key question"
+        case .needsPassword: "needs you to type the password"
+        default: words
+        }
     }
+
+    /// Whether it waits on somebody, which a tab says with its Needs you
+    /// badge, in front or behind another.
+    var needsYou: Bool { self == .needsAnswer || self == .needsPassword }
 
     /// The tab's symbol. Connecting is drawn as a spinner instead, and
     /// connected keeps the dot it always had: the one shape that is not a
@@ -75,6 +88,7 @@ nonisolated enum SessionStatus: Equatable, Sendable {
         switch self {
         case .connecting: "circle.dotted"
         case .needsAnswer: "key.fill"
+        case .needsPassword: "exclamationmark.triangle.fill"
         case .connected: "circle.fill"
         case .stopped: "stop.circle"
         case .couldNotConnect, .lost: "exclamationmark.triangle.fill"
@@ -90,7 +104,8 @@ nonisolated enum SessionStatus: Equatable, Sendable {
     /// the top of a session's last output, which is where an ending after
     /// some use goes.
     var isBeforeAnything: Bool {
-        self == .connecting || self == .stopped || self == .couldNotConnect
+        self == .connecting || self == .needsPassword || self == .stopped
+            || self == .couldNotConnect
     }
 
     /// What the pane says, naming the machine — nil for a local shell.
@@ -105,6 +120,7 @@ nonisolated enum SessionStatus: Equatable, Sendable {
         switch self {
         case .connecting: return "Connecting to \(name)"
         case .needsAnswer: return "\(name) needs an answer"
+        case .needsPassword: return "\(name) turned down its saved password"
         case .connected: return name
         case .stopped: return "Stopped connecting to \(name)"
         case .couldNotConnect: return "Couldn't connect to \(name)"

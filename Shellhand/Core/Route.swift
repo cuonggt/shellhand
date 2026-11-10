@@ -21,6 +21,12 @@ nonisolated struct Route: Sendable, Equatable {
         var addr: String
         /// The port dialled, 22 where none is stored.
         var port: Int
+        /// Who it logs in as, empty where ssh is left to choose — which is
+        /// what a password prompt names beside the machine.
+        var user = ""
+        /// Where this stop's password is filed (`Keychain.account`), empty
+        /// for none: what a tab types when this stop's ssh asks for one.
+        var password = ""
     }
 
     /// The first machine reached first, and the host itself last.
@@ -91,9 +97,11 @@ extension Resolved {
     /// the other way round.
     nonisolated var route: Route {
         let hops = jumps.reversed().map {
-            Route.Stop(name: $0.name, dest: $0.dest, addr: $0.addr, port: $0.dialPort)
+            Route.Stop(name: $0.name, dest: $0.dest, addr: $0.addr, port: $0.dialPort,
+                       user: $0.user, password: $0.passwordAccount)
         }
-        let end = Route.Stop(name: host.name, dest: dest, addr: host.addr, port: port)
+        let end = Route.Stop(name: host.name, dest: dest, addr: host.addr, port: port,
+                             user: user, password: passwordAccount)
         // A jump the chain could not resolve is handed to ssh as it stands,
         // and the config's applies only where the host names none.
         let beyond = !jumps.isEmpty ? "" : !proxyJump.isEmpty ? proxyJump : configProxy

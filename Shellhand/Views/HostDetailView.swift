@@ -64,6 +64,10 @@ struct HostDetailView: View {
         return ValueRow("Agent forwarding", value, from: from)
     }
 
+    /// What an inspector says of a password that reaches a host or a group:
+    /// that one is kept, and nothing of it.
+    nonisolated static let kept = "Kept in this Mac's keychain"
+
     /// The host as previewed: its own palette left out, so the preview's
     /// says what inheriting would give. With it in, a host with a palette of
     /// its own had its "inherit" row named after that same palette.
@@ -129,6 +133,12 @@ struct HostDetailView: View {
                     }
                     ValueRow("User", host.effective.user, from: host.effective.userFrom)
                     ValueRow("Key", host.effective.keyPath, from: host.effective.keyPathFrom)
+                    // Only where one reaches it, and never more than that one
+                    // is kept: the password is the keychain's, not the
+                    // inspector's to show.
+                    if host.effective.hasPassword {
+                        ValueRow("Password", Self.kept, from: host.effective.passwordFrom)
+                    }
                     ValueRow("Jump host", host.effective.jumpHost.value,
                              from: host.effective.jumpHost.from)
                     if let group = store.group(host.groupId) {

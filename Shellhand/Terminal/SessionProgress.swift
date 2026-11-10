@@ -21,9 +21,13 @@ nonisolated enum SessionProgress {
     /// an `@Observable` into redrawing the terminal for nothing.
     ///
     /// `answered` is the question most recently answered, if the session has
-    /// not got through since — see where it is used below.
+    /// not got through since — see where it is used below. `typed` is the
+    /// password prompts the session has typed a saved password into, as
+    /// `PasswordPrompt` holds them, which are ssh's own words and not the far
+    /// side's (`heardFromTheFarSide`).
     static func next(
-        from state: TerminalSession.State, screen: String, answered: String? = nil
+        from state: TerminalSession.State, screen: String, answered: String? = nil,
+        typed: [String] = []
     ) -> TerminalSession.State? {
         // An ended session is finished. Whatever is still on the screen, it is
         // the last thing that process ever said.
@@ -49,7 +53,7 @@ nonisolated enum SessionProgress {
             // Anything at all from the far side means we are through. A
             // question that has been answered leaves its own text on screen,
             // which is why `.askingHostKey` moves on from here too.
-            return heardFromTheFarSide(screen) ? .connected : nil
+            return heardFromTheFarSide(screen, typed: typed) ? .connected : nil
         case .connected, .ended:
             return nil
         }
@@ -74,13 +78,28 @@ nonisolated enum SessionProgress {
     /// greyed out — the walk after 0.1.4 found it. The rows are put back
     /// together with the whitespace out, as `HostKey` does, since a warning
     /// wider than the terminal arrives split between them.
-    static func heardFromTheFarSide(_ screen: String) -> Bool {
+    ///
+    /// **Nor is a password prompt the tab typed into** (`typed`), nor ssh's
+    /// line asking again after it was turned down: a tab that typed a saved
+    /// password is still connecting until something comes back, so its card
+    /// can say it typed one — and, asked again, that it was turned down.
+    /// A prompt the tab left alone is still read as through, as it always
+    /// was: the person types there, and a card over it would be in the way.
+    static func heardFromTheFarSide(_ screen: String, typed: [String] = []) -> Bool {
         var said = screen.filter { !$0.isWhitespace }
         for warning in sshsOwn {
             said = said.replacingOccurrences(of: warning, with: "", options: .regularExpression)
         }
+        if !typed.isEmpty {
+            for prompt in typed { said = said.replacingOccurrences(of: prompt, with: "") }
+            said = said.replacingOccurrences(of: askingAgain, with: "")
+        }
         return !said.isEmpty
     }
+
+    /// What ssh says before asking for a password again, in OpenSSH's own
+    /// words and with the whitespace out.
+    private static let askingAgain = "Permissiondenied,pleasetryagain."
 
     /// The warnings ssh prints and then goes on trying, with the whitespace
     /// out, in OpenSSH's own words.

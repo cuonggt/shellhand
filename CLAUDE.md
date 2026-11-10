@@ -64,7 +64,11 @@ against macOS's own `sshd`, kept off your own `~/.ssh`,
 **identities** — where one sits in the resolver's chain, what `FromAbove`
 gives a row, what deleting one says, and the file's two readings of
 `identity:`, in `Tests/IdentityTests.swift` and
-`Tests/IdentityFileTests.swift` — and
+`Tests/IdentityFileTests.swift` —
+**passwords** — where a host's or a group's sits in the walk, the prompt a
+tab types one at and how often, against a terminal fed by hand, and the
+store's keychain writes under a service of the test's own, in
+`Tests/PasswordTests.swift` — and
 `HostStore` itself — its writes, moves, tag
 rewrites and imports, driven against a scratch database through the same code
 path the app runs.
@@ -180,20 +184,62 @@ credentials, which is most of it.
   anything needing a server ran `gliderlabs/ssh` in-process on loopback — and
   it still binds anything added later. A check that reaches someone else's
   machine is not a check.
-- **Keys, credentials and snippets are gone**, and the askpass helper with
-  them, so **this app no longer answers a password prompt** and the SFTP window
-  cannot reach a host that takes only a password. `identity` stayed, a plain
-  `-i`. **Don't bring any of it back without a reason from someone other than
-  us** — the exception being **identities**, which came back at the owner's
-  word, and with them the keychain and the askpass helper for **unattended
-  connections only**: the sentence above now holds for a terminal tab, where
-  ssh still asks on the pty, and no longer for the SFTP window, which logs
-  in with a stored password. Key generation, `ssh-copy-id`, the Keys
-  manager, snippets and startup scripts stayed cut.
+- **Keys, credentials and snippets are gone**, and the askpass helper went
+  with them for a while: the MVP cut left this app answering no password
+  prompt, and the SFTP window unable to reach a host that takes only a
+  password. `identity` stayed, a plain `-i`. **Don't bring any of it back
+  without a reason from someone other than us** — the exceptions being the
+  owner's own word: **identities**, and with them the keychain and the
+  askpass helper for **unattended connections**, so the SFTP window logs in
+  with a stored password; and then **a host's or a group's own password**
+  (2026-11-08), which **a terminal tab types** at ssh's own prompt for it.
+  Key generation, `ssh-copy-id`, the Keys manager, snippets and startup
+  scripts stayed cut.
   → [the MVP cut](docs/notes/cuts-and-sweeps.md#the-mvp-cut)
+- **A host or a group keeps a password of its own** beside its key, at the
+  owner's word: the password in this Mac's keychain under
+  `Keychain.account(host:)` or `(group:)` — an identity's under its bare id,
+  as before — and in the store only `hasPassword` (v13), so the resolver says
+  whose reaches a host without a keychain read per row. **It is inherited as
+  the user is**: your own, then the identity you point at where that is a
+  password one, then the same again for each group above
+  (`Resolver.inherit`, `FromAbove`), credited to whatever supplied it —
+  "from Production", "from the switches identity". Both editors' Password row
+  (`PasswordField`) never reads one back to show it: the field over one says
+  it is kept, what is typed replaces it, and its bin forgets it, all on the
+  record's own Add or Save (`HostStore.save(_:password:)`, the keychain
+  first, then the flag, so the list never claims one the keychain refused).
+  Deleting a host or a group takes its password away, and deleting a group
+  says so. **The export never carries it, nor that there is one**: a list
+  moved to another Mac arrives with nothing in its keychain. Under test the
+  store keeps passwords under a service of the test's own
+  (`HostStore.keychainService`), or it would write the user's.
+- **A tab types a stored password at ssh's own prompt, once**
+  (`PasswordPrompt`, `TerminalSession.typePassword`): only `user@host's
+  password:` or `(user@host) Password:`, starting a row, last on the screen,
+  naming a stop on the route by its name or address **and logging in as
+  that stop's user** — this Mac's login name where it names none — and only
+  while the session is still connecting. A code from an authenticator, a
+  server's prompt worded otherwise and `sudo` inside a session are left to
+  the person: a password typed into the wrong question is a password given
+  away. **Each hop's own**: a jump host's prompt gets the jump host's
+  password, from the resolver's chain (`Route.Stop.password`). A prompt
+  typed into, and ssh's "Permission denied, please try again." after it, are
+  ssh's own words, not the far side (`SessionProgress.heardFromTheFarSide`
+  `typed:`), so the tab stays connecting and its card says "Typed db-01's
+  password from the keychain"; a prompt left alone is read as through, as it
+  always was. **Asked again, nothing more is typed** — twice is a refusal
+  earned twice and, on some machines, a locked account — and the tab needs
+  you (`SessionStatus.needsPassword`): "db-01 turned down its saved
+  password", with Edit Host… and Close Tab, while the person types it in the
+  terminal. A tab never forces `SSH_ASKPASS` for this, which would take the
+  host-key question away from `HostKey.swift`: the password goes where a
+  person would type it, onto the pty.
 - **A password is answered by the app run as ssh's own askpass helper**
-  (`Core/Askpass.swift`), and only where there is nobody in front of the
-  connection. What travels is the **identity's id** and the path to this
+  (`Core/Askpass.swift`) where there is nobody in front of the connection —
+  the SFTP window's child; a tab types its own (above). What travels is the
+  **keychain account** — an identity's id, or a host's or a group's
+  (`Keychain.account`), in `SHELLHAND_ASKPASS_ACCOUNT` — and the path to this
   bundle — never the password, since an argument list is readable by every
   process on the machine and an environment variable by every child of one;
   the password goes keychain to the helper's stdout and nowhere else.
@@ -213,11 +259,17 @@ credentials, which is most of it.
   suite cannot.
 - **An sftp child drops `BatchMode=yes` exactly when it has an answer ready**
   (`SSHArgs.unattended(_:)`): BatchMode turns off the very prompt the helper
-  exists to answer, and `SSHArgs.answering` stands in its place —
+  exists to answer, and `SSHArgs.answering(_:)` stands in its place —
   `PreferredAuthentications=keyboard-interactive,password` so ssh does not
-  get in as somebody else on an agent key first, and `NumberOfPasswordPrompts=1`
-  so a stale password fails once rather than three times. Both lead, with
-  what nothing may override, since ssh keeps the first value it is given.
+  get in as somebody else on an agent key first, **with `publickey` leading
+  where the host has a key**, since a host with both logs in with the key
+  and falls back on the password, as a tab's ssh does; and
+  `NumberOfPasswordPrompts=1` so a stale password fails once rather than
+  three times. Both lead, with what nothing may override, since ssh keeps
+  the first value it is given. The child answers the host's own password
+  only: a jump host's ssh, carried the same options and the same helper, is
+  answered the host's, so SFTP through a hop that wants its own password
+  fails there — a tab reaches it.
 - **An identity is a group that is not a place**: a named user and key
   (`Identity`, the store's v11) that a host or a group points at **by id**, so
   renaming one takes nothing with it and there is no rename to follow — don't
@@ -1510,16 +1562,18 @@ credentials, which is most of it.
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor's
-  General needs **724** and its Advanced 640 — room for the command's six
+  General needs **765** and its Advanced 640 — room for the command's six
   lines at its foot and one line more, a problem or a rename note. It was
   **741** while the inherited user's caption sat under Connect to and an
   Identity row headed Connect with; both went into the User row above the
   key (2026-11-08). Driven from outside, the build before and the build
   after on one host behind a jump host, db-01's General went from 28.5pt to
-  spare at the six lines — what it was tuned to — to 45.5, so 724 puts it
-  back; measured again at 724, a user typed, an identity picked and one
-  logging in as another user all leave 28.5. The group editor's is
-  **476**, General's with the
+  spare at the six lines — what it was tuned to — to 45.5, so it was 724;
+  measured again at 724, a user typed, an identity picked and one logging in
+  as another user all left 28.5. The Password row under the key
+  (2026-11-10) is one more row, 41pt, and at **765** db-01 with a password
+  kept and web-01 with none leave 28.5 again. The group editor's is
+  **517**, General's with the
   footer's problem line up, where 570, measured when it
   had rows since gone, left General 137pt of empty form and Advanced 160.
   **736 and 486 were those numbers before identities**, and the row each
@@ -1532,7 +1586,8 @@ credentials, which is most of it.
   driven before and after, Edge and Lab had 46.5pt under General's last row
   at 516 and 86.5 after, and Advanced 108 in both — not the 46 recorded
   for Production's, though its ssh options box is a fixed 64pt — so
-  General is still the taller tab and 476 gives it its 46.5 back. **A row's
+  General is still the taller tab and 476 gave it its 46.5 back; its
+  Password row is 41pt, and at 516 both had 45.5, so it is 517. **A row's
   worth added by eye is a band of nothing shipped**: read it off the form's
   own scroll area instead — which `window-check.sh` now does on every run,
   so this rule is checked rather than remembered.
@@ -1919,24 +1974,22 @@ costs. What is left is the host list, the editor, tabs on real `ssh`, files
 over SFTP, and import and export — and that is what to finish before anything
 is added back.
 
-**Identities are the one thing added back**, at the owner's word: a named user
-and key, pointed at from hosts and groups, with no secrets in them. The two
-phases after it — a password kept in the keychain and answered through an
-askpass helper, and with it an SFTP window that can reach a host taking only a
-password — are **not built**, but the gate is no longer open: **where a forced
-askpass puts the host-key question has been measured**, against macOS's own
-`sshd` under a pty, and it decides the shape of both. With
-`SSH_ASKPASS_REQUIRE=force` the helper is handed that question and the pty
-sees none of it, so `HostKey.swift` never fires and a yes writes
-`known_hosts` with nobody having seen the fingerprint; a helper that declines
-ends the connection rather than handing the question back; and without
-`REQUIRE`, with a pty, the helper is never called at all. So an **unattended**
-child forces it safely, having no pty, and is the straightforward half — and it is the half
-carrying the capability the cut actually cost — while a **tab** needs the
-question put somewhere a person can see it before askpass can be forced
-there. Password auth itself still cannot be held by this suite, since it
-validates against the real system and `LocalSSHD` has no test user to give a
-password to.
+**Identities and passwords are what came back**, at the owner's word: a named
+user and key, pointed at from hosts and groups; then a password, kept in this
+Mac's keychain — an identity's, and since 2026-11-08 a host's or a group's own,
+inherited as the user is. **Where a forced askpass puts the host-key question
+was measured first**, against macOS's own `sshd` under a pty, and it decided
+the shape of both halves. With `SSH_ASKPASS_REQUIRE=force` the helper is
+handed that question and the pty sees none of it, so `HostKey.swift` never
+fires and a yes writes `known_hosts` with nobody having seen the fingerprint;
+a helper that declines ends the connection rather than handing the question
+back; and without `REQUIRE`, with a pty, the helper is never called at all. So
+an **unattended** child forces it safely, having no pty — the SFTP window's —
+while a **tab** types the password onto ssh's own prompt on the pty instead,
+once, and never forces askpass. Password auth itself still cannot be held by
+this suite, since it validates against the real system and `LocalSSHD` has no
+test user to give a password to: the tab's typing is held against a terminal
+fed by hand, and the real thing is proved by hand.
 → [a forced askpass](docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question)
 
 The engine behind it is Swift. The terminal takes a palette — five ship, and
@@ -1945,7 +1998,8 @@ machines in `~/.ssh/config` and offers them, a CSV, or a YAML file. Hosts are
 filed by dragging them onto a group, and found by tag as well as by name —
 several tags at once, narrowing. A group can set the terminal's colours for
 everything beneath it, so production need not look like staging, and passes
-down the user, the key, the jump host and an identity to everything under it;
+down the user, the key, a password, the jump host and an identity to
+everything under it;
 an identity is a login written once, so rotating a key is one edit rather than
 one per host. Transfers
 queue rather than all starting at once, a couple at a time, with the rest
@@ -1953,15 +2007,14 @@ shown waiting their turn, and carrying a file onto one already there asks
 first.
 
 A host that takes only a password connects in a tab, where ssh asks on the pty
-and it can be typed — and **in the SFTP window too, given an identity holding
-one**: the password is kept in this Mac's keychain, and the app is run as
-ssh's own askpass helper to hand it over. That is the capability the MVP cut
-took away, back. What a stored password does **not** get past is a host key
-this Mac has never seen: the question comes before authentication and there is
-nowhere to put a fingerprint in a window with no terminal, so `Places.trouble`
-sends you to a tab once first. A terminal tab still asks rather than answering
-for you, because forcing askpass there would take that question away from the
-dialog the app already has.
+and a stored one — the host's own, its group's or its identity's — is typed
+there once, the person typing it if it is turned down; and **in the SFTP window
+too**, where the app is run as ssh's own askpass helper to hand it over. That
+is the capability the MVP cut took away, back. What a stored password does
+**not** get past is a host key this Mac has never seen: the question comes
+before authentication, a tab puts it to the person with the app's own dialog,
+and there is nowhere to put a fingerprint in a window with no terminal, so
+`Places.trouble` sends you to a tab once first.
 
 It has an icon: a shell prompt, chevron and block cursor, as an Icon Composer
 bundle that macOS composites into the Tahoe squircle. `docs/app-icon.md` has

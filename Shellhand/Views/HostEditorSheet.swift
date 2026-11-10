@@ -35,6 +35,10 @@ struct HostEditorSheet: View {
     /// going with the move.
     @State private var newGroupParent = ""
     @State private var optionsText: String
+    /// A password typed for the host, kept in the keychain on Save.
+    @State private var passwordTyped = ""
+    /// Whether Save forgets the one the host keeps.
+    @State private var forgettingPassword = false
     @State private var tab: Tab = .general
     /// How tall the command along the bottom is, whole.
     @State private var commandHeight: CGFloat = 0
@@ -126,7 +130,7 @@ struct HostEditorSheet: View {
     }
 
     /// What each tab was measured to need; see the frame for how.
-    private var wanted: CGFloat { tab == .general ? 724 : 640 }
+    private var wanted: CGFloat { tab == .general ? 765 : 640 }
 
     /// How much of the command the foot shows: from the form as drawn once
     /// this tab's has been laid out, and the estimate until then.
@@ -155,7 +159,7 @@ struct HostEditorSheet: View {
     }
 
     /// What it gets, over the window it opens over.
-    private var height: CGFloat { SheetHeight.fitted(724, in: room.height) }
+    private var height: CGFloat { SheetHeight.fitted(765, in: room.height) }
 
     /// The lines along the foot above the command, each taking room the form
     /// could otherwise spare it.
@@ -245,6 +249,11 @@ struct HostEditorSheet: View {
         // a user typed, an identity picked and one logging in as another
         // user all left General 28.5pt, its rows on the same lines.
         //
+        // **765 since**: the Password row under the key (2026-11-10), one
+        // row of 41pt. Measured at 765, db-01 — a password kept and an
+        // identity picked — and web-01 — neither — both leave General 28.5pt
+        // at the six lines, as tuned, and neither tab scrolls.
+        //
         // Where the window has less room than that below its toolbar — 668
         // at its default 1106×720 — the editor is the room less a margin, and
         // the command's box gives up the difference: at 720 General hung
@@ -255,6 +264,9 @@ struct HostEditorSheet: View {
             // inheriting would give — `HostDetailView.inheriting`.
             var asTyped = HostDetailView.inheriting(filed)
             asTyped.sshOptions = SSHOptionsField.parse(optionsText)
+            // Its own password left out too, so the preview says whose would
+            // reach it from above — for the Password row's caption.
+            asTyped.hasPassword = false
             preview = await store.preview(of: asTyped)
         }
         .onAppear { if isNew { focus = .name } }
@@ -330,6 +342,8 @@ struct HostEditorSheet: View {
                         .labelsHidden()
                         .multilineTextAlignment(.leading)
                 }
+                // Beside the key, as ssh tries them: the key first, then this.
+                passwordRow
                 row("Jump host", from: preview.effective.proxyJumpFrom, set: host.proxyJump,
                     picking: $host.proxyJump) {
                     jumpField
@@ -446,6 +460,34 @@ struct HostEditorSheet: View {
         }
     }
 
+    /// The host's own password (`PasswordField`), with whose reaches it
+    /// from above said beside it — a group's, or an identity's — as the key's
+    /// is said beside the key.
+    private var passwordRow: some View {
+        LabeledContent("Password") {
+            // On the field's baseline, as `row` sets its rows.
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                PasswordField(
+                    typed: $passwordTyped, forgetting: $forgettingPassword,
+                    keeps: host.hasPassword, inherited: preview.effective.hasPassword)
+                if let passwordFrom {
+                    FromCaption(
+                        from: passwordFrom, among: shownFroms,
+                        help: "Kept for \(passwordFrom) in this Mac's keychain. Type one here to "
+                            + "keep this host's own.")
+                }
+            }
+        }
+    }
+
+    /// Where the password that would reach this host comes from, while it
+    /// has none of its own in play (`PasswordField.namesSource`).
+    private var passwordFrom: String? {
+        guard PasswordField.namesSource(typed: passwordTyped, keeps: host.hasPassword),
+              preview.effective.hasPassword else { return nil }
+        return Self.shownFrom(preview.effective.passwordFrom, set: "")
+    }
+
     /// A field with where its value came from beside it.
     ///
     /// Only when this host sets nothing itself: then what is on screen belongs
@@ -496,6 +538,7 @@ struct HostEditorSheet: View {
         [
             userFrom,
             Self.shownFrom(preview.effective.keyPathFrom, set: host.keyPath),
+            passwordFrom,
             Self.shownFrom(preview.effective.proxyJumpFrom, set: host.proxyJump),
         ].compactMap { $0 }
     }
@@ -782,7 +825,9 @@ struct HostEditorSheet: View {
                 }
                 host.groupId = group.id
             }
-            guard await store.save(host) != nil else { return refused() }
+            guard await store.save(host, password: PasswordField.change(
+                typed: passwordTyped, forgetting: forgettingPassword)) != nil
+            else { return refused() }
             saving = false
             dismiss()
         }
