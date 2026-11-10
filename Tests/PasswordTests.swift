@@ -103,6 +103,30 @@ nonisolated struct PasswordTests {
         #expect(fromKept.passwordFrom == "Production")
     }
 
+    /// What the group editor's caption and the group inspector's row both
+    /// say: read off the groups above alone, a group picking a password
+    /// identity named Production where its hosts take the identity's.
+    @Test("a group names whose password its hosts take: the identity it picks, then the groups above")
+    func groupPassesDownAPassword() {
+        let production = Group(id: "g1", name: "Production", hasPassword: true)
+        let eu = Group(id: "g2", name: "EU", parentId: "g1")
+        let above = FromAbove(of: eu, among: [production, eu], identities: [switches])
+        // A password identity picked here comes before Production's own.
+        #expect(GroupEditorSheet.passedPassword(picked: switches, above: above)
+            == "the switches identity")
+        // A key identity gives none, and blocks nothing.
+        #expect(GroupEditorSheet.passedPassword(picked: deploy, above: above) == "Production")
+        #expect(GroupEditorSheet.passedPassword(picked: nil, above: above) == "Production")
+        // Nothing kept anywhere: nobody's.
+        let bare = FromAbove(of: eu, among: [Group(id: "g1", name: "Production"), eu])
+        #expect(GroupEditorSheet.passedPassword(picked: nil, above: bare) == "")
+        // And it is what the resolver gives a host beneath that keeps none.
+        let picking = Group(id: "g2", name: "EU", parentId: "g1", identityId: "i2")
+        let host = Shellhand.Host(id: "h1", name: "db-01", addr: "10.0.0.1", groupId: "g2")
+        let out = resolve(host, groups: [production, picking], identities: [switches])
+        #expect(out.passwordFrom == GroupEditorSheet.passedPassword(picked: switches, above: above))
+    }
+
     // MARK: what a connection carries
 
     @Test("each stop on the way carries its own login and password, a hop's its own")

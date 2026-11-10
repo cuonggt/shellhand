@@ -49,14 +49,13 @@ struct GroupInspector: View {
                 // values 41.5pt left of what is passed down.
                 Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 9) {
                     identity(above)
-                    passed("User", own: group.user, above: above.user, from: above.userFrom)
-                    passed("Key", own: group.keyPath, above: above.keyPath, from: above.keyPathFrom)
-                    // Only where one is kept here or reaches it from above —
-                    // and only that one is, never the password.
-                    if group.hasPassword || !above.passwordAccount.isEmpty {
-                        passed("Password", own: group.hasPassword ? HostDetailView.kept : "",
-                               above: HostDetailView.kept, from: above.passwordFrom)
-                    }
+                    given("User", own: group.user, picked: picked?.user ?? "",
+                          above: above.user, from: above.userFrom)
+                    given("Key", own: group.keyPath, picked: picked?.keyPath ?? "",
+                          above: above.keyPath, from: above.keyPathFrom)
+                    // Only where one is kept here, by the identity it picks or
+                    // above — and only that one is, never the password.
+                    if let password = password(above) { password }
                     passed("Jump host", own: group.proxyJump, above: above.proxyJump,
                            from: above.proxyJumpFrom)
                     agent(above)
@@ -107,6 +106,33 @@ struct GroupInspector: View {
     /// Its own value with no caption, or what reaches it from above with one.
     private func passed(_ label: String, own: String, above: String, from: String) -> ValueRow {
         own.isEmpty ? ValueRow(label, above, from: from) : ValueRow(label, own)
+    }
+
+    /// The identity this group picks, where its id answers to one.
+    private var picked: Identity? { store.identity(group.identityId) }
+
+    /// What the group passes down, in the order its editor reads it and the
+    /// resolver gives the hosts beneath (`GroupEditorSheet.passedDown`): its
+    /// own value, then what the identity it picks fills in, credited to it,
+    /// then the groups above. Read off the groups above alone, a group
+    /// picking the deploy identity showed no user and no key here, while its
+    /// editor beside it showed deploy's.
+    private func given(
+        _ label: String, own: String, picked value: String, above: String, from: String
+    ) -> ValueRow {
+        guard own.trimmingCharacters(in: .whitespaces).isEmpty else { return ValueRow(label, own) }
+        let given = GroupEditorSheet.passedDown(
+            picked: value, pickedFrom: picked?.source ?? "", above: above, aboveFrom: from)
+        return ValueRow(label, given.value, from: given.from)
+    }
+
+    /// The password row, where one reaches the hosts beneath: the group's
+    /// own, or else whose its editor names (`GroupEditorSheet
+    /// .passedPassword`) — said to be kept, and whose, and nothing of it.
+    private func password(_ above: FromAbove) -> ValueRow? {
+        if group.hasPassword { return ValueRow("Password", HostDetailView.kept) }
+        let from = GroupEditorSheet.passedPassword(picked: picked, above: above)
+        return from.isEmpty ? nil : ValueRow("Password", HostDetailView.kept, from: from)
     }
 
     /// The identity this group points at, by **name**: the store holds an id

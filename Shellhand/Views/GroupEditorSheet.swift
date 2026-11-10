@@ -399,7 +399,8 @@ struct GroupEditorSheet: View {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 PasswordField(
                     typed: $passwordTyped, forgetting: $forgettingPassword,
-                    keeps: group.hasPassword, inherited: !passedPassword(above).isEmpty)
+                    keeps: group.hasPassword,
+                    inherited: !Self.passedPassword(picked: picked, above: above).isEmpty)
                 if let from = passwordFrom(above) {
                     FromCaption(from: from, among: shownFroms,
                                 help: "Kept for \(from) in this Mac's keychain. Type one here "
@@ -409,21 +410,23 @@ struct GroupEditorSheet: View {
         }
     }
 
-    /// Where the password the hosts beneath would take comes from, if this
-    /// group kept none: the identity it picks, where that is a password
-    /// one, and otherwise the groups above. Empty where none would.
-    private func passedPassword(_ above: FromAbove) -> String {
-        if let picked, picked.kind == .password { return picked.source }
-        return above.passwordAccount.isEmpty ? "" : above.passwordFrom
-    }
-
     /// The Password row's caption, while the group has none of its own in
     /// play (`PasswordField.namesSource`).
     private func passwordFrom(_ above: FromAbove) -> String? {
         guard PasswordField.namesSource(typed: passwordTyped, keeps: group.hasPassword)
         else { return nil }
-        let from = passedPassword(above)
+        let from = Self.passedPassword(picked: picked, above: above)
         return from.isEmpty ? nil : from
+    }
+
+    /// Whose password the hosts beneath a group take where the group keeps
+    /// none of its own: the identity it picks, where that is a password
+    /// one, and otherwise the groups above — the resolver's order. Empty
+    /// where none would. The editor's caption and the inspector's row both
+    /// read it, so the two cannot say different things.
+    nonisolated static func passedPassword(picked: Identity?, above: FromAbove) -> String {
+        if let picked, picked.kind == .password, !picked.id.isEmpty { return picked.source }
+        return above.passwordAccount.isEmpty ? "" : above.passwordFrom
     }
 
     /// What a field left empty in a group gives the hosts beneath it, and

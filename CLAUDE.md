@@ -326,6 +326,12 @@ credentials, which is most of it.
   host editor's preview already showed. Read off the groups above alone, a
   group picking the deploy identity showed "ubuntu" and "~/.ssh/id_rsa",
   examples, where its hosts log in as deploy with `~/.ssh/id_ed25519`.
+  **So does the group inspector's grid**, its Password row included,
+  through the same two rules (`passedDown`, `passedPassword` — the
+  editor's caption reads the second too): read off the groups above
+  alone, Edge, picking deploy, said "—" for its user and key beside an
+  editor saying deploy's, and a group picking a password identity showed
+  no password, or credited the group above for one its hosts never take.
 - **ssh puts every prompt through `SSH_ASKPASS`, the host-key question
   included** — measured, under a pty, against macOS's own `sshd`. Forcing it
   (`SSH_ASKPASS_REQUIRE=force`) takes that question away from
@@ -474,7 +480,7 @@ credentials, which is most of it.
   name stood 1.5pt right of the hosts' under it.
 - **The inspector describes whatever the tab in front is about**
   (`Panes.inspected`): a listed host; a group, with what it passes down
-  (`FromAbove`) — its ssh options too, and every group's above with whose
+  (its own, the identity it picks, then `FromAbove`) — its ssh options too, and every group's above with whose
   they are, since they add up (`FromAbove.sshOptions`), where they showed
   nowhere but the editor — and what is inside, in one grid with it, where
   two put its values 41.5pt left of the rest; a local shell, with Open now
@@ -1641,7 +1647,12 @@ credentials, which is most of it.
   → [does it fit](docs/notes/driving.md#does-it-fit)
 - **Focus the outline once, then arrow**: re-focusing before each press puts
   the selection back where it started. Group rows are reachable that way;
-  `click at` reaches nothing.
+  `click at` reaches nothing. **A drive that only needs a row picked can
+  leave the copy in the background**: the outline's `AXSelectedRows`, set
+  through the Accessibility API by pid, picks a row the sidebar shows, and
+  the title and the inspector follow, with no key sent and nothing
+  frontmost — seen on top-level groups (2026-11-10), with the copy opened
+  by `open -g -n` while the Mac was in use.
   → [arrowing](docs/notes/driving.md#arrowing)
 - **Where an inherited value comes from is a caption beside the field**, not
   part of the placeholder, which is the inherited value or an example — never
