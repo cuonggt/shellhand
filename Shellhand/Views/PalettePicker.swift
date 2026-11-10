@@ -257,6 +257,9 @@ struct PaletteChoice: View {
     }
 
     var body: some View {
+        // Read here, on the main actor: the alignment closure below is
+        // Sendable, and reading them in there was a warning on every build.
+        let centreToBaseline = Self.swatchSize.height / 2 + Self.centreToBaseline
         Button {
             choosing = Opening(height: PalettePicker.height(
                 rows: Themes.names.count + (inherited == nil ? 0 : 1),
@@ -293,9 +296,7 @@ struct PaletteChoice: View {
         // "Colours" up 1.5pt above "System" without it; and the inspector,
         // its words under the swatch, lined the row up by top, "Colours"
         // riding 3pt high against the swatch.
-        .alignmentGuide(.firstTextBaseline) { d in
-            d[.top] + Self.swatchSize.height / 2 + Self.centreToBaseline
-        }
+        .alignmentGuide(.firstTextBaseline) { d in d[.top] + centreToBaseline }
         .accessibilityLabel("Colours: \(title)")
         .sheet(item: $choosing) { opening in
             PalettePicker(
