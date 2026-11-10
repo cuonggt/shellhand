@@ -314,4 +314,54 @@ struct SSHConfigReachTests {
             #expect(host.effective.configProxyCommand == "")
         }
     }
+
+    // MARK: how it keeps a connection alive
+
+    /// Read back by ssh itself, from the argv a session is opened with:
+    /// `ssh -G` prints the settings it would connect with, and connects to
+    /// nothing. ssh takes the command line before any config, so the app's
+    /// own keepalive would beat the one written for this very machine —
+    /// which is why it is left off there, and only there; and a host's own
+    /// comes before the app's, so a 0 on it turns keepalives off.
+    @Test("ssh keeps the config's keepalive where it names one, and the app's everywhere else")
+    func keepAliveAsSSHReadsIt() async {
+        await withConfig("Host probe-alive\n  HostName 10.0.0.44\n  ServerAliveInterval 60\n") {
+            let db = TestScratch.database()
+            let store = HostStore(dbPath: db)
+            await store.refresh()
+            let named = await store.save(AppHost(name: "probe-alive", addr: "10.0.0.44"))
+            let unnamed = await store.save(AppHost(name: "probe-unkept", addr: "10.0.0.45"))
+            let quiet = await store.save(
+                AppHost(name: "probe-quiet", addr: "10.0.0.46", sshOptions: ["ServerAliveInterval=0"]))
+            func kept(_ host: AppHost?) async -> String? {
+                guard let id = host?.id,
+                      let argv = try? await Core.shared.connection(db: db, hostID: id).argv
+                else { return nil }
+                return Self.keepAlive(sshReads: argv)
+            }
+            #expect(await kept(named) == "60")
+            #expect(await kept(unnamed) == "30")
+            #expect(await kept(quiet) == "0")
+        }
+    }
+
+    /// ssh's own `ServerAliveInterval` for an argv, as `ssh -G` prints it.
+    /// The argv leads with the run's own `-F`, so ssh reads the config the
+    /// resolver read, and never the user's.
+    nonisolated private static func keepAlive(sshReads argv: [String]) -> String? {
+        let ssh = Process()
+        ssh.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+        ssh.arguments = ["-G"] + argv
+        let out = Pipe.marked()
+        ssh.standardOutput = out
+        ssh.standardError = FileHandle.nullDevice
+        do { try ssh.run() } catch { return nil }
+        let printed = out.fileHandleForReading.readDataToEndOfFile()
+        ssh.waitUntilExit()
+        let prefix = "serveraliveinterval "
+        return String(decoding: printed, as: UTF8.self)
+            .split(separator: "\n")
+            .first { $0.hasPrefix(prefix) }
+            .map { String($0.dropFirst(prefix.count)) }
+    }
 }

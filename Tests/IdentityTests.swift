@@ -146,7 +146,8 @@ nonisolated struct IdentityTests {
     func argv() {
         let host = Shellhand.Host(id: "h", name: "db-01", addr: "10.0.0.1", identityId: "i1")
         let out = resolver(hosts: [host], identities: [deploy]).resolve(host)
-        #expect(SSHArgs.build(out) == ["-i", "~/.ssh/id_ed25519", "deploy@10.0.0.1"])
+        #expect(SSHArgs.build(out)
+            == ["-o", "ServerAliveInterval=30", "-i", "~/.ssh/id_ed25519", "deploy@10.0.0.1"])
     }
 
     // MARK: what a record would inherit, for the editors' rows
@@ -300,7 +301,7 @@ nonisolated struct IdentityTests {
         #expect(out.keyPath == "")
         // And nothing of it reaches the command line yet: wiring a password
         // into a connection is the phase after this one.
-        #expect(SSHArgs.build(out) == ["root@10.0.9.2"])
+        #expect(SSHArgs.build(out) == ["-o", "ServerAliveInterval=30", "root@10.0.9.2"])
     }
 
     // MARK: the host editor's User row

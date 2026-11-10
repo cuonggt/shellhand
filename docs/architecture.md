@@ -73,7 +73,9 @@ which is given `BatchMode=yes`, cannot reach a host that takes only a password.
 and `themes:` for terminal palettes — eighteen colours is a thing to paste,
 not a thing to fill in on a form. Options are ordered by how specific they
 are, because ssh keeps the **first** value it is given: the host's own, then
-each group going up, then the config's.
+each group going up, then the config's — and last the keepalive every
+connection is given, `ServerAliveInterval=30`, left off where ssh's own
+config sets one for the machine, since the command line would beat it.
 
 It is read once, when the app opens. A file that cannot be used — not YAML, a
 key that is not a setting, an option ssh would refuse — applies nothing, and

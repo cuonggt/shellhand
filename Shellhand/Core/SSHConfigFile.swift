@@ -50,12 +50,18 @@ nonisolated enum SSHConfigFile {
         document(from: blocks).hosts.map { Alias(name: $0.name, addr: $0.addr, port: $0.port) }
     }
 
-    /// What a config would send a connection through.
+    /// What a config says about a connection: what it would send it through,
+    /// and whether it keeps it alive itself.
     struct Route: Sendable, Equatable {
         /// A host that can be named in a sentence.
         var jump = ""
         /// A command line, which is not a jump host and never pretends to be.
         var command = ""
+        /// Whether it sets `ServerAliveInterval` — `0` included, which is
+        /// somebody turning keepalives off on purpose. The app's own
+        /// keepalive goes on the command line, which ssh reads before any
+        /// config, so it stays off where the config has said.
+        var keepsAlive = false
     }
 
     /// What this config would send a connection to `destination` through.
@@ -81,7 +87,9 @@ nonisolated enum SSHConfigFile {
             return value.lowercased() == "none" ? "" : value
         }
         let jump = set("proxyjump")
-        return Route(jump: jump, command: jump.isEmpty ? set("proxycommand") : "")
+        return Route(
+            jump: jump, command: jump.isEmpty ? set("proxycommand") : "",
+            keepsAlive: settings["serveraliveinterval"] != nil)
     }
 
     /// The machines a config names, as a document ready to merge.

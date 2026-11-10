@@ -151,6 +151,25 @@ nonisolated struct ResolverTests {
             .resolve(host)
         #expect(out.configProxy == "gateway.example")
     }
+
+    /// A jump host of yours decides how the host is reached, not how its
+    /// connection is kept: the config's keepalive for it still stands, and
+    /// the app's own must stay off the command line, which ssh reads first.
+    @Test("whether the config keeps a host alive is asked even where the host names a jump host")
+    func configKeepsAliveAsked() {
+        let bastion = Host(id: "b", name: "bastion", addr: "10.0.0.9")
+        let host = Host(id: "h", name: "web", addr: "10.0.1.5", proxyJump: "bastion")
+        let out = resolver(hosts: [bastion, host])
+            .withProxies { dest in
+                dest == "10.0.1.5" ? .init(jump: "gateway.example", keepsAlive: true) : .init()
+            }
+            .resolve(host)
+        #expect(out.configProxy == "")
+        #expect(out.configKeepsAlive)
+        // And nothing said is nothing kept.
+        let unsaid = resolver(hosts: [bastion, host]).withProxies { _ in .init() }.resolve(host)
+        #expect(!unsaid.configKeepsAlive)
+    }
 }
 
 /// What a group's own editor shows beside each field: the value it would take

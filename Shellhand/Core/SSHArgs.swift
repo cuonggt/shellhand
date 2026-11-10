@@ -109,7 +109,8 @@ nonisolated enum SSHArgs {
     static func build(
         _ resolved: Resolved, fixed: [String] = [], extra: [String] = []
     ) -> [String] {
-        build(resolved.endpoints, at: 0, fixed: fixed, extra: extra)
+        build(resolved.endpoints, at: 0, fixed: fixed, extra: extra,
+              keepAlive: !resolved.configKeepsAlive)
     }
 
     /// The argv for invoking a remote subsystem, such as `sftp`. ssh puts the
@@ -127,12 +128,37 @@ nonisolated enum SSHArgs {
         _ resolved: Resolved, _ name: String, fixed: [String] = [], opts: [String] = [],
         each: (@Sendable (Endpoint) -> [String])? = nil
     ) -> [String] {
-        build(resolved.endpoints, at: 0, fixed: fixed, extra: ["-s"] + opts, each: each) + [name]
+        build(resolved.endpoints, at: 0, fixed: fixed, extra: ["-s"] + opts, each: each,
+              keepAlive: !resolved.configKeepsAlive) + [name]
     }
+
+    // MARK: keeping a connection alive
+
+    /// How long a connection may go quiet before ssh asks the far end to
+    /// answer: every connection is given it unless something nearer says
+    /// otherwise. A router, a NAT or a firewall along the way forgets a
+    /// connection that carries nothing for long enough, and ssh finds out
+    /// only when it next writes — "client_loop: send disconnect: Broken
+    /// pipe", from a tab left alone on a Mac that never slept. Thirty
+    /// seconds is well inside the few minutes most of them allow, and
+    /// ssh's own count of three unanswered ends a connection that is really
+    /// gone in about a minute and a half, where it froze until a write gave
+    /// up.
+    static let keepAliveSeconds = 30
+
+    /// What `keepAliveSeconds` puts on the command line: **last of the `-o`
+    /// settings**, so the host's own, its groups' and the settings file's
+    /// all come first and ssh keeps theirs — `ServerAliveInterval=0` in any
+    /// of them turns it off — and **not where ssh's own config sets one**
+    /// for the machine (`Resolved.configKeepsAlive`), since the command
+    /// line comes before every config. Only the ssh that reaches the host
+    /// is given it: its keepalives cross every hop on the way, so they keep
+    /// the jump hosts' connections busy too.
+    static var keepingAlive: [String] { ["-o", "ServerAliveInterval=\(keepAliveSeconds)"] }
 
     private static func build(
         _ chain: [Endpoint], at index: Int, fixed: [String], extra: [String],
-        each: (@Sendable (Endpoint) -> [String])? = nil
+        each: (@Sendable (Endpoint) -> [String])? = nil, keepAlive: Bool = false
     ) -> [String] {
         guard index < chain.count else { return [] }
         let end = chain[index]
@@ -146,6 +172,7 @@ nonisolated enum SSHArgs {
         }
         for option in end.options { args += ["-o", option] }
         for option in globalOptions { args += ["-o", option] }
+        if keepAlive { args += keepingAlive }
 
         if end.port != 0 && end.port != 22 { args += ["-p", String(end.port)] }
         if !end.keyPath.isEmpty { args += ["-i", end.keyPath] }

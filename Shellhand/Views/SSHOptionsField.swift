@@ -18,8 +18,11 @@ struct SSHOptionsField: View {
                 .font(.caption.monospaced())
                 .frame(height: 64)
                 .overlay(alignment: .topLeading) {
+                    // Not the keepalive every connection already has
+                    // (`SSHArgs.keepingAlive`), which in grey here would
+                    // read as one this host is given.
                     if text.isEmpty {
-                        Text("ServerAliveInterval=30")
+                        Text("Compression=yes")
                             .font(.caption.monospaced())
                             .foregroundStyle(.tertiary)
                             .padding(.leading, 5)

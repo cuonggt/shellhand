@@ -374,6 +374,25 @@ credentials, which is most of it.
   group going up, then the config's, which apply to everything. A setting
   written against one machine beats the default written for all of them.
   Within one call, options passed as `extra` still come after the config's.
+- **Every connection keeps itself alive** (`SSHArgs.keepingAlive`,
+  `ServerAliveInterval=30`), at the owner's word (2026-11-10): a tab left
+  alone was dropped by something on the way — ssh's last words "client_loop:
+  send disconnect: Broken pipe", on a Mac that had not slept — since nothing
+  crossed the connection while nobody typed, and nothing here set a
+  keepalive. It is **the last `-o`**, after the settings file's, so a
+  host's own, its groups' and the file's come first and ssh keeps theirs —
+  `ServerAliveInterval=0` in any of them turns it off — and it is **left off
+  where ssh's own config sets one** for the machine
+  (`SSHConfigFile.Route.keepsAlive`, `Resolved.configKeepsAlive`, asked
+  whatever the route): the command line comes before every config, so the
+  app's value would beat the one written for that very machine. Only the
+  ssh that reaches the host carries it, since its keepalives cross every
+  hop and keep the jump hosts' connections busy too. `ssh -G` reads the
+  outcome back in `SSHConfigReachTests`, a config's 60, the app's 30 and a
+  host's own 0. It does nothing while the Mac sleeps — whether a
+  connection outlives that is the far end's and the network's to say — and
+  a connection that is really gone ends after ssh's three unanswered, about
+  a minute and a half, where it froze until a write gave up.
 - **ssh's own config reaches the resolver**, from one walk of its blocks
   (`SSHConfigFile.route`): a host whose name is an entry for the same machine
   is reached by that name, one whose name is an entry for another machine is

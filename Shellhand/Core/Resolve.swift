@@ -74,6 +74,12 @@ nonisolated struct Resolved: Sendable {
     /// jump. A command line is not a jump host, so it is kept apart and
     /// shown as its own thing.
     var configProxyCommand = ""
+    /// Whether ssh's own config sets this host's keepalive itself, so the
+    /// app's own (`SSHArgs.keepingAlive`) stays off the command line, where
+    /// ssh would take it over the config's. Asked whatever the route, since
+    /// a jump host of yours changes how the host is reached, not how its
+    /// connection is kept.
+    var configKeepsAlive = false
     /// Every `-o` setting that reaches this host, nearest first — its own,
     /// then each group above it. ssh keeps the first value for a setting, so
     /// the order is the precedence.
@@ -283,7 +289,7 @@ nonisolated struct Resolver: Sendable {
     }
 
     /// The resolver knowing what ssh's own config sends a connection through,
-    /// asked by the name ssh is handed for it.
+    /// and whether it keeps one alive, asked by the name ssh is handed for it.
     func withProxies(_ proxy: @escaping @Sendable (String) -> SSHConfigFile.Route) -> Resolver {
         var out = self
         out.proxyFor = proxy
@@ -299,6 +305,7 @@ nonisolated struct Resolver: Sendable {
         let route = route(out)
         out.configProxy = route.jump
         out.configProxyCommand = route.command
+        out.configKeepsAlive = route.keepsAlive
         return out
     }
 
@@ -461,10 +468,20 @@ nonisolated struct Resolver: Sendable {
     /// are matched against. A host reached by its address is sent through a
     /// bastion by `Host 10.0.1.*` as surely as one reached by name is by its
     /// own block.
+    ///
+    /// A jump host of yours goes on the command line as a `ProxyCommand`,
+    /// which ssh takes over anything its config says, so the config's own
+    /// way there is dropped — but whether it keeps the connection alive is
+    /// still the config's to say.
     private func route(_ resolved: Resolved) -> SSHConfigFile.Route {
-        guard let proxyFor, resolved.proxyJump.isEmpty else { return .init() }
         let dest = resolved.dest
-        return dest.isEmpty ? .init() : proxyFor(dest)
+        guard let proxyFor, !dest.isEmpty else { return .init() }
+        var said = proxyFor(dest)
+        if !resolved.proxyJump.isEmpty {
+            said.jump = ""
+            said.command = ""
+        }
+        return said
     }
 
     /// The port ssh will use, which is 22 where none is given.

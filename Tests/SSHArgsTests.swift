@@ -16,39 +16,43 @@ nonisolated struct SSHArgsTests {
             alias: alias)
     }
 
-    @Test("the plainest connection is the address and nothing else")
+    @Test("the plainest connection is the address, kept alive, and nothing else")
     func plain() {
         clean()
-        #expect(SSHArgs.build(host("10.0.0.1")) == ["10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1")) == ["-o", "ServerAliveInterval=30", "10.0.0.1"])
     }
 
     @Test("a user becomes user@addr rather than -l")
     func user() {
         clean()
-        #expect(SSHArgs.build(host("10.0.0.1", user: "deploy")) == ["deploy@10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1", user: "deploy"))
+            == ["-o", "ServerAliveInterval=30", "deploy@10.0.0.1"])
     }
 
     @Test("a port is passed only when it is not ssh's own")
     func port() {
         clean()
-        #expect(SSHArgs.build(host("10.0.0.1", port: 0)) == ["10.0.0.1"])
-        #expect(SSHArgs.build(host("10.0.0.1", port: 22)) == ["10.0.0.1"])
-        #expect(SSHArgs.build(host("10.0.0.1", port: 2222)) == ["-p", "2222", "10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1", port: 0))
+            == ["-o", "ServerAliveInterval=30", "10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1", port: 22))
+            == ["-o", "ServerAliveInterval=30", "10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1", port: 2222))
+            == ["-o", "ServerAliveInterval=30", "-p", "2222", "10.0.0.1"])
     }
 
     @Test("a key becomes -i")
     func keyPath() {
         clean()
         #expect(SSHArgs.build(host("10.0.0.1", keyPath: "/keys/id"))
-            == ["-i", "/keys/id", "10.0.0.1"])
+            == ["-o", "ServerAliveInterval=30", "-i", "/keys/id", "10.0.0.1"])
     }
 
     @Test("the options given to the app lead, because ssh keeps the first it sees")
     func globalOptionsLead() {
-        SSHArgs.setGlobalOptions(["IdentitiesOnly=yes", "ServerAliveInterval=30"])
+        SSHArgs.setGlobalOptions(["IdentitiesOnly=yes", "ConnectTimeout=10"])
         defer { clean() }
         #expect(SSHArgs.build(host("10.0.0.1", port: 2222, keyPath: "/keys/id")) == [
-            "-o", "IdentitiesOnly=yes", "-o", "ServerAliveInterval=30",
+            "-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=30",
             "-p", "2222", "-i", "/keys/id", "10.0.0.1",
         ])
     }
@@ -58,7 +62,9 @@ nonisolated struct SSHArgsTests {
         SSHArgs.setGlobalOptions(["BatchMode=no"])
         defer { clean() }
         let args = SSHArgs.build(host("10.0.0.1"), fixed: ["-o", "BatchMode=yes"])
-        #expect(args == ["-o", "BatchMode=yes", "-o", "BatchMode=no", "10.0.0.1"])
+        #expect(args == [
+            "-o", "BatchMode=yes", "-o", "BatchMode=no", "-o", "ServerAliveInterval=30", "10.0.0.1",
+        ])
     }
 
     @Test("the line the window shows is the line that was shipped")
@@ -73,7 +79,52 @@ nonisolated struct SSHArgsTests {
             name: "demoserver")
         #expect((["ssh"] + SSHArgs.build(resolved)).joined(separator: " ")
             == "ssh -o UserKnownHostsFile=/tmp/shellhand-check/known_hosts.uicheck"
-            + " -o IdentitiesOnly=yes -p 42222 -i /tmp/shellhand-check/id_spike spike@127.0.0.1")
+            + " -o IdentitiesOnly=yes -o ServerAliveInterval=30"
+            + " -p 42222 -i /tmp/shellhand-check/id_spike spike@127.0.0.1")
+    }
+
+    // MARK: keeping a connection alive
+
+    /// A tab left alone was dropped by something on the way — "client_loop:
+    /// send disconnect: Broken pipe", on a Mac that never slept — since
+    /// nothing crossed the connection while nobody typed.
+    @Test("every connection is kept alive, after every setting that could say otherwise")
+    func keptAliveLast() {
+        SSHArgs.setGlobalOptions(["Compression=yes"])
+        defer { clean() }
+        var resolved = host("10.0.0.1", port: 2222)
+        resolved.sshOptions = ["ServerAliveInterval=0"]
+        let args = SSHArgs.build(resolved)
+        #expect(args == [
+            "-o", "ServerAliveInterval=0", "-o", "Compression=yes", "-o", "ServerAliveInterval=30",
+            "-p", "2222", "10.0.0.1",
+        ])
+        // ssh keeps the first, so a host's own 0 turns it off there.
+        #expect(args.first { $0.hasPrefix("ServerAliveInterval=") } == "ServerAliveInterval=0")
+    }
+
+    /// ssh reads the command line before any config, so the app's own value
+    /// would beat the one written for this very machine.
+    @Test("where ssh's own config keeps the machine alive, the app adds nothing to beat it")
+    func configKeepsAlive() {
+        clean()
+        var resolved = host("10.0.0.1", alias: "web")
+        resolved.configKeepsAlive = true
+        #expect(SSHArgs.build(resolved) == ["-o", "HostName=10.0.0.1", "web"])
+        #expect(SSHArgs.subsystem(resolved, "sftp")
+            == ["-s", "-o", "HostName=10.0.0.1", "web", "sftp"])
+    }
+
+    /// Its keepalives are carried through every hop to the host, so they
+    /// keep each hop's own connection busy as well.
+    @Test("only the ssh that reaches the host is given one, its keepalives crossing every hop")
+    func hopsRideTheKeepalive() {
+        clean()
+        var resolved = host("10.0.2.5")
+        resolved.jumps = [Hop(name: "inner", addr: "10.0.1.9"), Hop(name: "outer", addr: "10.0.0.9")]
+        let args = SSHArgs.build(resolved)
+        #expect(Array(args.prefix(2)) == ["-o", "ServerAliveInterval=30"])
+        #expect(args.filter { $0.contains("ServerAlive") }.count == 1)
     }
 
     // MARK: jump hosts
@@ -87,7 +138,7 @@ nonisolated struct SSHArgsTests {
             keyPath: "/keys/jump")]
         let args = SSHArgs.build(resolved)
         #expect(args == [
-            "-p", "2200",
+            "-o", "ServerAliveInterval=30", "-p", "2200",
             "-o", "ProxyCommand=ssh -p 2222 -i /keys/jump -W '[10.0.1.5]:2200' jump@10.0.0.9",
             "app@10.0.1.5",
         ])
@@ -114,7 +165,8 @@ nonisolated struct SSHArgsTests {
         clean()
         var resolved = host("10.0.1.5")
         resolved.proxyJump = "someone@elsewhere.net"
-        #expect(SSHArgs.build(resolved) == ["-J", "someone@elsewhere.net", "10.0.1.5"])
+        #expect(SSHArgs.build(resolved)
+            == ["-o", "ServerAliveInterval=30", "-J", "someone@elsewhere.net", "10.0.1.5"])
     }
 
     @Test("settings that must hold are carried down to every hop")
@@ -133,20 +185,22 @@ nonisolated struct SSHArgsTests {
     func alias() {
         clean()
         let args = SSHArgs.build(host("10.0.0.1", user: "deploy", alias: "web"))
-        #expect(args == ["-o", "HostName=10.0.0.1", "deploy@web"])
+        #expect(args == ["-o", "ServerAliveInterval=30", "-o", "HostName=10.0.0.1", "deploy@web"])
     }
 
     @Test("a name that is the address adds nothing")
     func aliasIsAddress() {
         clean()
-        #expect(SSHArgs.build(host("10.0.0.1", alias: "10.0.0.1")) == ["10.0.0.1"])
+        #expect(SSHArgs.build(host("10.0.0.1", alias: "10.0.0.1"))
+            == ["-o", "ServerAliveInterval=30", "10.0.0.1"])
     }
 
     @Test("a percent in an address is doubled, because ssh expands tokens in HostName")
     func aliasPercent() {
         clean()
         let args = SSHArgs.build(host("fe80::1%en0", alias: "linklocal"))
-        #expect(args == ["-o", "HostName=fe80::1%%en0", "linklocal"])
+        #expect(args
+            == ["-o", "ServerAliveInterval=30", "-o", "HostName=fe80::1%%en0", "linklocal"])
     }
 
     // MARK: subsystems, quoting, and what ssh will take
@@ -155,7 +209,9 @@ nonisolated struct SSHArgsTests {
     func subsystem() {
         clean()
         let args = SSHArgs.subsystem(host("10.0.0.1"), "sftp", fixed: ["-o", "BatchMode=yes"])
-        #expect(args == ["-o", "BatchMode=yes", "-s", "10.0.0.1", "sftp"])
+        #expect(args == [
+            "-o", "BatchMode=yes", "-o", "ServerAliveInterval=30", "-s", "10.0.0.1", "sftp",
+        ])
     }
 
     @Test("quoting leaves plain arguments alone and wraps anything a shell would act on")

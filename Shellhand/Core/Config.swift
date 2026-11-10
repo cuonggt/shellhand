@@ -9,7 +9,7 @@ import Foundation
 ///
 /// ```yaml
 /// ssh_options:
-///   - ServerAliveInterval=30
+///   - ServerAliveInterval=60
 ///   - IdentitiesOnly=yes
 /// ```
 nonisolated struct Config: Sendable, Equatable {
@@ -53,6 +53,11 @@ nonisolated struct Config: Sendable, Equatable {
             # first value it is given, so these apply where nothing nearer says
             # otherwise.
             #
+            # Every connection already sends a keepalive after 30 seconds of
+            # quiet, so nothing on the way drops it as idle — except where your
+            # SSH config sets ServerAliveInterval itself. ServerAliveInterval=0
+            # here turns that off everywhere; on a host or a group, there alone.
+            #
             # themes are palettes of your own, beside the ones that ship: a name,
             # the sixteen ANSI colours, and the background, foreground, cursor and
             # selection. Choose one in Settings, or on a host or a group.
@@ -71,7 +76,7 @@ nonisolated struct Config: Sendable, Equatable {
     /// something this app accepts.
     static let example = """
         ssh_options:
-          - ServerAliveInterval=30
+          - ServerAliveInterval=60
           - IdentitiesOnly=yes
         themes:
           - name: Paper

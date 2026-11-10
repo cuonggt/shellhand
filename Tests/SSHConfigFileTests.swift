@@ -11,6 +11,27 @@ nonisolated struct SSHConfigFileTests {
         return path
     }
 
+    /// What keeps the app's own keepalive off the command line, where ssh
+    /// would take it over the one written here.
+    @Test("a keepalive the file sets is said for the machines it covers, 0 included")
+    func keepsAlive() throws {
+        let path = try write("""
+            Host web
+                ServerAliveInterval 60
+            Host quiet
+                ServerAliveInterval=0
+            Host 10.0.2.*
+                ServerAliveInterval 15
+            Host db
+                HostName 10.0.0.2
+            """, named: "keepalive")
+        let blocks = SSHConfigFile.parse(path: path)
+        #expect(SSHConfigFile.route(reaching: "web", in: blocks).keepsAlive)
+        #expect(SSHConfigFile.route(reaching: "quiet", in: blocks).keepsAlive)
+        #expect(SSHConfigFile.route(reaching: "10.0.2.7", in: blocks).keepsAlive)
+        #expect(!SSHConfigFile.route(reaching: "db", in: blocks).keepsAlive)
+    }
+
     @Test("a block becomes a host, by the name the file gives it")
     func plain() throws {
         let path = try write("""

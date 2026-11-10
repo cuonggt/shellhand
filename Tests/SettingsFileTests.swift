@@ -18,7 +18,7 @@ nonisolated struct SettingsFileTests {
     @Test("its example, taken in, is two ssh options and a whole palette")
     func exampleIsReal() throws {
         let config = try Config.parse(Config.example)
-        #expect(config.sshOptions == ["ServerAliveInterval=30", "IdentitiesOnly=yes"])
+        #expect(config.sshOptions == ["ServerAliveInterval=60", "IdentitiesOnly=yes"])
         #expect(config.themes.map(\.name) == ["Paper"])
         #expect(config.themes.first?.isComplete == true)
     }
