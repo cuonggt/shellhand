@@ -95,7 +95,14 @@ struct GroupEditorSheet: View {
         // with. Driven from outside, Production's General and Advanced both
         // fit at 516 with 46pt under the last row — a margin, not the band
         // of nothing that 570 left — and neither tab scrolls.
-        .frame(width: DialogSize.medium, height: SheetHeight.fitted(516, in: room.height))
+        //
+        // **476 since, measured before and after the same way**: the
+        // Identity row went into the User row (2026-11-09), and its 40pt
+        // with it. Driven from outside, Edge — picking an identity — and Lab
+        // — a user typed — had 46.5pt under General's last row at 516 in
+        // the build before, and 86.5 after, Advanced 108 in both: General is
+        // still the taller tab, and 476 gives it its margin back.
+        .frame(width: DialogSize.medium, height: SheetHeight.fitted(476, in: room.height))
         .onAppear { nameFocused = isNew }
         .confirmationDialog(
             "Delete \(group.name)?", isPresented: $confirmingDelete, titleVisibility: .visible
@@ -183,13 +190,12 @@ struct GroupEditorSheet: View {
             }
 
             Section("Passed down, unless something beneath says otherwise") {
-                // First, as in the host editor: it is what fills the two
-                // rows under it in, for every host beneath this group.
-                identityRow(from: above.identityFrom, inherited: above.identity)
-                row("User", value: above.user, from: above.userFrom,
-                    example: HostEditorSheet.userExample(avoiding: usersInList),
-                    text: $group.user)
-                row("Key", value: above.keyPath, from: above.keyPathFrom,
+                // First, on a line of its own above the key, as in the host
+                // editor: who the hosts beneath log in as, typed or an
+                // identity picked, which fills the key in too.
+                userRow(above)
+                let key = passedKey(above)
+                row("Key", value: key.value, from: key.from,
                     example: HostEditorSheet.keyExample(avoiding: keysInList),
                     text: $group.keyPath)
                 row("Jump host", value: above.proxyJump, from: above.proxyJumpFrom,
@@ -323,26 +329,61 @@ struct GroupEditorSheet: View {
         }
     }
 
-    /// The identity row: the same shape as the others — the choice where
-    /// their field is, the menu's room after it so everything in the section
-    /// ends at one edge, and the caption beside it — with a menu in place of
-    /// a field, since an identity is picked rather than typed.
-    private func identityRow(from: String, inherited: String) -> some View {
-        LabeledContent("Identity") {
+    /// Who the hosts beneath log in as, on a line of its own above the key:
+    /// typed, or an identity picked in the field (`UserField`), as the host
+    /// editor has it, with where an inherited user comes from beside it.
+    private func userRow(_ above: FromAbove) -> some View {
+        let user = passedUser(above)
+        return LabeledContent("User") {
+            // On the field's baseline, as `row` sets its rows.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                HStack(spacing: 6) {
-                    IdentityChoice(
-                        chosen: $group.identityId, identities: store.identitiesByName,
-                        inherited: inherited)
-                    FieldMenu.room
-                }
-                if let from = Self.shownFrom(from, set: group.identityId) {
+                UserField(
+                    user: $group.user, identityId: $group.identityId,
+                    identities: store.identitiesByName,
+                    prompt: user.value.isEmpty
+                        ? HostEditorSheet.userExample(avoiding: usersInList) : user.value)
+                if let from = userFrom(above) {
                     FromCaption(from: from, among: shownFroms,
-                                help: "Inherited from \(from). Pick one here to set it "
-                                    + "for everything under this group.")
+                                help: "Inherited from \(from). Type a user or pick an identity "
+                                    + "to set it for everything under this group.")
                 }
             }
         }
+    }
+
+    /// The identity this group picks, where its id answers to one.
+    private var picked: Identity? { store.identity(group.identityId) }
+
+    /// What a user left empty here gives the hosts beneath, and where from.
+    private func passedUser(_ above: FromAbove) -> (value: String, from: String) {
+        Self.passedDown(
+            picked: picked?.user ?? "", pickedFrom: picked?.source ?? "",
+            above: above.user, aboveFrom: above.userFrom)
+    }
+
+    /// What a key left empty here gives the hosts beneath, and where from.
+    private func passedKey(_ above: FromAbove) -> (value: String, from: String) {
+        Self.passedDown(
+            picked: picked?.keyPath ?? "", pickedFrom: picked?.source ?? "",
+            above: above.keyPath, aboveFrom: above.keyPathFrom)
+    }
+
+    /// What the User row says its user is from (`UserField.caption`).
+    private func userFrom(_ above: FromAbove) -> String? {
+        UserField.caption(typed: group.user, picked: picked, from: passedUser(above).from)
+    }
+
+    /// What a field left empty in a group gives the hosts beneath it, and
+    /// where from: what the identity the group picks fills in, and otherwise
+    /// what the groups above give — the resolver's order, a group's own
+    /// pointer before its parents. Read off the parents alone, a group
+    /// picking the deploy identity showed "ubuntu" and "~/.ssh/id_rsa",
+    /// examples, where its hosts log in as deploy with ~/.ssh/id_ed25519.
+    nonisolated static func passedDown(
+        picked: String, pickedFrom: String, above: String, aboveFrom: String
+    ) -> (value: String, from: String) {
+        let own = picked.trimmingCharacters(in: .whitespaces)
+        return own.isEmpty ? (above, aboveFrom) : (own, pickedFrom)
     }
 
     /// Where a row's value comes from, said beside it only while this group
@@ -375,9 +416,8 @@ struct GroupEditorSheet: View {
     private var shownFroms: [String] {
         let above = fromAbove
         return [
-            Self.shownFrom(above.identityFrom, set: group.identityId),
-            Self.shownFrom(above.userFrom, set: group.user),
-            Self.shownFrom(above.keyPathFrom, set: group.keyPath),
+            userFrom(above),
+            Self.shownFrom(passedKey(above).from, set: group.keyPath),
             Self.shownFrom(above.proxyJumpFrom, set: group.proxyJump),
         ].compactMap { $0 }
     }

@@ -96,9 +96,10 @@ struct HostEditorSheet: View {
     /// The same, read off the sheet as drawn: `room` is the box's height and
     /// whatever the form above it leaves unused, together — which stays put
     /// as the box grows or shrinks, since the form gives or takes the same.
-    /// The estimate guesses the form's spare from db-01's General, which
-    /// carries a caption under Connect to that a host typed into ⌘K does
-    /// not: Save as Host… cut a three-line command under 58pt of empty form.
+    /// The estimate guesses the form's spare from db-01's General as it was
+    /// measured, which carried a caption under Connect to that a host typed
+    /// into ⌘K did not: Save as Host… cut a three-line command under 58pt of
+    /// empty form.
     ///
     /// Where not even a line fits without scrolling the form, the box gives
     /// way altogether: held to a line, it left the form 39pt short with New
@@ -125,7 +126,7 @@ struct HostEditorSheet: View {
     }
 
     /// What each tab was measured to need; see the frame for how.
-    private var wanted: CGFloat { tab == .general ? 741 : 640 }
+    private var wanted: CGFloat { tab == .general ? 724 : 640 }
 
     /// How much of the command the foot shows: from the form as drawn once
     /// this tab's has been laid out, and the estimate until then.
@@ -145,17 +146,16 @@ struct HostEditorSheet: View {
         showsCommand ? Self.commandShown(commandHeight, cap: commandCap) : 0
     }
 
-    /// Where the user this host logs in as comes from while its own field is
-    /// empty: nil when it says one itself, or nothing above gives one.
+    /// Where the user this host logs in as comes from, said beside the User
+    /// row as the key's is beside its own (`UserField.caption`).
     private var userFrom: String? {
-        let from = preview.effective.userFrom
-        guard host.user.trimmingCharacters(in: .whitespaces).isEmpty,
-              !from.isEmpty, from != "itself" else { return nil }
-        return from
+        UserField.caption(
+            typed: host.user, picked: store.identity(host.identityId),
+            from: preview.effective.userFrom)
     }
 
     /// What it gets, over the window it opens over.
-    private var height: CGFloat { SheetHeight.fitted(741, in: room.height) }
+    private var height: CGFloat { SheetHeight.fitted(724, in: room.height) }
 
     /// The lines along the foot above the command, each taking room the form
     /// could otherwise spare it.
@@ -233,6 +233,18 @@ struct HostEditorSheet: View {
         // this was tuned to; 741 puts it back. Neither tab scrolls, and the
         // 25pt is the band of nothing a guess would have shipped.
         //
+        // **724 since, measured before and after the same way.** The user
+        // took a line of its own above the key, and the identity went into
+        // it, so both the Identity row and the caption under Connect to
+        // went. Driven from outside, the last build and this one on the same
+        // host behind a jump host: db-01's General had 28.5pt to spare at
+        // the six lines, as tuned, and this one 45.5 with a user typed; 724
+        // puts it back. With an identity picked, the token's box stood 4pt
+        // lower than a field and its row 4pt taller, until the box took its
+        // frame from a field (`UserField.tokenBox`). Measured again at 724,
+        // a user typed, an identity picked and one logging in as another
+        // user all left General 28.5pt, its rows on the same lines.
+        //
         // Where the window has less room than that below its toolbar — 668
         // at its default 1106×720 — the editor is the room less a margin, and
         // the command's box gives up the difference: at 720 General hung
@@ -300,33 +312,16 @@ struct HostEditorSheet: View {
                     needed("Name")
                 }
                 LabeledContent {
-                    VStack(alignment: .leading, spacing: 3) {
-                        destination
-                        // Where an empty user comes from, as Key and Jump
-                        // host say beside theirs — under this row, which has
-                        // no room beside it. It said nothing, the inherited
-                        // name sitting in the field as if typed.
-                        if let userFrom {
-                            Text("user from \(userFrom)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .help("Inherited from \(userFrom). Type a user to set it on this host.")
-                        }
-                    }
+                    destination
                 } label: {
                     needed("Connect to")
                 }
             }
 
             Section("Connect with") {
-                // First, because it is what fills the two rows under it in:
-                // an identity is not a third setting beside the user and the
-                // key, it is a way of writing both once.
-                row("Identity", from: preview.effective.identityFrom, set: host.identityId) {
-                    IdentityChoice(
-                        chosen: $host.identityId, identities: store.identitiesByName,
-                        inherited: inheritedIdentity)
-                }
+                // First, on a line of its own above the key: who logs in,
+                // typed or an identity picked, which fills the key in too.
+                userRow
                 row("Key", from: preview.effective.keyPathFrom, set: host.keyPath) {
                     TextField("", text: $host.keyPath,
                               prompt: Text(shown(preview.effective.keyPath,
@@ -407,15 +402,14 @@ struct HostEditorSheet: View {
         .formStyle(.grouped)
     }
 
-    /// `user@host:port`, as one row, because that is one destination — it is
-    /// how ssh is typed and how the command along the bottom ends. Three
-    /// rows said the same thing and left you to infer they belonged together.
+    /// `host:port`, as one row, because that is one place — two rows said
+    /// the same thing and left you to infer they belonged together. The user
+    /// was a third part of it, `user@host:port` as ssh is typed, until it
+    /// took a line of its own above the key (`userRow`): there an identity
+    /// can be picked in its place, and an inherited user says beside it
+    /// where it is from, which under this row it said for want of room.
     private var destination: some View {
         HStack(spacing: 4) {
-            TextField("", text: $host.user, prompt: Text(shown(
-                preview.effective.user, Self.userExample(avoiding: usersInList))))
-                .frame(width: 92)
-            Text("@").foregroundStyle(.secondary)
             TextField("", text: $host.addr, prompt: Text("10.0.0.1"))
                 .focused($focus, equals: .address)
             Text(":").foregroundStyle(.secondary)
@@ -429,6 +423,27 @@ struct HostEditorSheet: View {
         .textFieldStyle(.roundedBorder)
         .labelsHidden()
         .multilineTextAlignment(.leading)
+    }
+
+    /// Who it logs in as, on a line of its own above the key: typed, or an
+    /// identity picked from the menu at the field's end (`UserField`), with
+    /// where an inherited user comes from beside it, as the key's says.
+    private var userRow: some View {
+        LabeledContent("User") {
+            // On the field's baseline, as `row` sets its rows.
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                UserField(
+                    user: $host.user, identityId: $host.identityId,
+                    identities: store.identitiesByName,
+                    prompt: shown(preview.effective.user, Self.userExample(avoiding: usersInList)))
+                if let userFrom {
+                    FromCaption(
+                        from: userFrom, among: shownFroms,
+                        help: "Inherited from \(userFrom). Type a user or pick an identity "
+                            + "to set it on this host.")
+                }
+            }
+        }
     }
 
     /// A field with where its value came from beside it.
@@ -479,7 +494,7 @@ struct HostEditorSheet: View {
     /// they stand in.
     private var shownFroms: [String] {
         [
-            Self.shownFrom(preview.effective.identityFrom, set: host.identityId),
+            userFrom,
             Self.shownFrom(preview.effective.keyPathFrom, set: host.keyPath),
             Self.shownFrom(preview.effective.proxyJumpFrom, set: host.proxyJump),
         ].compactMap { $0 }
@@ -745,10 +760,6 @@ struct HostEditorSheet: View {
         FromAbove(
             of: filed, among: store.snapshot.groups, identities: store.snapshot.identities)
     }
-
-    /// The name of the identity a group above points at, for the Identity
-    /// menu's "leave it alone" item and for its grey label.
-    private var inheritedIdentity: String { fromAbove.identity }
 
     /// What the terminal would come up in if this host chose nothing: the
     /// nearest group that names a palette, or the one in Settings.

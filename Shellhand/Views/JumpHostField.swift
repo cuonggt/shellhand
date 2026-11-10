@@ -46,16 +46,19 @@ struct JumpHostMenu: View {
 }
 
 /// The room the editors' field menus stand in at the ends of their rows —
-/// the jump host's and the tags' — as wide as the wider, unseen, so that
-/// every field before one, or before its room, ends at one edge. Each at its
-/// own width, the Tags box ended 2pt short of the jump host's field.
+/// the jump host's, the tags' and the user's identities — as wide as the
+/// widest, unseen, so that every field before one, or before its room, ends
+/// at one edge. Each at its own width, the Tags box ended 2pt short of the
+/// jump host's field.
 enum FieldMenu {
     static var room: some View {
         ZStack {
             JumpHostMenu(text: .constant(""), hosts: [])
-            Menu {} label: { Image(systemName: "tag") }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
+            ForEach(["tag", UserField.symbol], id: \.self) { glyph in
+                Menu {} label: { Image(systemName: glyph) }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+            }
         }
         .hidden()
     }

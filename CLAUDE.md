@@ -237,10 +237,35 @@ credentials, which is most of it.
   it. It is **File ▸ Identities…**, the documented list-beside-detail sheet at
   `DialogSize.large`, written on a debounce and flushed on disappear, since
   a save resolves every host and crashes the table view drawing the list.
-  **`IdentityChoice` is a named row, not a glyph on the user field**, which is
-  where Termius puts the same choice: theirs is the better idea in the
-  abstract and does not survive a group pointing at an identity, because a
-  glyph has nowhere to put "from Production".
+  **In both editors an identity is picked in the User row**
+  (`UserField`), at the owner's word (2026-11-08) and where Termius puts
+  it: the user has a line of its own above the key, typed or an identity
+  picked from the menu at its end, which then stands in the field as a
+  token. It was a named row, `IdentityChoice` (gone since), because a
+  glyph on the user field had nowhere to put "from Production" — and the
+  row's caption column
+  is that somewhere: an inherited user says "from Production", or "from the
+  deploy identity" where a group's identity supplies it, as the key beside
+  it does, and the inspector's Identity row still names the group that
+  points. **The field is the resolver's order made visible**: beside a token
+  it still takes a user, typed to log in in the identity's place while the
+  identity goes on giving the key, and left empty it shows in grey what it
+  would log in as. Picking an identity that names a user clears a typed one,
+  since picking it is asking for its login; one that names none leaves it.
+  **The token's box is drawn over an unseen rounded field** (`tokenBox`),
+  which gives it a field's frame and baseline, and the typing field after
+  the token stands on that baseline: as the tag field's flowing box, whose
+  baseline is its first token's words, the row stood 4pt taller with an
+  identity picked than without, and the grey user after the token 3pt
+  above the label's line. The Tags row still stands about 3.5pt lower in
+  its row than a field does, the same way, as it has since it was drawn.
+  **A group's rows read the identity it picks first**
+  (`GroupEditorSheet.passedDown`): its User and Key rows show in grey what
+  that identity fills in for the hosts beneath, credited to it, and only
+  then what the groups above give — the resolver's order, and what the
+  host editor's preview already showed. Read off the groups above alone, a
+  group picking the deploy identity showed "ubuntu" and "~/.ssh/id_rsa",
+  examples, where its hosts log in as deploy with `~/.ssh/id_ed25519`.
 - **ssh puts every prompt through `SSH_ASKPASS`, the host-key question
   included** — measured, under a pty, against macOS's own `sshd`. Forcing it
   (`SSH_ASKPASS_REQUIRE=force`) takes that question away from
@@ -1433,9 +1458,13 @@ credentials, which is most of it.
   An earlier cut — Machine / Logging in / Filing — was ssh-shaped and wrong at
   the first row: a name is not a fact about the machine, so it does not belong
   beside the address.
-- The destination is **one row**, `user@host:port`, because that is one thing —
-  it is how ssh is typed and how the command along the bottom ends.
-  Three rows said the same and left you to infer they belonged together.
+- The destination is **one row**, `host:port`, because that is one place —
+  two rows said the same and left you to infer they belonged together.
+  **The user has a line of its own above the key**, at the owner's word
+  (2026-11-08), where it can be typed or an identity picked in its place
+  (`UserField`). It was the third part of `user@host:port`, as ssh is typed,
+  which left no room to pick an identity there, nor to say where an
+  inherited user came from but a caption under the row.
 - Advanced carries a **mark when what is wrong is on it**, worked out by asking
   whether the problem survives clearing the ssh options. A greyed-out Save with
   nothing visible to explain it is what tabs cost if you don't do this.
@@ -1481,10 +1510,16 @@ credentials, which is most of it.
 - **Both editors are sized so that neither tab ever scrolls**, and sized for
   **editing** rather than for a new record: an editor opened on something has
   a Delete in its footer, which costs the form 23pt. The host editor's
-  General needs **741** and its Advanced 640 — room for the command's six
-  lines at its foot and one line more, a problem or a rename note, for the
-  inherited user's caption under Connect to, and for the Identity row at the
-  head of Connect with — and the group editor's **516**, General's with the
+  General needs **724** and its Advanced 640 — room for the command's six
+  lines at its foot and one line more, a problem or a rename note. It was
+  **741** while the inherited user's caption sat under Connect to and an
+  Identity row headed Connect with; both went into the User row above the
+  key (2026-11-08). Driven from outside, the build before and the build
+  after on one host behind a jump host, db-01's General went from 28.5pt to
+  spare at the six lines — what it was tuned to — to 45.5, so 724 puts it
+  back; measured again at 724, a user typed, an identity picked and one
+  logging in as another user all leave 28.5. The group editor's is
+  **476**, General's with the
   footer's problem line up, where 570, measured when it
   had rows since gone, left General 137pt of empty form and Advanced 160.
   **736 and 486 were those numbers before identities**, and the row each
@@ -1493,9 +1528,14 @@ credentials, which is most of it.
   row — 53 once normalised to the six lines `commandRoom` allows, against the
   28 it was tuned to — so the host editor's is 741, measured; the group
   editor's 516 came back at 46pt under Production's last row on both tabs and
-  stood. **A row's worth added by eye is a band of nothing shipped**: read it
-  off the form's own scroll area instead — which `window-check.sh` now does
-  on every run, so this rule is checked rather than remembered.
+  stood. Its Identity row went into its User row too (2026-11-09), 40pt:
+  driven before and after, Edge and Lab had 46.5pt under General's last row
+  at 516 and 86.5 after, and Advanced 108 in both — not the 46 recorded
+  for Production's, though its ssh options box is a fixed 64pt — so
+  General is still the taller tab and 476 gives it its 46.5 back. **A row's
+  worth added by eye is a band of nothing shipped**: read it off the form's
+  own scroll area instead — which `window-check.sh` now does on every run,
+  so this rule is checked rather than remembered.
   **Each editor is drawn at its taller tab's height on both tabs**: a
   sheet is centred on its window, so one that changed height with the tab
   moved the tab control under the pointer, 7pt in the group editor and 27
@@ -1548,15 +1588,18 @@ credentials, which is most of it.
   the form sets the label: centred, the row's baseline was the caption's,
   and the label stood 1.5pt above the field's words. The captions stand in
   one column, as wide as the widest an editor shows (`FromCaption`), and
-  every such row keeps the jump host's menu's room beside its field
-  (`FieldMenu.room`), so the fields end at one edge: each caption at its
+  every such row keeps the room of the widest field menu beside its field
+  (`FieldMenu.room`: the jump host's, the tags' and the user's identities),
+  so the fields end at one edge: each caption at its
   own width, the jump host's field ended 2.5pt short of the key's above it —
   "from Production" against its menu and "from US" — near enough a line to
   read as a slip; and with the captions lined up and not the fields, the
   menu's arrow ended 7pt short of the key's border, a borderless menu
   padding its glyph.
-  Connect to's user says it under the row, which has no room beside it —
-  "user from Production" — where it said nothing at all. An inherited
+  The user says it beside a line of its own, as the key does — "from
+  Production", or "from the deploy identity" — where as part of Connect to
+  it said it under the row for want of room, and before that said nothing
+  at all. An inherited
   palette reads the same way, value first — "Gruvbox Dark from Production",
   "System from Settings" (`Effective.inherited`) — where it said "From
   Production — Gruvbox Dark", and the group inspector "As in Settings"; and

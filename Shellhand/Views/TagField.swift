@@ -19,8 +19,9 @@ struct TagField: View {
     /// Where AppKit puts a borderless field's first baseline, from its top,
     /// in the body font: what the typing field says it has. Asked from
     /// inside the flow, it answered 8pt down a 22pt field, above its words,
-    /// where its words sit 13pt down.
-    private static let fieldBaseline: CGFloat = {
+    /// where its words sit 13pt down. The user field's typing field after an
+    /// identity's token stands on it too.
+    static let fieldBaseline: CGFloat = {
         let probe = NSTextField(string: "")
         probe.isBezeled = false
         probe.font = .systemFont(ofSize: NSFont.systemFontSize)
@@ -29,6 +30,9 @@ struct TagField: View {
     }()
 
     var body: some View {
+        // Read here, on the main actor: the alignment closure is Sendable,
+        // and reading it in there was a warning on every build.
+        let baseline = Self.fieldBaseline
         // On the text's line, the row's label with it: the form lines a
         // label up with the baseline of what is beside it, and this said
         // none, or one it took from the typing field 5pt too high — "Tags"
@@ -36,7 +40,7 @@ struct TagField: View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             FlowLayout(spacing: 4) {
                 ForEach(tags, id: \.self) { tag in
-                    TagToken(tag: tag) { remove(tag) }
+                    Token(title: tag, removeLabel: "Remove tag \(tag)") { remove(tag) }
                 }
                 // The same words with tags or without: "web, eu" named two
                 // tags the list already holds, in the comma form the field
@@ -48,7 +52,7 @@ struct TagField: View {
                     // token, and "web, eu" sat 25pt inside an empty box.
                     .multilineTextAlignment(.leading)
                     .frame(minWidth: 72)
-                    .alignmentGuide(.firstTextBaseline) { d in d[.top] + Self.fieldBaseline }
+                    .alignmentGuide(.firstTextBaseline) { d in d[.top] + baseline }
                     .onSubmit { commit() }
                     // One rule for reading tags, and it says a comma, a
                     // semicolon, a bar or a space all separate — so typing any
@@ -64,14 +68,7 @@ struct TagField: View {
             // field's: drawn inside, at 3pt of padding, the box stood 1pt in
             // from the fields above it at the left and 2pt taller.
             .padding(.vertical, 1)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(nsColor: .textBackgroundColor))
-                    .padding(-1))
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(Color(nsColor: .separatorColor))
-                    .padding(-1))
+            .fieldGround()
 
             // In the room every field's menu stands in (`FieldMenu.room`), so
             // the box ends where the fields above it end: on its own, the
@@ -116,22 +113,52 @@ struct TagField: View {
     }
 }
 
-private struct TagToken: View {
-    let tag: String
+/// Something in a field that can be seen and taken off — a tag, or the
+/// identity a login is picked from — as a capsule with its × inside, the one
+/// look for both.
+struct Token: View {
+    let title: String
+    /// A mark before the words, for a token that is not a tag.
+    var systemImage: String?
+    /// What its × is called to VoiceOver.
+    let removeLabel: String
     let remove: () -> Void
 
     var body: some View {
         HStack(spacing: 3) {
-            Text(tag).font(.caption)
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+            Text(title).font(.caption)
             Button(action: remove) {
                 Image(systemName: "xmark").font(.system(size: 8, weight: .bold))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Remove tag \(tag)")
+            .accessibilityLabel(removeLabel)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(Color.accentColor.opacity(0.18), in: Capsule())
+    }
+}
+
+extension View {
+    /// A rounded field's ground and border, for a field made of parts — the
+    /// tag field's box, the user field's token — drawn as macOS 26 draws
+    /// them round a field's own 24pt frame: the border 1pt outside it, 26pt
+    /// from edge to edge, read off the screen.
+    func fieldGround() -> some View {
+        background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(nsColor: .textBackgroundColor))
+                .padding(-1))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(Color(nsColor: .separatorColor))
+                    .padding(-1))
     }
 }
 

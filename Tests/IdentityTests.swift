@@ -302,4 +302,98 @@ nonisolated struct IdentityTests {
         // into a connection is the phase after this one.
         #expect(SSHArgs.build(out) == ["root@10.0.9.2"])
     }
+
+    // MARK: the host editor's User row
+
+    @Test("picking an identity that names a user clears a user typed beside it")
+    func pickingClearsATypedUser() {
+        let picked = UserField.picking(deploy, over: "root")
+        #expect(picked.identityId == "i1")
+        // Left typed, it would log in in the identity's place: the host's
+        // own user comes before the identity it points at.
+        #expect(picked.user == "")
+    }
+
+    @Test("picking one that names no user keeps the user typed, the only one there is")
+    func pickingKeepsATypedUser() {
+        let laptop = Identity(id: "i5", name: "laptop", keyPath: "~/.ssh/id_laptop")
+        let picked = UserField.picking(laptop, over: "root")
+        #expect(picked.identityId == "i5")
+        #expect(picked.user == "root")
+    }
+
+    @Test("the User row says where its user is from only where the record says none itself")
+    func userCaption() {
+        let laptop = Identity(id: "i5", name: "laptop", keyPath: "~/.ssh/id_laptop")
+        // Inherited, from a group or from a group's identity.
+        #expect(UserField.caption(typed: "", picked: nil, from: "Production")
+            == "Production")
+        #expect(UserField.caption(typed: " ", picked: nil, from: "the deploy identity")
+            == "the deploy identity")
+        // Typed here, whatever is picked beside it.
+        #expect(UserField.caption(typed: "root", picked: nil, from: "Production") == nil)
+        #expect(UserField.caption(
+            typed: "root", picked: deploy, from: "the deploy identity") == nil)
+        // An identity picked here that names a user: its token says whose.
+        #expect(UserField.caption(
+            typed: "", picked: deploy, from: "the deploy identity") == nil)
+        // One that names none leaves the user to whatever is above, which says so.
+        #expect(UserField.caption(typed: "", picked: laptop, from: "Production")
+            == "Production")
+        // Nothing anywhere: nothing to say.
+        #expect(UserField.caption(typed: "", picked: nil, from: "") == nil)
+    }
+
+    @Test("the grey user after a token is left out where it is the token's own name")
+    func typingPromptAfterAToken() {
+        // "deploy", logging in as deploy: the token says it once.
+        #expect(UserField.typingPrompt("deploy", after: deploy) == "")
+        // "operator", logging in as ops: worth saying.
+        #expect(UserField.typingPrompt("ops", after: operatorID) == "ops")
+        // One that names no user: the grey one is from above, whatever the
+        // identity is called — even a name it happens to share.
+        let laptop = Identity(id: "i5", name: "admin", keyPath: "~/.ssh/id_laptop")
+        #expect(UserField.typingPrompt("admin", after: laptop) == "admin")
+    }
+
+    @Test("a group's rows read the identity it picks before the groups above it")
+    func groupPassesDownItsIdentity() {
+        // What the identity fills in, credited to it, as the resolver gives
+        // the hosts beneath.
+        let key = GroupEditorSheet.passedDown(
+            picked: deploy.keyPath, pickedFrom: deploy.source,
+            above: "~/.ssh/id_rsa", aboveFrom: "Production")
+        #expect(key.value == "~/.ssh/id_ed25519")
+        #expect(key.from == "the deploy identity")
+        // Where it fills nothing in, the groups above still do.
+        let user = GroupEditorSheet.passedDown(
+            picked: "  ", pickedFrom: "the laptop identity",
+            above: "ops", aboveFrom: "Production")
+        #expect(user.value == "ops")
+        #expect(user.from == "Production")
+        // And with nothing picked, only the groups above.
+        let none = GroupEditorSheet.passedDown(
+            picked: "", pickedFrom: "", above: "", aboveFrom: "")
+        #expect(none.value == "" && none.from == "")
+    }
+
+    @Test("a group's rows agree with what the resolver gives a host beneath it")
+    func groupRowsAgreeWithTheResolver() {
+        // Production picks deploy; a host under it that sets nothing logs
+        // in with what the group's editor says it passes down.
+        let production = Group(id: "g1", name: "Production", identityId: "i1")
+        let host = Shellhand.Host(id: "h", name: "db-01", addr: "10.0.0.1", groupId: "g1")
+        let out = resolver(groups: [production], hosts: [host], identities: [deploy]).resolve(host)
+        let above = FromAbove(of: production, among: [production], identities: [deploy])
+        let key = GroupEditorSheet.passedDown(
+            picked: deploy.keyPath, pickedFrom: deploy.source,
+            above: above.keyPath, aboveFrom: above.keyPathFrom)
+        #expect(key.value == out.keyPath)
+        #expect(key.from == out.keyPathFrom)
+        let user = GroupEditorSheet.passedDown(
+            picked: deploy.user, pickedFrom: deploy.source,
+            above: above.user, aboveFrom: above.userFrom)
+        #expect(user.value == out.user)
+        #expect(user.from == out.userFrom)
+    }
 }

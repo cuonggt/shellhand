@@ -194,6 +194,21 @@ debugging the app rather than the script. A `whose` filter holding a script
 **variable** rather than a literal fails the same quiet way, which is why the
 pid goes in by string interpolation from the shell.
 
+**And the literal holds only for lines written inline under it.** Every
+element System Events hands back — `window 1`, each item of `UI elements
+of` — comes back named by the process's **name**, "window "Hosts" of
+application process "Shellhand"", so a handler walking what it was handed
+is walking whichever copy that name finds first. Measuring the host
+editor's User row (2026-11-09) beside the user's own Debug copy, a walk in a
+handler — `findOutline(window 1, 0)`, as `window-check.sh` writes it —
+failed on its first step with *"Can't get window "Hosts" of application
+process "Shellhand""*, while the same window's top levels, read inline
+under the literal pid, came back whole. What worked beside a copy was the
+Accessibility API itself, by pid: a tool built from the shell, which the
+shell's Accessibility grant covers, taking `AXUIElementCreateApplication`
+for reading, setting `AXFocused` and pressing, and `CGEvent.postToPid` for
+keys, so nothing reaches the other copy whichever app is in front.
+
 ## A window retitled by its own selection
 
 The host window's title carries what is picked — "Hosts – db-01 ·
