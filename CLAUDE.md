@@ -237,11 +237,13 @@ credentials, which is most of it.
   person would type it, onto the pty.
 - **A password is answered by the app run as ssh's own askpass helper**
   (`Core/Askpass.swift`) where there is nobody in front of the connection —
-  the SFTP window's child; a tab types its own (above). What travels is the
-  **keychain account** — an identity's id, or a host's or a group's
-  (`Keychain.account`), in `SHELLHAND_ASKPASS_ACCOUNT` — and the path to this
-  bundle — never the password, since an argument list is readable by every
-  process on the machine and an environment variable by every child of one;
+  the SFTP window's child; a tab types its own (above). What travels is
+  **the machines on the way** — each one's user, name, address and the
+  keychain account its password is kept under, an identity's id or a host's
+  or a group's (`Keychain.account`), in `SHELLHAND_ASKPASS_STOPS` — and the
+  path to this bundle — never the password, since an argument list is
+  readable by every process on the machine and an environment variable by
+  every child of one;
   the password goes keychain to the helper's stdout and nowhere else.
   **`SSH_ASKPASS_REQUIRE=force` is required here, and leaving it out is a
   recorded mistake**: ssh uses a helper only with no tty **and** `DISPLAY`
@@ -266,10 +268,16 @@ credentials, which is most of it.
   and falls back on the password, as a tab's ssh does; and
   `NumberOfPasswordPrompts=1` so a stale password fails once rather than
   three times. Both lead, with what nothing may override, since ssh keeps
-  the first value it is given. The child answers the host's own password
-  only: a jump host's ssh, carried the same options and the same helper, is
-  answered the host's, so SFTP through a hop that wants its own password
-  fails there — a tab reaches it.
+  the first value it is given. **Each ssh in the chain gets its own**
+  (`SSHArgs.unattended(at:)`, through `subsystem`'s `each`), from its own key
+  and password: the host's, carried down every hop, told a bastion that logs
+  in with a key to try nothing but a password, and SFTP was turned away at
+  the bastion of the commonest setup there is. And the helper answers each
+  prompt for the machine it names, by user and machine in either of ssh's
+  shapes whatever words follow (`Askpass.account(for:among:)`,
+  `PasswordPrompt.stop(namedIn:)`): a jump host is never handed the host's
+  password, and a prompt naming no machine on the way is answered only where
+  the host is all there is.
 - **An identity is a group that is not a place**: a named user and key
   (`Identity`, the store's v11) that a host or a group points at **by id**, so
   renaming one takes nothing with it and there is no rename to follow — don't

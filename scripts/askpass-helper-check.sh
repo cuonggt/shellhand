@@ -25,8 +25,12 @@ security add-generic-password -s "$svc" -a "$id" -w "$pw" -A -U >/dev/null 2>&1 
     || { echo "could not put a password in the keychain"; exit 1; }
 echo "put a password under a service of this run's own"
 
+# The machine on the way, as the app hands it over: who logs in, the name, the
+# address and where its password is kept, tab-separated. Ids, never a password.
+stops=$(printf 'cuonggt\t10.0.9.2\t10.0.9.2\t%s' "$id")
+
 ask() { # ask <prompt>
-    SHELLHAND_ASKPASS_ACCOUNT="$id" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
+    SHELLHAND_ASKPASS_STOPS="$stops" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
         /usr/bin/perl -e 'alarm 20; exec @ARGV' "$binary" "$1" 2>"$svc.err"
     local status=$?
     # To stderr, not stdout: the caller captures stdout, which is the
@@ -49,7 +53,8 @@ if [ "$got" = "no" ]; then echo "   ANSWERED no ✓ — nobody can read a finger
 else echo "   said: '$got' — expected no ✗"; fi
 
 echo "— an account with nothing stored —"
-got=$(SHELLHAND_ASKPASS_ACCOUNT="nobody-$$" SHELLHAND_KEYCHAIN_SERVICE="$svc" \
+got=$(SHELLHAND_ASKPASS_STOPS="$(printf 'cuonggt\t10.0.9.2\t10.0.9.2\tnobody-%s' "$$")" \
+    SHELLHAND_KEYCHAIN_SERVICE="$svc" \
     /usr/bin/perl -e 'alarm 20; exec @ARGV' "$binary" "password: " 2>&1)
 echo "   said: '$got'"
 

@@ -80,19 +80,50 @@ nonisolated enum PasswordPrompt {
 
     /// The two shapes ssh asks for a stop's password in, whitespace out.
     static func prompts(for stop: Route.Stop, localUser: String) -> [String] {
+        guard let login = login(of: stop, localUser: localUser) else { return [] }
+        return machines(of: stop).flatMap { machine in
+            ["\(login)@\(machine)'spassword:", "(\(login)@\(machine))password:"]
+        }
+    }
+
+    /// The stop a prompt is for, by the machine and user it names in either
+    /// of ssh's shapes **whatever words follow** — `(root@db) Passwort:` too.
+    /// For the askpass helper, which answers every prompt but a host-key
+    /// question (`Askpass.isQuestion`) and needs only to know whose password
+    /// to give: a server asks in its own language. A tab types only where
+    /// `asked(in:route:)` also finds the word password.
+    static func stop(
+        namedIn prompt: String, route: Route, localUser: String = NSUserName()
+    ) -> Int? {
+        let said = tightened(prompt).lowercased()
+        for (index, stop) in route.stops.enumerated() {
+            guard let login = login(of: stop, localUser: localUser)?.lowercased() else { continue }
+            for machine in machines(of: stop).map({ $0.lowercased() })
+            where said.hasPrefix("(\(login)@\(machine))") || said.hasPrefix("\(login)@\(machine)'s") {
+                return index
+            }
+        }
+        return nil
+    }
+
+    /// Who a stop logs in as, as ssh names it: its own user, or this Mac's
+    /// login name where it names none.
+    private static func login(of stop: Route.Stop, localUser: String) -> String? {
         let user = stop.user.trimmingCharacters(in: .whitespaces).isEmpty
             ? localUser : stop.user.trimmingCharacters(in: .whitespaces)
-        guard !user.isEmpty else { return [] }
+        return user.isEmpty ? nil : tightened(user)
+    }
+
+    /// What ssh may call a stop: the name it was handed, or the address a
+    /// config's `HostName` puts in its place — each once.
+    private static func machines(of stop: Route.Stop) -> [String] {
         var machines: [String] = []
         for machine in [stop.dest, stop.addr].map({ tightened($0) }) where !machine.isEmpty {
             if !machines.contains(where: { $0.caseInsensitiveCompare(machine) == .orderedSame }) {
                 machines.append(machine)
             }
         }
-        let login = tightened(user)
-        return machines.flatMap { machine in
-            ["\(login)@\(machine)'spassword:", "(\(login)@\(machine))password:"]
-        }
+        return machines
     }
 
     private static func tightened(_ text: String) -> String {

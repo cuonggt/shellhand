@@ -28,30 +28,38 @@ import Foundation
 /// question has somewhere a person can see it:
 /// → docs/notes/terminal.md#where-a-forced-askpass-puts-the-host-key-question
 nonisolated enum Askpass {
-    /// Names the keychain account whose password ssh is asking for. Its
-    /// presence is also what tells the app it was run as a helper rather than
-    /// by a person: ssh invokes the program with the prompt as its only
-    /// argument, so there is no subcommand there to recognise.
-    static let accountVariable = "SHELLHAND_ASKPASS_ACCOUNT"
+    /// The machines on the way, one a line — who logs in, the name ssh is
+    /// handed, the address, and where its password is kept, tab-separated
+    /// (`stops(_:)`) — so the helper answers each prompt for the machine it
+    /// names, a jump host's with the jump host's. Ids and names, never a
+    /// password. Its presence is also what tells the app it was run as a
+    /// helper rather than by a person: ssh invokes the program with the
+    /// prompt as its only argument, so there is no subcommand there to
+    /// recognise.
+    static let stopsVariable = "SHELLHAND_ASKPASS_STOPS"
 
     // MARK: what a connection carries
 
     /// What an unattended connection needs added to its environment, and
-    /// nothing at all where no password reaches the host — so no other
-    /// connection changes shape because this exists.
+    /// nothing at all where no password reaches the host or a jump host on
+    /// the way — so no other connection changes shape because this exists.
     ///
     /// Empty where there is no password to answer with, and where the app has
     /// no executable path to point ssh at. A machine typed into ⌘K has no id
-    /// to have filed one under, so nothing reaches it of its own.
+    /// to have filed one under, so nothing reaches it of its own. Every ssh
+    /// in a jump chain inherits it, and each is answered for its own machine
+    /// (`account(for:among:)`).
     static func environment(for resolved: Resolved) -> [String: String] {
-        guard !resolved.passwordAccount.isEmpty, let app = Bundle.main.executablePath
+        let stops = resolved.route.stops
+        guard stops.contains(where: { !$0.password.isEmpty }),
+              let app = Bundle.main.executablePath
         else { return [:] }
         var out = [
             "SSH_ASKPASS": app,
             // Without this the helper is never run: ssh wants `DISPLAY` set
             // before it will use one, and a GUI app has none. See above.
             "SSH_ASKPASS_REQUIRE": "force",
-            accountVariable: resolved.passwordAccount,
+            stopsVariable: Self.stops(stops),
         ]
         // Where the password is filed, when it is not the usual place: the
         // helper is a process of its own and would otherwise look in the one
@@ -70,13 +78,52 @@ nonisolated enum Askpass {
         return ProcessInfo.processInfo.environment.merging(ours) { _, mine in mine }
     }
 
+    /// The machines on the way, as `stopsVariable` carries them.
+    static func stops(_ stops: [Route.Stop]) -> String {
+        stops.map { [$0.user, $0.dest, $0.addr, $0.password].joined(separator: "\t") }
+            .joined(separator: "\n")
+    }
+
+    /// The same, read back; a line that is not four fields is passed over.
+    static func stops(from text: String) -> [Route.Stop] {
+        text.split(separator: "\n").compactMap { line in
+            let field = line.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
+            guard field.count == 4 else { return nil }
+            return Route.Stop(name: field[1], dest: field[1], addr: field[2], port: 22,
+                              user: field[0], password: field[3])
+        }
+    }
+
+    /// Where the password for `prompt` is kept, among the machines on the
+    /// way: the one the prompt names, by user and machine in either of ssh's
+    /// shapes (`PasswordPrompt.stop(namedIn:)`), or nil where that one keeps
+    /// none — a jump host is never handed the host's password. A prompt
+    /// naming none of them is the host's own only where the host is all there
+    /// is: ssh wording it some way the route did not foresee is no reason to
+    /// fail a direct connection, and every reason not to guess between two
+    /// machines.
+    static func account(
+        for prompt: String, among stops: [Route.Stop], localUser: String = NSUserName()
+    ) -> String? {
+        let account: String
+        if let named = PasswordPrompt.stop(
+            namedIn: prompt, route: Route(stops: stops), localUser: localUser)
+        {
+            account = stops[named].password
+        } else if stops.count == 1 {
+            account = stops[0].password
+        } else {
+            return nil
+        }
+        return account.isEmpty ? nil : account
+    }
+
     // MARK: being the helper
 
-    /// The keychain account ssh is asking about, when this process is a
-    /// helper.
-    static var accountBeingAsked: String? {
-        let account = ProcessInfo.processInfo.environment[accountVariable] ?? ""
-        return account.isEmpty ? nil : account
+    /// The machines on the way, when this process is a helper.
+    static var stopsBeingAsked: [Route.Stop]? {
+        let text = ProcessInfo.processInfo.environment[stopsVariable] ?? ""
+        return text.isEmpty ? nil : stops(from: text)
     }
 
     /// Answers one prompt and stops.
@@ -86,7 +133,7 @@ nonisolated enum Askpass {
     /// error, which for a file session is the stderr the window reports.
     /// Exiting non-zero tells ssh no answer is coming, which becomes an
     /// ordinary refusal rather than a prompt that hangs.
-    static func answer(account: String, prompt: String) -> Never {
+    static func answer(stops: [Route.Stop], prompt: String) -> Never {
         if isQuestion(prompt) {
             // **No**, always, and that is not a shrug. Nobody can read a
             // fingerprint in a window with no terminal in it, and a yes here
@@ -95,6 +142,10 @@ nonisolated enum Askpass {
             // open it in a tab, where the question is put to somebody.
             print(answerToQuestion())
             exit(0)
+        }
+        guard let account = account(for: prompt, among: stops) else {
+            complain("no password kept for the machine asking — type one in Shellhand, in "
+                + "its editor, its group's or its identity's")
         }
         do {
             guard let password = try Keychain.password(for: account) else {

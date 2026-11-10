@@ -18,12 +18,12 @@ struct ShellhandApp: App {
     init() {
         // **Before everything**, including the settings file and Sparkle:
         // ssh runs this same binary as its askpass helper, handing it the
-        // prompt as its only argument and naming the keychain account in the
-        // environment. It answers on standard output and exits; nothing of
-        // the app proper should start, and no window should ever appear.
-        if let account = Askpass.accountBeingAsked {
+        // prompt as its only argument and naming the machines on the way in
+        // the environment. It answers on standard output and exits; nothing
+        // of the app proper should start, and no window should ever appear.
+        if let stops = Askpass.stopsBeingAsked {
             Askpass.answer(
-                account: account, prompt: CommandLine.arguments.dropFirst().first ?? "")
+                stops: stops, prompt: CommandLine.arguments.dropFirst().first ?? "")
         }
         let options = LaunchOptions()
         self.options = options

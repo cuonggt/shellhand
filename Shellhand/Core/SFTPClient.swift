@@ -106,9 +106,14 @@ actor SFTPClient {
     /// What the `ssh` behind a file session is started with. A run under
     /// test leads with its own config (`TestRun.sshFixed`), ahead of what the
     /// caller fixes, so a caller's own `-F` comes later and is the one kept.
+    ///
+    /// Every ssh in the chain is told its own way of being unattended — the
+    /// host's and each jump host's, from its own key and password
+    /// (`SSHArgs.unattended(at:)`) — rather than the host's for all of them.
     static func arguments(_ resolved: Resolved, fixed: [String] = []) -> [String] {
         SSHArgs.subsystem(
-            resolved, "sftp", fixed: TestRun.sshFixed + SSHArgs.unattended(resolved) + fixed)
+            resolved, "sftp", fixed: TestRun.sshFixed + fixed,
+            each: { SSHArgs.unattended(at: $0) })
     }
 
     /// Opens a session to a host.

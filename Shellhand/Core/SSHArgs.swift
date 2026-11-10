@@ -15,6 +15,10 @@ nonisolated struct Endpoint: Sendable, Hashable {
     /// This end's own `-o` settings, nearest first.
     var options: [String] = []
     var forwardAgent: Bool?
+    /// Where this end's password is kept (`Keychain.account`), empty for
+    /// none: what decides whether an unattended ssh reaching it may ask for
+    /// one (`SSHArgs.unattended(at:)`).
+    var password = ""
 
     /// user@addr, or the address alone.
     var target: String { user.isEmpty ? addr : user + "@" + addr }
@@ -34,12 +38,12 @@ extension Resolved {
             // Where the chain resolved, the hops carry it; what is left here is
             // a destination ssh has to make sense of on its own.
             proxyJumpText: jumps.isEmpty ? proxyJump : "",
-            options: sshOptions, forwardAgent: forwardAgent)]
+            options: sshOptions, forwardAgent: forwardAgent, password: passwordAccount)]
         out += jumps.map {
             Endpoint(
                 addr: $0.addr, port: $0.port, user: $0.user, keyPath: $0.keyPath,
                 alias: $0.alias,
-                options: $0.options, forwardAgent: $0.forwardAgent)
+                options: $0.options, forwardAgent: $0.forwardAgent, password: $0.passwordAccount)
         }
         return out
     }
@@ -114,18 +118,25 @@ nonisolated enum SSHArgs {
     /// `opts` are preferences and go where `build` puts them, after the global
     /// options, so LogLevel can still be raised for a look at what ssh is
     /// doing.
+    ///
+    /// `each` adds what one end of the chain must not have overridden and the
+    /// others must not be given — an unattended child's own BatchMode, or its
+    /// own way of answering (`unattended(at:)`) — after `fixed`, at the head
+    /// of that end's ssh alone.
     static func subsystem(
-        _ resolved: Resolved, _ name: String, fixed: [String] = [], opts: [String] = []
+        _ resolved: Resolved, _ name: String, fixed: [String] = [], opts: [String] = [],
+        each: (@Sendable (Endpoint) -> [String])? = nil
     ) -> [String] {
-        build(resolved, fixed: fixed, extra: ["-s"] + opts) + [name]
+        build(resolved.endpoints, at: 0, fixed: fixed, extra: ["-s"] + opts, each: each) + [name]
     }
 
     private static func build(
-        _ chain: [Endpoint], at index: Int, fixed: [String], extra: [String]
+        _ chain: [Endpoint], at index: Int, fixed: [String], extra: [String],
+        each: (@Sendable (Endpoint) -> [String])? = nil
     ) -> [String] {
         guard index < chain.count else { return [] }
         let end = chain[index]
-        var args = fixed
+        var args = fixed + (each?(end) ?? [])
 
         // This host's own, and its groups', before the ones every connection
         // gets: a setting written against one machine should beat the default
@@ -144,7 +155,8 @@ nonisolated enum SSHArgs {
             // options would be dropped. Spelling the inner connection out is
             // what ssh does internally anyway, and it composes: a hop behind
             // another hop carries its own ProxyCommand.
-            let inner = proxyCommand(chain, at: index + 1, reaching: end.forwardTarget, fixed: fixed)
+            let inner = proxyCommand(
+                chain, at: index + 1, reaching: end.forwardTarget, fixed: fixed, each: each)
             args += ["-o", "ProxyCommand=" + inner]
         } else if !end.proxyJumpText.isEmpty {
             // Not one of ours, so it is already an ssh destination.
@@ -181,9 +193,10 @@ nonisolated enum SSHArgs {
     /// destination — the first hop dialled it directly and the ones in between
     /// were never contacted at all.
     private static func proxyCommand(
-        _ chain: [Endpoint], at index: Int, reaching dest: String, fixed: [String]
+        _ chain: [Endpoint], at index: Int, reaching dest: String, fixed: [String],
+        each: (@Sendable (Endpoint) -> [String])? = nil
     ) -> String {
-        let inner = ["ssh"] + build(chain, at: index, fixed: fixed, extra: ["-W", dest])
+        let inner = ["ssh"] + build(chain, at: index, fixed: fixed, extra: ["-W", dest], each: each)
         return inner.map(shellQuote).joined(separator: " ")
     }
 
@@ -238,14 +251,27 @@ nonisolated enum SSHArgs {
     /// They lead, with the rest of what nothing may override, so a config's
     /// own value cannot come first — ssh keeps the first it is given.
     static func answering(_ resolved: Resolved) -> [String] {
-        let ways = resolved.keyPath.trimmingCharacters(in: .whitespaces).isEmpty
+        answering(keyPath: resolved.keyPath)
+    }
+
+    static func answering(keyPath: String) -> [String] {
+        let ways = keyPath.trimmingCharacters(in: .whitespaces).isEmpty
             ? "keyboard-interactive,password" : "publickey,keyboard-interactive,password"
         return ["-o", "PreferredAuthentications=\(ways)", "-o", "NumberOfPasswordPrompts=1"]
     }
 
-    /// Which of the two a connection with nobody in front of it gets: an
-    /// answer ready, or every prompt off.
+    /// Which of the two the host itself gets: an answer ready, or every
+    /// prompt off.
     static func unattended(_ resolved: Resolved) -> [String] {
-        resolved.passwordAccount.isEmpty ? unattended : answering(resolved)
+        unattended(at: resolved.endpoints[0])
+    }
+
+    /// The same for one end of a chain — the host, or a jump host in front
+    /// of it — **from its own key and password**, at the head of its own ssh
+    /// alone. It was the host's, carried down every hop: a bastion that logs
+    /// in with a key, in front of a host that takes a password, was told to
+    /// try nothing but a password and turned SFTP away at the bastion.
+    static func unattended(at end: Endpoint) -> [String] {
+        end.password.isEmpty ? unattended : answering(keyPath: end.keyPath)
     }
 }

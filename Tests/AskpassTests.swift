@@ -63,7 +63,7 @@ nonisolated struct AskpassTests {
     func environmentForAPassword() {
         let out = Askpass.environment(for: resolved(switches))
         #expect(out["SSH_ASKPASS"] != nil)
-        #expect(out[Askpass.accountVariable] == "i-switches")
+        #expect(Askpass.stops(from: out[Askpass.stopsVariable] ?? "").map(\.password) == ["i-switches"])
         // **Never the password.** An argument list is readable by every
         // process on the machine and an environment variable by every child
         // of one; the password goes keychain to stdout and nowhere else.
@@ -104,9 +104,9 @@ nonisolated struct AskpassTests {
     @Test("the child's environment is the inherited one with ours folded in")
     func childEnvironmentMerges() throws {
         let out = try #require(Askpass.childEnvironment(for: resolved(switches)))
-        #expect(out[Askpass.accountVariable] == "i-switches")
+        #expect(Askpass.stops(from: out[Askpass.stopsVariable] ?? "").map(\.password) == ["i-switches"])
         for (key, value) in ProcessInfo.processInfo.environment
-        where key != Askpass.accountVariable && key != "SSH_ASKPASS" {
+        where key != Askpass.stopsVariable && key != "SSH_ASKPASS" {
             #expect(out[key] == value, "the child lost \(key)")
         }
     }

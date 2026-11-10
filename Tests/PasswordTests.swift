@@ -121,7 +121,7 @@ nonisolated struct PasswordTests {
     func askpassForAHost() {
         let host = Shellhand.Host(id: "h1", name: "db-01", addr: "10.0.0.1", hasPassword: true)
         let out = Askpass.environment(for: resolve(host))
-        #expect(out[Askpass.accountVariable] == "host:h1")
+        #expect(Askpass.stops(from: out[Askpass.stopsVariable] ?? "").map(\.password) == ["host:h1"])
         #expect(out["SSH_ASKPASS_REQUIRE"] == "force")
         #expect(SSHArgs.unattended(resolve(host)) != SSHArgs.unattended)
     }
@@ -140,6 +140,68 @@ nonisolated struct PasswordTests {
         // And with no password at all, every prompt off, as before.
         let none = Shellhand.Host(id: "h3", name: "db-03", addr: "10.0.0.3")
         #expect(SSHArgs.unattended(resolve(none)) == SSHArgs.unattended)
+    }
+
+    /// The bastion logs in with its key, the host behind it with a password:
+    /// told the host's way of answering, the bastion's ssh would try only a
+    /// password and turn SFTP away at the bastion.
+    @Test("each ssh in an sftp child's chain is told its own way, from its own key and password")
+    func eachHopItsOwnWay() throws {
+        let bastion = Shellhand.Host(
+            id: "hb", name: "bastion", addr: "192.0.2.1", user: "ops", keyPath: "~/.ssh/bastion")
+        let db = Shellhand.Host(
+            id: "h1", name: "db-01", addr: "203.0.113.31", user: "deploy", hasPassword: true,
+            proxyJump: "bastion")
+        let args = SFTPClient.arguments(resolve(db, hosts: [bastion]))
+        let hop = try #require(args.first { $0.hasPrefix("ProxyCommand=") })
+        let own = args.filter { $0 != hop }
+        #expect(own.contains("PreferredAuthentications=keyboard-interactive,password"))
+        #expect(!own.contains("BatchMode=yes"))
+        #expect(hop.contains("BatchMode=yes"))
+        #expect(!hop.contains("PreferredAuthentications"))
+
+        // A bastion with a password of its own answers with it, key first.
+        var keeping = bastion
+        keeping.hasPassword = true
+        let both = SFTPClient.arguments(resolve(db, hosts: [keeping]))
+        let hopKeeping = try #require(both.first { $0.hasPrefix("ProxyCommand=") })
+        #expect(hopKeeping.contains("PreferredAuthentications=publickey,keyboard-interactive,password"))
+        #expect(!hopKeeping.contains("BatchMode=yes"))
+    }
+
+    @Test("the helper answers each machine on the way with its own password, and no other")
+    func helperAnswersEachHop() {
+        let stops = [
+            Route.Stop(name: "bastion", dest: "bastion", addr: "192.0.2.1", port: 22,
+                       user: "ops", password: "host:hb"),
+            Route.Stop(name: "db-01", dest: "203.0.113.31", addr: "203.0.113.31", port: 22,
+                       user: "deploy", password: "host:h1"),
+        ]
+        #expect(Askpass.account(for: "ops@bastion's password: ", among: stops) == "host:hb")
+        #expect(Askpass.account(for: "deploy@203.0.113.31's password: ", among: stops) == "host:h1")
+        // A server's own words, in its own language: the machine is what counts.
+        #expect(Askpass.account(for: "(deploy@203.0.113.31) Passwort: ", among: stops) == "host:h1")
+        // A jump host keeping none is never handed the host's.
+        var bare = stops
+        bare[0].password = ""
+        #expect(Askpass.account(for: "ops@bastion's password: ", among: bare) == nil)
+        // Naming none of them, two machines are not guessed between...
+        #expect(Askpass.account(for: "Password: ", among: stops) == nil)
+        // ...and one is: a direct connection is answered as it always was.
+        #expect(Askpass.account(for: "Password: ", among: [stops[1]]) == "host:h1")
+    }
+
+    @Test("a jump host's own password reaches the helper though the host keeps none")
+    func helperForAHopOnly() {
+        let bastion = Shellhand.Host(
+            id: "hb", name: "bastion", addr: "192.0.2.1", user: "ops", hasPassword: true)
+        let db = Shellhand.Host(
+            id: "h1", name: "db-01", addr: "203.0.113.31", user: "deploy", proxyJump: "bastion")
+        let out = Askpass.environment(for: resolve(db, hosts: [bastion]))
+        #expect(out["SSH_ASKPASS_REQUIRE"] == "force")
+        let stops = Askpass.stops(from: out[Askpass.stopsVariable] ?? "")
+        #expect(stops.map(\.password) == ["host:hb", ""])
+        #expect(stops.map(\.user) == ["ops", "deploy"])
     }
 
     // MARK: which prompt a tab types at
