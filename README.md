@@ -48,20 +48,23 @@ forwarding. None of it is pending by accident; `CLAUDE.md` records what each
 cut removed and what it cost.
 
 The one thing to know before you try it: **a password is answered only where
-you have stored one.** Give a host an identity with a password — File ▸
-Identities… — and the SFTP window logs in with it, from this Mac's keychain
-and nowhere else; the host list and its export are plain text and never hold
-it. In a terminal tab `ssh` still asks on the pty and you type it, exactly as
-in Terminal.app. And a host whose key this Mac has never seen has to be
-opened in a tab once first, whatever it logs in with: SFTP has nowhere to put
-a fingerprint in front of you. Key and agent authentication work everywhere.
+you have stored one.** A host, a group or an identity — File ▸ Identities… —
+can keep one, in this Mac's keychain and nowhere else; the host list and its
+export are plain text and never hold it. A host takes its own, or else the one
+it inherits, as it takes its user. A terminal tab types it once, at ssh's own
+prompt and only while connecting, each jump host getting its own; anything
+else ssh asks, like a code from an authenticator, and a password that is
+turned down are left to you to type. The SFTP window logs in with it too. And
+a host whose key this Mac has never seen has to be opened in a tab once first,
+whatever it logs in with: SFTP has nowhere to put a fingerprint in front of
+you. Key and agent authentication work everywhere.
 
 ## What it does
 
 - **A host list that inherits.** A host takes its own value first, then the
-  nearest group above it that sets one. Groups pass down the user, the key,
-  the jump host, ssh options, the agent and the terminal's colours, so
-  production need not look like staging.
+  nearest group above it that sets one. Groups pass down an identity, the
+  user, the key, a password, the jump host, ssh options, the agent and the
+  terminal's colours, so production need not look like staging.
 - **Tabs on real `ssh`.** Every session is `/usr/bin/ssh` on a pty, so your
   config, your jump hosts and your agent behave as they do in a terminal.
   Shellhand builds the argv — including a nested `ProxyCommand` that spells a

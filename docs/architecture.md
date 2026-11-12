@@ -62,10 +62,26 @@ history — SwiftTerm gives the app no part of it — and five reads a second of
 later, by something run inside the session, is answered in the terminal, as
 anywhere else.
 
-**A password is typed into the terminal**, as it would be anywhere else. An
-askpass helper answering from the keychain was built and taken out with
-credentials, so the app no longer answers a prompt at all — and an sftp child,
-which is given `BatchMode=yes`, cannot reach a host that takes only a password.
+**A stored password is typed into the terminal, once.** A host, a group or
+an identity can keep one in this Mac's keychain, inherited as the user is; the
+store holds only that there is one. A tab types it at ssh's own prompt for it
+— `user@host's password:` or `(user@host) Password:`, last on the screen,
+naming a machine on the route and the user it logs in as — and only while
+connecting, each jump host getting its own (`Terminal/PasswordPrompt.swift`).
+Asked again, it types nothing more and says the password was turned down,
+leaving the prompt to the person; anything else asked, a code or `sudo`, is
+the person's too. A tab never forces `SSH_ASKPASS`: forced, ssh hands the
+host-key question to the helper as well, and the pty never sees it.
+
+**A connection nobody is in front of is answered by the app itself**, run as
+ssh's own askpass helper (`Core/Askpass.swift`). The SFTP window's `sftp`
+child has no pty, so it is started with `SSH_ASKPASS_REQUIRE=force` and the
+machines on the way in its environment — never the password — and each ssh in
+its chain is told its own way to log in (`SSHArgs.unattended(at:)`). The
+helper answers each prompt with the password of the machine it names, and
+answers no to a host-key question, which nobody could read in a window with no
+terminal. Where no password is stored, the child keeps `BatchMode=yes`, and
+fails rather than waits at a prompt nobody can see.
 
 ## The settings file
 
@@ -258,10 +274,11 @@ own; `Color` belongs to both SwiftUI and SwiftTerm. Write `SwiftUI.Group` and
 
 ## Not here yet
 
-**The SFTP window cannot reach a host that takes only a password.** An `sftp`
-child is given `BatchMode=yes`, so there is nothing left to answer a prompt
-with. It is the one capability the cut back to an MVP costs; a session to such
-a host still works, because ssh asks on the pty where it can be typed.
+**The SFTP window cannot answer a host key this Mac has never seen.** The
+question comes before any password, and a window with no terminal has nowhere
+to put a fingerprint in front of a person, so the askpass helper answers no
+and the window offers Open in Terminal: a tab asks it once, and SFTP connects
+from then on.
 
 **A host-key question is found by putting rows back together, not by reading
 logical lines.** It is found and shown whole down to about three columns, which
